@@ -24,10 +24,19 @@ export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
     done: (error: any, user?: any, info?: any) => void,
   ) {
     try {
-      const { id, username: name, profile_image: profileImg } = profile._json;
+      const { id, username: name, profile_image } = profile._json;
+      let profileImg = profile_image;
       const provider = 'kakao';
       const providerId = id;
       const username = name;
+
+      if (
+        profileImg &&
+        typeof profileImg === 'string' &&
+        profileImg.startsWith('http://')
+      ) {
+        profileImg = profileImg.replace('http://', 'https://');
+      }
 
       const user = await this.authService.validateUser({
         provider,
