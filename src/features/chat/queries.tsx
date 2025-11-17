@@ -1,14 +1,24 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+"use client";
+
+import {
+  useInfiniteQuery,
+  useQuery,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
 import { getChatMessages, getMyChatRooms } from "./apis";
+import { ChatRoom } from "./types";
 
-export const useMyChatRoomsQuery = () => {
+export const useMyChatRoomsQuery = (
+  options?: Omit<UseQueryOptions<ChatRoom[]>, "queryKey" | "queryFn">
+) => {
   return useQuery({
     queryKey: QUERY_KEYS.chatKeys.rooms.queryKey,
     queryFn: getMyChatRooms,
     staleTime: Infinity,
+    ...options,
   });
 };
 

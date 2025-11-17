@@ -19,6 +19,25 @@ export const useChatEvents = () => {
   const queryClient = useQueryClient();
   const { setTyping, setRoomInactive } = useChatStore();
 
+  const handleNewChatRoom = useCallback(
+    (newRoom: ChatRoom) => {
+      console.log("New chat room created:", newRoom);
+      queryClient.setQueryData<ChatRoom[]>(
+        QUERY_KEYS.chatKeys.rooms.queryKey,
+        (oldData) => {
+          if (oldData) {
+            if (oldData.some((room) => room.id === newRoom.id)) {
+              return oldData;
+            }
+            return [newRoom, ...oldData];
+          }
+          return [newRoom];
+        },
+      );
+    },
+    [queryClient],
+  );
+
   const handleNewMessage = useCallback(
     (newMessage: ChatMessage) => {
       const roomId = newMessage.chatRoom.id;
@@ -34,7 +53,7 @@ export const useChatEvents = () => {
             messages: [newMessage, ...newPages[0].messages],
           };
           return { ...oldData, pages: newPages };
-        }
+        },
       );
 
       queryClient.setQueryData<ChatRoom[]>(
@@ -51,18 +70,18 @@ export const useChatEvents = () => {
                   lastMessage: newMessage,
                   unreadCount: isChatVisible ? 0 : (room.unreadCount || 0) + 1,
                 }
-              : room
+              : room,
           );
 
           return updatedRooms.sort(
             (a, b) =>
               new Date(b.lastMessage?.createdAt ?? 0).getTime() -
-              new Date(a.lastMessage?.createdAt ?? 0).getTime()
+              new Date(a.lastMessage?.createdAt ?? 0).getTime(),
           );
-        }
+        },
       );
     },
-    [queryClient]
+    [queryClient],
   );
 
   const handleUserLeft = useCallback(
@@ -78,11 +97,11 @@ export const useChatEvents = () => {
             messages: [message, ...newPages[0].messages],
           };
           return { ...oldData, pages: newPages };
-        }
+        },
       );
       setRoomInactive(roomId, true);
     },
-    [queryClient, setRoomInactive]
+    [queryClient, setRoomInactive],
   );
 
   const handleUserRejoined = useCallback(
@@ -98,14 +117,14 @@ export const useChatEvents = () => {
             messages: [message, ...newPages[0].messages],
           };
           return { ...oldData, pages: newPages };
-        }
+        },
       );
       setRoomInactive(roomId, false);
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.chatKeys.rooms.queryKey,
       });
     },
-    [queryClient, setRoomInactive]
+    [queryClient, setRoomInactive],
   );
 
   const handleTyping = useCallback(
@@ -115,11 +134,12 @@ export const useChatEvents = () => {
         setTyping(activeChatRoomId, isTyping ? nickname : "");
       }
     },
-    [setTyping]
+    [setTyping],
   );
 
   const registerChatEventListeners = useCallback(() => {
     if (!socket) return;
+    socket.on("newChatRoom", handleNewChatRoom);
     socket.on("newMessage", handleNewMessage);
     socket.on("userLeft", handleUserLeft);
     socket.on("userRejoined", handleUserRejoined);
@@ -127,6 +147,7 @@ export const useChatEvents = () => {
     console.log("Chat event listeners registered");
   }, [
     socket,
+    handleNewChatRoom,
     handleNewMessage,
     handleUserLeft,
     handleUserRejoined,
@@ -135,6 +156,7 @@ export const useChatEvents = () => {
 
   const unregisterChatEventListeners = useCallback(() => {
     if (!socket) return;
+    socket.off("newChatRoom", handleNewChatRoom);
     socket.off("newMessage", handleNewMessage);
     socket.off("userLeft", handleUserLeft);
     socket.off("userRejoined", handleUserRejoined);
@@ -142,6 +164,7 @@ export const useChatEvents = () => {
     console.log("Chat event listeners unregistered");
   }, [
     socket,
+    handleNewChatRoom,
     handleNewMessage,
     handleUserLeft,
     handleUserRejoined,

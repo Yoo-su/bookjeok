@@ -1,12 +1,9 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { useAuthStore } from "@/features/auth/store";
-import { ChatRoom } from "@/features/chat/types";
-import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -26,7 +23,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (accessToken) {
@@ -65,32 +61,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       };
     }
   }, [accessToken]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    // 새 채팅방 생성 이벤트 수신
-    socket.on("newChatRoom", (newRoom: ChatRoom) => {
-      console.log("New chat room created:", newRoom);
-      queryClient.setQueryData<ChatRoom[]>(
-        QUERY_KEYS.chatKeys.rooms.queryKey,
-        (oldData) => {
-          if (oldData) {
-            // 중복 추가 방지
-            if (oldData.some((room) => room.id === newRoom.id)) {
-              return oldData;
-            }
-            return [newRoom, ...oldData];
-          }
-          return [newRoom];
-        }
-      );
-    });
-
-    return () => {
-      socket.off("newChatRoom");
-    };
-  }, [socket, queryClient]);
 
   const value = useMemo(() => ({ socket, isConnected }), [socket, isConnected]);
 
