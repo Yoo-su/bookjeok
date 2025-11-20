@@ -2,7 +2,7 @@
 
 import { Heart, PenSquare } from "lucide-react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 // Shadcn/ui 컴포넌트
@@ -18,6 +18,7 @@ import { BookDetailSkeleton } from "./skeleton";
 
 export const BookDetail = () => {
   const params = useParams();
+  const router = useRouter();
   const isbn = params.isbn as string;
 
   const {
@@ -88,7 +89,7 @@ export const BookDetail = () => {
             <Button
               size="lg"
               className="w-full sm:w-auto"
-              onClick={() => (location.href = `/book/${isbn}/sell`)}
+              onClick={() => router.push(`/book/${isbn}/sell`)}
             >
               <PenSquare className="w-4 h-4 mr-2" />
               중고책 판매글 작성

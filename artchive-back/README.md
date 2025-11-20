@@ -1,6 +1,7 @@
-# Artchive-back
+# 🛠️ ArtChive Backend
 
-Artchive-back은 NestJS 기반의 백엔드 서버로, 소셜 로그인, 도서 정보 관리, 중고 도서 판매, 실시간 채팅 및 AI를 활용한 도서 요약 기능을 제공합니다.
+ArtChive의 백엔드 서버는 **NestJS**를 기반으로 구축되었으며, 안정적인 데이터 관리와 실시간 통신, 그리고 AI 기능을 제공합니다.
+소셜 로그인부터 중고 서적 거래, 실시간 채팅, 그리고 LLM 기반 도서 요약까지 다양한 기능을 지원합니다.
 
 ## 주요 기능
 
@@ -32,6 +33,23 @@ Artchive-back은 NestJS 기반의 백엔드 서버로, 소셜 로그인, 도서 
 - **AI 기반 도서 요약:** Google Generative AI 모델을 활용하여 도서의 핵심 내용을 요약하는 기능을 제공합니다.
 - **프롬프트 관리:** AI 모델에 최적화된 프롬프트를 생성하고 관리합니다.
 
+## 프로젝트 구조
+
+```
+src
+├── app                 # 애플리케이션 핵심 모듈
+├── features            # 기능별 도메인 모듈
+│   ├── auth            # 인증 및 소셜 로그인
+│   ├── book            # 도서 정보 및 중고 서적 판매
+│   ├── chat            # 실시간 채팅
+│   ├── llm             # Google Generative AI 연동
+│   └── user            # 사용자 정보
+└── shared              # 공용 모듈 및 유틸리티
+    ├── middlewares     # 공통 미들웨어
+    ├── types           # 공통 타입 정의
+    └── utils           # 유틸리티 함수
+```
+
 ## API 엔드포인트
 
 | 기능 (Feature) | 엔드포인트 (Endpoint)          | HTTP 메소드 | 설명 (Description)                  | 인증 (Authentication) |
@@ -60,17 +78,17 @@ Artchive-back은 NestJS 기반의 백엔드 서버로, 소셜 로그인, 도서 
 | **User**       | `/user/me`                     | `GET`       | 내 프로필 정보 조회                 | JWT                   |
 |                | `/user/my-sales`               | `GET`       | 내가 등록한 판매글 목록 조회        | JWT                   |
 
-## 사용 기술
+## 🛠️ 사용 기술 (Tech Stack)
 
-- **Framework:** [NestJS](https://nestjs.com/)
-- **Language:** TypeScript
-- **Database:** PostgreSQL
-- **ORM:** TypeORM
-- **Authentication:** Passport (JWT, Kakao, Naver)
-- **Real-time:** WebSocket (Socket.IO)
-- **AI:** Google Generative AI
-- **Validation:** class-validator, class-transformer
-- **API Specification:** Swagger
+| Category | Technology | Description |
+| --- | --- | --- |
+| **Framework** | ![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white) | 모듈형 아키텍처를 제공하는 Node.js 프레임워크 |
+| **Language** | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) | 정적 타입 시스템을 통한 안정성 확보 |
+| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white) | 신뢰성 높은 관계형 데이터베이스 |
+| **ORM** | ![TypeORM](https://img.shields.io/badge/TypeORM-FE0C2C?logo=typeorm&logoColor=white) | 객체와 관계형 데이터베이스 간의 매핑 |
+| **Real-time** | ![Socket.io](https://img.shields.io/badge/Socket.io-010101?logo=socketdotio&logoColor=white) | 실시간 양방향 통신 (채팅) |
+| **AI** | ![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?logo=google&logoColor=white) | 도서 요약 및 추천을 위한 LLM |
+| **Docs** | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black) | API 문서 자동화 |
 
 ## 시작하기
 
@@ -146,19 +164,4 @@ $ npm run test
 $ npm run test:e2e
 ```
 
-## 프로젝트 구조
 
-```
-src
-├── app                 # 애플리케이션 핵심 모듈
-├── features            # 기능별 도메인 모듈
-│   ├── auth            # 인증 및 소셜 로그인
-│   ├── book            # 도서 정보 및 중고 서적 판매
-│   ├── chat            # 실시간 채팅
-│   ├── llm             # Google Generative AI 연동
-│   └── user            # 사용자 정보
-└── shared              # 공용 모듈 및 유틸리티
-    ├── middlewares     # 공통 미들웨어
-    ├── types           # 공통 타입 정의
-    └── utils           # 유틸리티 함수
-```
