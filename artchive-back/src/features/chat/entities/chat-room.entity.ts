@@ -18,7 +18,9 @@ export class ChatRoom {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => UsedBookSale, (sale) => sale.chatRooms)
+  @ManyToOne(() => UsedBookSale, (sale) => sale.chatRooms, {
+    onDelete: 'CASCADE',
+  })
   usedBookSale: UsedBookSale;
 
   @OneToMany(() => ChatParticipant, (participant) => participant.chatRoom)

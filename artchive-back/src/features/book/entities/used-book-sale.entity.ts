@@ -16,6 +16,7 @@ export enum SaleStatus {
   FOR_SALE = 'FOR_SALE', // 판매중
   RESERVED = 'RESERVED', // 예약중
   SOLD = 'SOLD', // 판매완료
+  WITHDRAWN = 'WITHDRAWN', // 탈퇴로 인한 숨김
 }
 
 @Entity({ name: 'used_book_sales' })

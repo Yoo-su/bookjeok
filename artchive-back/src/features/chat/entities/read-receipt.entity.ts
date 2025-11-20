@@ -11,6 +11,8 @@ export class ReadReceipt {
   @ManyToOne(() => User, (user) => user.readReceipts)
   user: User;
 
-  @ManyToOne(() => ChatMessage, (message) => message.readReceipts)
+  @ManyToOne(() => ChatMessage, (message) => message.readReceipts, {
+    onDelete: 'CASCADE',
+  })
   message: ChatMessage;
 }
