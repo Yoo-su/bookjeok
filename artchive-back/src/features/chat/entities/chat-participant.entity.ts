@@ -17,7 +17,9 @@ export class ChatParticipant {
   @ManyToOne(() => User, (user) => user.chatParticipants)
   user: User;
 
-  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.participants)
+  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.participants, {
+    onDelete: 'CASCADE',
+  })
   chatRoom: ChatRoom;
 
   // 사용자의 채팅방 참여 상태 (true: 참여중, false: 나감)

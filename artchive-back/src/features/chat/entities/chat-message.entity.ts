@@ -24,7 +24,9 @@ export class ChatMessage {
   @ManyToOne(() => User, { nullable: true })
   sender: User | null;
 
-  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.messages)
+  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.messages, {
+    onDelete: 'CASCADE',
+  })
   chatRoom: ChatRoom;
 
   @OneToMany(() => ReadReceipt, (receipt) => receipt.message)

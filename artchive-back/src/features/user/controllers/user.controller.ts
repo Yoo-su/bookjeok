@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Delete } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserService } from '../services/user.service';
 import { CurrentUser } from '../decorators/current-user.decorator';
@@ -26,5 +26,18 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   getUser(@CurrentUser() user: User) {
     return user;
+  }
+
+  /**
+   * 회원 탈퇴
+   */
+  @Delete('me')
+  @UseGuards(AuthGuard('jwt'))
+  async withdraw(@CurrentUser() user: User) {
+    await this.userService.withdraw(user.id);
+    return {
+      success: true,
+      message: '회원 탈퇴가 완료되었습니다.',
+    };
   }
 }

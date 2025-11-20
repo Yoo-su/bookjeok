@@ -6,7 +6,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { ChatRoom } from '../entities/chat-room.entity';
 import { ChatParticipant } from '../entities/chat-participant.entity';
 import { ChatMessage } from '../entities/chat-message.entity';
@@ -30,6 +30,7 @@ export class ChatService {
     private readonly readReceiptRepository: Repository<ReadReceipt>,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -63,22 +64,47 @@ export class ChatService {
       const participantsToUpdate = existingRoom.participants.filter(
         (p) => !p.isActive,
       );
+
       if (participantsToUpdate.length > 0) {
-        participantsToUpdate.forEach((p) => (p.isActive = true));
-        await this.chatParticipantRepository.save(participantsToUpdate);
-        existingRoom.updatedAt = new Date();
-        await this.chatRoomRepository.save(existingRoom);
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-        // 다시 참여한 유저에 대해 시스템 메시지 생성 및 이벤트 전송
-        for (const participant of participantsToUpdate) {
-          const systemMessage = this.chatMessageRepository.create({
-            chatRoom: { id: existingRoom.id },
-            content: `${participant.user.nickname}님이 다시 참여했습니다.`,
-            sender: null, // 시스템 메시지
-          });
-          await this.chatMessageRepository.save(systemMessage);
+        try {
+          // 1. 참여자 상태 업데이트
+          participantsToUpdate.forEach((p) => (p.isActive = true));
+          await queryRunner.manager.save(ChatParticipant, participantsToUpdate);
 
-          this.chatGateway.emitUserRejoined(existingRoom.id, systemMessage);
+          // 2. 채팅방 업데이트 시간 갱신
+          existingRoom.updatedAt = new Date();
+          await queryRunner.manager.save(ChatRoom, existingRoom);
+
+          // 3. 시스템 메시지 생성
+          const systemMessages: ChatMessage[] = [];
+          for (const participant of participantsToUpdate) {
+            const systemMessage = this.chatMessageRepository.create({
+              chatRoom: { id: existingRoom.id },
+              content: `${participant.user.nickname}님이 다시 참여했습니다.`,
+              sender: null,
+            });
+            const savedMessage = await queryRunner.manager.save(
+              ChatMessage,
+              systemMessage,
+            );
+            systemMessages.push(savedMessage);
+          }
+
+          await queryRunner.commitTransaction();
+
+          // 트랜잭션 성공 후 소켓 이벤트 전송
+          for (const msg of systemMessages) {
+            this.chatGateway.emitUserRejoined(existingRoom.id, msg);
+          }
+        } catch (err) {
+          await queryRunner.rollbackTransaction();
+          throw err;
+        } finally {
+          await queryRunner.release();
         }
       }
 
@@ -100,49 +126,58 @@ export class ChatService {
       return reloadedRoom;
     }
 
-    const newRoom = this.chatRoomRepository.create({ usedBookSale: sale });
-    await this.chatRoomRepository.save(newRoom);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const buyerParticipant = this.chatParticipantRepository.create({
-      chatRoom: newRoom,
-      user: { id: buyerId } as User,
-      isActive: true,
-    });
-    const sellerParticipant = this.chatParticipantRepository.create({
-      chatRoom: newRoom,
-      user: { id: sellerId } as User,
-      isActive: true,
-    });
+    try {
+      // 2. 새 방 생성
+      const newRoom = this.chatRoomRepository.create({ usedBookSale: sale });
+      const savedRoom = await queryRunner.manager.save(ChatRoom, newRoom);
 
-    await this.chatParticipantRepository.save([
-      buyerParticipant,
-      sellerParticipant,
-    ]);
+      const buyerParticipant = this.chatParticipantRepository.create({
+        chatRoom: savedRoom,
+        user: { id: buyerId } as User,
+        isActive: true,
+      });
+      const sellerParticipant = this.chatParticipantRepository.create({
+        chatRoom: savedRoom,
+        user: { id: sellerId } as User,
+        isActive: true,
+      });
 
-    // 새 채팅방 생성 후 구매자와 판매자를 웹소켓 룸에 참여시킵니다.
-    await this.chatGateway.joinRoom([buyerId, sellerId], newRoom.id);
+      await queryRunner.manager.save(ChatParticipant, [
+        buyerParticipant,
+        sellerParticipant,
+      ]);
 
-    // 생성된 채팅방 정보를 다시 조회하여 participants 정보를 포함시킵니다.
-    const createdRoom = await this.chatRoomRepository.findOne({
-      where: { id: newRoom.id },
-      relations: [
-        'participants',
-        'participants.user',
-        'usedBookSale',
-        'usedBookSale.book',
-      ],
-    });
+      await queryRunner.commitTransaction();
 
-    if (!createdRoom) {
-      // 이 경우는 거의 발생하지 않지만, 만약을 대비한 에러 처리
-      throw new NotFoundException('Failed to retrieve the created chat room.');
+      // 트랜잭션 성공 후 소켓 작업
+      await this.chatGateway.joinRoom([buyerId, sellerId], savedRoom.id);
+
+      const createdRoom = await this.chatRoomRepository.findOne({
+        where: { id: savedRoom.id },
+        relations: [
+          'participants',
+          'participants.user',
+          'usedBookSale',
+          'usedBookSale.book',
+        ],
+      });
+
+      if (!createdRoom)
+        throw new NotFoundException('Failed to retrieve created room');
+
+      this.chatGateway.notifyNewRoom(sellerId, createdRoom);
+
+      return createdRoom;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-
-    // 판매자에게 새로운 채팅방이 생성되었음을 실시간으로 알립니다.
-    this.chatGateway.notifyNewRoom(sellerId, createdRoom);
-
-    // 생성된 채팅방 정보를 반환합니다.
-    return createdRoom;
   }
 
   /**
@@ -288,28 +323,44 @@ export class ChatService {
    * @param userId - 나가는 사용자 ID
    */
   async leaveRoom(roomId: number, userId: number) {
-    // 1. 내 참여 정보 조회
-    const participant = await this.chatParticipantRepository.findOne({
-      where: { chatRoom: { id: roomId }, user: { id: userId } },
-      relations: ['user'],
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!participant || !participant.isActive) {
-      throw new NotFoundException('Chat room not found or already left.');
+    try {
+      // 1. 내 참여 정보 조회 (Lock을 걸 수도 있음)
+      const participant = await queryRunner.manager.findOne(ChatParticipant, {
+        where: { chatRoom: { id: roomId }, user: { id: userId } },
+        relations: ['user'],
+      });
+
+      if (!participant || !participant.isActive) {
+        throw new NotFoundException('Chat room not found or already left.');
+      }
+
+      // 2. 내 참여 상태를 false로 변경
+      participant.isActive = false;
+      await queryRunner.manager.save(ChatParticipant, participant);
+
+      // 3. 시스템 메시지 생성 ("OOO님이 나갔습니다.")
+      const systemMessage = this.chatMessageRepository.create({
+        chatRoom: { id: roomId },
+        content: `${participant.user.nickname}님이 나갔습니다.`,
+        sender: null,
+      });
+      const savedMessage = await queryRunner.manager.save(
+        ChatMessage,
+        systemMessage,
+      );
+
+      await queryRunner.commitTransaction();
+
+      return savedMessage;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
     }
-
-    // 2. 내 참여 상태를 false로 변경
-    participant.isActive = false;
-    await this.chatParticipantRepository.save(participant);
-
-    // 3. 시스템 메시지 생성 ("OOO님이 나갔습니다.")
-    const systemMessage = this.chatMessageRepository.create({
-      chatRoom: { id: roomId },
-      content: `${participant.user.nickname}님이 나갔습니다.`,
-      sender: null, // sender가 null이면 시스템 메시지로 간주
-    });
-    await this.chatMessageRepository.save(systemMessage);
-
-    return systemMessage;
   }
 }

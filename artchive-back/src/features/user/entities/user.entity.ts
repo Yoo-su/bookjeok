@@ -38,6 +38,9 @@ export class User {
   @UpdateDateColumn({ name: 'updatedAt' })
   updatedAt: Date;
 
+  @Column({ nullable: true })
+  deletedAt: Date;
+
   @OneToMany(() => UsedBookSale, (sale) => sale.user)
   usedBookSales: UsedBookSale[];
 

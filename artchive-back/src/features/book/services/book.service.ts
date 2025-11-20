@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Book } from '../entities/book.entity';
 import { SaleStatus, UsedBookSale } from '../entities/used-book-sale.entity';
 import { CreateBookSaleDto } from '../dtos/create-book-sale.dto';
@@ -22,6 +22,7 @@ export class BookService {
     @InjectRepository(UsedBookSale)
     private readonly usedBookSaleRepository: Repository<UsedBookSale>,
     private readonly userService: UserService,
+    private readonly dataSource: DataSource,
   ) {}
 
   // 책 정보가 DB에 있으면 찾고, 없으면 새로 생성하는 메서드
@@ -43,15 +44,38 @@ export class BookService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    const book = await this.findOrCreateBook(createBookSaleDto.book);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const newSale = this.usedBookSaleRepository.create({
-      ...createBookSaleDto,
-      user, // user 객체 전체를 할당
-      book, // book 객체 전체를 할당
-    });
+    try {
+      // 1. 책 정보 찾기 또는 생성 (트랜잭션 내에서 처리)
+      let book = await queryRunner.manager.findOne(Book, {
+        where: { isbn: createBookSaleDto.book.isbn },
+      });
 
-    return this.usedBookSaleRepository.save(newSale);
+      if (!book) {
+        book = this.bookRepository.create(createBookSaleDto.book);
+        book = await queryRunner.manager.save(Book, book);
+      }
+
+      // 2. 판매글 생성
+      const newSale = this.usedBookSaleRepository.create({
+        ...createBookSaleDto,
+        user,
+        book,
+      });
+
+      const savedSale = await queryRunner.manager.save(UsedBookSale, newSale);
+
+      await queryRunner.commitTransaction();
+      return savedSale;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
@@ -130,7 +154,7 @@ export class BookService {
         'book',
       ]);
 
-    // Search condition
+    // 검색어 필터
     if (search) {
       queryBuilder.andWhere(
         '(sale.title LIKE :search OR sale.content LIKE :search OR book.title LIKE :search OR book.author LIKE :search)',
@@ -138,7 +162,7 @@ export class BookService {
       );
     }
 
-    // Location filter
+    // 시/도, 시/군/구 필터
     if (city) {
       queryBuilder.andWhere('sale.city = :city', { city });
     }
@@ -146,7 +170,7 @@ export class BookService {
       queryBuilder.andWhere('sale.district = :district', { district });
     }
 
-    // Price filter
+    // 가격대 필터
     if (minPrice !== undefined) {
       queryBuilder.andWhere('sale.price >= :minPrice', { minPrice });
     }
@@ -154,7 +178,7 @@ export class BookService {
       queryBuilder.andWhere('sale.price <= :maxPrice', { maxPrice });
     }
 
-    // Status filter
+    // 판매글 상태 필터
     if (status && status.length > 0) {
       // Defensively ensure 'status' is an array before passing to TypeORM
       const statusArray = Array.isArray(status) ? status : [status];
@@ -163,10 +187,10 @@ export class BookService {
       });
     }
 
-    // Sorting
+    // 정렬
     queryBuilder.orderBy(`sale.${sortBy}`, sortOrder);
 
-    // Pagination
+    // 페이지네이션
     queryBuilder.skip((page - 1) * limit).take(limit);
 
     const [sales, total] = await queryBuilder.getManyAndCount();
@@ -191,15 +215,15 @@ export class BookService {
     const queryBuilder = this.usedBookSaleRepository
       .createQueryBuilder('sale')
       .where('sale.bookIsbn = :isbn', { isbn })
-      .leftJoinAndSelect('sale.user', 'user') // 작성자 정보 포함
-      .leftJoinAndSelect('sale.book', 'book') // 책 정보도 명시적으로 포함
+      .leftJoinAndSelect('sale.user', 'user')
+      .leftJoinAndSelect('sale.book', 'book')
       .select([
         'sale.id',
         'sale.title',
         'sale.price',
         'sale.status',
         'sale.createdAt',
-        'sale.updatedAt', // updatedAt 필드 추가
+        'sale.updatedAt',
         'sale.imageUrls',
         'sale.city',
         'sale.district',
@@ -208,7 +232,7 @@ export class BookService {
         'user.profileImageUrl',
         'book', // book 객체 전체 선택
       ])
-      .orderBy('sale.createdAt', 'DESC') // 최신순으로 정렬
+      .orderBy('sale.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -286,9 +310,6 @@ export class BookService {
       throw new ForbiddenException('판매글을 삭제할 권한이 없습니다.');
     }
 
-    // 참고: used_book_sales와 연관된 chat_rooms, chat_participants 등은
-    // entity의 onDelete: 'CASCADE' 설정에 의해 DB 레벨에서 연쇄적으로 삭제될 수 있습니다.
-    // 해당 설정이 없다면 여기서 직접 관련 데이터를 삭제하는 로직이 필요합니다.
     await this.usedBookSaleRepository.remove(sale);
   }
 
