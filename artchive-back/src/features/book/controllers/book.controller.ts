@@ -37,10 +37,7 @@ export class BookController {
       createBookSaleDto,
       userId,
     );
-    return {
-      success: true,
-      sale: newSale,
-    };
+    return newSale;
   }
 
   /**
@@ -70,10 +67,7 @@ export class BookController {
       userId,
       updateSaleStatusDto.status,
     );
-    return {
-      success: true,
-      sale: updatedSale,
-    };
+    return updatedSale;
   }
 
   /**
@@ -119,7 +113,6 @@ export class BookController {
       updateBookSaleDto,
     );
     return {
-      success: true,
       sale: updatedSale,
     };
   }

@@ -54,22 +54,6 @@ export const MyPageView = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 판매글</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <div className="text-2xl font-bold">{stats?.salesCount || 0}</div>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              작성한 판매글 수
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">판매중</CardTitle>
             <div className="h-2 w-2 rounded-full bg-green-500" />
           </CardHeader>
@@ -78,11 +62,47 @@ export const MyPageView = () => {
               <Skeleton className="h-8 w-20" />
             ) : (
               <div className="text-2xl font-bold">
-                {stats?.salesStatusCounts?.ON_SALE || 0}
+                {stats?.salesStatusCounts?.FOR_SALE || 0}
               </div>
             )}
             <p className="text-xs text-muted-foreground mt-1">
               현재 판매 중인 상품
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">예약중</CardTitle>
+            <div className="h-2 w-2 rounded-full bg-orange-500" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {stats?.salesStatusCounts?.RESERVED || 0}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              예약 진행 중인 상품
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">판매완료</CardTitle>
+            <div className="h-2 w-2 rounded-full bg-gray-500" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {stats?.salesStatusCounts?.SOLD || 0}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              거래가 완료된 상품
             </p>
           </CardContent>
         </Card>

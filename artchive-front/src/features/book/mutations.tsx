@@ -50,7 +50,7 @@ export const useCreateBookSaleMutation = () => {
       if (!saleResult.success) {
         throw new Error("게시글 등록에 실패했습니다.");
       }
-      return saleResult.sale;
+      return saleResult;
     },
     onSuccess: () => {
       alert("판매글이 성공적으로 등록되었습니다.");
@@ -141,10 +141,10 @@ export const useUpdateBookSaleMutation = () => {
 
       // 4. 백엔드에 최종 데이터 업데이트 요청
       const result = await updateBookSale({ saleId, payload: finalPayload });
-      if (!result.success || !result.sale) {
+      if (!result.success) {
         throw new Error("게시글 정보 업데이트에 실패했습니다.");
       }
-      return result.sale;
+      return result;
     },
     onSuccess: (data) => {
       alert("판매글이 성공적으로 수정되었습니다.");

@@ -27,7 +27,7 @@ export const useBookListQuery = (params: GetBookListParams) => {
       const result = await getBookList(params);
 
       if (!result.success) return [] as BookInfo[];
-      return result.data.items;
+      return result.items;
     },
   });
 };
@@ -39,7 +39,7 @@ export const useBookDetailQuery = (isbn: string) => {
       const response = await getBookDetail(isbn);
 
       if (!response.success) return null;
-      return response.data.items[0];
+      return response.items[0];
     },
     staleTime: Infinity,
   });
@@ -59,10 +59,10 @@ export const useInfiniteBookSearch = (query: string) => {
         throw new Error("Failed to fetch book list");
       }
       return {
-        items: result.data.items,
+        items: result.items,
         currentPage: pageParam,
         // API가 전체 페이지 수를 주지 않으므로, 받아온 아이템 수가 요청한 수보다 적으면 마지막 페이지로 간주
-        isLastPage: result.data.items.length < DEFAULT_DISPLAY,
+        isLastPage: result.items.length < DEFAULT_DISPLAY,
       };
     },
     initialPageParam: 1, // 첫 페이지는 1
@@ -95,7 +95,7 @@ export const useMyBookSalesQuery = () => {
     queryKey: QUERY_KEYS.bookKeys.mySales.queryKey,
     queryFn: async () => {
       const result = await getMyBookSales();
-      return result.sales;
+      return result;
     },
   });
 };
@@ -163,10 +163,10 @@ export const useBookSummaryQuery = (
     queryKey: ["bookSummary", title, author],
     queryFn: async () => {
       const result = await getBookSummary(title, author);
-      if (!result.success || !result.data) {
+      if (!result.success) {
         throw new Error(result.message || "요약 정보를 가져오지 못했습니다.");
       }
-      return result.data.summary;
+      return result;
     },
     enabled: enabled, // book 데이터 로딩이 완료되었을 때만 이 쿼리를 실행
     staleTime: Infinity, // 한 번 가져온 요약 정보는 바뀌지 않으므로 fresh 상태 유지

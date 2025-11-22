@@ -16,6 +16,6 @@ export class LlmController {
   ) {
     const { title, author } = bookSummaryDto;
     const summary = await this.llmService.generateBookSummary(title, author);
-    return { success: true, data: { summary } };
+    return summary;
   }
 }

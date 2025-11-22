@@ -130,11 +130,11 @@ export const getRelatedSales = async ({
   if (city) params.append("city", city);
   if (district) params.append("district", district);
 
-  const response = await publicAxios.get<GetRelatedSalesResponse>(
+  const { data } = await publicAxios.get<GetRelatedSalesResponse>(
     API_PATHS.book.relatedSales(isbn),
     { params }
   );
-  return response.data;
+  return data;
 };
 
 /**

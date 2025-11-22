@@ -63,6 +63,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt-refresh'))
   async refresh(@CurrentUser() user: User) {
     const { id: userId, nickname } = user;
-    return this.authService.refresh(userId, nickname);
+    const tokens = await this.authService.refresh(userId, nickname);
+    return tokens;
   }
 }

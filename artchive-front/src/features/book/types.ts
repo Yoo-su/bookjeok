@@ -1,3 +1,5 @@
+import { ApiResponse } from "@/shared/types/api";
+
 export type BookSortParam = "sim" | "date";
 
 export interface GetBookListParams {
@@ -29,10 +31,7 @@ export interface GetBookListResponseData {
   start: number;
   total: number;
 }
-export interface GetBookListSuccessResponse {
-  success: true;
-  data: GetBookListResponseData;
-}
+export type GetBookListSuccessResponse = ApiResponse<GetBookListResponseData>;
 
 export interface GetBookListErrorResponse {
   success: false;
@@ -50,10 +49,8 @@ export interface GetBookDetailResponseData {
   total: number;
 }
 
-export interface GetBookDetailSuccessResponse {
-  success: true;
-  data: GetBookDetailResponseData;
-}
+export type GetBookDetailSuccessResponse =
+  ApiResponse<GetBookDetailResponseData>;
 
 export interface GetBookDetailErrorResponse {
   success: false;
@@ -150,15 +147,9 @@ export type UpdateBookSaleParams = Partial<{
   imageUrls: string[];
 }>;
 
-export type CommonBookSaleResponse = {
-  success: boolean;
-  sale: UsedBookSale;
-};
+export type CommonBookSaleResponse = ApiResponse<UsedBookSale>;
 
-export type GetMyBookSalesResponse = {
-  success: boolean;
-  sales: UsedBookSale[];
-};
+export type GetMyBookSalesResponse = ApiResponse<UsedBookSale[]>;
 
 export interface SearchBookSalesParams {
   page?: number;

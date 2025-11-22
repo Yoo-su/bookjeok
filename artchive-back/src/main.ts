@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app/app.module';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,6 +20,8 @@ async function bootstrap() {
       'Authorization',
     ],
   });
+
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   app.enableShutdownHooks();
 

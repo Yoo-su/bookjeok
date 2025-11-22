@@ -49,10 +49,27 @@ const processQueue = (
   failedQueue = [];
 };
 
+const commonResponseInterceptor = (response: AxiosResponse): AxiosResponse => {
+  if (
+    response.data &&
+    response.data.success === true &&
+    response.data.data !== undefined
+  ) {
+    const unwrappedData = response.data.data;
+    if (
+      typeof unwrappedData === "object" &&
+      unwrappedData !== null &&
+      !Array.isArray(unwrappedData)
+    ) {
+      unwrappedData.success = true;
+    }
+    response.data = unwrappedData;
+  }
+  return response;
+};
+
 privateAxios.interceptors.response.use(
-  (response: AxiosResponse): AxiosResponse => {
-    return response;
-  },
+  commonResponseInterceptor,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
@@ -67,7 +84,10 @@ privateAxios.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(() => privateAxios(originalRequest))
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return privateAxios(originalRequest);
+          })
           .catch((err) => Promise.reject(err));
       }
 
@@ -80,6 +100,7 @@ privateAxios.interceptors.response.use(
       }
 
       try {
+        console.log("Attempting to refresh token...");
         const { data } = await publicAxios.post(
           `/auth/refresh`,
           {},
@@ -89,9 +110,16 @@ privateAxios.interceptors.response.use(
             },
           }
         );
+        console.log("Refresh response data:", data);
 
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
           data;
+
+        if (!newAccessToken) {
+          console.error("New access token is missing!");
+          throw new Error("Failed to retrieve new access token");
+        }
+
         useAuthStore.getState().setTokens({
           accessToken: newAccessToken,
           refreshToken: newRefreshToken,
@@ -101,6 +129,7 @@ privateAxios.interceptors.response.use(
         processQueue(null, newAccessToken);
         return privateAxios(originalRequest);
       } catch (refreshError) {
+        console.error("Refresh failed:", refreshError);
         processQueue(refreshError as AxiosError, null);
         useAuthStore.getState().clearAuth();
         location.reload();
@@ -117,3 +146,6 @@ privateAxios.interceptors.response.use(
 export const internalAxios = axios.create({
   baseURL: "/api",
 });
+
+publicAxios.interceptors.response.use(commonResponseInterceptor);
+internalAxios.interceptors.response.use(commonResponseInterceptor);

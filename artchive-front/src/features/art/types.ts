@@ -1,3 +1,5 @@
+import { ApiResponse } from "@/shared/types/api";
+
 export type Genre =
   | "AAAA" // 연극
   | "BBBC" // 무용(서양/한국무용)
@@ -89,11 +91,7 @@ export interface ArtDetailItem {
   relates?: Relates; // 관련 정보
 }
 
-export interface GetArtDetailResponse {
-  success: boolean;
-  data?: ArtDetailItem;
-  message?: string;
-}
+export type GetArtDetailResponse = ApiResponse<ArtDetailItem>;
 
 export interface GetArtListParams {
   cpage?: string; // 시작페이지 번호
@@ -117,10 +115,7 @@ export interface ApiResponseParams {
  * @description API 성공 응답 타입
  * API가 성공적으로 데이터를 반환할 때의 구조를 정의합니다.
  */
-export interface ArtListSuccessResponse {
-  success: true;
-  data: ArtItem[];
-}
+export type ArtListSuccessResponse = ArtItem[];
 
 /**
  * @description API 실패 응답 타입

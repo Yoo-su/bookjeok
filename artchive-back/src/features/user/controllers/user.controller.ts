@@ -16,20 +16,14 @@ export class UserController {
   async getMySales(@CurrentUser() user: User) {
     const userId = user.id;
     const sales = await this.userService.findMySales(userId);
-    return {
-      success: true,
-      sales: sales,
-    };
+    return sales;
   }
 
   @Get('stats')
   @UseGuards(AuthGuard('jwt'))
   async getStats(@CurrentUser() user: User) {
     const stats = await this.userService.getUserStats(user.id);
-    return {
-      success: true,
-      stats,
-    };
+    return stats;
   }
 
   @Get('profile')
@@ -46,7 +40,6 @@ export class UserController {
   async withdraw(@CurrentUser() user: User) {
     await this.userService.withdraw(user.id);
     return {
-      success: true,
       message: '회원 탈퇴가 완료되었습니다.',
     };
   }

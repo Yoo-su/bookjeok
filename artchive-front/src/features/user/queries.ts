@@ -3,14 +3,15 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
-import { privateAxios } from "@/shared/libs/axios";
+
+import { getUserStats } from "./apis";
 
 export interface UserStats {
   salesCount: number;
   salesStatusCounts: {
-    ON_SALE?: number;
+    FOR_SALE?: number;
     RESERVED?: number;
-    SOLD_OUT?: number;
+    SOLD?: number;
     WITHDRAWN?: number;
   };
   chatRoomCount: number;
@@ -19,12 +20,6 @@ export interface UserStats {
 export const useMyStatsQuery = () => {
   return useQuery<UserStats>({
     queryKey: QUERY_KEYS.userKeys.stats.queryKey,
-    queryFn: async () => {
-      const response = await privateAxios.get<{
-        success: boolean;
-        stats: UserStats;
-      }>("/user/stats");
-      return response.data.stats;
-    },
+    queryFn: getUserStats,
   });
 };
