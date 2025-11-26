@@ -31,8 +31,10 @@ export const removeFromWishlist = async (
   return data;
 };
 
+import { WishlistItem } from "./types";
+
 export const getWishlist = async () => {
-  const { data } = await privateAxios.get("/user/wishlist");
+  const { data } = await privateAxios.get<WishlistItem[]>("/user/wishlist");
   return data;
 };
 

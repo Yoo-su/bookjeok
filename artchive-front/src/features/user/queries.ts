@@ -24,8 +24,10 @@ export const useMyStatsQuery = () => {
   });
 };
 
+import { WishlistItem } from "./types";
+
 export const useWishlistQuery = () => {
-  return useQuery({
+  return useQuery<WishlistItem[]>({
     queryKey: QUERY_KEYS.userKeys.wishlist.queryKey,
     queryFn: getWishlist,
   });
