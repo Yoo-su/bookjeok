@@ -38,11 +38,11 @@ export const metadata: Metadata = {
     title: "ReLeaf - 책과 지식의 선순환",
     description:
       "다양한 문화 예술 정보를 탐색하고, 중고 서적을 거래하며 지식의 가치를 발견하는 공간입니다.",
-    url: "http://releaf-hub.vercel.app", // 실제 서비스 URL (예시)
+    url: "http://releaf-hub.vercel.app",
     siteName: "ReLeaf",
     images: [
       {
-        url: "/imgs/og-image.png", // TODO: Update when image is ready
+        url: "/imgs/releaf.png",
         width: 1200,
         height: 630,
       },
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: "ReLeaf - 책과 지식의 선순환",
     description:
       "공연, 전시, 중고 서적 거래를 한 곳에서. 당신의 문화 생활을 업그레이드하세요.",
-    images: ["/imgs/og-image.png"], // 트위터 카드 이미지 경로
+    images: ["/imgs/releaf.png"],
   },
   icons: {
     icon: "/logo.svg",
