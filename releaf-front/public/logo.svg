@@ -1,31 +1,11 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="leaf_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" /> <!-- Emerald 400 -->
-      <stop offset="100%" style="stop-color:#065F46;stop-opacity:1" /> <!-- Emerald 800 -->
-    </linearGradient>
-    <filter id="soft_shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#064E3B" flood-opacity="0.2"/>
-    </filter>
-  </defs>
-
-  <!-- Concept: ReLeaf (Book + Leaf) -->
-  <!-- Two shapes resembling pages of an open book, but styled as leaves -->
-  
-  <!-- Left Leaf/Page -->
-  <path d="M256 100 C 150 100, 100 200, 100 350 C 100 400, 150 420, 256 400 Z" 
-        fill="url(#leaf_gradient)" 
-        filter="url(#soft_shadow)"
-        transform="rotate(-10 256 400)" />
-
-  <!-- Right Leaf/Page -->
-  <path d="M256 100 C 362 100, 412 200, 412 350 C 412 400, 362 420, 256 400 Z" 
-        fill="url(#leaf_gradient)" 
-        filter="url(#soft_shadow)"
-        opacity="0.9"
-        transform="rotate(10 256 400)" />
-
-  <!-- Central Spine / Stem -->
-  <path d="M256 100 L 256 420" stroke="#064E3B" stroke-width="8" stroke-linecap="round" />
-
+<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 26C12 26 8 26 4 25L4 6C8 5 12 5 16 7" stroke="#1a2a4b" stroke-width="2" fill="#e3d5b0" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M4 25L4 27C8 28 12 28 16 28" stroke="#1a2a4b" stroke-width="1" opacity="0.5" stroke-linecap="round" />
+  <path d="M7 10H13" stroke="#1a2a4b" stroke-width="1" opacity="0.3" stroke-linecap="round" />
+  <path d="M7 14H13" stroke="#1a2a4b" stroke-width="1" opacity="0.3" stroke-linecap="round" />
+  <path d="M7 18H11" stroke="#1a2a4b" stroke-width="1" opacity="0.3" stroke-linecap="round" />
+  <path d="M16 26C16 26 18 25 22 25C26 25 29 21 29 14C29 7 24 2 19 2C17 2 16 7 16 7" fill="#2b6d61" />
+  <path d="M16 7V26" stroke="#2b6d61" stroke-width="1.5" opacity="0.5" stroke-linecap="round" />
+  <path d="M16 12C19 11 22 9 24 6" stroke="white" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round" />
+  <path d="M16 18C19 17 22 15 24 13" stroke="white" stroke-opacity="0.3" stroke-width="1" stroke-linecap="round" />
 </svg>
