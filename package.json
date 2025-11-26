@@ -1,5 +1,5 @@
 {
-  "name": "artchive-monorepo",
+  "name": "releaf-monorepo",
   "private": true,
   "scripts": {
     "dev": "turbo dev",

@@ -20,21 +20,29 @@ import UserProvider from "@/shared/providers/user-provider";
 // SEO를 위한 기본 메타데이터 객체
 export const metadata: Metadata = {
   title: {
-    template: "%s | ArtChive", // 페이지별 제목이 %s 위치에 들어갑니다.
-    default: "ArtChive - 문화와 지식을 잇는 아카이브", // 기본 제목
+    template: "%s | ReLeaf", // 페이지별 제목이 %s 위치에 들어갑니다.
+    default: "ReLeaf - 책과 지식의 선순환", // 기본 제목
   },
   description:
-    "공연, 전시 정보부터 중고 서적 거래까지. ArtChive에서 당신의 문화적 경험과 지식의 선순환을 만들어보세요.",
-  keywords: ["중고서적", "공연", "전시", "문화예술", "책거래", "채팅"],
+    "공연, 전시 정보부터 중고 서적 거래까지. ReLeaf에서 당신의 문화적 경험과 지식의 선순환을 만들어보세요.",
+  keywords: [
+    "중고서적",
+    "공연",
+    "전시",
+    "문화예술",
+    "책거래",
+    "채팅",
+    "ReLeaf",
+  ],
   openGraph: {
-    title: "ArtChive - 문화와 지식을 잇는 아카이브",
+    title: "ReLeaf - 책과 지식의 선순환",
     description:
       "다양한 문화 예술 정보를 탐색하고, 중고 서적을 거래하며 지식의 가치를 발견하는 공간입니다.",
-    url: "http://artchive-hub.vercel.app", // 실제 서비스 URL
-    siteName: "ArtChive",
+    url: "http://releaf-hub.vercel.app", // 실제 서비스 URL (예시)
+    siteName: "ReLeaf",
     images: [
       {
-        url: "/imgs/artchive.png",
+        url: "/imgs/og-image.png", // TODO: Update when image is ready
         width: 1200,
         height: 630,
       },
@@ -43,10 +51,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ArtChive - 문화와 지식을 잇는 아카이브",
+    title: "ReLeaf - 책과 지식의 선순환",
     description:
       "공연, 전시, 중고 서적 거래를 한 곳에서. 당신의 문화 생활을 업그레이드하세요.",
-    images: ["/imgs/artchive.png"], // 트위터 카드 이미지 경로
+    images: ["/imgs/og-image.png"], // 트위터 카드 이미지 경로
   },
   icons: {
     icon: "/logo.svg",

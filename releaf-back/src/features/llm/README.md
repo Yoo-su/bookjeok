@@ -4,19 +4,19 @@
 
 ## 1. 주요 파일 및 역할
 
--   **`llm.controller.ts`**: `/llm` 경로의 API 엔드포인트를 정의합니다. 클라이언트로부터 책 요약 생성 요청을 받아 `LlmService`로 전달합니다.
--   **`llm.service.ts`**: AI 모델과의 상호작용을 담당하는 핵심 서비스입니다.
-    -   `@google/generative-ai` SDK를 사용하여 Gemini 모델을 초기화합니다.
-    -   `generateBookSummary()`: 요청받은 책 정보와 사전 정의된 프롬프트를 조합하여 AI 모델에 질의하고, 생성된 텍스트를 반환합니다.
--   **`dtos/book-summary.dto.ts`**: 책 요약 요청 시 클라이언트가 보내야 할 데이터 형식( `title`, `author`)을 정의하고 유효성을 검증합니다.
--   **`constants/index.ts`**: 사용할 AI 모델의 이름(`gemini-2.5-pro`)과 같은 상수를 정의합니다.
--   **`utils/get-prompt-text.ts`**: AI 모델에 보낼 프롬프트 텍스트를 생성하는 유틸리티 함수입니다. 프롬프트 내용을 한 곳에서 관리하여 일관성을 유지하고 수정을 용이하게 합니다.
+- **`llm.controller.ts`**: `/llm` 경로의 API 엔드포인트를 정의합니다. 클라이언트로부터 책 요약 생성 요청을 받아 `LlmService`로 전달합니다.
+- **`llm.service.ts`**: AI 모델과의 상호작용을 담당하는 핵심 서비스입니다.
+  - `@google/generative-ai` SDK를 사용하여 Gemini 모델을 초기화합니다.
+  - `generateBookSummary()`: 요청받은 책 정보와 사전 정의된 프롬프트를 조합하여 AI 모델에 질의하고, 생성된 텍스트를 반환합니다.
+- **`dtos/book-summary.dto.ts`**: 책 요약 요청 시 클라이언트가 보내야 할 데이터 형식( `title`, `author`)을 정의하고 유효성을 검증합니다.
+- **`constants/index.ts`**: 사용할 AI 모델의 이름(`gemini-2.5-pro`)과 같은 상수를 정의합니다.
+- **`utils/get-prompt-text.ts`**: AI 모델에 보낼 프롬프트 텍스트를 생성하는 유틸리티 함수입니다. 프롬프트 내용을 한 곳에서 관리하여 일관성을 유지하고 수정을 용이하게 합니다.
 
 ## 2. API 엔드포인트
 
-| HTTP Method | 경로 (`/llm/...`) | 설명                                 | 인증 필요 |
-| :---------- | :---------------- | :----------------------------------- | :-------- |
-| `POST`      | `/book-summary`   | AI를 이용해 책 요약 및 분석을 생성합니다. | ❌         |
+| HTTP Method | 경로 (`/llm/...`) | 설명                                      | 인증 필요 |
+| :---------- | :---------------- | :---------------------------------------- | :-------- |
+| `POST`      | `/book-summary`   | AI를 이용해 책 요약 및 분석을 생성합니다. | ❌        |
 
 ## 3. 핵심 로직 흐름
 
@@ -27,18 +27,18 @@
 ```mermaid
 sequenceDiagram
     participant C as 클라이언트
-    participant S as Artchive 서버
+    participant S as Releaf 서버
     participant AI as Google Gemini AI
 
     C->>S: 1. POST /llm/book-summary ({ title, author })
-    
+
     S->>S: 2. [LlmController] getBookSummary() 호출
     S->>S: 3. [LlmService] generateBookSummary(title, author) 호출
-    
+
     S->>S: 4. [getPromptText] 프롬프트 생성
     S->>AI: 5. 생성된 프롬프트로 generateContent() API 호출
     AI-->>S: 6. 요약 텍스트 생성 및 응답
-    
+
     S-->>C: 7. 200 OK 응답 (생성된 요약 텍스트 포함)
 ```
 

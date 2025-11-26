@@ -1,6 +1,6 @@
-# 🛠️ ArtChive Backend
+# 🛠️ Releaf Backend
 
-ArtChive의 백엔드 서버는 **NestJS**를 기반으로 구축되었으며, 안정적인 데이터 관리와 실시간 통신, 그리고 AI 기능을 제공합니다.
+Releaf의 백엔드 서버는 **NestJS**를 기반으로 구축되었으며, 안정적인 데이터 관리와 실시간 통신, 그리고 AI 기능을 제공합니다.
 소셜 로그인부터 중고 서적 거래, 실시간 채팅, 그리고 LLM 기반 도서 요약까지 다양한 기능을 지원합니다.
 
 ## 주요 기능
@@ -80,15 +80,15 @@ src
 
 ## 🛠️ 사용 기술 (Tech Stack)
 
-| Category | Technology | Description |
-| --- | --- | --- |
-| **Framework** | ![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white) | 모듈형 아키텍처를 제공하는 Node.js 프레임워크 |
-| **Language** | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) | 정적 타입 시스템을 통한 안정성 확보 |
-| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white) | 신뢰성 높은 관계형 데이터베이스 |
-| **ORM** | ![TypeORM](https://img.shields.io/badge/TypeORM-FE0C2C?logo=typeorm&logoColor=white) | 객체와 관계형 데이터베이스 간의 매핑 |
-| **Real-time** | ![Socket.io](https://img.shields.io/badge/Socket.io-010101?logo=socketdotio&logoColor=white) | 실시간 양방향 통신 (채팅) |
-| **AI** | ![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?logo=google&logoColor=white) | 도서 요약 및 추천을 위한 LLM |
-| **Docs** | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black) | API 문서 자동화 |
+| Category      | Technology                                                                                      | Description                                   |
+| ------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Framework** | ![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)               | 모듈형 아키텍처를 제공하는 Node.js 프레임워크 |
+| **Language**  | ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)   | 정적 타입 시스템을 통한 안정성 확보           |
+| **Database**  | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)   | 신뢰성 높은 관계형 데이터베이스               |
+| **ORM**       | ![TypeORM](https://img.shields.io/badge/TypeORM-FE0C2C?logo=typeorm&logoColor=white)            | 객체와 관계형 데이터베이스 간의 매핑          |
+| **Real-time** | ![Socket.io](https://img.shields.io/badge/Socket.io-010101?logo=socketdotio&logoColor=white)    | 실시간 양방향 통신 (채팅)                     |
+| **AI**        | ![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?logo=google&logoColor=white) | 도서 요약 및 추천을 위한 LLM                  |
+| **Docs**      | ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)            | API 문서 자동화                               |
 
 ## 시작하기
 
@@ -101,8 +101,8 @@ src
 ### 1. 프로젝트 클론 및 의존성 설치
 
 ```bash
-$ git clone https://github.com/your-repository/artchive-back.git
-$ cd artchive-back
+$ git clone https://github.com/your-repository/releaf-back.git
+$ cd releaf-back
 $ npm install
 ```
 
@@ -122,7 +122,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=your_db_user
 DB_PASSWORD=your_db_password
-DB_DATABASE=artchive
+DB_DATABASE=releaf
 
 # JWT
 JWT_SECRET=your_jwt_secret
@@ -163,5 +163,3 @@ $ npm run test
 # e2e 테스트 실행
 $ npm run test:e2e
 ```
-
-

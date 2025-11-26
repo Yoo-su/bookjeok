@@ -16,7 +16,7 @@ export const DefaultFooter = () => {
             className="flex items-center gap-2 text-lg font-bold text-gray-700 transition-colors hover:text-gray-900"
           >
             <BookHeart className="h-6 w-6 text-emerald-600" />
-            <span>ArtChive</span>
+            <span>ReLeaf</span>
           </Link>
         </div>
 
@@ -25,7 +25,7 @@ export const DefaultFooter = () => {
         {/* 하단 섹션: 저작권 및 소셜 링크 */}
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-gray-500">
-            © {currentYear} ArtChive. All Rights Reserved.
+            © {currentYear} ReLeaf. All Rights Reserved.
           </p>
           <div className="flex items-center gap-4">
             <a

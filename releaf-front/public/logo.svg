@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="leaf_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34D399;stop-opacity:1" /> <!-- Emerald 400 -->
+      <stop offset="100%" style="stop-color:#065F46;stop-opacity:1" /> <!-- Emerald 800 -->
+    </linearGradient>
+    <filter id="soft_shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#064E3B" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Concept: ReLeaf (Book + Leaf) -->
+  <!-- Two shapes resembling pages of an open book, but styled as leaves -->
+  
+  <!-- Left Leaf/Page -->
+  <path d="M256 100 C 150 100, 100 200, 100 350 C 100 400, 150 420, 256 400 Z" 
+        fill="url(#leaf_gradient)" 
+        filter="url(#soft_shadow)"
+        transform="rotate(-10 256 400)" />
+
+  <!-- Right Leaf/Page -->
+  <path d="M256 100 C 362 100, 412 200, 412 350 C 412 400, 362 420, 256 400 Z" 
+        fill="url(#leaf_gradient)" 
+        filter="url(#soft_shadow)"
+        opacity="0.9"
+        transform="rotate(10 256 400)" />
+
+  <!-- Central Spine / Stem -->
+  <path d="M256 100 L 256 420" stroke="#064E3B" stroke-width="8" stroke-linecap="round" />
+
+</svg>
