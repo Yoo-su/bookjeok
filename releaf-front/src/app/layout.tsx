@@ -1,10 +1,5 @@
 import "@/styles/globals.css";
-import "swiper/css";
-import "swiper/css/scrollbar";
-import "swiper/css/autoplay";
-import "swiper/css/effect-coverflow";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
+import "@/styles/swiper.css";
 
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";

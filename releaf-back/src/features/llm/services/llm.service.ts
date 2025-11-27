@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { MODEL_NAME } from '../constants';
+import { BookSummaryResponseDto } from '../dtos/book-summary-response.dto';
 import { getPromptText } from '../utils/get-prompt-text';
 
 @Injectable()
@@ -24,14 +25,27 @@ export class LlmService {
    * @param author - 저자
    * @returns 생성된 요약 텍스트
    */
-  async generateBookSummary(title: string, author: string): Promise<string> {
+  async generateBookSummary(
+    title: string,
+    author: string,
+    description?: string,
+  ): Promise<BookSummaryResponseDto> {
     try {
-      // LLM에게 보낼 프롬프트를 구체적으로 작성합니다.
-      const prompt = getPromptText(title, author);
+      const prompt = getPromptText(title, author, description);
 
       const result = await this.model.generateContent(prompt);
       const response = result.response;
-      return response.text();
+      const text = response.text();
+
+      // JSON 파싱 시도
+      try {
+        // 마크다운 코드 블록 제거 (```json ... ```)
+        const cleanedText = text.replace(/```json\n|\n```/g, '').trim();
+        return JSON.parse(cleanedText) as BookSummaryResponseDto;
+      } catch (e) {
+        console.warn('JSON 파싱 실패, 원본 텍스트 반환', e);
+        return { summary: text };
+      }
     } catch (error) {
       console.error('Gemini API 호출에 실패했습니다:', error);
       throw new InternalServerErrorException(

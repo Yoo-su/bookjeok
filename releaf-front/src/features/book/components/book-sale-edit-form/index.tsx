@@ -1,10 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 
 import { Button } from "@/shared/components/shadcn/button";
 import {
@@ -23,101 +20,30 @@ import {
   FormMessage,
 } from "@/shared/components/shadcn/form";
 import { Input } from "@/shared/components/shadcn/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/shadcn/select";
 import { Textarea } from "@/shared/components/shadcn/textarea";
-import { KOREA_DISTRICTS } from "@/shared/constants/korea-districts";
+import { ImageUploader } from "@/shared/components/ui/image-uploader";
+import { LocationSelector } from "@/shared/components/ui/location-selector";
 
-import { useUpdateBookSaleMutation } from "../../mutations";
-import { UpdateBookSaleParams, UsedBookSale } from "../../types";
-import { editFormSchema, EditFormValues } from "./schema";
+import { UsedBookSale } from "../../types";
+import { useBookSaleEditForm } from "./use-book-sale-edit-form";
 
 interface BookSaleEditFormProps {
   sale: UsedBookSale;
 }
 
 export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
-  const { mutate, isPending } = useUpdateBookSaleMutation();
+  const {
+    form,
+    existingImages,
+    newImagePreviews,
+    isPending,
+    handleImagesAdd,
+    handleExistingImageRemove,
+    handleNewImageRemove,
+    onSubmit,
+  } = useBookSaleEditForm({ sale });
 
-  const [existingImages, setExistingImages] = useState<string[]>(
-    sale.imageUrls
-  );
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
-  const [deletedImages, setDeletedImages] = useState<string[]>([]);
-
-  const form = useForm<EditFormValues>({
-    resolver: zodResolver(editFormSchema),
-    defaultValues: {
-      title: sale.title,
-      price: String(sale.price),
-      city: sale.city,
-      district: sale.district,
-      content: sale.content,
-    },
-    mode: "onBlur",
-  });
-
-  const selectedCity = form.watch("city");
-
-  useEffect(() => {
-    const dataTransfer = new DataTransfer();
-    newImageFiles.forEach((file) => dataTransfer.items.add(file));
-    form.setValue("images", dataTransfer.files, { shouldValidate: true });
-  }, [newImageFiles, form]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const totalImages =
-      existingImages.length + newImageFiles.length + files.length;
-
-    if (totalImages > 5) {
-      alert("이미지는 최대 5개까지 첨부할 수 있습니다.");
-      return;
-    }
-    setNewImageFiles((prev) => [...prev, ...files]);
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setNewImagePreviews((prev) => [...prev, ...previews]);
-  };
-
-  const handleRemoveExistingImage = (urlToRemove: string) => {
-    setExistingImages((prev) => prev.filter((url) => url !== urlToRemove));
-    setDeletedImages((prev) => [...prev, urlToRemove]);
-  };
-
-  const handleRemoveNewImage = (indexToRemove: number) => {
-    setNewImageFiles((prev) => prev.filter((_, i) => i !== indexToRemove));
-    setNewImagePreviews((prev) => prev.filter((_, i) => i !== indexToRemove));
-  };
-
-  const onSubmit = (data: EditFormValues) => {
-    // ⭐️ Zod 스키마 대신 여기서 직접 이미지 개수를 검증합니다.
-    if (existingImages.length + newImageFiles.length === 0) {
-      form.setError("images", { message: "이미지를 1개 이상 등록해주세요." });
-      return;
-    }
-
-    const payload: UpdateBookSaleParams = {
-      title: data.title,
-      price: Number(data.price),
-      city: data.city,
-      district: data.district,
-      content: data.content,
-      imageUrls: existingImages,
-    };
-
-    mutate({
-      saleId: sale.id,
-      payload,
-      newImageFiles,
-      deletedImageUrls: deletedImages,
-    });
-  };
+  const totalImages = existingImages.length + newImagePreviews.length;
 
   return (
     <Card className="w-full">
@@ -140,7 +66,7 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
           </div>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6">
             <FormField
               control={form.control}
               name="title"
@@ -176,142 +102,53 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>지역 (시/도)</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.resetField("district");
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="시/도 선택" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.keys(KOREA_DISTRICTS).map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {" "}
-                            {city}{" "}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="h-5">
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="district"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>지역 (시/군/구)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                      disabled={
-                        !selectedCity ||
-                        KOREA_DISTRICTS[selectedCity]?.length === 0
-                      }
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="시/군/구 선택" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {selectedCity &&
-                          KOREA_DISTRICTS[selectedCity].map((district) => (
-                            <SelectItem key={district} value={district}>
-                              {" "}
-                              {district}{" "}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="h-5">
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
+
+              <div className="md:col-span-2">
+                <LocationSelector
+                  city={form.watch("city")}
+                  district={form.watch("district")}
+                  onCityChange={(value) => {
+                    form.setValue("city", value, { shouldValidate: true });
+                    form.setValue("district", "", { shouldValidate: true });
+                  }}
+                  onDistrictChange={(value) => {
+                    form.setValue("district", value, { shouldValidate: true });
+                  }}
+                />
+                <div className="flex gap-4 mt-2">
+                  <div className="flex-1 h-5">
+                    {form.formState.errors.city && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.city.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex-1 h-5">
+                    {form.formState.errors.district && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.district.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
+
             <FormField
               control={form.control}
               name="images"
               render={() => (
                 <FormItem>
-                  <FormLabel>
-                    책 상태 이미지 (
-                    {existingImages.length + newImageFiles.length} / 5)
-                  </FormLabel>
+                  <FormLabel>{`책 상태 이미지 (${totalImages} / 5)`}</FormLabel>
                   <FormControl>
-                    <div className="flex flex-wrap items-center gap-4">
-                      {existingImages.map((url) => (
-                        <div key={url} className="relative">
-                          <Image
-                            src={url}
-                            alt="기존 이미지"
-                            width={96}
-                            height={96}
-                            className="object-cover w-24 h-24 rounded-lg shadow"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveExistingImage(url)}
-                            className="absolute top-[-5px] right-[-5px] p-0.5 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                      {newImagePreviews.map((src, index) => (
-                        <div key={src} className="relative">
-                          <Image
-                            src={src}
-                            alt={`새 이미지 ${index}`}
-                            width={96}
-                            height={96}
-                            className="object-cover w-24 h-24 rounded-lg shadow"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveNewImage(index)}
-                            className="absolute top-[-5px] right-[-5px] p-0.5 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                      {existingImages.length + newImageFiles.length < 5 && (
-                        <label
-                          htmlFor="image-upload"
-                          className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                        >
-                          <ImagePlus className="w-8 h-8 text-gray-400" />
-                          <span className="mt-1 text-xs text-gray-500">
-                            이미지 추가
-                          </span>
-                        </label>
-                      )}
-                      <Input
-                        id="image-upload"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                      />
-                    </div>
+                    <ImageUploader
+                      previews={newImagePreviews}
+                      existingImages={existingImages}
+                      onImagesAdd={handleImagesAdd}
+                      onImageRemove={handleNewImageRemove}
+                      onExistingImageRemove={handleExistingImageRemove}
+                      maxFiles={5}
+                    />
                   </FormControl>
                   <div className="h-5">
                     <FormMessage />
@@ -319,6 +156,7 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="content"

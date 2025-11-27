@@ -1,4 +1,3 @@
-// src/app/api/art-detail/[id]/route.ts
 import { XMLParser } from "fast-xml-parser";
 import { NextRequest } from "next/server";
 

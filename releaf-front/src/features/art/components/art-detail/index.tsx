@@ -1,4 +1,3 @@
-// src/features/art/components/art-detail/index.tsx
 "use client";
 
 import { Calendar, Clock, MapPin, Ticket, Users } from "lucide-react";

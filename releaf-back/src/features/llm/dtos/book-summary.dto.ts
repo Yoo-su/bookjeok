@@ -8,4 +8,7 @@ export class BookSummaryDto {
   @IsString()
   @IsNotEmpty({ message: '저자 정보는 필수 항목입니다.' })
   author: string;
+
+  @IsString()
+  description?: string;
 }

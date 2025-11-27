@@ -156,13 +156,14 @@ export const useRecentBookSalesQuery = () => {
 export const useBookSummaryQuery = (
   title: string,
   author: string,
-  enabled: boolean
+  enabled: boolean,
+  description?: string
 ) => {
   return useQuery({
     // title과 author를 queryKey에 포함시켜 책마다 캐시되도록 함
     queryKey: ["bookSummary", title, author],
     queryFn: async () => {
-      const result = await getBookSummary(title, author);
+      const result = await getBookSummary(title, author, description);
       if (!result.success) {
         throw new Error(result.message || "요약 정보를 가져오지 못했습니다.");
       }

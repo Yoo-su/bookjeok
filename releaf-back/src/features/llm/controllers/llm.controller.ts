@@ -14,8 +14,12 @@ export class LlmController {
   async getBookSummary(
     @Body(new ValidationPipe()) bookSummaryDto: BookSummaryDto,
   ) {
-    const { title, author } = bookSummaryDto;
-    const summary = await this.llmService.generateBookSummary(title, author);
+    const { title, author, description } = bookSummaryDto;
+    const summary = await this.llmService.generateBookSummary(
+      title,
+      author,
+      description,
+    );
     return summary;
   }
 }

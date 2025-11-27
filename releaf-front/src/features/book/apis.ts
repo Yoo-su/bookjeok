@@ -174,10 +174,15 @@ export const getRecentBookSales = async (): Promise<UsedBookSale[]> => {
   return data;
 };
 
-export const getBookSummary = async (title: string, author: string) => {
+export const getBookSummary = async (
+  title: string,
+  author: string,
+  description?: string
+) => {
   const { data } = await privateAxios.post(API_PATHS.book.summary, {
     title,
     author,
+    description,
   });
   return data;
 };

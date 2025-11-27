@@ -1,10 +1,7 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ImagePlus, Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 
 import { Button } from "@/shared/components/shadcn/button";
 import {
@@ -23,96 +20,26 @@ import {
   FormMessage,
 } from "@/shared/components/shadcn/form";
 import { Input } from "@/shared/components/shadcn/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/shadcn/select";
 import { Textarea } from "@/shared/components/shadcn/textarea";
-import { KOREA_DISTRICTS } from "@/shared/constants/korea-districts";
+import { ImageUploader } from "@/shared/components/ui/image-uploader";
+import { LocationSelector } from "@/shared/components/ui/location-selector";
 
-import { useCreateBookSaleMutation } from "../../mutations";
-import { BookInfo, CreateBookSaleParams } from "../../types";
-import { sellFormSchema, SellFormValues } from "./schema";
+import { BookInfo } from "../../types";
+import { useBookSaleForm } from "./use-book-sale-form";
 
 interface BookSaleFormProps {
   bookInfo: BookInfo;
 }
 
 export const BookSaleForm = ({ bookInfo }: BookSaleFormProps) => {
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-
-  const { mutate, isPending } = useCreateBookSaleMutation();
-
-  const form = useForm<SellFormValues>({
-    resolver: zodResolver(sellFormSchema),
-    defaultValues: {
-      title: "",
-      price: "",
-      content: "",
-      city: "",
-      district: "",
-    },
-    mode: "onBlur",
-  });
-
-  const selectedCity = form.watch("city");
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFiles = e.target.files;
-    if (!newFiles) return;
-    const currentFiles = Array.from(form.getValues("images") || []);
-    const combinedFiles = [...currentFiles, ...Array.from(newFiles)];
-    if (combinedFiles.length > 5) {
-      alert("이미지는 최대 5개까지 첨부할 수 있습니다.");
-      return;
-    }
-    const dataTransfer = new DataTransfer();
-    combinedFiles.forEach((file) => dataTransfer.items.add(file));
-    form.setValue("images", dataTransfer.files, { shouldValidate: true });
-    const newPreviews = combinedFiles.map((file) => URL.createObjectURL(file));
-    setImagePreviews(newPreviews);
-  };
-
-  const removeImage = (indexToRemove: number) => {
-    const updatedPreviews = imagePreviews.filter(
-      (_, index) => index !== indexToRemove
-    );
-    setImagePreviews(updatedPreviews);
-
-    const currentFiles = Array.from(form.getValues("images") || []);
-    const updatedFiles = currentFiles.filter(
-      (_, index) => index !== indexToRemove
-    );
-    const dataTransfer = new DataTransfer();
-    updatedFiles.forEach((file) => dataTransfer.items.add(file));
-    form.setValue("images", dataTransfer.files, { shouldValidate: true });
-  };
-
-  const onSubmit = (data: SellFormValues) => {
-    const imageFiles = Array.from(data.images);
-
-    const payload: Omit<CreateBookSaleParams, "imageUrls"> = {
-      title: data.title,
-      price: data.price,
-      city: data.city,
-      district: data.district,
-      content: data.content,
-      book: {
-        isbn: bookInfo.isbn,
-        title: bookInfo.title,
-        description: bookInfo.description,
-        author: bookInfo.author,
-        publisher: bookInfo.publisher,
-        image: bookInfo.image,
-        pubdate: bookInfo.pubdate,
-      },
-    };
-
-    mutate({ imageFiles, payload });
-  };
+  const {
+    form,
+    imagePreviews,
+    isPending,
+    handleImagesAdd,
+    handleImageRemove,
+    onSubmit,
+  } = useBookSaleForm({ bookInfo });
 
   return (
     <Card className="w-full">
@@ -137,7 +64,7 @@ export const BookSaleForm = ({ bookInfo }: BookSaleFormProps) => {
           </div>
         </div>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6">
             <FormField
               control={form.control}
               name="title"
@@ -174,72 +101,36 @@ export const BookSaleForm = ({ bookInfo }: BookSaleFormProps) => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>지역 (시/도)</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.resetField("district");
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="시/도 선택" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.keys(KOREA_DISTRICTS).map((city) => (
-                          <SelectItem key={city} value={city}>
-                            {city}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="h-5">
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="district"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>지역 (시/군/구)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={
-                        !selectedCity ||
-                        KOREA_DISTRICTS[selectedCity]?.length === 0
-                      }
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="시/군/구 선택" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {selectedCity &&
-                          KOREA_DISTRICTS[selectedCity].map((district) => (
-                            <SelectItem key={district} value={district}>
-                              {district}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="h-5">
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
+
+              <div className="md:col-span-2">
+                <LocationSelector
+                  city={form.watch("city")}
+                  district={form.watch("district")}
+                  onCityChange={(value) => {
+                    form.setValue("city", value, { shouldValidate: true });
+                    form.setValue("district", "", { shouldValidate: true });
+                  }}
+                  onDistrictChange={(value) => {
+                    form.setValue("district", value, { shouldValidate: true });
+                  }}
+                />
+                <div className="flex gap-4 mt-2">
+                  <div className="flex-1 h-5">
+                    {form.formState.errors.city && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.city.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex-1 h-5">
+                    {form.formState.errors.district && (
+                      <p className="text-sm font-medium text-destructive">
+                        {form.formState.errors.district.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <FormField
@@ -251,46 +142,12 @@ export const BookSaleForm = ({ bookInfo }: BookSaleFormProps) => {
                     {`책 상태 이미지 (${imagePreviews.length} / 5)`}
                   </FormLabel>
                   <FormControl>
-                    <div className="flex flex-wrap items-center gap-4">
-                      {imagePreviews.map((src, index) => (
-                        <div key={src} className="relative">
-                          <Image
-                            src={src}
-                            alt={`Preview ${index}`}
-                            width={96}
-                            height={96}
-                            className="object-cover w-24 h-24 rounded-lg shadow"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            aria-label={`Preview ${index} 삭제`}
-                            className="absolute top-[-5px] right-[-5px] p-0.5 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                      {imagePreviews.length < 5 && (
-                        <label
-                          htmlFor="image-upload"
-                          className="flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                        >
-                          <ImagePlus className="w-8 h-8 text-gray-400" />
-                          <span className="mt-1 text-xs text-gray-500">
-                            이미지 추가
-                          </span>
-                        </label>
-                      )}
-                      <Input
-                        id="image-upload"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                      />
-                    </div>
+                    <ImageUploader
+                      previews={imagePreviews}
+                      onImagesAdd={handleImagesAdd}
+                      onImageRemove={handleImageRemove}
+                      maxFiles={5}
+                    />
                   </FormControl>
                   <div className="h-5">
                     <FormMessage />
