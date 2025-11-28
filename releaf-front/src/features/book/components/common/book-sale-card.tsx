@@ -15,6 +15,7 @@ import {
   CardHeader,
 } from "@/shared/components/shadcn/card";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
+import { cn } from "@/shared/utils/cn";
 import { formatPostDate } from "@/shared/utils/date";
 
 import { UsedBookSale } from "../../types";
@@ -22,14 +23,33 @@ import { SaleStatusBadge } from "./sale-status-badge";
 
 interface SaleCardProps {
   sale: UsedBookSale;
-  idx: number;
+  idx?: number;
+  className?: string;
+  href?: string;
+  showEffect?: boolean;
 }
-export const BookSaleCard = ({ sale, idx }: SaleCardProps) => {
+
+const PLACEHOLDER_IMAGE =
+  "https://placehold.co/250x192/e2e8f0/64748b?text=Image";
+
+export const BookSaleCard = ({
+  sale,
+  idx = 0,
+  className,
+  href,
+  showEffect = true,
+}: SaleCardProps) => {
   const displayDate =
     sale.updatedAt > sale.createdAt ? sale.updatedAt : sale.createdAt;
 
+  const linkHref = href || `/book/sale/${sale.id}`;
+
   return (
-    <Link href={`/book/sale/${sale.id}`} passHref>
+    <Link
+      href={linkHref}
+      passHref
+      className={cn("block h-full w-full", className)}
+    >
       <Card className="relative group h-full w-full overflow-hidden duration-300 select-none">
         <CardContent className="p-0">
           <div className="relative h-48 w-full overflow-hidden">
@@ -40,8 +60,7 @@ export const BookSaleCard = ({ sale, idx }: SaleCardProps) => {
               sizes="250px"
               className="object-cover transition-transform duration-300 group-hover:scale-110"
               onError={(e) => {
-                e.currentTarget.src =
-                  "https://placehold.co/250x192/e2e8f0/64748b?text=Image";
+                e.currentTarget.src = PLACEHOLDER_IMAGE;
               }}
             />
             <SaleStatusBadge
@@ -79,7 +98,7 @@ export const BookSaleCard = ({ sale, idx }: SaleCardProps) => {
             </div>
           </div>
         </CardContent>
-        <BorderBeam duration={8} delay={idx * 10} />
+        {showEffect && <BorderBeam duration={8} delay={idx * 10} />}
       </Card>
     </Link>
   );
