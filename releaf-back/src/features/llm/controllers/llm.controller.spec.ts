@@ -9,7 +9,14 @@ describe('LlmController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [LlmController],
-      providers: [LlmService],
+      providers: [
+        {
+          provide: LlmService,
+          useValue: {
+            generateBookSummary: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<LlmController>(LlmController);

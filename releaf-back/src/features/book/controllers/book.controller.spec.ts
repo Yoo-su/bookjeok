@@ -9,7 +9,21 @@ describe('BookController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BookController],
-      providers: [BookService],
+      providers: [
+        {
+          provide: BookService,
+          useValue: {
+            createUsedBookSale: jest.fn(),
+            searchSales: jest.fn(),
+            updateSaleStatus: jest.fn(),
+            findRecentSales: jest.fn(),
+            findSaleById: jest.fn(),
+            findSalesByIsbn: jest.fn(),
+            updateUsedBookSale: jest.fn(),
+            deleteUsedBookSale: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<BookController>(BookController);
