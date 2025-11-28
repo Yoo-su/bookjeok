@@ -1,3 +1,4 @@
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { DataSource } from 'typeorm';
 import { NestFactory } from '@nestjs/core';
@@ -24,6 +25,15 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
 
   app.enableShutdownHooks();
+
+  const config = new DocumentBuilder()
+    .setTitle('Releaf API')
+    .setDescription('Releaf API 문서')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   const dataSource = app.get(DataSource);
 
