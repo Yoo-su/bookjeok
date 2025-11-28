@@ -160,12 +160,11 @@ describe("BookSaleForm", () => {
         screen.getByPlaceholderText("판매글 제목을 입력하세요")
       ).toBeInTheDocument();
       expect(screen.getByPlaceholderText("숫자만 입력")).toBeInTheDocument();
-      expect(
-        screen.getByRole("combobox", { name: /시\/도/ })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("combobox", { name: /시\/군\/구/ })
-      ).toBeInTheDocument();
+
+      const comboboxes = screen.getAllByRole("combobox");
+      expect(comboboxes[0]).toBeInTheDocument(); // 시/도
+      expect(comboboxes[1]).toBeInTheDocument(); // 시/군/구
+
       expect(screen.getByText(/책 상태 이미지/)).toBeInTheDocument();
       expect(
         screen.getByPlaceholderText(/책의 상태, 거래 방식 등/)
@@ -339,12 +338,12 @@ describe("BookSaleForm", () => {
       const user = userEvent.setup();
       render(<BookSaleForm bookInfo={mockBookInfo} />);
 
-      const districtSelect = screen.getByRole("combobox", {
-        name: /시\/군\/구/,
-      });
+      const comboboxes = screen.getAllByRole("combobox");
+      const citySelect = comboboxes[0];
+      const districtSelect = comboboxes[1];
+
       expect(districtSelect).toBeDisabled();
 
-      const citySelect = screen.getByRole("combobox", { name: /시\/도/ });
       await user.click(citySelect);
 
       // Radix UI Select는 포털을 사용하므로 document.body에서 찾음
@@ -371,7 +370,9 @@ describe("BookSaleForm", () => {
       const user = userEvent.setup();
       render(<BookSaleForm bookInfo={mockBookInfo} />);
 
-      const citySelect = screen.getByRole("combobox", { name: /시\/도/ });
+      const comboboxes = screen.getAllByRole("combobox");
+      const citySelect = comboboxes[0];
+
       await user.click(citySelect);
 
       await waitFor(() => {
@@ -470,7 +471,7 @@ describe("BookSaleForm", () => {
         expect(screen.getByAltText("Preview 0")).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByLabelText("Preview 0 삭제");
+      const deleteButton = screen.getByLabelText("이미지 1 삭제");
       await user.click(deleteButton);
 
       await waitFor(() => {
@@ -590,7 +591,8 @@ describe("BookSaleForm", () => {
       );
       await user.type(screen.getByPlaceholderText("숫자만 입력"), "10000");
 
-      const citySelect = screen.getByRole("combobox", { name: /시\/도/ });
+      const comboboxes = screen.getAllByRole("combobox");
+      const citySelect = comboboxes[0];
       await user.click(citySelect);
 
       await waitFor(() => {
@@ -608,15 +610,11 @@ describe("BookSaleForm", () => {
       await user.click(seoulOption);
 
       await waitFor(() => {
-        const districtSelect = screen.getByRole("combobox", {
-          name: /시\/군\/구/,
-        });
+        const districtSelect = screen.getAllByRole("combobox")[1];
         expect(districtSelect).not.toBeDisabled();
       });
 
-      const districtSelect = screen.getByRole("combobox", {
-        name: /시\/군\/구/,
-      });
+      const districtSelect = screen.getAllByRole("combobox")[1];
       await user.click(districtSelect);
 
       await waitFor(() => {

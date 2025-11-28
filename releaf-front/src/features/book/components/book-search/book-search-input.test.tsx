@@ -4,7 +4,7 @@ import { useBookSearchStore } from "../../stores/use-book-search-store";
 import { BookSearchInput } from "./book-search-input";
 
 // Zustand store mock
-jest.mock("../stores/use-book-search-store");
+jest.mock("../../stores/use-book-search-store");
 
 // lodash debounce mock
 jest.mock("lodash/debounce", () => ({
