@@ -51,7 +51,7 @@ export const MyPageView = () => {
       </Card>
 
       {/* 대시보드 통계 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">판매중</CardTitle>
@@ -122,6 +122,22 @@ export const MyPageView = () => {
             <p className="text-xs text-muted-foreground mt-1">
               활성화된 채팅방
             </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">작성한 리뷰</CardTitle>
+            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {stats?.reviewsCount || 0}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">내가 쓴 리뷰</p>
           </CardContent>
         </Card>
       </div>

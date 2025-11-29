@@ -8,4 +8,9 @@ export const PATHS = {
   ART_DETAIL: (id: string) => `/art/${id}`,
   MY_PAGE_SALES: "/my-page/sales",
   MY_PAGE_SALES_EDIT: (id: string) => `/my-page/sales/${id}/edit`,
+  REVIEWS: "/review",
+  REVIEW_WRITE: "/review/write",
+  REVIEW_DETAIL: (id: string | number) => `/review/${id}`,
+  MY_PAGE: "/my-page",
+  MY_REVIEWS: "/my-page/reviews",
 } as const;

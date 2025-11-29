@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 
-import { DefaultLayout } from "@/layouts/default-layout";
 import BookSearchView from "@/views/book-search-view";
 
 export const metadata: Metadata = {
@@ -10,9 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return (
-    <DefaultLayout>
-      <BookSearchView />
-    </DefaultLayout>
-  );
+  return <BookSearchView />;
 }

@@ -21,6 +21,8 @@ export interface BookInfo {
   description: string;
 }
 
+export type Book = BookInfo;
+
 /**
  * Book List 조회 관련 타입
  */

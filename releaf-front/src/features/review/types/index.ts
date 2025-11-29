@@ -1,0 +1,60 @@
+export interface ReviewUser {
+  id: number;
+  nickname: string;
+  profileImageUrl: string | null;
+}
+
+export interface Review {
+  id: number;
+  title: string;
+  content: string;
+  bookIsbn: string;
+  rating: number;
+  tags: string[];
+  category: string;
+  userId: number;
+  user: ReviewUser;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewFeed {
+  category: string;
+  reviews: Review[];
+}
+
+export interface GetReviewsParams {
+  page?: number;
+  limit?: number;
+  bookIsbn?: string;
+  tag?: string | null;
+  search?: string;
+  category?: string | null;
+  userId?: number;
+  enabled?: boolean;
+}
+
+export interface GetReviewsResponse {
+  reviews: Review[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ReviewFormValues {
+  title: string;
+  content: string;
+  bookIsbn: string;
+  category: string;
+  tags: string[];
+  rating: number;
+  book?: {
+    isbn: string;
+    title: string;
+    author: string;
+    publisher: string;
+    image: string;
+    description: string;
+  };
+}

@@ -1,0 +1,67 @@
+"use client";
+
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
+
+import { useAuthStore } from "@/features/auth/store";
+import { ReviewGridList } from "@/features/review/components/review-grid-list";
+import { useReviewsInfiniteQuery } from "@/features/review/queries";
+
+export default function MyReviewsPage() {
+  const user = useAuthStore((state) => state.user);
+  const router = useRouter();
+  const { ref, inView } = useInView();
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isReviewsLoading,
+  } = useReviewsInfiniteQuery({
+    userId: user?.id,
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
+    }
+  }, [user, router]);
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, fetchNextPage]);
+
+  if (isReviewsLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const reviews = data?.pages.flatMap((page) => page.reviews) || [];
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">내가 쓴 리뷰</h1>
+      <ReviewGridList
+        reviews={reviews}
+        searchQuery=""
+        category={null}
+        clearFilters={() => {}}
+        loadMoreRef={ref}
+        isFetchingNextPage={isFetchingNextPage}
+      />
+    </div>
+  );
+}

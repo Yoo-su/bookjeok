@@ -10,6 +10,8 @@ import { UsedBookSale } from '@/features/book/entities/used-book-sale.entity';
 import { Book } from '@/features/book/entities/book.entity';
 import { ChatModule } from '@/features/chat/chat.module';
 import { LlmModule } from '@/features/llm/llm.module';
+import { ReviewsModule } from '@/features/review/reviews.module';
+import { Review } from '@/features/review/entities/review.entity';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { LlmModule } from '@/features/llm/llm.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [User, Book, UsedBookSale],
+        entities: [User, Book, UsedBookSale, Review],
         synchronize: configService.get<string>('NODE_ENV') !== 'production', // 개발 환경에서만 true로 설정
         autoLoadEntities: true,
         extra: {
@@ -44,6 +46,7 @@ import { LlmModule } from '@/features/llm/llm.module';
     BookModule,
     ChatModule,
     LlmModule,
+    ReviewsModule,
   ],
   controllers: [],
   providers: [],

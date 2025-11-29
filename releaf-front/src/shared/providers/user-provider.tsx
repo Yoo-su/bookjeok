@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 
 import { getUserProfile } from "@/features/auth/apis";
 import { useAuthStore } from "@/features/auth/store";
-import { FullScreenLoader } from "@/shared/components/full-screen-loader";
+import { FullScreenLoader } from "@/shared/components/ui/full-screen-loader";
 
 interface UesrProviderProps {
   children: ReactNode;

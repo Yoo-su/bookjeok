@@ -187,4 +187,20 @@ export class BookController {
     await this.bookService.deleteUsedBookSale(id, userId);
     return;
   }
+  /**
+   * 책 제목 또는 저자로 책을 검색하는 엔드포인트
+   * @param query - 검색어
+   */
+  @Get('search')
+  @ApiOperation({
+    summary: '책 검색',
+    description: '책 제목 또는 저자로 책을 검색합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '검색된 책 목록을 반환합니다.',
+  })
+  async searchBooks(@Query('query') query: string) {
+    return await this.bookService.searchBooks(query);
+  }
 }

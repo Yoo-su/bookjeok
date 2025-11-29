@@ -80,7 +80,7 @@ export const BookSaleCard = ({
               <span>{formatPostDate(displayDate)}</span>
             </div>
             <div className="flex items-center text-xs text-gray-500 mt-1">
-              <MapPin className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" />
+              <MapPin className="w-3.5 h-3.5 mr-1.5 shrink-0" />
               <span className="truncate">
                 {sale.city} {sale.district}
               </span>

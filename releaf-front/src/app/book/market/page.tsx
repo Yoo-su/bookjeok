@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 
-import { DefaultLayout } from "@/layouts/default-layout";
 import { BookMarketView } from "@/views/book-market-view";
 
 export const metadata: Metadata = {
@@ -9,9 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function BookMarketPage() {
-  return (
-    <DefaultLayout>
-      <BookMarketView />
-    </DefaultLayout>
-  );
+  return <BookMarketView />;
 }

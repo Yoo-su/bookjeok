@@ -7,6 +7,7 @@ import { UsedBookSale } from '../book/entities/used-book-sale.entity';
 import { ChatParticipant } from '../chat/entities/chat-participant.entity';
 import { Wishlist } from './entities/wishlist.entity';
 import { Book } from '../book/entities/book.entity';
+import { Review } from '../review/entities/review.entity';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { Book } from '../book/entities/book.entity';
       ChatParticipant,
       Wishlist,
       Book,
+      Review,
     ]),
   ],
   controllers: [UserController],

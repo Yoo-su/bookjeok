@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 
-import { DefaultLayout } from "@/layouts/default-layout";
 import { MainView } from "@/views/main-view";
 
 export const metadata: Metadata = {
@@ -10,9 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function MainPage() {
-  return (
-    <DefaultLayout>
-      <MainView />
-    </DefaultLayout>
-  );
+  return <MainView />;
 }

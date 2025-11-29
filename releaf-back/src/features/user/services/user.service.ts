@@ -13,6 +13,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Wishlist } from '../entities/wishlist.entity';
 import { Book } from '@/features/book/entities/book.entity';
 import { BookInfoDto } from '@/features/book/dtos/book-info.dto';
+import { Review } from '@/features/review/entities/review.entity';
 
 @Injectable()
 export class UserService {
@@ -27,6 +28,8 @@ export class UserService {
     private readonly wishlistRepository: Repository<Wishlist>,
     @InjectRepository(Book)
     private readonly bookRepository: Repository<Book>,
+    @InjectRepository(Review)
+    private readonly reviewRepository: Repository<Review>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -86,10 +89,16 @@ export class UserService {
       where: { user: { id: userId }, isActive: true },
     });
 
+    // 3. 리뷰 통계
+    const reviewsCount = await this.reviewRepository.count({
+      where: { user: { id: userId } },
+    });
+
     return {
       salesCount,
       salesStatusCounts,
       chatRoomCount,
+      reviewsCount,
     };
   }
 

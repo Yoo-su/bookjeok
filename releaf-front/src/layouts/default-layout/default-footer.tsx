@@ -8,7 +8,7 @@ export const DefaultFooter = () => {
 
   return (
     <footer className="w-full border-t bg-gray-50">
-      <div className="mx-auto w-full max-w-3xl px-4 py-8">
+      <div className="mx-auto w-full max-w-4xl px-4 py-8">
         {/* 상단 섹션: 로고 및 네비게이션 링크 */}
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <Link

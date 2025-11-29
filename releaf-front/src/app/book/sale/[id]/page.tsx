@@ -1,5 +1,4 @@
 import { AuthGuard } from "@/features/auth/components/auth-guard";
-import { DefaultLayout } from "@/layouts/default-layout";
 import { BookSaleDetailView } from "@/views/book-sale-detail-view";
 
 export default async function Page({
@@ -11,9 +10,7 @@ export default async function Page({
 
   return (
     <AuthGuard>
-      <DefaultLayout>
-        <BookSaleDetailView saleId={id} />
-      </DefaultLayout>
+      <BookSaleDetailView saleId={id} />
     </AuthGuard>
   );
 }

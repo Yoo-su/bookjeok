@@ -15,6 +15,7 @@ export interface UserStats {
     WITHDRAWN?: number;
   };
   chatRoomCount: number;
+  reviewsCount: number;
 }
 
 export const useMyStatsQuery = () => {

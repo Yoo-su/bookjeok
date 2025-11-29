@@ -324,4 +324,21 @@ export class BookService {
       relations: ['user', 'book'], // 작성자, 책 정보 포함
     });
   }
+  /**
+   * 책 제목 또는 저자로 책을 검색합니다.
+   * @param query - 검색어
+   */
+  async searchBooks(query: string): Promise<Book[]> {
+    if (!query) {
+      return [];
+    }
+
+    return await this.bookRepository
+      .createQueryBuilder('book')
+      .where('book.title LIKE :query OR book.author LIKE :query', {
+        query: `%${query}%`,
+      })
+      .take(20) // 최대 20개까지만 조회
+      .getMany();
+  }
 }

@@ -41,7 +41,7 @@ export const WishlistList = ({ wishlist, isLoading }: WishlistListProps) => {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="flex flex-col gap-4">
       {wishlist.map((item) => (
         <WishlistItem key={item.id} item={item} />
       ))}
