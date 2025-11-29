@@ -23,6 +23,7 @@ export class CreateReviewDto {
 
   @IsArray()
   @ArrayMinSize(1)
+  @IsString({ each: true })
   tags: string[];
 
   @IsOptional()

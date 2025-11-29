@@ -1,18 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { upload } from "@vercel/blob/client";
 import { BookOpen, Loader2, Search, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { useAuthStore } from "@/features/auth/store";
 import { BookSearchModal } from "@/features/book/components/book-search-modal";
 import { Book } from "@/features/book/types";
-import { ReviewEditor } from "@/features/review/components/review-editor";
+import { reviewSchema, ReviewSchemaValues } from "@/features/review/schemas";
 import { ReviewFormValues } from "@/features/review/types";
+import { TiptapEditor } from "@/shared/components/editor/tiptap-editor";
 import { Badge } from "@/shared/components/shadcn/badge";
 import { Button } from "@/shared/components/shadcn/button";
 import {
@@ -32,17 +31,9 @@ import {
   SelectValue,
 } from "@/shared/components/shadcn/select";
 import { StarRating } from "@/shared/components/ui/star-rating";
+import { useEditorImageHandler } from "@/shared/hooks/use-editor-image-handler";
 
 import { BOOK_DOMAINS } from "../constants";
-
-const reviewSchema = z.object({
-  title: z.string().min(1, "제목을 입력해주세요."),
-  content: z.string().min(1, "내용을 입력해주세요."),
-  bookIsbn: z.string().min(1, "책을 선택해주세요."),
-  category: z.string().min(1, "카테고리를 선택해주세요."),
-  tags: z.array(z.string()).max(5, "태그는 최대 5개까지 입력 가능합니다."),
-  rating: z.number().min(0).max(5),
-});
 
 interface ReviewFormProps {
   initialData?: {
@@ -73,9 +64,12 @@ export const ReviewForm = ({
   const [isLocalSubmitting, setIsLocalSubmitting] = useState(false);
   const { user } = useAuthStore();
 
-  const imageMapRef = useRef<Map<string, File>>(new Map());
+  const { handleImageAdd, uploadImages, isUploading } = useEditorImageHandler({
+    uploadPath: (file) =>
+      `${user?.provider}-${user?.id}/review-images/${file.name}`,
+  });
 
-  const form = useForm<ReviewFormValues>({
+  const form = useForm<ReviewSchemaValues>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       title: initialData?.title || "",
@@ -132,12 +126,6 @@ export const ReviewForm = ({
     form.setValue("bookIsbn", "");
   };
 
-  const handleImageAdd = (file: File) => {
-    const url = URL.createObjectURL(file);
-    imageMapRef.current.set(url, file);
-    return url;
-  };
-
   const handleSubmit = async (data: ReviewFormValues) => {
     if (!user) {
       alert("로그인이 필요합니다.");
@@ -146,39 +134,7 @@ export const ReviewForm = ({
 
     setIsLocalSubmitting(true);
     try {
-      let content = data.content;
-      const imagesToUpload: File[] = [];
-      const placeholderUrls: string[] = [];
-
-      // 업로드가 필요한 콘텐츠 내 모든 이미지 찾기
-      imageMapRef.current.forEach((file, url) => {
-        if (content.includes(url)) {
-          imagesToUpload.push(file);
-          placeholderUrls.push(url);
-        }
-      });
-
-      if (imagesToUpload.length > 0) {
-        // @vercel/blob/client를 사용한 클라이언트 측 업로드
-        const blobs = await Promise.all(
-          imagesToUpload.map((file) => {
-            const filePath = `${user.provider}-${user.id}/review-images/${file.name}`;
-            return upload(filePath, file, {
-              access: "public",
-              handleUploadUrl: "/api/upload",
-            });
-          })
-        );
-
-        // blob URL을 실제 Vercel Blob URL로 교체
-        blobs.forEach((blob, index) => {
-          content = content.replace(placeholderUrls[index], blob.url);
-        });
-      }
-
-      // object URL 정리
-      imageMapRef.current.forEach((_, url) => URL.revokeObjectURL(url));
-      imageMapRef.current.clear();
+      const content = await uploadImages(data.content);
 
       await onSubmit({
         ...data,
@@ -197,12 +153,11 @@ export const ReviewForm = ({
     } catch (error: any) {
       console.error("Review submission error:", error);
       alert(error.message || "리뷰 작성 중 오류가 발생했습니다.");
-    } finally {
       setIsLocalSubmitting(false);
     }
   };
 
-  const isProcessing = isSubmitting || isLocalSubmitting;
+  const isProcessing = isSubmitting || isLocalSubmitting || isUploading;
 
   return (
     <Form {...form}>
@@ -404,7 +359,7 @@ export const ReviewForm = ({
               <FormItem>
                 <FormLabel>내용</FormLabel>
                 <FormControl>
-                  <ReviewEditor
+                  <TiptapEditor
                     content={field.value}
                     onChange={field.onChange}
                     placeholder="책에 대한 솔직한 후기를 남겨주세요..."

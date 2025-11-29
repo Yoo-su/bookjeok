@@ -9,16 +9,16 @@ import { Repository } from 'typeorm';
 import { Book } from '@/features/book/entities/book.entity';
 import { Review } from '@/features/review/entities/review.entity';
 
-import { ReviewImageHelper } from './helpers/review-image.helper';
+import { ReviewImageHelper } from '../helpers/review-image.helper';
 
-import { CreateReviewDto } from './dto/create-review.dto';
-import { GetReviewsQueryDto } from './dto/get-reviews-query.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
-import { BOOK_DOMAINS } from './constants';
+import { CreateReviewDto } from '../dto/create-review.dto';
+import { GetReviewsQueryDto } from '../dto/get-reviews-query.dto';
+import { UpdateReviewDto } from '../dto/update-review.dto';
+import { BOOK_DOMAINS } from '../constants';
 import {
   GetReviewsResponseDto,
   ReviewFeedDto,
-} from './dto/review-response.dto';
+} from '../dto/review-response.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -123,7 +123,7 @@ export class ReviewsService {
     for (const category of categories) {
       const reviews = await this.reviewsRepository.find({
         where: { category },
-        relations: ['user'],
+        relations: ['user', 'book'],
         order: { createdAt: 'DESC' },
         take: 4,
       });
@@ -142,7 +142,7 @@ export class ReviewsService {
   async findOne(id: number) {
     const review = await this.reviewsRepository.findOne({
       where: { id },
-      relations: ['user'],
+      relations: ['user', 'book'],
     });
 
     if (!review) {
@@ -161,7 +161,7 @@ export class ReviewsService {
       );
     }
 
-    // Handle image deletion if content is updated
+    // 내용이 수정된 경우 이미지 삭제 처리
     if (updateReviewDto.content && updateReviewDto.content !== review.content) {
       const removedImages = this.reviewImageHelper.getRemovedImages(
         review.content,
@@ -185,7 +185,7 @@ export class ReviewsService {
       );
     }
 
-    // Delete all images associated with the review
+    // 리뷰와 연관된 모든 이미지 삭제
     const images = this.reviewImageHelper.extractImageUrls(review.content);
     if (images.length > 0) {
       await this.reviewImageHelper.deleteImages(images);

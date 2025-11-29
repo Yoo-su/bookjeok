@@ -13,6 +13,8 @@ interface ReviewGridListProps {
   clearFilters: () => void;
   loadMoreRef?: (node?: Element | null) => void;
   isFetchingNextPage?: boolean;
+  onDeleteReview?: (id: number) => void;
+  onEditReview?: (id: number) => void;
 }
 
 export function ReviewGridList({
@@ -22,6 +24,8 @@ export function ReviewGridList({
   clearFilters,
   loadMoreRef,
   isFetchingNextPage,
+  onDeleteReview,
+  onEditReview,
 }: ReviewGridListProps) {
   if (reviews.length === 0) {
     return (
@@ -64,7 +68,13 @@ export function ReviewGridList({
     <div className="space-y-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
         {reviews.map((review, index) => (
-          <ReviewCard key={review.id} review={review} priority={index < 4} />
+          <ReviewCard
+            key={review.id}
+            review={review}
+            priority={index < 4}
+            onDelete={onDeleteReview}
+            onEdit={onEditReview}
+          />
         ))}
       </div>
 

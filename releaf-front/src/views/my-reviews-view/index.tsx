@@ -7,7 +7,10 @@ import { useInView } from "react-intersection-observer";
 
 import { useAuthStore } from "@/features/auth/store";
 import { ReviewGridList } from "@/features/review/components/review-grid-list";
-import { useReviewsInfiniteQuery } from "@/features/review/queries";
+import {
+  useDeleteReviewMutation,
+  useReviewsInfiniteQuery,
+} from "@/features/review/queries";
 
 export default function MyReviewsPage() {
   const user = useAuthStore((state) => state.user);
@@ -25,6 +28,8 @@ export default function MyReviewsPage() {
     enabled: !!user,
   });
 
+  const deleteReviewMutation = useDeleteReviewMutation();
+
   useEffect(() => {
     if (!user) {
       router.push("/login");
@@ -36,6 +41,21 @@ export default function MyReviewsPage() {
       fetchNextPage();
     }
   }, [inView, hasNextPage, fetchNextPage]);
+
+  const handleDeleteReview = async (id: number) => {
+    if (window.confirm("정말로 이 리뷰를 삭제하시겠습니까?")) {
+      try {
+        await deleteReviewMutation.mutateAsync(id);
+      } catch (error) {
+        console.error("Failed to delete review:", error);
+        alert("리뷰 삭제에 실패했습니다.");
+      }
+    }
+  };
+
+  const handleEditReview = (id: number) => {
+    router.push(`/review/${id}/edit`);
+  };
 
   if (isReviewsLoading) {
     return (
@@ -61,6 +81,8 @@ export default function MyReviewsPage() {
         clearFilters={() => {}}
         loadMoreRef={ref}
         isFetchingNextPage={isFetchingNextPage}
+        onDeleteReview={handleDeleteReview}
+        onEditReview={handleEditReview}
       />
     </div>
   );

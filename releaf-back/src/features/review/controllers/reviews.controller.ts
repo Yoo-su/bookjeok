@@ -16,16 +16,16 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@/features/user/decorators/current-user.decorator';
 import { User } from '@/features/user/entities/user.entity';
 
-import { CreateReviewDto } from './dto/create-review.dto';
-import { GetReviewsQueryDto } from './dto/get-reviews-query.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
-import { ReviewsService } from './reviews.service';
+import { CreateReviewDto } from '../dto/create-review.dto';
+import { GetReviewsQueryDto } from '../dto/get-reviews-query.dto';
+import { UpdateReviewDto } from '../dto/update-review.dto';
+import { ReviewsService } from '../services/reviews.service';
 
 import { Review } from '@/features/review/entities/review.entity';
 import {
   GetReviewsResponseDto,
   ReviewFeedDto,
-} from './dto/review-response.dto';
+} from '../dto/review-response.dto';
 
 @ApiTags('리뷰 (Review)')
 @Controller('reviews')

@@ -22,7 +22,6 @@ import {
   Strikethrough,
   Underline,
 } from "lucide-react";
-import { useCallback, useRef } from "react";
 
 import { Button } from "@/shared/components/shadcn/button";
 import {
@@ -46,7 +45,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
   return (
     <div className="border-b bg-muted/40 p-2 flex flex-wrap gap-1 sticky top-0 z-10 items-center">
-      {/* Text Style */}
+      {/* 텍스트 스타일 */}
       <div className="flex items-center gap-1">
         <Toggle
           size="sm"
@@ -84,7 +83,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Headings */}
+      {/* 헤딩 */}
       <div className="flex items-center gap-1">
         <Toggle
           size="sm"
@@ -120,7 +119,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Alignment */}
+      {/* 정렬 */}
       <div className="flex items-center gap-1">
         <Toggle
           size="sm"
@@ -156,7 +155,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Lists & Block */}
+      {/* 리스트 & 블록 */}
       <div className="flex items-center gap-1">
         <Toggle
           size="sm"
@@ -200,7 +199,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Colors */}
+      {/* 색상 */}
       <div className="flex items-center gap-1">
         <Popover>
           <PopoverTrigger asChild>
@@ -300,7 +299,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Insert */}
+      {/* 삽입 */}
       <div className="flex items-center gap-1">
         <Button
           type="button"
@@ -351,7 +350,7 @@ export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Image & Gallery */}
+      {/* 이미지 & 갤러리 */}
       <div className="flex items-center gap-1">
         <Button
           type="button"

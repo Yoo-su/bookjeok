@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Book } from '@/features/book/entities/book.entity';
 import { User } from '@/features/user/entities/user.entity';
 
 @Entity('reviews')
@@ -40,9 +41,9 @@ export class Review {
   @Column({ nullable: true })
   bookIsbn: string;
 
-  @ManyToOne('Book')
+  @ManyToOne(() => Book)
   @JoinColumn({ name: 'bookIsbn' })
-  book: any;
+  book: Book;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -6,9 +6,9 @@ export class ReviewImageHelper {
   private readonly logger = new Logger(ReviewImageHelper.name);
 
   /**
-   * Extracts all image URLs from the HTML content.
-   * @param content HTML content
-   * @returns Array of image URLs
+   * HTML 콘텐츠에서 모든 이미지 URL을 추출합니다.
+   * @param content HTML 콘텐츠
+   * @returns 이미지 URL 배열
    */
   extractImageUrls(content: string): string[] {
     const regex = /<img[^>]+src="([^">]+)"/g;
@@ -17,14 +17,14 @@ export class ReviewImageHelper {
   }
 
   /**
-   * Deletes images from Vercel Blob storage.
-   * @param urls Array of image URLs to delete
+   * Vercel Blob 스토리지에서 이미지를 삭제합니다.
+   * @param urls 삭제할 이미지 URL 배열
    */
   async deleteImages(urls: string[]): Promise<void> {
     if (!urls.length) return;
 
     try {
-      // Filter only Vercel Blob URLs to avoid trying to delete external images
+      // 외부 이미지를 삭제하려는 시도를 방지하기 위해 Vercel Blob URL만 필터링합니다.
       const blobUrls = urls.filter((url) =>
         url.includes('public.blob.vercel-storage.com'),
       );
@@ -36,15 +36,15 @@ export class ReviewImageHelper {
       }
     } catch (error) {
       this.logger.error('Failed to delete images from storage', error);
-      // We don't throw here to prevent blocking the main operation (e.g., review deletion)
+      // 메인 작업(예: 리뷰 삭제)을 차단하지 않기 위해 여기서 에러를 던지지 않습니다.
     }
   }
 
   /**
-   * Identifies images that were removed in the new content compared to the old content.
-   * @param oldContent Old HTML content
-   * @param newContent New HTML content
-   * @returns Array of removed image URLs
+   * 이전 콘텐츠와 비교하여 새 콘텐츠에서 제거된 이미지를 식별합니다.
+   * @param oldContent 이전 HTML 콘텐츠
+   * @param newContent 새 HTML 콘텐츠
+   * @returns 제거된 이미지 URL 배열
    */
   getRemovedImages(oldContent: string, newContent: string): string[] {
     const oldImages = this.extractImageUrls(oldContent);

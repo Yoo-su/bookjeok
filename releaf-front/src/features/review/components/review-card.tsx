@@ -1,31 +1,48 @@
 "use client";
 
 import { format } from "date-fns";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { useBookDetailQuery } from "@/features/book/queries";
 import { Review } from "@/features/review/types";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
+import { Button } from "@/shared/components/shadcn/button";
 import { StarRating } from "@/shared/components/ui/star-rating";
 
 interface ReviewCardProps {
   review: Review;
   priority?: boolean;
+  onDelete?: (id: number) => void;
+  onEdit?: (id: number) => void;
 }
 
-export function ReviewCard({ review, priority = false }: ReviewCardProps) {
-  const { data: bookData } = useBookDetailQuery(review.bookIsbn);
+export function ReviewCard({
+  review,
+  priority = false,
+  onDelete,
+  onEdit,
+}: ReviewCardProps) {
+  const book = review.book;
 
-  const book = bookData;
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete?.(review.id);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit?.(review.id);
+  };
 
   return (
-    <Link href={`/review/${review.id}`} className="group block h-full">
+    <Link href={`/review/${review.id}`} className="group block h-full relative">
       <article className="flex h-[180px] bg-white rounded-xl overflow-hidden border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-200 transition-all duration-300">
         {/* 이미지 컨테이너 (좌측) */}
         <div className="relative w-[120px] shrink-0 overflow-hidden bg-stone-100">
@@ -70,11 +87,11 @@ export function ReviewCard({ review, priority = false }: ReviewCardProps) {
 
           {/* 태그 */}
           {review.tags && review.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1 mb-auto">
+            <div className="flex flex-nowrap items-center gap-1 mb-auto overflow-hidden mask-linear-fade">
               {review.tags.slice(0, 3).map((tag: string) => (
                 <span
                   key={tag}
-                  className="text-[10px] text-stone-500 bg-stone-50 px-1.5 py-0.5 rounded-full border border-stone-100"
+                  className="text-[10px] text-stone-500 bg-stone-50 px-1.5 py-0.5 rounded-full border border-stone-100 whitespace-nowrap shrink-0"
                 >
                   #{tag}
                 </span>
@@ -82,19 +99,44 @@ export function ReviewCard({ review, priority = false }: ReviewCardProps) {
             </div>
           )}
 
-          <div className="mt-2 pt-2 border-t border-stone-100 flex items-center gap-2">
-            <Avatar className="w-5 h-5 border border-stone-200">
-              <AvatarImage
-                src={review.user?.profileImageUrl || undefined}
-                alt={review.user?.nickname}
-              />
-              <AvatarFallback className="bg-stone-100 text-[9px] font-bold text-stone-500">
-                {review.user?.nickname?.[0] || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-xs font-medium text-stone-600 line-clamp-1">
-              {review.user?.nickname || "Anonymous"}
-            </span>
+          <div className="mt-2 pt-2 border-t border-stone-100 flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <Avatar className="w-5 h-5 border border-stone-200">
+                <AvatarImage
+                  src={review.user?.profileImageUrl || undefined}
+                  alt={review.user?.nickname}
+                />
+                <AvatarFallback className="bg-stone-100 text-[9px] font-bold text-stone-500">
+                  {review.user?.nickname?.[0] || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium text-stone-600 line-clamp-1">
+                {review.user?.nickname || "Anonymous"}
+              </span>
+            </div>
+
+            <div className="flex items-center">
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-stone-400 hover:text-blue-500 hover:bg-blue-50"
+                  onClick={handleEdit}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-stone-400 hover:text-red-500 hover:bg-red-50 -mr-1"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </article>

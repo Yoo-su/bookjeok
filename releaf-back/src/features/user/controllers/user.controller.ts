@@ -29,9 +29,6 @@ export class UserController {
   /**
    * 내가 등록한 모든 판매글을 조회하는 엔드포인트
    */
-  /**
-   * 내가 등록한 모든 판매글을 조회하는 엔드포인트
-   */
   @Get('my-sales')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
@@ -86,9 +83,6 @@ export class UserController {
     };
   }
 
-  /**
-   * 위시리스트에 추가하는 엔드포인트
-   */
   /**
    * 위시리스트에 추가하는 엔드포인트
    */

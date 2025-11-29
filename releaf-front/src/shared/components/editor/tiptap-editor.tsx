@@ -12,7 +12,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { Bold, Heading2, Italic } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import ImageResize from "tiptap-extension-resize-image";
 
 import { Button } from "@/shared/components/shadcn/button";
@@ -20,19 +20,19 @@ import { cn } from "@/shared/utils/cn";
 
 import { EditorToolbar } from "./editor-toolbar";
 
-interface ReviewEditorProps {
+interface TiptapEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
-  onImageAdd?: (file: File) => string; // Returns the object URL
+  onImageAdd?: (file: File) => string; // 객체 URL 반환
 }
 
-export const ReviewEditor = ({
+export const TiptapEditor = ({
   content,
   onChange,
   placeholder = "내용을 입력하세요...",
   onImageAdd,
-}: ReviewEditorProps) => {
+}: TiptapEditorProps) => {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -44,7 +44,6 @@ export const ReviewEditor = ({
       Placeholder.configure({
         placeholder,
       }),
-      ImageResize,
       ImageResize,
       BubbleMenuExtension,
       TextStyle,
@@ -94,6 +93,13 @@ export const ReviewEditor = ({
     },
   });
 
+  // prop에서 에디터로 콘텐츠 동기화 (제어 컴포넌트 동작)
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageClick = useCallback(() => {
@@ -106,7 +112,7 @@ export const ReviewEditor = ({
       if (file && onImageAdd && editor) {
         const url = onImageAdd(file);
 
-        // Insert image and then a paragraph to prevent replacement and allow typing
+        // 이미지를 삽입한 다음 단락을 추가하여 대체를 방지하고 입력을 허용합니다.
         editor
           .chain()
           .focus()
@@ -117,7 +123,7 @@ export const ReviewEditor = ({
           .createParagraphNear()
           .run();
       }
-      // Reset input value to allow selecting the same file again
+      // 동일한 파일을 다시 선택할 수 있도록 입력 값을 초기화합니다.
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }

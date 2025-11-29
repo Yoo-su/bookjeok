@@ -1,3 +1,5 @@
+import { BookInfo } from "@/features/book/types";
+
 export interface ReviewUser {
   id: number;
   nickname: string;
@@ -14,6 +16,7 @@ export interface Review {
   category: string;
   userId: number;
   user: ReviewUser;
+  book: BookInfo;
   createdAt: string;
   updatedAt: string;
 }
