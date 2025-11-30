@@ -14,6 +14,7 @@ import { Wishlist } from '../entities/wishlist.entity';
 import { Book } from '@/features/book/entities/book.entity';
 import { BookInfoDto } from '@/features/book/dtos/book-info.dto';
 import { Review } from '@/features/review/entities/review.entity';
+import { ReviewReaction } from '@/features/review/entities/review-reaction.entity';
 
 @Injectable()
 export class UserService {
@@ -169,6 +170,17 @@ export class UserService {
         { user: { id: userId } },
         { isActive: false },
       );
+
+      // 4. 리뷰 관련 데이터 삭제
+      // 4-1. 유저가 남긴 리액션 삭제
+      await queryRunner.manager.delete(ReviewReaction, {
+        user: { id: userId },
+      });
+      // 4-2. 유저가 작성한 리뷰 삭제
+      await queryRunner.manager.delete(Review, { user: { id: userId } });
+
+      // 5. 위시리스트 삭제
+      await queryRunner.manager.delete(Wishlist, { user: { id: userId } });
 
       await queryRunner.commitTransaction();
     } catch (err) {
