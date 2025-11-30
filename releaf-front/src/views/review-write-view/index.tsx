@@ -6,6 +6,7 @@ import { useState } from "react";
 import { createReview } from "@/features/review/apis";
 import { ReviewForm } from "@/features/review/components/review-form";
 import { ReviewFormValues } from "@/features/review/types";
+import { PATHS } from "@/shared/constants/paths";
 
 export const ReviewWriteView = () => {
   const router = useRouter();
@@ -16,7 +17,7 @@ export const ReviewWriteView = () => {
     try {
       await createReview(data);
       alert("리뷰가 작성되었습니다!");
-      router.push("/review"); // 리뷰 목록으로 리다이렉트
+      router.push(PATHS.REVIEWS); // 리뷰 목록으로 리다이렉트
     } catch (error: any) {
       console.error("Review creation error:", error);
       alert(error.message || "리뷰 작성 중 오류가 발생했습니다.");

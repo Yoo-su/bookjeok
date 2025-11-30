@@ -2,7 +2,7 @@
 
 import {
   List,
-  MessageSquare,
+  MessageSquareQuote,
   PenLine,
   Search,
   Store,
@@ -83,14 +83,14 @@ export const DefaultHeader = () => {
               </Tooltip>
             </TooltipProvider>
 
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="rounded-full cursor-pointer text-gray-600 hover:text-gray-900"
                 >
-                  <MessageSquare className="w-5 h-5" />
+                  <MessageSquareQuote className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

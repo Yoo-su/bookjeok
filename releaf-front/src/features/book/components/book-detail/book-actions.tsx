@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { WishlistButton } from "@/features/user/components/wishlist-button";
 import { Button } from "@/shared/components/shadcn/button";
+import { PATHS } from "@/shared/constants/paths";
 
 import { BookInfo as BookType } from "../../types";
 
@@ -21,7 +22,7 @@ export const BookActions = ({ isbn, book }: BookActionsProps) => {
       <Button
         size="lg"
         className="w-full sm:w-auto"
-        onClick={() => router.push(`/book/${isbn}/sell`)}
+        onClick={() => router.push(PATHS.BOOK_SELL(isbn))}
       >
         <PenSquare className="w-4 h-4 mr-2" />
         중고책 판매글 작성

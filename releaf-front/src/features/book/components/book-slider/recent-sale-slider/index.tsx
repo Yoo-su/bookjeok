@@ -13,10 +13,10 @@ export const RecentSalesSlider = () => {
   const SliderHeader = () => (
     <div className="text-center mb-10">
       <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">
-          따끈따끈,
+        <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-500 to-teal-500">
+          새로운 만남,
         </span>
-        지금 막 올라왔어요!
+        방금 등록된 책
       </h2>
       <p className="mt-4 text-lg text-gray-600">
         가장 새로운 중고 서적들을 만나보세요.

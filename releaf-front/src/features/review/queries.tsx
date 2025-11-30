@@ -7,6 +7,7 @@ import {
 
 import {
   deleteReview,
+  getMyReviewReaction,
   getReview,
   getReviewFeeds,
   getReviews,
@@ -66,6 +67,22 @@ export const useReviewDetailQuery = (id: number, enabled: boolean = true) => {
   return useQuery({
     queryKey: QUERY_KEYS.reviewKeys.detail(id).queryKey,
     queryFn: () => getReview(id),
+    enabled,
+  });
+};
+
+/**
+ * 나의 리액션 정보를 조회하는 쿼리 훅입니다.
+ * @param id 리뷰 ID
+ * @param enabled 쿼리 활성화 여부
+ */
+export const useMyReviewReactionQuery = (
+  id: number,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.reviewKeys.detail(id).queryKey, "reaction"],
+    queryFn: () => getMyReviewReaction(id),
     enabled,
   });
 };

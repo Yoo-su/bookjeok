@@ -6,6 +6,12 @@ export interface ReviewUser {
   profileImageUrl: string | null;
 }
 
+export enum ReviewReactionType {
+  LIKE = "LIKE",
+  INSIGHTFUL = "INSIGHTFUL",
+  SUPPORT = "SUPPORT",
+}
+
 export interface Review {
   id: number;
   title: string;
@@ -15,6 +21,10 @@ export interface Review {
   tags: string[];
   category: string;
   userId: number;
+  reactionCounts?: {
+    [key in ReviewReactionType]: number;
+  };
+  myReaction?: ReviewReactionType | null;
   user: ReviewUser;
   book: BookInfo;
   createdAt: string;

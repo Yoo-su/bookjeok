@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 
+import { PATHS } from "@/shared/constants/paths";
+
 import { useAuthStore } from "../store";
 
 interface AuthGuardProps {
@@ -18,7 +20,7 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
 
   useEffect(() => {
     if (!user) {
-      router.replace("/login");
+      router.replace(PATHS.LOGIN);
       return;
     }
   }, [router, user]);

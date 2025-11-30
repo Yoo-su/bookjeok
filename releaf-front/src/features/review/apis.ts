@@ -4,6 +4,7 @@ import {
   Review,
   ReviewFeed,
   ReviewFormValues,
+  ReviewReactionType,
 } from "@/features/review/types";
 import { privateAxios, publicAxios } from "@/shared/libs/axios";
 
@@ -19,12 +20,12 @@ const API_PATHS = {
  * @param data 리뷰 생성 데이터
  * @returns 생성된 리뷰 정보
  */
-export const createReview = async (data: ReviewFormValues) => {
-  const { data: response } = await privateAxios.post<Review>(
+export const createReview = async (formValues: ReviewFormValues) => {
+  const { data } = await privateAxios.post<Review>(
     API_PATHS.review.base,
-    data
+    formValues
   );
-  return response;
+  return data;
 };
 
 /**
@@ -33,12 +34,15 @@ export const createReview = async (data: ReviewFormValues) => {
  * @param data 수정할 데이터
  * @returns 수정된 리뷰 정보
  */
-export const updateReview = async (id: number, data: ReviewFormValues) => {
-  const { data: response } = await privateAxios.patch<Review>(
+export const updateReview = async (
+  id: number,
+  formValues: ReviewFormValues
+) => {
+  const { data } = await privateAxios.patch<Review>(
     API_PATHS.review.detail(id),
-    data
+    formValues
   );
-  return response;
+  return data;
 };
 
 /**
@@ -47,10 +51,10 @@ export const updateReview = async (id: number, data: ReviewFormValues) => {
  * @returns 삭제된 리뷰 정보
  */
 export const deleteReview = async (id: number) => {
-  const { data: response } = await privateAxios.delete<Review>(
+  const { data } = await privateAxios.delete<Review>(
     API_PATHS.review.detail(id)
   );
-  return response;
+  return data;
 };
 
 /**
@@ -76,10 +80,10 @@ export const getReviews = async ({
   if (category) params.append("category", category);
   if (userId) params.append("userId", userId.toString());
 
-  const response = await publicAxios.get<GetReviewsResponse>(
+  const { data } = await publicAxios.get<GetReviewsResponse>(
     `${API_PATHS.review.base}?${params.toString()}`
   );
-  return response.data;
+  return data;
 };
 
 /**
@@ -100,5 +104,34 @@ export const getReviewFeeds = async () => {
  */
 export const getReview = async (id: number) => {
   const { data } = await publicAxios.get<Review>(API_PATHS.review.detail(id));
+  return data;
+};
+
+/**
+ * 나의 리액션 정보를 조회합니다.
+ * @param id 리뷰 ID
+ * @returns 나의 리액션 타입 (없으면 null)
+ */
+export const getMyReviewReaction = async (id: number) => {
+  const { data } = await privateAxios.get<ReviewReactionType | null>(
+    `${API_PATHS.review.detail(id)}/reaction`
+  );
+  return data;
+};
+
+/**
+ * 리뷰 리액션을 토글합니다.
+ * @param id 리뷰 ID
+ * @param type 리액션 타입
+ * @returns 업데이트된 리뷰 정보 (리액션 카운트 포함)
+ */
+export const toggleReviewReaction = async (
+  id: number,
+  type: ReviewReactionType
+) => {
+  const { data } = await privateAxios.post<Review>(
+    `${API_PATHS.review.detail(id)}/reactions`,
+    { type }
+  );
   return data;
 };

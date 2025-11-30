@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 
+import { PATHS } from "@/shared/constants/paths";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
 import { useAuthStore } from "../auth/store";
@@ -58,7 +59,7 @@ export const useCreateBookSaleMutation = () => {
     },
     onSuccess: () => {
       alert("판매글이 성공적으로 등록되었습니다.");
-      router.push("/my-page/sales");
+      router.push(PATHS.MY_PAGE_SALES);
     },
     onError: (error) => {
       console.error("Submission failed:", error);
@@ -160,7 +161,7 @@ export const useUpdateBookSaleMutation = () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.bookKeys.saleDetail(String(data.id)).queryKey,
       });
-      router.push("/my-page/sales");
+      router.push(PATHS.MY_PAGE_SALES);
     },
     onError: (error) => {
       alert(`수정 중 오류가 발생했습니다: ${error.message}`);
@@ -190,7 +191,7 @@ export const useDeleteBookSaleMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.bookKeys._def });
       // 현재 페이지가 삭제된 게시글 상세 페이지일 경우 홈으로 이동
       if (window.location.pathname.includes(`/book/sale/${saleId}`)) {
-        router.push("/my-page/sales");
+        router.push(PATHS.MY_PAGE_SALES);
       }
     },
     onError: (error) => {

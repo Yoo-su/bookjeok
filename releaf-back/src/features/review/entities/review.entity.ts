@@ -4,12 +4,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
 import { User } from '@/features/user/entities/user.entity';
+import { ReviewReaction } from './review-reaction.entity';
 
 @Entity('reviews')
 export class Review {
@@ -50,4 +52,7 @@ export class Review {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => ReviewReaction, (reaction) => reaction.review)
+  reactions: ReviewReaction[];
 }

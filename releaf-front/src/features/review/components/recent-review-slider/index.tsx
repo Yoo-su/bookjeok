@@ -21,8 +21,8 @@ export const RecentReviewSlider = () => {
   const SliderHeader = () => (
     <div className="text-center mb-10">
       <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-        <span className="text-transparent bg-clip-text bg-linear-to-r from-indigo-500 to-purple-500">
-          생생한 이야기,
+        <span className="text-transparent bg-clip-text bg-linear-to-r from-stone-700 to-amber-900">
+          진솔한 기록,
         </span>
         지금 막 올라온 리뷰
       </h2>

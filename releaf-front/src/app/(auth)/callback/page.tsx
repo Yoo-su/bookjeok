@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { useAuthStore } from "@/features/auth/store";
 import { User } from "@/features/auth/types";
+import { PATHS } from "@/shared/constants/paths";
 
 const CallbackPage = () => {
   const router = useRouter();
@@ -21,13 +22,13 @@ const CallbackPage = () => {
         const user: User = JSON.parse(userString);
         setTokens({ accessToken, refreshToken });
         setUser(user);
-        router.replace("/home");
+        router.replace(PATHS.HOME);
       } catch (error) {
         console.error("Failed to parse user data:", error);
-        router.replace("/login");
+        router.replace(PATHS.LOGIN);
       }
     } else {
-      router.replace("/login");
+      router.replace(PATHS.LOGIN);
     }
   }, [router, searchParams, setTokens, setUser]);
 

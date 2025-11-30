@@ -12,6 +12,7 @@ import {
   useReviewFeedsQuery,
   useReviewsInfiniteQuery,
 } from "@/features/review/queries";
+import { PATHS } from "@/shared/constants/paths";
 
 export const ReviewListView = () => {
   const router = useRouter();
@@ -57,7 +58,7 @@ export const ReviewListView = () => {
     } else {
       params.delete("search");
     }
-    router.push(`/review?${params.toString()}`);
+    router.push(`${PATHS.REVIEWS}?${params.toString()}`);
   };
 
   const handleCategoryClick = (category: string) => {
@@ -69,12 +70,12 @@ export const ReviewListView = () => {
       params.set("category", category);
     }
 
-    router.push(`/review?${params.toString()}`);
+    router.push(`${PATHS.REVIEWS}?${params.toString()}`);
   };
 
   const clearFilters = () => {
     setSearchInput("");
-    router.push("/review");
+    router.push(PATHS.REVIEWS);
   };
 
   const isLoading = isFiltered ? isReviewsLoading : isFeedsLoading;

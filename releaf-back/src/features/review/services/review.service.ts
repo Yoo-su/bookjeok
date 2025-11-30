@@ -8,6 +8,10 @@ import { Repository } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
 import { Review } from '@/features/review/entities/review.entity';
+import {
+  ReviewReaction,
+  ReviewReactionType,
+} from '@/features/review/entities/review-reaction.entity';
 
 import { ReviewImageHelper } from '../helpers/review-image.helper';
 
@@ -27,6 +31,8 @@ export class ReviewService {
     private reviewsRepository: Repository<Review>,
     @InjectRepository(Book)
     private booksRepository: Repository<Book>,
+    @InjectRepository(ReviewReaction)
+    private reviewReactionsRepository: Repository<ReviewReaction>,
     private reviewImageHelper: ReviewImageHelper,
   ) {}
 
@@ -156,7 +162,8 @@ export class ReviewService {
   /**
    * ID로 리뷰를 조회합니다.
    * @param id 리뷰 ID
-   * @returns 리뷰 엔티티
+   * @param userId 요청한 유저 ID (옵션)
+   * @returns 리뷰 엔티티 (리액션 정보 포함)
    */
   async findOne(id: number) {
     const review = await this.reviewsRepository.findOne({
@@ -168,7 +175,79 @@ export class ReviewService {
       throw new NotFoundException(`Review with ID ${id} not found`);
     }
 
-    return review;
+    const reactions = await this.reviewReactionsRepository
+      .createQueryBuilder('reaction')
+      .select('reaction.type')
+      .addSelect('COUNT(reaction.id)', 'count')
+      .where('reaction.reviewId = :reviewId', { reviewId: id })
+      .groupBy('reaction.type')
+      .getRawMany();
+
+    const reactionCounts = {
+      [ReviewReactionType.LIKE]: 0,
+      [ReviewReactionType.INSIGHTFUL]: 0,
+      [ReviewReactionType.SUPPORT]: 0,
+    };
+
+    reactions.forEach((r) => {
+      reactionCounts[r.reaction_type] = parseInt(r.count, 10);
+    });
+
+    return {
+      ...review,
+      reactionCounts,
+    };
+  }
+
+  /**
+   * 사용자의 리액션 정보를 조회합니다.
+   * @param id 리뷰 ID
+   * @param userId 유저 ID
+   * @returns 사용자의 리액션 타입 (없으면 null)
+   */
+  async getMyReaction(
+    id: number,
+    userId: number,
+  ): Promise<ReviewReactionType | null> {
+    const reaction = await this.reviewReactionsRepository.findOne({
+      where: { reviewId: id, userId },
+    });
+    return reaction ? reaction.type : null;
+  }
+
+  /**
+   * 리뷰에 리액션을 토글합니다.
+   * @param id 리뷰 ID
+   * @param userId 유저 ID
+   * @param type 리액션 타입
+   */
+  async toggleReaction(id: number, userId: number, type: ReviewReactionType) {
+    const review = await this.reviewsRepository.findOne({ where: { id } });
+    if (!review) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
+
+    const existingReaction = await this.reviewReactionsRepository.findOne({
+      where: { reviewId: id, userId },
+    });
+
+    if (existingReaction) {
+      if (existingReaction.type === type) {
+        await this.reviewReactionsRepository.remove(existingReaction);
+      } else {
+        existingReaction.type = type;
+        await this.reviewReactionsRepository.save(existingReaction);
+      }
+    } else {
+      const newReaction = this.reviewReactionsRepository.create({
+        reviewId: id,
+        userId,
+        type,
+      });
+      await this.reviewReactionsRepository.save(newReaction);
+    }
+
+    return this.findOne(id);
   }
 
   /**

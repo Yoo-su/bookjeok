@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 
+import { PATHS } from "@/shared/constants/paths";
+
 import { useAuthStore } from "../store";
 
 interface GuestGuardProps {
@@ -14,7 +16,7 @@ export const GuestGuard = ({ children }: GuestGuardProps) => {
 
   useEffect(() => {
     if (user) {
-      router.push("/home");
+      router.push(PATHS.HOME);
       return;
     }
   }, [user, router]);

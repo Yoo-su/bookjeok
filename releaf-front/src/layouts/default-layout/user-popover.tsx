@@ -2,6 +2,8 @@
 
 import { LogIn } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/store";
 import {
@@ -20,6 +22,12 @@ import { Separator } from "@/shared/components/shadcn/separator";
 export default function UserPopover() {
   const user = useAuthStore((state) => state.user);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   const handleLogout = () => {
     clearAuth();
@@ -39,7 +47,7 @@ export default function UserPopover() {
 
   // 3. 로그인 상태일 때
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"

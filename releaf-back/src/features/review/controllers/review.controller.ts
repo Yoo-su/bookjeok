@@ -23,6 +23,7 @@ import { UpdateReviewDto } from '../dto/update-review.dto';
 import { ReviewService } from '../services/review.service';
 
 import { Review } from '@/features/review/entities/review.entity';
+import { ReviewReactionType } from '@/features/review/entities/review-reaction.entity';
 import {
   GetReviewsResponseDto,
   ReviewFeedDto,
@@ -100,8 +101,27 @@ export class ReviewController {
     description: '리뷰를 찾을 수 없습니다.',
   })
   @ApiParam({ name: 'id', description: '리뷰 ID' })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Review> {
+  async findOne(@Param('id', ParseIntPipe) id: number) {
     return await this.reviewsService.findOne(id);
+  }
+
+  @Post(':id/reactions')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: '리뷰 리액션 토글',
+    description: '리뷰에 대한 리액션을 추가하거나 제거합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '리액션이 성공적으로 반영되었습니다.',
+  })
+  @ApiParam({ name: 'id', description: '리뷰 ID' })
+  async toggleReaction(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('type') type: ReviewReactionType,
+    @CurrentUser() user: User,
+  ) {
+    return await this.reviewsService.toggleReaction(id, user.id, type);
   }
 
   @Patch(':id')
@@ -157,5 +177,27 @@ export class ReviewController {
     @CurrentUser() user: User,
   ): Promise<Review> {
     return await this.reviewsService.remove(id, user.id);
+  }
+
+  @Get(':id/reaction')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: '내 리액션 조회',
+    description: '특정 리뷰에 대한 나의 리액션 정보를 조회합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '나의 리액션 타입을 반환합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: '리뷰를 찾을 수 없습니다.',
+  })
+  @ApiParam({ name: 'id', description: '리뷰 ID' })
+  async getMyReaction(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    return await this.reviewsService.getMyReaction(id, user.id);
   }
 }

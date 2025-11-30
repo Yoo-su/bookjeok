@@ -8,6 +8,7 @@ import { getReview, updateReview } from "@/features/review/apis";
 import { ReviewForm } from "@/features/review/components/review-form";
 import { ReviewFormValues } from "@/features/review/types";
 import { Spinner } from "@/shared/components/shadcn/spinner";
+import { PATHS } from "@/shared/constants/paths";
 
 export const ReviewEditView = () => {
   const params = useParams();
@@ -46,7 +47,7 @@ export const ReviewEditView = () => {
       } catch (error: any) {
         console.error("Failed to fetch data:", error);
         alert(error.message);
-        router.push("/my-page");
+        router.push(PATHS.MY_PAGE);
       } finally {
         setIsLoading(false);
       }
@@ -60,7 +61,7 @@ export const ReviewEditView = () => {
     try {
       await updateReview(id, data);
       alert("리뷰가 수정되었습니다!");
-      router.push(`/review/${id}`); // 리뷰 상세 페이지로 리다이렉트
+      router.push(PATHS.REVIEW_DETAIL(id)); // 리뷰 상세 페이지로 리다이렉트
     } catch (error: any) {
       console.error("Review update error:", error);
       alert(error.message || "리뷰 수정 중 오류가 발생했습니다.");

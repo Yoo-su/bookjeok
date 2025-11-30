@@ -2,10 +2,12 @@
 
 import { useRouter } from "next/navigation";
 
+import { PATHS } from "@/shared/constants/paths";
+
 export const Logo = () => {
   const router = useRouter();
   const handleClickLogo = () => {
-    router.push("/home");
+    router.push(PATHS.HOME);
   };
 
   return (

@@ -46,7 +46,11 @@ export const ReviewDetailView = () => {
 
       <div className="container mx-auto px-4 max-w-4xl py-16">
         <ReviewDetailContent content={review.content} />
-        <ReviewDetailActions isAuthor={isAuthor} reviewId={id} />
+        <ReviewDetailActions
+          isAuthor={isAuthor}
+          reviewId={id}
+          reactionCounts={review.reactionCounts}
+        />
       </div>
     </article>
   );

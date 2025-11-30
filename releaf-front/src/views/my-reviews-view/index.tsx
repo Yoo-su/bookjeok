@@ -11,6 +11,7 @@ import {
   useDeleteReviewMutation,
   useReviewsInfiniteQuery,
 } from "@/features/review/queries";
+import { PATHS } from "@/shared/constants/paths";
 
 export default function MyReviewsPage() {
   const user = useAuthStore((state) => state.user);
@@ -32,7 +33,7 @@ export default function MyReviewsPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push("/login");
+      router.push(PATHS.LOGIN);
     }
   }, [user, router]);
 
@@ -54,7 +55,7 @@ export default function MyReviewsPage() {
   };
 
   const handleEditReview = (id: number) => {
-    router.push(`/review/${id}/edit`);
+    router.push(PATHS.REVIEW_EDIT(id));
   };
 
   if (isReviewsLoading) {
