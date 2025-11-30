@@ -120,24 +120,6 @@ Google의 Gemini LLM을 활용하여 책 상세 정보 페이지에 'AI 요약'�
 
 ---
 
-## 💻 서비스 화면 (Service Preview)
-
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/747f0e22-56a2-4eca-aa53-8124deed210f" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/b1fc358c-8b2c-4c7b-a898-695734f00a49" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/d468dd4a-87ab-45a4-b0d9-a21fb43734f6" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/729b2437-667d-4a82-943f-828449eda0d3" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/24039b9f-f524-4c87-a7fe-64f1ff84dadb" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/548cf753-ea50-4241-bf3d-58e0be1518cf" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/bc6046be-4d1d-4ec1-a095-68f688ecdcf5" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/623bbecd-9993-44ca-a94f-9639f01c5b05" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/aec79ee5-e96c-4ed2-94be-9807e4650ef2" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/3757768a-c151-4db9-b2dd-9bfbeeb0acbe" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/618ce65a-593c-4450-9e3a-b054ef23dcf1" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/5bc61c89-965d-4743-b257-c74d1e2f19d7" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/afeb2a57-69fc-42d1-9a36-50e83282a44c" />
-
----
-
 ## 🏁 시작하기 (Getting Started)
 
 1.  **Repository 클론:**
