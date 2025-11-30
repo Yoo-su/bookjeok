@@ -1,58 +1,151 @@
-# Releaf (릴리프)
+# ReLeaf (릴리프) - 책과 지식의 선순환 플랫폼
 
-**문화와 지식을 잇는 아카이브, Releaf**
+ReLeaf(릴리프)는 **종합 도서 플랫폼**입니다.
+단순한 중고 거래를 넘어, 도서 정보를 탐색하고, 깊이 있는 리뷰를 나누며, 실시간으로 소통하는 커뮤니티를 지향합니다.
+더불어 공연, 전시 등 다양한 문화 예술 정보를 제공하여 풍요로운 문화 생활을 지원합니다.
 
-Releaf는 공연, 전시 등 다채로운 문화 예술 정보를 탐색하고, 소장하고 있던 중고 서적을 거래하며 지식의 선순환을 만드는 웹 플랫폼입니다.
+---
+
+## ✨ 주요 기능 (Key Features)
+
+### 📚 1. 도서 탐색 및 정보 제공
+
+- **방대한 도서 데이터**: 네이버 책 검색 API를 연동하여 수많은 도서 정보를 쉽고 빠르게 검색할 수 있습니다.
+- **상세 정보**: 저자, 출판사, 줄거리 등 책에 대한 자세한 정보를 제공합니다.
+- **AI 도서 요약**: Google Gemini LLM을 활용하여 긴 책의 내용을 핵심만 요약해 줍니다. 바쁜 현대인에게 딱 맞는 기능입니다.
+
+### ♻️ 2. 중고 서적 거래 (Marketplace)
+
+- **간편한 판매 등록**: ISBN 검색 한 번으로 도서 정보를 자동으로 불러와 손쉽게 판매글을 작성할 수 있습니다.
+- **안전한 거래**: 판매자와 구매자가 1:1 채팅을 통해 직접 소통하며 안전하게 거래할 수 있습니다.
+- **위시리스트**: 사고 싶은 책이나 관심 있는 판매글을 찜해두고 언제든 다시 확인할 수 있습니다.
+- **판매 내역 관리**: 나의 판매 현황(판매 중, 예약 중, 거래 완료)을 한눈에 관리할 수 있습니다.
+
+### � 3. 독서 커뮤니티 & 리뷰
+
+- **진솔한 리뷰**: 책을 읽고 난 후의 감상과 생각을 리뷰로 남겨 다른 사용자와 공유합니다.
+- **소통과 공감**: 다른 사람의 리뷰에 댓글을 달거나 '좋아요'를 눌러 공감을 표현할 수 있습니다.
+- **마이 라이브러리**: 내가 쓴 리뷰와 찜한 책들을 모아 나만의 서재를 꾸밀 수 있습니다.
+
+### 🎭 4. 문화 예술 정보 (Culture)
+
+- **실시간 공연/전시**: KOPIS(공연예술통합전산망) API를 통해 연극, 뮤지컬, 전시회 등 최신 문화 예술 정보를 실시간으로 제공합니다.
+- **지역별/장르별 검색**: 내 주변의 문화 행사를 쉽게 찾을 수 있습니다.
+
+---
+
+## � 서비스 이미지 (Service Images)
+
+---
+
+## �🛠 기술 스택 (Tech Stack)
+
+이 프로젝트는 최신 웹 기술을 적극 도입하여 성능과 개발 생산성을 극대화했습니다. **TurboRepo**를 기반으로 한 모노레포(Monorepo) 구조입니다.
+
+### Frontend (`releaf-front`)
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router) - 최신 React 기능을 활용한 서버 사이드 렌더링 및 라우팅
+- **Language**: [TypeScript](https://www.typescriptlang.org/) - 정적 타입 시스템을 통한 안정성 확보
+- **Library**: [React 19](https://react.dev/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand) - 가볍고 직관적인 전역 상태 관리
+- **Data Fetching**: [TanStack Query v5](https://tanstack.com/query/latest) - 서버 상태 관리, 캐싱, 동기화
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) - 유틸리티 퍼스트 CSS 프레임워크
+- **UI Components**: [Radix UI](https://www.radix-ui.com/) - 접근성 높은 Headless UI 컴포넌트
+- **Animation**: [Framer Motion](https://www.framer.com/motion/) - 자연스럽고 강력한 애니메이션 구현
+- **Editor**: [Tiptap](https://tiptap.dev/) - 확장 가능한 리치 텍스트 에디터
+
+### Backend (`releaf-back`)
+
+- **Framework**: [NestJS 11](https://nestjs.com/) - 확장성 있고 유지보수가 용이한 서버 사이드 애플리케이션 프레임워크
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/) - 강력한 오픈소스 관계형 데이터베이스
+- **ORM**: [TypeORM](https://typeorm.io/) - TypeScript와 완벽하게 호환되는 ORM
+- **Real-time**: [Socket.IO](https://socket.io/) - 실시간 양방향 통신 (채팅 기능)
+- **Authentication**: Passport (JWT, OAuth2.0 - Kakao, Naver)
+- **AI**: Google Generative AI (Gemini) - LLM 기반 도서 요약
+
+### Infrastructure & Tools
+
+- **Monorepo**: [TurboRepo](https://turbo.build/) - 고성능 빌드 시스템
+- **Package Manager**: [pnpm](https://pnpm.io/) - 빠르고 효율적인 패키지 매니저
+- **Deployment**: Vercel (Frontend), Supabase (Database)
+
+---
 
 ## 📂 프로젝트 구조 (Project Structure)
 
-이 프로젝트는 **TurboRepo**를 사용한 모노레포(Monorepo) 구조로 구성되어 있습니다.
-
 ```
 releaf/
-├── releaf-front/   # Next.js 기반 프론트엔드 애플리케이션
-└── releaf-back/    # NestJS 기반 백엔드 API 서버
+├── releaf-front/           # 프론트엔드 애플리케이션
+│   ├── src/
+│   │   ├── app/            # Next.js App Router 페이지
+│   │   ├── features/       # 기능별 모듈 (도메인 로직, 컴포넌트, 훅)
+│   │   ├── views/          # 페이지 단위 뷰 컴포넌트
+│   │   ├── layouts/        # 공통 레이아웃
+│   │   └── shared/         # 공통 유틸리티, UI 컴포넌트
+│   └── ...
+│
+├── releaf-back/            # 백엔드 API 서버
+│   ├── src/
+│   │   ├── features/       # 기능별 모듈 (Controller, Service, Entity)
+│   │   ├── common/         # 공통 모듈 (Guard, Filter, Interceptor)
+│   │   └── ...
+│   └── ...
+│
+└── package.json            # 워크스페이스 설정
 ```
 
-- **[Frontend (releaf-front)](./releaf-front/README.md)**: Next.js 15, React 19, Tailwind CSS, TanStack Query
-- **[Backend (releaf-back)](./releaf-back/README.md)**: NestJS, PostgreSQL, TypeORM, Socket.IO
+---
 
-## 🚀 시작하기 (Quick Start)
+## 🚀 시작하기 (Getting Started)
 
 ### 사전 요구사항 (Prerequisites)
 
-- Node.js (v18+)
-- pnpm (권장) 또는 npm
-- PostgreSQL (백엔드 실행 시 필요)
+- Node.js (v18 이상)
+- pnpm (권장)
+- PostgreSQL 데이터베이스
 
 ### 설치 (Installation)
 
-루트 디렉토리에서 의존성을 설치합니다.
+1. 저장소를 클론합니다.
 
-```bash
-pnpm install
-```
+   ```bash
+   git clone https://github.com/your-username/releaf.git
+   cd releaf
+   ```
+
+2. 의존성을 설치합니다.
+
+   ```bash
+   pnpm install
+   ```
+
+3. 환경 변수를 설정합니다.
+   - `releaf-front/.env.local` 및 `releaf-back/.env` 파일을 생성하고 필요한 키 값을 입력합니다. (예: DB 접속 정보, API 키 등)
 
 ### 실행 (Running)
 
-TurboRepo를 사용하여 프론트엔드와 백엔드를 동시에 실행할 수 있습니다.
+**전체 실행 (Frontend + Backend)**
+TurboRepo를 사용하여 한 번에 실행합니다.
 
 ```bash
 pnpm dev
 ```
 
-또는 각 디렉토리에서 개별적으로 실행할 수도 있습니다.
+**개별 실행**
 
-- **Frontend**: `cd releaf-front && npm run dev`
-- **Backend**: `cd releaf-back && npm run start:dev`
+- Frontend:
+  ```bash
+  cd releaf-front
+  pnpm dev
+  ```
+- Backend:
+  ```bash
+  cd releaf-back
+  pnpm start:dev
+  ```
 
-## ✨ 주요 기능 (Key Features)
-
-- **문화 예술 정보**: KOPIS API 연동을 통한 실시간 공연/전시 정보 제공
-- **중고 서적 거래**: 네이버 책 검색 API 연동 및 중고 거래 게시판 (CRUD)
-- **실시간 채팅**: Socket.IO를 이용한 판매자-구매자 간 1:1 채팅
-- **AI 도서 요약**: Google Gemini LLM을 활용한 도서 정보 요약 및 추천
-- **소셜 로그인**: 카카오, 네이버 OAuth2.0 지원
+---
 
 ## 📝 라이선스 (License)
 
