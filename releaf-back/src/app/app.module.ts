@@ -10,7 +10,7 @@ import { UsedBookSale } from '@/features/book/entities/used-book-sale.entity';
 import { Book } from '@/features/book/entities/book.entity';
 import { ChatModule } from '@/features/chat/chat.module';
 import { LlmModule } from '@/features/llm/llm.module';
-import { ReviewsModule } from '@/features/review/reviews.module';
+import { ReviewModule } from '@/features/review/review.module';
 import { Review } from '@/features/review/entities/review.entity';
 
 @Module({
@@ -46,7 +46,7 @@ import { Review } from '@/features/review/entities/review.entity';
     BookModule,
     ChatModule,
     LlmModule,
-    ReviewsModule,
+    ReviewModule,
   ],
   controllers: [],
   providers: [],

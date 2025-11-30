@@ -21,7 +21,7 @@ import {
 } from '../dto/review-response.dto';
 
 @Injectable()
-export class ReviewsService {
+export class ReviewService {
   constructor(
     @InjectRepository(Review)
     private reviewsRepository: Repository<Review>,

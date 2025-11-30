@@ -81,7 +81,7 @@ export function ReviewCard({
             </div>
           </div>
 
-          <h3 className="text-sm sm:text-base font-serif font-bold text-stone-900 mb-2 leading-tight group-hover:text-primary transition-colors line-clamp-2">
+          <h3 className="text-sm sm:text-base font-semibold text-zinc-600 mb-2 leading-tight group-hover:text-primary transition-colors line-clamp-2">
             {review.title}
           </h3>
 

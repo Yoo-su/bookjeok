@@ -5,7 +5,6 @@ import {
   ReviewFeed,
   ReviewFormValues,
 } from "@/features/review/types";
-import { PATHS } from "@/shared/constants/paths";
 import { privateAxios, publicAxios } from "@/shared/libs/axios";
 
 const API_PATHS = {
@@ -70,8 +69,6 @@ export const getReviewFeeds = async () => {
 };
 
 export const getReview = async (id: number) => {
-  // 리뷰는 공개된 정보이므로 publicAxios를 사용합니다.
-  // 비로그인 사용자도 조회할 수 있어야 하기 때문입니다.
   const { data } = await publicAxios.get<Review>(API_PATHS.review.detail(id));
   return data;
 };
