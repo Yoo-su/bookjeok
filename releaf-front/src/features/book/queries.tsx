@@ -20,6 +20,10 @@ import {
   UseInfiniteRelatedSalesQueryProps,
 } from "./types";
 
+/**
+ * 책 목록을 조회하는 쿼리 훅입니다.
+ * @param params 조회 파라미터
+ */
 export const useBookListQuery = (params: GetBookListParams) => {
   return useQuery({
     queryKey: QUERY_KEYS.bookKeys.list(params).queryKey,
@@ -32,6 +36,10 @@ export const useBookListQuery = (params: GetBookListParams) => {
   });
 };
 
+/**
+ * 책 상세 정보를 조회하는 쿼리 훅입니다.
+ * @param isbn 책 ISBN
+ */
 export const useBookDetailQuery = (isbn: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.bookKeys.detail(isbn).queryKey,
@@ -45,6 +53,10 @@ export const useBookDetailQuery = (isbn: string) => {
   });
 };
 
+/**
+ * 책 검색을 위한 무한 스크롤 쿼리 훅입니다.
+ * @param query 검색어
+ */
 export const useInfiniteBookSearch = (query: string) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.bookKeys.search(query).queryKey,
@@ -75,6 +87,10 @@ export const useInfiniteBookSearch = (query: string) => {
   });
 };
 
+/**
+ * 판매글 검색을 위한 무한 스크롤 쿼리 훅입니다.
+ * @param params 검색 파라미터
+ */
 export const useInfiniteBookSalesQuery = (params: SearchBookSalesParams) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.bookKeys.marketSales(params).queryKey,
@@ -88,7 +104,7 @@ export const useInfiniteBookSalesQuery = (params: SearchBookSalesParams) => {
 };
 
 /**
- * 내 판매글 목록을 조회하는 커스텀 훅
+ * 내 판매글 목록을 조회하는 쿼리 훅입니다.
  */
 export const useMyBookSalesQuery = () => {
   return useQuery({
@@ -101,8 +117,8 @@ export const useMyBookSalesQuery = () => {
 };
 
 /**
- * 판매글 ID를 받아 상세 정보를 조회하는 커스텀 쿼리 훅
- * @param saleId - 조회할 판매글의 ID (문자열)
+ * 판매글 ID를 받아 상세 정보를 조회하는 쿼리 훅입니다.
+ * @param saleId 조회할 판매글의 ID
  */
 export const useBookSaleDetailQuery = (saleId: string) => {
   return useQuery({
@@ -117,6 +133,9 @@ export const useBookSaleDetailQuery = (saleId: string) => {
   });
 };
 
+/**
+ * 관련 판매글 목록을 조회하는 무한 스크롤 쿼리 훅입니다.
+ */
 export const useInfiniteRelatedSalesQuery = ({
   isbn,
   city,
@@ -137,7 +156,7 @@ export const useInfiniteRelatedSalesQuery = ({
   });
 };
 /**
- *  최근 중고책 판매글 목록을 조회하는 커스텀 훅
+ * 최근 중고책 판매글 목록을 조회하는 쿼리 훅입니다.
  */
 export const useRecentBookSalesQuery = () => {
   return useQuery({
@@ -148,10 +167,11 @@ export const useRecentBookSalesQuery = () => {
 };
 
 /**
- * LLM을 통해 생성된 책 요약/후기 정보를 조회하는 커스텀 훅
- * @param title - 책 제목
- * @param author - 저자
- * @param enabled - 쿼리 자동 실행 여부 (책 정보가 있을 때만 실행)
+ * LLM을 통해 생성된 책 요약/후기 정보를 조회하는 쿼리 훅입니다.
+ * @param title 책 제목
+ * @param author 저자
+ * @param enabled 쿼리 자동 실행 여부
+ * @param description 책 설명
  */
 export const useBookSummaryQuery = (
   title: string,

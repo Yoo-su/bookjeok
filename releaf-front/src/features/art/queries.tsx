@@ -5,6 +5,10 @@ import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { getArtDetail, getArtList } from "./apis";
 import { ArtItem, Genre, GetArtListParams } from "./types";
 
+/**
+ * 공연/예술 목록을 조회하는 쿼리 훅입니다.
+ * @param params 조회 파라미터
+ */
 export const useArtListQuery = (params: GetArtListParams) => {
   return useQuery({
     queryKey: QUERY_KEYS.artKeys.list(params).queryKey,
@@ -46,6 +50,11 @@ export const useArtDetailQuery = (artId: string) => {
   });
 };
 
+/**
+ * 메인 페이지용 공연/예술 목록 쿼리 훅입니다.
+ * 여러 장르의 공연 목록을 병렬로 조회합니다.
+ * @param mainArts 장르와 제목을 포함한 배열
+ */
 export const useMainArtsQueries = (
   mainArts: { genreCode: Genre; title: string }[]
 ) => {

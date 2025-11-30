@@ -64,6 +64,10 @@ const MessageBubble = ({
   );
 };
 
+/**
+ * 채팅방 컴포넌트입니다.
+ * 메시지 목록을 보여주고, 메시지를 전송할 수 있습니다.
+ */
 export const ChatRoom = () => {
   const { activeChatRoomId, closeChatRoom, typingUsers, isRoomInactive } =
     useChatStore();

@@ -6,6 +6,9 @@ import { useMyChatRoomsQuery } from "../queries";
 import { ChatItem } from "./chat-item";
 import { ChatListSkeleton } from "./skeleton";
 
+/**
+ * 채팅방 목록을 보여주는 컴포넌트입니다.
+ */
 export const ChatList = () => {
   const { data: rooms, isLoading } = useMyChatRoomsQuery();
 

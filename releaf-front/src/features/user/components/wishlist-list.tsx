@@ -12,6 +12,10 @@ interface WishlistListProps {
   isLoading: boolean;
 }
 
+/**
+ * 위시리스트 목록을 보여주는 컴포넌트입니다.
+ * 로딩 상태와 빈 목록 상태를 처리합니다.
+ */
 export const WishlistList = ({ wishlist, isLoading }: WishlistListProps) => {
   if (isLoading) {
     return (

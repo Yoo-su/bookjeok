@@ -11,6 +11,9 @@ import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { getChatMessages, getMyChatRooms } from "./apis";
 import { ChatRoom } from "./types";
 
+/**
+ * 내 채팅방 목록을 조회하는 쿼리 훅입니다.
+ */
 export const useMyChatRoomsQuery = (
   options?: Omit<UseQueryOptions<ChatRoom[]>, "queryKey" | "queryFn">
 ) => {
@@ -22,6 +25,10 @@ export const useMyChatRoomsQuery = (
   });
 };
 
+/**
+ * 채팅 메시지 목록을 조회하는 무한 스크롤 쿼리 훅입니다.
+ * @param roomId 채팅방 ID
+ */
 export const useInfiniteChatMessagesQuery = (roomId: number | null) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.chatKeys.messages(roomId!).queryKey,
