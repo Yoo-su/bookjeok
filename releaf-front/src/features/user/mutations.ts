@@ -8,6 +8,10 @@ import { privateAxios } from "@/shared/libs/axios";
 import { BookInfo } from "../book/types";
 import { addToWishlist, removeFromWishlist } from "./apis";
 
+/**
+ * 회원 탈퇴를 처리하는 뮤테이션 훅입니다.
+ * 탈퇴 성공 시 로그아웃 처리하고 홈으로 이동합니다.
+ */
 export const useWithdrawMutation = () => {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
@@ -29,6 +33,9 @@ export const useWithdrawMutation = () => {
   });
 };
 
+/**
+ * 위시리스트에 추가하는 뮤테이션 훅입니다.
+ */
 export const useAddToWishlistMutation = () => {
   return useMutation({
     mutationFn: ({
@@ -43,6 +50,9 @@ export const useAddToWishlistMutation = () => {
   });
 };
 
+/**
+ * 위시리스트에서 제거하는 뮤테이션 훅입니다.
+ */
 export const useRemoveFromWishlistMutation = () => {
   return useMutation({
     mutationFn: ({

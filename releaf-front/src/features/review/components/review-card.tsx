@@ -21,6 +21,10 @@ interface ReviewCardProps {
   onEdit?: (id: number) => void;
 }
 
+/**
+ * 리뷰 정보를 카드 형태로 보여주는 컴포넌트입니다.
+ * 수정 및 삭제 버튼을 포함할 수 있습니다.
+ */
 export function ReviewCard({
   review,
   priority = false,

@@ -14,6 +14,10 @@ import {
 import { GetReviewsParams, GetReviewsResponse } from "@/features/review/types";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
+/**
+ * 리뷰 목록을 조회하는 쿼리 훅입니다.
+ * @param params 조회 파라미터
+ */
 export const useReviewsQuery = (params: GetReviewsParams) => {
   return useQuery({
     queryKey: QUERY_KEYS.reviewKeys.list(params).queryKey,
@@ -22,6 +26,10 @@ export const useReviewsQuery = (params: GetReviewsParams) => {
   });
 };
 
+/**
+ * 리뷰 목록을 조회하는 무한 스크롤 쿼리 훅입니다.
+ * @param params 조회 파라미터
+ */
 export const useReviewsInfiniteQuery = (params: GetReviewsParams) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.reviewKeys.list(params).queryKey,
@@ -37,6 +45,10 @@ export const useReviewsInfiniteQuery = (params: GetReviewsParams) => {
   });
 };
 
+/**
+ * 리뷰 피드를 조회하는 쿼리 훅입니다.
+ * @param enabled 쿼리 활성화 여부
+ */
 export const useReviewFeedsQuery = (enabled: boolean = true) => {
   return useQuery({
     queryKey: QUERY_KEYS.reviewKeys.feeds.queryKey,
@@ -45,6 +57,11 @@ export const useReviewFeedsQuery = (enabled: boolean = true) => {
   });
 };
 
+/**
+ * 리뷰 상세 정보를 조회하는 쿼리 훅입니다.
+ * @param id 리뷰 ID
+ * @param enabled 쿼리 활성화 여부
+ */
 export const useReviewDetailQuery = (id: number, enabled: boolean = true) => {
   return useQuery({
     queryKey: QUERY_KEYS.reviewKeys.detail(id).queryKey,
@@ -53,6 +70,9 @@ export const useReviewDetailQuery = (id: number, enabled: boolean = true) => {
   });
 };
 
+/**
+ * 리뷰를 삭제하는 뮤테이션 훅입니다.
+ */
 export const useDeleteReviewMutation = () => {
   const queryClient = useQueryClient();
 

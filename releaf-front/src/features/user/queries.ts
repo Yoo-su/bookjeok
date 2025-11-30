@@ -18,6 +18,9 @@ export interface UserStats {
   reviewsCount: number;
 }
 
+/**
+ * 내 활동 통계를 조회하는 쿼리 훅입니다.
+ */
 export const useMyStatsQuery = () => {
   return useQuery<UserStats>({
     queryKey: QUERY_KEYS.userKeys.stats.queryKey,
@@ -27,6 +30,9 @@ export const useMyStatsQuery = () => {
 
 import { WishlistItem } from "./types";
 
+/**
+ * 내 위시리스트 목록을 조회하는 쿼리 훅입니다.
+ */
 export const useWishlistQuery = () => {
   return useQuery<WishlistItem[]>({
     queryKey: QUERY_KEYS.userKeys.wishlist.queryKey,
@@ -34,6 +40,11 @@ export const useWishlistQuery = () => {
   });
 };
 
+/**
+ * 특정 항목의 위시리스트 포함 여부를 확인하는 쿼리 훅입니다.
+ * @param type 타입 (BOOK, SALE)
+ * @param id 대상 ID
+ */
 export const useWishlistStatusQuery = (
   type: "BOOK" | "SALE",
   id: string | number

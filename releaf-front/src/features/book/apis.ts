@@ -20,9 +20,9 @@ import {
 } from "./types";
 
 /**
- * 책 검색결과 조회 API
- * @param params
- * @returns
+ * 책 검색결과를 조회합니다.
+ * @param params 검색 파라미터 (검색어, 정렬, 페이징 등)
+ * @returns 책 목록 또는 에러 응답
  */
 export const getBookList = async (
   params: GetBookListParams
@@ -44,9 +44,9 @@ export const getBookList = async (
 };
 
 /**
- * 책 상세정보 조회 API
- * @param isbn 책 고유 식별값인 isbn코드
- * @returns
+ * 책 상세정보를 조회합니다.
+ * @param isbn 책 고유 식별값 (ISBN)
+ * @returns 책 상세 정보 또는 에러 응답
  */
 export const getBookDetail = async (
   isbn: string
@@ -61,9 +61,9 @@ export const getBookDetail = async (
 };
 
 /**
- * 중고책 판매글 등록 API
- * @param payload
- * @returns
+ * 중고책 판매글을 등록합니다.
+ * @param payload 판매글 생성 정보
+ * @returns 생성된 판매글 정보
  */
 export const createBookSale = async (
   payload: CreateBookSaleParams
@@ -77,7 +77,8 @@ export const createBookSale = async (
 };
 
 /**
- * 내가 등록한 중고책 판매글 목록 조회 API
+ * 내가 등록한 중고책 판매글 목록을 조회합니다.
+ * @returns 내 판매글 목록
  */
 export const getMyBookSales = async (): Promise<GetMyBookSalesResponse> => {
   const { data } = await privateAxios.get<GetMyBookSalesResponse>(
@@ -87,7 +88,10 @@ export const getMyBookSales = async (): Promise<GetMyBookSalesResponse> => {
 };
 
 /**
- * 중고책 판매글의 상태를 변경하는 API
+ * 중고책 판매글의 상태(판매중, 예약중, 판매완료)를 변경합니다.
+ * @param saleId 판매글 ID
+ * @param status 변경할 상태
+ * @returns 변경된 판매글 정보
  */
 export const updateBookSaleStatus = async ({
   saleId,
@@ -105,7 +109,11 @@ export const updateBookSaleStatus = async ({
   return data;
 };
 
-/** 특정 판매글 상세 정보 조회 API */
+/**
+ * 특정 판매글의 상세 정보를 조회합니다.
+ * @param saleId 판매글 ID
+ * @returns 판매글 상세 정보
+ */
 export const getBookSaleDetail = async (saleId: string) => {
   const { data } = await publicAxios.get<UsedBookSale>(
     API_PATHS.book.saleDetail(saleId)
@@ -114,7 +122,9 @@ export const getBookSaleDetail = async (saleId: string) => {
 };
 
 /**
- * 특정 책(ISBN)에 대한 관련 판매글 목록을 페이지네이션으로 조회하는 API 함수
+ * 특정 책(ISBN)에 대한 관련 판매글 목록을 페이지네이션으로 조회합니다.
+ * @param params 조회 파라미터 (ISBN, 페이지, 지역 등)
+ * @returns 관련 판매글 목록
  */
 export const getRelatedSales = async ({
   isbn,
@@ -138,9 +148,10 @@ export const getRelatedSales = async ({
 };
 
 /**
- * 중고책 판매글 수정 API
- * @param saleId - 수정할 판매글 ID
- * @param payload - 수정할 데이터
+ * 중고책 판매글을 수정합니다.
+ * @param saleId 수정할 판매글 ID
+ * @param payload 수정할 데이터
+ * @returns 수정된 판매글 정보
  */
 export const updateBookSale = async ({
   saleId,
@@ -157,15 +168,16 @@ export const updateBookSale = async ({
 };
 
 /**
- * 중고책 판매글 삭제 API
- @param saleId - 삭제할 판매글 ID
+ * 중고책 판매글을 삭제합니다.
+ * @param saleId 삭제할 판매글 ID
  */
 export const deleteBookSale = async (saleId: number) => {
   await privateAxios.delete(API_PATHS.book.deleteSale(saleId));
 };
 
 /**
- * 최근 등록된 중고책 판매글 목록 조회 API
+ * 최근 등록된 중고책 판매글 목록을 조회합니다.
+ * @returns 최근 판매글 목록
  */
 export const getRecentBookSales = async (): Promise<UsedBookSale[]> => {
   const { data } = await publicAxios.get<UsedBookSale[]>(
@@ -174,6 +186,13 @@ export const getRecentBookSales = async (): Promise<UsedBookSale[]> => {
   return data;
 };
 
+/**
+ * 책에 대한 요약 및 후기를 생성하거나 조회합니다.
+ * @param title 책 제목
+ * @param author 저자
+ * @param description 책 설명 (선택)
+ * @returns 요약 정보
+ */
 export const getBookSummary = async (
   title: string,
   author: string,
@@ -187,6 +206,11 @@ export const getBookSummary = async (
   return data;
 };
 
+/**
+ * 중고책 판매글을 검색합니다.
+ * @param params 검색 파라미터
+ * @returns 검색 결과
+ */
 export const searchBookSales = async (
   params: SearchBookSalesParams
 ): Promise<SearchBookSalesResponse> => {

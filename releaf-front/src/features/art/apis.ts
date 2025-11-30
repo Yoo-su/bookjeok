@@ -15,6 +15,11 @@ import {
   GetArtListParams,
 } from "./types";
 
+/**
+ * 공연/예술 목록을 조회합니다.
+ * @param params 조회 파라미터 (페이지, 장르, 날짜 등)
+ * @returns 공연 목록 또는 에러 응답
+ */
 export const getArtList = async (
   params: GetArtListParams
 ): Promise<ArtListSuccessResponse | ArtListErrorResponse> => {

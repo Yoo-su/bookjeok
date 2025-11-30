@@ -50,6 +50,10 @@ interface ReviewFormProps {
   isSubmitting?: boolean;
 }
 
+/**
+ * 리뷰 작성 및 수정을 위한 폼 컴포넌트입니다.
+ * 책 검색, 별점, 태그, 에디터 기능을 포함합니다.
+ */
 export const ReviewForm = ({
   initialData,
   onSubmit,

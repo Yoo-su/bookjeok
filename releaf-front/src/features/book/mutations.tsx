@@ -25,6 +25,10 @@ interface CreateSaleVariables {
   imageFiles: File[];
   payload: Omit<CreateBookSaleParams, "imageUrls">;
 }
+/**
+ * 중고책 판매글을 생성하는 뮤테이션 훅입니다.
+ * 이미지를 업로드하고 판매글을 생성합니다.
+ */
 export const useCreateBookSaleMutation = () => {
   const router = useRouter();
   const { provider, id } = useAuthStore((state) => state.user)!;
@@ -64,7 +68,7 @@ export const useCreateBookSaleMutation = () => {
 };
 
 /**
- * 판매글 상태를 업데이트하는 뮤테이션 훅 (낙관적 업데이트 적용)
+ * 판매글 상태를 업데이트하는 뮤테이션 훅입니다. (낙관적 업데이트 적용)
  */
 export const useUpdateBookSaleStatusMutation = () => {
   const queryClient = useQueryClient();
@@ -98,7 +102,8 @@ export const useUpdateBookSaleStatusMutation = () => {
 };
 
 /**
- * 중고책 판매글 수정을 위한 Mutation Hook
+ * 중고책 판매글 수정을 위한 뮤테이션 훅입니다.
+ * 이미지 추가/삭제 및 판매글 정보 업데이트를 처리합니다.
  */
 interface UpdateSaleVariables {
   saleId: number;
@@ -164,7 +169,8 @@ export const useUpdateBookSaleMutation = () => {
 };
 
 /**
- * 중고책 판매글 삭제를 위한 Mutation Hook
+ * 중고책 판매글 삭제를 위한 뮤테이션 훅입니다.
+ * 관련된 이미지들도 함께 삭제합니다.
  */
 export const useDeleteBookSaleMutation = () => {
   const queryClient = useQueryClient();
