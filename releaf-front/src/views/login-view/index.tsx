@@ -54,13 +54,10 @@ export const LoginView = () => {
 
         <p className="px-8 text-xs text-center text-gray-500">
           로그인은{" "}
-          <a href="/terms" className="underline hover:text-gray-700">
-            이용약관
-          </a>{" "}
-          및{" "}
-          <a href="/privacy" className="underline hover:text-gray-700">
+          <label className="underline hover:text-gray-700">이용약관</label> 및{" "}
+          <label className="underline hover:text-gray-700">
             개인정보처리방침
-          </a>
+          </label>
           에 동의하는 것으로 간주됩니다.
         </p>
       </div>
