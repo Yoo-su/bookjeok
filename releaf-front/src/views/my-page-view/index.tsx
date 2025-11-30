@@ -20,7 +20,7 @@ export const MyPageView = () => {
   const { data: stats, isLoading } = useMyStatsQuery();
 
   if (!user) {
-    return null; // Or redirect to login
+    return null;
   }
 
   return (
