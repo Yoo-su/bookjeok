@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
+import { PopularReviewList } from "@/features/review/components/popular-review-list";
 import { ReviewFeedList } from "@/features/review/components/review-feed-list";
 import { ReviewGridList } from "@/features/review/components/review-grid-list";
 import { ReviewListFilters } from "@/features/review/components/review-list-filters";
@@ -104,7 +105,10 @@ export const ReviewListView = () => {
 
       <section className="mb-20 container mx-auto">
         {!isFiltered ? (
-          <ReviewFeedList feedsData={feedsData} />
+          <>
+            <PopularReviewList />
+            <ReviewFeedList feedsData={feedsData} />
+          </>
         ) : (
           <ReviewGridList
             reviews={reviews}

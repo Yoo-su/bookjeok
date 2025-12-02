@@ -98,6 +98,17 @@ export const getReviewFeeds = async () => {
 };
 
 /**
+ * 인기 리뷰를 조회합니다.
+ * @returns 인기 리뷰 목록
+ */
+export const getPopularReviews = async () => {
+  const { data } = await publicAxios.get<Review[]>(
+    `${API_PATHS.review.base}/popular`
+  );
+  return data;
+};
+
+/**
  * 리뷰 상세 정보를 조회합니다.
  * @param id 리뷰 ID
  * @returns 리뷰 상세 정보

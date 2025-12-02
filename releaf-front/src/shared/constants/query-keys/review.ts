@@ -9,6 +9,9 @@ export const reviewKeys = createQueryKeys("review", {
   feeds: {
     queryKey: null,
   },
+  popular: {
+    queryKey: null,
+  },
   detail: (id: number) => ({
     queryKey: [id],
   }),

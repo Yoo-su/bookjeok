@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Eye } from "lucide-react";
 import Image from "next/image";
 
 import { BookInfo } from "@/features/book/types";
@@ -69,6 +69,11 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
           <time dateTime={review.createdAt}>
             {format(new Date(review.createdAt), "MMMM d, yyyy")}
           </time>
+          <span className="w-1 h-1 rounded-full bg-stone-300" />
+          <div className="flex items-center gap-1.5">
+            <Eye className="w-4 h-4" />
+            <span>{review.viewCount.toLocaleString()}</span>
+          </div>
         </div>
 
         {/* 책 정보 카드 - 플로팅 */}

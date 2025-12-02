@@ -20,6 +20,7 @@ export interface Review {
   rating: number;
   tags: string[];
   category: string;
+  viewCount: number;
   userId: number;
   reactionCounts?: {
     [key in ReviewReactionType]: number;

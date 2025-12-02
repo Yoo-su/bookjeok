@@ -9,8 +9,10 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
   HttpStatus,
 } from '@nestjs/common';
+import { ViewCountInterceptor } from '../interceptors/view-count.interceptor';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags, ApiResponse, ApiParam } from '@nestjs/swagger';
 
@@ -86,7 +88,22 @@ export class ReviewController {
     return await this.reviewsService.findFeeds();
   }
 
+  @Get('popular')
+  @ApiOperation({
+    summary: '인기 리뷰 조회',
+    description: '조회수와 리액션 수를 기준으로 인기 리뷰를 조회합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '인기 리뷰 목록을 반환합니다.',
+    type: [Review],
+  })
+  async findPopular(): Promise<Review[]> {
+    return await this.reviewsService.findPopular();
+  }
+
   @Get(':id')
+  @UseInterceptors(ViewCountInterceptor)
   @ApiOperation({
     summary: '리뷰 상세 조회',
     description: '특정 리뷰의 상세 정보를 조회합니다.',

@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import {
   getMyReviewReaction,
+  getPopularReviews,
   getReview,
   getReviewFeeds,
   getReviews,
@@ -52,6 +53,18 @@ export const useReviewFeedsQuery = (enabled: boolean = true) => {
   return useQuery({
     queryKey: QUERY_KEYS.reviewKeys.feeds.queryKey,
     queryFn: getReviewFeeds,
+    enabled,
+  });
+};
+
+/**
+ * 인기 리뷰를 조회하는 쿼리 훅입니다.
+ * @param enabled 쿼리 활성화 여부
+ */
+export const usePopularReviewsQuery = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.reviewKeys.popular.queryKey,
+    queryFn: getPopularReviews,
     enabled,
   });
 };

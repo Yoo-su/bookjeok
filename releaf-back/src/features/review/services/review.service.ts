@@ -200,6 +200,36 @@ export class ReviewService {
   }
 
   /**
+   * 리뷰 조회수를 증가시킵니다.
+   * @param id 리뷰 ID
+   */
+  async incrementViewCount(id: number): Promise<void> {
+    await this.reviewsRepository.increment({ id }, 'viewCount', 1);
+  }
+
+  /**
+   * 인기 리뷰를 조회합니다.
+   * 인기 점수 = (조회수 * 1) + (리액션 수 * 3)
+   */
+  async findPopular(): Promise<Review[]> {
+    return this.reviewsRepository
+      .createQueryBuilder('review')
+      .leftJoinAndSelect('review.user', 'user')
+      .leftJoinAndSelect('review.book', 'book')
+      .leftJoin('review.reactions', 'reaction')
+      .addSelect(
+        '(COALESCE(review.viewCount, 0) * 1 + COUNT(reaction.id) * 3)',
+        'score',
+      )
+      .groupBy('review.id')
+      .addGroupBy('user.id')
+      .addGroupBy('book.isbn')
+      .orderBy('score', 'DESC')
+      .take(5)
+      .getMany();
+  }
+
+  /**
    * 사용자의 리액션 정보를 조회합니다.
    * @param id 리뷰 ID
    * @param userId 유저 ID
