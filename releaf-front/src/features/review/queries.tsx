@@ -6,7 +6,11 @@ import {
   getReviewFeeds,
   getReviews,
 } from "@/features/review/apis";
-import { GetReviewsParams, GetReviewsResponse } from "@/features/review/types";
+import {
+  GetReviewsParams,
+  GetReviewsResponse,
+  Review,
+} from "@/features/review/types";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
 /**
@@ -57,11 +61,16 @@ export const useReviewFeedsQuery = (enabled: boolean = true) => {
  * @param id 리뷰 ID
  * @param enabled 쿼리 활성화 여부
  */
-export const useReviewDetailQuery = (id: number, enabled: boolean = true) => {
+export const useReviewDetailQuery = (
+  id: number,
+  enabled: boolean = true,
+  initialData?: Review
+) => {
   return useQuery({
     queryKey: QUERY_KEYS.reviewKeys.detail(id).queryKey,
     queryFn: () => getReview(id),
     enabled,
+    initialData,
   });
 };
 

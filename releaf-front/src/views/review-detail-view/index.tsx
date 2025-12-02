@@ -7,9 +7,14 @@ import { ReviewDetailActions } from "@/features/review/components/review-detail-
 import { ReviewDetailContent } from "@/features/review/components/review-detail-content";
 import { ReviewDetailHeader } from "@/features/review/components/review-detail-header";
 import { useReviewDetailQuery } from "@/features/review/queries";
+import { Review } from "@/features/review/types";
 import { Spinner } from "@/shared/components/shadcn/spinner";
 
-export const ReviewDetailView = () => {
+interface ReviewDetailViewProps {
+  initialReview?: Review | null;
+}
+
+export const ReviewDetailView = ({ initialReview }: ReviewDetailViewProps) => {
   const params = useParams();
   const id = params.id as string;
   const { user } = useAuthStore();
@@ -18,7 +23,7 @@ export const ReviewDetailView = () => {
     data: review,
     isLoading,
     error,
-  } = useReviewDetailQuery(Number(id), !!id);
+  } = useReviewDetailQuery(Number(id), !!id, initialReview ?? undefined);
 
   if (isLoading) {
     return (
