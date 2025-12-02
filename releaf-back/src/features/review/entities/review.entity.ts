@@ -3,6 +3,8 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -12,6 +14,7 @@ import {
 import { Book } from '@/features/book/entities/book.entity';
 import { User } from '@/features/user/entities/user.entity';
 import { ReviewReaction } from './review-reaction.entity';
+import { Tag } from './tag.entity';
 
 @Entity('reviews')
 export class Review {
@@ -26,9 +29,6 @@ export class Review {
 
   @Column('text')
   content: string;
-
-  @Column('simple-array', { nullable: true })
-  tags: string[];
 
   @Column('float', { default: 0 })
   rating: number;
@@ -61,4 +61,12 @@ export class Review {
 
   @OneToMany(() => ReviewReaction, (reaction) => reaction.review)
   reactions: ReviewReaction[];
+
+  @ManyToMany(() => Tag, { cascade: ['insert'] })
+  @JoinTable({
+    name: 'review_tags',
+    joinColumn: { name: 'reviewId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tagId', referencedColumnName: 'id' },
+  })
+  tagEntities: Tag[];
 }

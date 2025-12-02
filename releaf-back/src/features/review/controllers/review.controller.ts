@@ -182,7 +182,7 @@ export class ReviewController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: '리뷰가 성공적으로 삭제되었습니다.',
-    type: Review,
+    type: ReviewResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -196,7 +196,7 @@ export class ReviewController {
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User,
-  ): Promise<Review> {
+  ): Promise<ReviewResponseDto> {
     return await this.reviewsService.remove(id, user.id);
   }
 

@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, In, EntityManager } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
 import { Review } from '@/features/review/entities/review.entity';
@@ -12,6 +12,7 @@ import {
   ReviewReaction,
   ReviewReactionType,
 } from '@/features/review/entities/review-reaction.entity';
+import { Tag } from '@/features/review/entities/tag.entity';
 
 import { ReviewImageHelper } from '../helpers/review-image.helper';
 
@@ -34,6 +35,8 @@ export class ReviewService {
     private booksRepository: Repository<Book>,
     @InjectRepository(ReviewReaction)
     private reviewReactionsRepository: Repository<ReviewReaction>,
+    @InjectRepository(Tag)
+    private tagsRepository: Repository<Tag>,
     private reviewImageHelper: ReviewImageHelper,
     private dataSource: DataSource,
   ) {}
@@ -47,10 +50,10 @@ export class ReviewService {
   async create(
     createReviewDto: CreateReviewDto,
     userId: number,
-  ): Promise<Review> {
-    const { book, ...reviewData } = createReviewDto;
+  ): Promise<ReviewResponseDto> {
+    const { book, tags, ...reviewData } = createReviewDto;
 
-    return this.dataSource.transaction(async (manager) => {
+    return this.dataSource.transaction(async (manager: EntityManager) => {
       if (book) {
         const existingBook = await manager.findOne(Book, {
           where: { isbn: book.isbn },
@@ -61,11 +64,47 @@ export class ReviewService {
         }
       }
 
+      // 태그 처리
+      let tagEntities: Tag[] = [];
+      if (tags && tags.length > 0) {
+        tagEntities = await this.getOrCreateTags(manager, tags);
+      }
+
       const review = manager.create(Review, {
         ...reviewData,
         userId,
+        tagEntities,
       });
-      return manager.save(Review, review);
+      const savedReview = await manager.save(Review, review);
+
+      // DTO로 변환하여 반환
+      return {
+        ...savedReview,
+        tags: tags || [],
+      } as ReviewResponseDto;
+    });
+  }
+
+  private async getOrCreateTags(
+    manager: EntityManager,
+    tagNames: string[],
+  ): Promise<Tag[]> {
+    if (tagNames.length === 0) return [];
+
+    // 1. 중복 무시하고 일괄 INSERT (ON CONFLICT DO NOTHING)
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(Tag)
+      .values(tagNames.map((name) => ({ name })))
+      .orIgnore()
+      .execute();
+
+    // 2. 전체 태그 조회
+    // manager.find(Tag, { where: { name: In(tagNames) } }) 와 같음
+    // 트랜잭션 매니저를 사용해야 하므로 createQueryBuilder 사용 권장
+    return await manager.find(Tag, {
+      where: { name: In(tagNames) },
     });
   }
 
@@ -81,6 +120,7 @@ export class ReviewService {
     const qb = this.reviewsRepository.createQueryBuilder('review');
     qb.leftJoinAndSelect('review.user', 'user');
     qb.leftJoinAndSelect('review.book', 'book');
+    qb.leftJoinAndSelect('review.tagEntities', 'tags'); // 태그 엔티티 로드
     qb.orderBy('review.createdAt', 'DESC');
     qb.skip(skip);
     qb.take(limit);
@@ -99,16 +139,17 @@ export class ReviewService {
 
     if (tag) {
       const tags = Array.isArray(tag) ? tag : tag.split(',');
-      const { Brackets } = await import('typeorm');
-      qb.andWhere(
-        new Brackets((subQb) => {
-          tags.forEach((t: string, index: number) => {
-            const paramName = `tag_${index}`;
-            subQb.orWhere(`review.tags LIKE :${paramName}`, {
-              [paramName]: `%${t.trim()}%`,
-            });
-          });
-        }),
+      // 태그 테이블과 조인하여 검색 (인덱스 활용)
+      // 이미 위에서 leftJoinAndSelect로 'tags' 알리어스를 썼으므로 여기서는 필터링만 함
+      // 하지만 필터링을 위해 innerJoin을 쓰면 결과가 줄어들 수 있음.
+      // 검색 조건에 맞는 리뷰만 가져오되, 그 리뷰의 *모든* 태그를 가져와야 함.
+      // 따라서 필터링용 조인은 별도로 하거나, 서브쿼리를 써야 함.
+      // 간단하게는:
+      qb.innerJoin(
+        'review.tagEntities',
+        'filterTag',
+        'filterTag.name IN (:...searchTags)',
+        { searchTags: tags.map((t: string) => t.trim()) },
       );
     }
 
@@ -119,7 +160,8 @@ export class ReviewService {
           subQb
             .where('review.title LIKE :search', { search: `%${search}%` })
             .orWhere('review.content LIKE :search', { search: `%${search}%` })
-            .orWhere('review.tags LIKE :search', { search: `%${search}%` })
+            // 태그 이름으로 검색 (조인된 테이블 사용)
+            .orWhere('tags.name LIKE :search', { search: `%${search}%` })
             .orWhere('book.title LIKE :search', { search: `%${search}%` });
         }),
       );
@@ -127,8 +169,14 @@ export class ReviewService {
 
     const [reviews, total] = await qb.getManyAndCount();
 
+    // 태그 엔티티를 문자열 배열로 변환하여 DTO 매핑
+    const reviewDtos = reviews.map((review) => ({
+      ...review,
+      tags: review.tagEntities?.map((t) => t.name) || [],
+    })) as ReviewResponseDto[];
+
     return {
-      reviews,
+      reviews: reviewDtos,
       total,
       page: +page,
       limit: +limit,
@@ -147,15 +195,21 @@ export class ReviewService {
     for (const category of categories) {
       const reviews = await this.reviewsRepository.find({
         where: { category },
-        relations: ['user', 'book'],
+        relations: ['user', 'book', 'tagEntities'],
         order: { createdAt: 'DESC' },
         take: 4,
       });
 
       if (reviews.length > 0) {
+        // 태그 매핑
+        const reviewDtos = reviews.map((review) => ({
+          ...review,
+          tags: review.tagEntities?.map((t) => t.name) || [],
+        })) as ReviewResponseDto[];
+
         feeds.push({
           category,
-          reviews,
+          reviews: reviewDtos,
         });
       }
     }
@@ -169,10 +223,10 @@ export class ReviewService {
    * @param userId 요청한 유저 ID (옵션)
    * @returns 리뷰 엔티티 (리액션 정보 포함)
    */
-  async findOne(id: number) {
+  async findOne(id: number): Promise<ReviewResponseDto> {
     const review = await this.reviewsRepository.findOne({
       where: { id },
-      relations: ['user', 'book'],
+      relations: ['user', 'book', 'tagEntities'],
     });
 
     if (!review) {
@@ -193,6 +247,7 @@ export class ReviewService {
   }
 
   /**
+   * 인기 리뷰를 조회합니다.
    * 인기 점수 = (조회수 * 1) + (리액션 수 * 3)
    */
   async findPopular(): Promise<ReviewResponseDto[]> {
@@ -200,6 +255,7 @@ export class ReviewService {
       .createQueryBuilder('review')
       .leftJoinAndSelect('review.user', 'user')
       .leftJoinAndSelect('review.book', 'book')
+      .leftJoinAndSelect('review.tagEntities', 'tagEntities')
       .addSelect(
         '(COALESCE(review.viewCount, 0) * 1 + COALESCE(review.reactionCount, 0) * 3)',
         'score',
@@ -259,12 +315,13 @@ export class ReviewService {
 
     return reviews.map((review) => ({
       ...review,
+      tags: review.tagEntities?.map((t) => t.name) || [],
       reactionCounts: reactionCountsMap.get(review.id) || {
         [ReviewReactionType.LIKE]: 0,
         [ReviewReactionType.INSIGHTFUL]: 0,
         [ReviewReactionType.SUPPORT]: 0,
       },
-    }));
+    })) as ReviewResponseDto[];
   }
 
   /**
@@ -333,8 +390,19 @@ export class ReviewService {
    * @param userId 요청한 유저 ID
    * @returns 수정된 리뷰
    */
-  async update(id: number, updateReviewDto: UpdateReviewDto, userId: number) {
-    const review = await this.findOne(id);
+  async update(
+    id: number,
+    updateReviewDto: UpdateReviewDto,
+    userId: number,
+  ): Promise<ReviewResponseDto> {
+    const review = await this.reviewsRepository.findOne({
+      where: { id },
+      relations: ['user', 'book', 'tagEntities'],
+    });
+
+    if (!review) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
 
     if (review.userId !== userId) {
       throw new UnauthorizedException(
@@ -350,14 +418,31 @@ export class ReviewService {
       );
     }
 
-    Object.assign(review, updateReviewDto);
-    await this.reviewsRepository.save(review);
+    // 태그 업데이트 처리
+    if (updateReviewDto.tags) {
+      // 트랜잭션 없이 처리 (간단하게) 또는 트랜잭션 래핑 필요.
+      // 여기서는 간단히 처리.
+      review.tagEntities = await this.getOrCreateTags(
+        this.dataSource.manager,
+        updateReviewDto.tags,
+      );
+    }
+
+    Object.assign(review, {
+      ...updateReviewDto,
+      tags: undefined, // tags 속성은 엔티티에 없으므로 제외 (DTO에서만 사용)
+    });
+
+    const savedReview = await this.reviewsRepository.save(review);
 
     if (removedImages.length > 0) {
       await this.reviewImageHelper.deleteImages(removedImages);
     }
 
-    return this.findOne(id);
+    return {
+      ...savedReview,
+      tags: savedReview.tagEntities?.map((t) => t.name) || [],
+    } as ReviewResponseDto;
   }
 
   /**
@@ -366,8 +451,15 @@ export class ReviewService {
    * @param userId 요청한 유저 ID
    * @returns 삭제된 리뷰
    */
-  async remove(id: number, userId: number) {
-    const review = await this.findOne(id);
+  async remove(id: number, userId: number): Promise<ReviewResponseDto> {
+    const review = await this.reviewsRepository.findOne({
+      where: { id },
+      relations: ['user', 'book', 'tagEntities'],
+    });
+
+    if (!review) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
 
     if (review.userId !== userId) {
       throw new UnauthorizedException(
@@ -377,12 +469,18 @@ export class ReviewService {
 
     const images = this.reviewImageHelper.extractImageUrls(review.content);
 
+    // 삭제 전 태그 정보 백업 (반환용)
+    const tags = review.tagEntities?.map((t) => t.name) || [];
+
     const deletedReview = await this.reviewsRepository.remove(review);
 
     if (images.length > 0) {
       await this.reviewImageHelper.deleteImages(images);
     }
 
-    return deletedReview;
+    return {
+      ...deletedReview,
+      tags,
+    } as ReviewResponseDto;
   }
 }

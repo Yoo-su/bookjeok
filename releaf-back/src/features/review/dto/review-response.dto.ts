@@ -11,6 +11,13 @@ export class ReviewResponseDto extends Review {
   reactionCounts?: {
     [key in ReviewReactionType]: number;
   };
+
+  @ApiProperty({
+    description: '태그 목록',
+    example: ['소설', '감동'],
+    required: false,
+  })
+  tags?: string[];
 }
 
 export class GetReviewsResponseDto {
