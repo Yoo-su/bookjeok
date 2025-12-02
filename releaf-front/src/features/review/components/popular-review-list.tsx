@@ -92,12 +92,13 @@ export function PopularReviewList() {
                     <div className="flex items-center gap-1">
                       <ThumbsUp className="w-3 h-3" />
                       <span>
-                        {review.reactionCounts
-                          ? Object.values(review.reactionCounts).reduce(
-                              (a, b) => a + b,
-                              0
-                            )
-                          : 0}
+                        {review.reactionCount ??
+                          (review.reactionCounts
+                            ? Object.values(review.reactionCounts).reduce(
+                                (a, b) => a + b,
+                                0
+                              )
+                            : 0)}
                       </span>
                     </div>
                   </div>

@@ -206,45 +206,62 @@ export class ChatService {
       .orderBy('room.updatedAt', 'DESC')
       .getMany();
 
-    // 2. 각 채팅방에 대한 추가 정보(마지막 메시지, 안 읽은 개수)를 계산합니다.
-    const roomsWithDetails = await Promise.all(
-      rooms.map(async (room) => {
-        // 마지막 메시지 조회
-        const lastMessage = await this.chatMessageRepository.findOne({
-          where: { chatRoom: { id: room.id } },
-          order: { createdAt: 'DESC' },
-          relations: ['sender'],
-        });
+    if (rooms.length === 0) {
+      return [];
+    }
 
-        // 안 읽은 메시지 개수 조회 (ReadReceipt 테이블 기준)
-        const unreadCount = await this.chatMessageRepository
-          .createQueryBuilder('message')
-          .leftJoin(
-            'message.readReceipts',
-            'receipt',
-            'receipt.userId = :userId',
-            { userId },
-          )
-          .where('message.chatRoom.id = :roomId', { roomId: room.id })
-          .andWhere('message.sender.id != :userId', { userId })
-          .andWhere('receipt.id IS NULL') // 내가 읽음 기록을 남기지 않은 메시지
-          .getCount();
+    const roomIds = rooms.map((room) => room.id);
 
-        return {
-          ...room,
-          lastMessage,
-          unreadCount,
-        };
-      }),
-    );
+    // 2. 각 채팅방의 마지막 메시지를 일괄 조회합니다.
+    // PostgreSQL의 DISTINCT ON을 사용하여 각 채팅방별 최신 메시지 하나씩만 가져옵니다.
+    const lastMessages = await this.chatMessageRepository
+      .createQueryBuilder('message')
+      .leftJoinAndSelect('message.sender', 'sender')
+      .leftJoinAndSelect('message.chatRoom', 'chatRoom')
+      .where('message.chatRoom.id IN (:...roomIds)', { roomIds })
+      .distinctOn(['message.chatRoom.id'])
+      .orderBy('message.chatRoom.id')
+      .addOrderBy('message.createdAt', 'DESC')
+      .getMany();
 
-    // 마지막 메시지 최신순으로 다시 정렬
+    const lastMessageMap = new Map<number, ChatMessage>();
+    lastMessages.forEach((msg) => {
+      lastMessageMap.set(msg.chatRoom.id, msg);
+    });
+
+    // 3. 안 읽은 메시지 개수 일괄 조회
+    const unreadCounts = await this.chatMessageRepository
+      .createQueryBuilder('message')
+      .leftJoin('message.readReceipts', 'receipt', 'receipt.userId = :userId', {
+        userId,
+      })
+      .select('message.chatRoom.id', 'roomId')
+      .addSelect('COUNT(message.id)', 'count')
+      .where('message.chatRoom.id IN (:...roomIds)', { roomIds })
+      .andWhere('message.sender.id != :userId', { userId })
+      .andWhere('receipt.id IS NULL')
+      .groupBy('message.chatRoom.id')
+      .getRawMany();
+
+    const unreadCountMap = new Map<number, number>();
+    unreadCounts.forEach((row) => {
+      unreadCountMap.set(row.roomId, parseInt(row.count, 10));
+    });
+
+    // 4. 데이터 병합
+    const roomsWithDetails = rooms.map((room) => {
+      return {
+        ...room,
+        lastMessage: lastMessageMap.get(room.id) || null,
+        unreadCount: unreadCountMap.get(room.id) || 0,
+      };
+    });
+
+    // 5. 정렬 (마지막 메시지 최신순, 없으면 방 업데이트 순)
     roomsWithDetails.sort((a, b) => {
-      if (!a.lastMessage) return 1;
-      if (!b.lastMessage) return -1;
-      return (
-        b.lastMessage.createdAt.getTime() - a.lastMessage.createdAt.getTime()
-      );
+      const timeA = a.lastMessage?.createdAt.getTime() || a.updatedAt.getTime();
+      const timeB = b.lastMessage?.createdAt.getTime() || b.updatedAt.getTime();
+      return timeB - timeA;
     });
 
     return roomsWithDetails;
