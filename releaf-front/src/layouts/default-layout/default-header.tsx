@@ -5,6 +5,7 @@ import {
   MessageSquareQuote,
   PenLine,
   Search,
+  ShoppingBag,
   Store,
   User,
 } from "lucide-react";
@@ -44,25 +45,45 @@ export const DefaultHeader = () => {
           </Link>
           {/* 향후 다른 메뉴 버튼들이 추가될 네비게이션 영역 */}
           <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    asChild
-                    className="rounded-full cursor-pointer text-gray-600 hover:text-gray-900"
-                    aria-label="중고마켓 페이지로 이동"
-                  >
-                    <Link href="/book/market">
-                      <Store className="w-5 h-5" />
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full cursor-pointer text-gray-600 hover:text-gray-900"
+                >
+                  <Store className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-40">
+                <DropdownMenuLabel>중고마켓</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/book/market"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Store className="w-4 h-4 mr-2" />
+                      <span>중고마켓 홈</span>
                     </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>중고마켓</p>
-                </TooltipContent>
-              </Tooltip>
+                  </DropdownMenuItem>
+                  {user && (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/my-page/sales"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <ShoppingBag className="w-4 h-4 mr-2" />
+                        <span>내 판매글</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -93,7 +114,7 @@ export const DefaultHeader = () => {
                   <MessageSquareQuote className="w-5 h-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="center" className="w-40">
                 <DropdownMenuLabel>리뷰</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
@@ -109,7 +130,6 @@ export const DefaultHeader = () => {
                 </DropdownMenuGroup>
                 {user && (
                   <>
-                    <DropdownMenuSeparator />
                     <DropdownMenuGroup>
                       <DropdownMenuItem asChild>
                         <Link
