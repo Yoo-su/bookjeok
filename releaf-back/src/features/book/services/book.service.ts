@@ -54,38 +54,26 @@ export class BookService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
+    return this.dataSource.transaction(async (manager) => {
       // 1. 책 정보 찾기 또는 생성 (트랜잭션 내에서 처리)
-      let book = await queryRunner.manager.findOne(Book, {
+      let book = await manager.findOne(Book, {
         where: { isbn: createBookSaleDto.book.isbn },
       });
 
       if (!book) {
-        book = this.bookRepository.create(createBookSaleDto.book);
-        book = await queryRunner.manager.save(Book, book);
+        book = manager.create(Book, createBookSaleDto.book);
+        book = await manager.save(Book, book);
       }
 
       // 2. 판매글 생성
-      const newSale = this.usedBookSaleRepository.create({
+      const newSale = manager.create(UsedBookSale, {
         ...createBookSaleDto,
         user,
         book,
       });
 
-      const savedSale = await queryRunner.manager.save(UsedBookSale, newSale);
-
-      await queryRunner.commitTransaction();
-      return savedSale;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+      return manager.save(UsedBookSale, newSale);
+    });
   }
 
   /**

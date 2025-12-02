@@ -45,6 +45,11 @@ Releaf는 사용자의 문화 생활과 지식 공유를 돕기 위해 다음과
 - **🤖 AI 도서 요약 (AI Book Summary)**
   - Google Gemini LLM을 연동하여, 책 상세 페이지에서 AI가 생성한 핵심 요약 및 도서 추천 대상 정보를 제공합니다.
 
+- **📝 독서 리뷰 커뮤니티 (Book Review Community)**
+  - **인기 리뷰 랭킹**: 조회수와 리액션(좋아요, 유익해요 등)을 종합하여 선정된 인기 리뷰를 메인에서 확인할 수 있습니다.
+  - **다양한 리액션**: 단순한 '좋아요'를 넘어 '유익해요', '응원해요' 등 다양한 감정을 표현할 수 있습니다.
+  - **조회수 트래킹**: IP 기반의 중복 방지 로직이 적용된 조회수 시스템으로 신뢰성 있는 인기도를 제공합니다.
+
 - **👤 간편한 소셜 로그인 및 마이페이지 (Social Login & My Page)**
   - 카카오, 네이버 소셜 로그인을 통해 3초 만에 간편하게 서비스를 시작할 수 있습니다.
   - 마이페이지에서 내가 등록한 판매글 목록을 관리하고, 판매 상태를 손쉽게 변경할 수 있습니다.
@@ -90,6 +95,7 @@ Next.js 13+의 App Router를 사용하여 라우팅을 관리합니다. 특히, 
 | **Forms**          | ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?logo=reacthookform&logoColor=white) | 폼 상태 관리의 복잡성을 줄이고, Zod 스키마를 통해 타입 추론과 유효성 검사를 동시에 처리하여 안정성을 높였습니다.             |
 | **Authentication** | ![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)                          | 백엔드에서 소셜 로그인(OAuth) 처리 및 JWT(Access/Refresh Token) 발급을 모두 담당합니다. 프론트엔드는 토큰을 받아 사용합니다. |
 | **Real-time**      | ![Socket.io](https://img.shields.io/badge/Socket.io-010101?logo=socketdotio&logoColor=white)               | 실시간 양방향 통신을 위한 표준 라이브러리로, 채팅 기능 구현에 필수적인 웹소켓 연결을 안정적으로 관리합니다.                  |
+| **Editor**         | ![Tiptap](https://img.shields.io/badge/Tiptap-000000?logo=tiptap&logoColor=white)                          | Headless 기반의 확장 가능한 리치 텍스트 에디터로, 커스텀 디자인과 기능을 자유롭게 구현할 수 있습니다.                        |
 | **Deployment**     | ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)                          | Next.js에 최적화된 배포 환경과 CI/CD 파이프라인을 제공하여 개발부터 배포까지의 과정을 자동화했습니다.                        |
 
 ---

@@ -33,6 +33,12 @@ Releaf의 백엔드 서버는 **NestJS**를 기반으로 구축되었으며, 안
 - **AI 기반 도서 요약:** Google Generative AI 모델을 활용하여 도서의 핵심 내용을 요약하는 기능을 제공합니다.
 - **프롬프트 관리:** AI 모델에 최적화된 프롬프트를 생성하고 관리합니다.
 
+### 6. 리뷰 (Review)
+
+- **리뷰 관리:** 도서에 대한 리뷰 작성, 수정, 삭제 기능을 제공합니다.
+- **인기 리뷰 선정:** 조회수와 리액션 수를 가중치로 계산하여 인기 리뷰를 선정합니다.
+- **리액션 시스템:** '좋아요', '유익해요', '응원해요' 등 다양한 리액션을 지원하며, 조회수와 함께 사용자 참여를 유도합니다.
+
 ## 프로젝트 구조
 
 ```
@@ -75,6 +81,15 @@ src
 |                | `/chat/rooms/:roomId/read`     | `PATCH`     | 채팅방 메시지 읽음 처리             | JWT                   |
 |                | `/chat/rooms/:roomId`          | `DELETE`    | 채팅방 나가기                       | JWT                   |
 | **LLM**        | `/llm/book-summary`            | `POST`      | AI를 이용한 도서 요약 생성          | 없음                  |
+| **Review**     | `/reviews`                     | `POST`      | 리뷰 작성                           | JWT                   |
+|                | `/reviews`                     | `GET`       | 리뷰 목록 조회 (필터링 지원)        | 없음                  |
+|                | `/reviews/feeds`               | `GET`       | 카테고리별 리뷰 피드 조회           | 없음                  |
+|                | `/reviews/popular`             | `GET`       | 인기 리뷰 목록 조회                 | 없음                  |
+|                | `/reviews/:id`                 | `GET`       | 리뷰 상세 조회 (조회수 증가)        | 없음                  |
+|                | `/reviews/:id`                 | `PATCH`     | 리뷰 수정                           | JWT                   |
+|                | `/reviews/:id`                 | `DELETE`    | 리뷰 삭제                           | JWT                   |
+|                | `/reviews/:id/reactions`       | `POST`      | 리뷰 리액션 토글                    | JWT                   |
+|                | `/reviews/:id/reaction`        | `GET`       | 내 리액션 정보 조회                 | JWT                   |
 | **User**       | `/user/me`                     | `GET`       | 내 프로필 정보 조회                 | JWT                   |
 |                | `/user/my-sales`               | `GET`       | 내가 등록한 판매글 목록 조회        | JWT                   |
 

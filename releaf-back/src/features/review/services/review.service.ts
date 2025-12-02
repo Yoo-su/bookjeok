@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
 import { Review } from '@/features/review/entities/review.entity';
@@ -35,6 +35,7 @@ export class ReviewService {
     @InjectRepository(ReviewReaction)
     private reviewReactionsRepository: Repository<ReviewReaction>,
     private reviewImageHelper: ReviewImageHelper,
+    private dataSource: DataSource,
   ) {}
 
   /**
@@ -49,21 +50,23 @@ export class ReviewService {
   ): Promise<Review> {
     const { book, ...reviewData } = createReviewDto;
 
-    if (book) {
-      const existingBook = await this.booksRepository.findOne({
-        where: { isbn: book.isbn },
-      });
+    return this.dataSource.transaction(async (manager) => {
+      if (book) {
+        const existingBook = await manager.findOne(Book, {
+          where: { isbn: book.isbn },
+        });
 
-      if (!existingBook) {
-        await this.booksRepository.save(this.booksRepository.create(book));
+        if (!existingBook) {
+          await manager.save(Book, manager.create(Book, book));
+        }
       }
-    }
 
-    const review = this.reviewsRepository.create({
-      ...reviewData,
-      userId,
+      const review = manager.create(Review, {
+        ...reviewData,
+        userId,
+      });
+      return manager.save(Review, review);
     });
-    return this.reviewsRepository.save(review);
   }
 
   /**
@@ -336,18 +339,21 @@ export class ReviewService {
       );
     }
 
+    let removedImages: string[] = [];
     if (updateReviewDto.content && updateReviewDto.content !== review.content) {
-      const removedImages = this.reviewImageHelper.getRemovedImages(
+      removedImages = this.reviewImageHelper.getRemovedImages(
         review.content,
         updateReviewDto.content,
       );
-      if (removedImages.length > 0) {
-        await this.reviewImageHelper.deleteImages(removedImages);
-      }
     }
 
     Object.assign(review, updateReviewDto);
     await this.reviewsRepository.save(review);
+
+    if (removedImages.length > 0) {
+      await this.reviewImageHelper.deleteImages(removedImages);
+    }
+
     return this.findOne(id);
   }
 
@@ -367,10 +373,13 @@ export class ReviewService {
     }
 
     const images = this.reviewImageHelper.extractImageUrls(review.content);
+
+    const deletedReview = await this.reviewsRepository.remove(review);
+
     if (images.length > 0) {
       await this.reviewImageHelper.deleteImages(images);
     }
 
-    return this.reviewsRepository.remove(review);
+    return deletedReview;
   }
 }
