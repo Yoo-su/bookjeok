@@ -54,6 +54,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       # Frontend Deploy (Vercel Production)
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -84,6 +89,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
 
       # Frontend Deploy (Vercel Preview)
       - name: Install Vercel CLI
