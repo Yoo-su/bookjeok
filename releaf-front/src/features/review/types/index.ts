@@ -26,6 +26,7 @@ export interface Review {
   category: string;
   viewCount: number;
   userId: number;
+  reactionCount?: number;
   reactionCounts?: ReviewReactionCounts;
 
   user: ReviewUser;

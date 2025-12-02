@@ -200,16 +200,11 @@ export class ReviewService {
       .createQueryBuilder('review')
       .leftJoinAndSelect('review.user', 'user')
       .leftJoinAndSelect('review.book', 'book')
-      .leftJoin('review.reactions', 'reaction')
       .addSelect(
-        '(COALESCE(review.viewCount, 0) * 1 + COUNT(reaction.id) * 3)',
+        '(COALESCE(review.viewCount, 0) * 1 + COALESCE(review.reactionCount, 0) * 3)',
         'score',
       )
-      .groupBy('review.id')
-      .addGroupBy('user.id')
-      .addGroupBy('book.isbn')
       .orderBy('score', 'DESC')
-      .take(5)
       .take(5)
       .getMany();
 
@@ -295,30 +290,38 @@ export class ReviewService {
    * @param type 리액션 타입
    */
   async toggleReaction(id: number, userId: number, type: ReviewReactionType) {
-    const review = await this.reviewsRepository.findOne({ where: { id } });
-    if (!review) {
-      throw new NotFoundException(`Review with ID ${id} not found`);
-    }
-
-    const existingReaction = await this.reviewReactionsRepository.findOne({
-      where: { reviewId: id, userId },
-    });
-
-    if (existingReaction) {
-      if (existingReaction.type === type) {
-        await this.reviewReactionsRepository.remove(existingReaction);
-      } else {
-        existingReaction.type = type;
-        await this.reviewReactionsRepository.save(existingReaction);
+    await this.dataSource.transaction(async (manager) => {
+      const review = await manager.findOne(Review, { where: { id } });
+      if (!review) {
+        throw new NotFoundException(`Review with ID ${id} not found`);
       }
-    } else {
-      const newReaction = this.reviewReactionsRepository.create({
-        reviewId: id,
-        userId,
-        type,
+
+      const existingReaction = await manager.findOne(ReviewReaction, {
+        where: { reviewId: id, userId },
       });
-      await this.reviewReactionsRepository.save(newReaction);
-    }
+
+      if (existingReaction) {
+        if (existingReaction.type === type) {
+          // 리액션 삭제 (같은 타입 클릭 시)
+          await manager.remove(ReviewReaction, existingReaction);
+          await manager.decrement(Review, { id }, 'reactionCount', 1);
+        } else {
+          // 리액션 변경
+          existingReaction.type = type;
+          await manager.save(ReviewReaction, existingReaction);
+          // 카운트 변경 없음
+        }
+      } else {
+        // 새 리액션 추가
+        const newReaction = manager.create(ReviewReaction, {
+          reviewId: id,
+          userId,
+          type,
+        });
+        await manager.save(ReviewReaction, newReaction);
+        await manager.increment(Review, { id }, 'reactionCount', 1);
+      }
+    });
 
     return this.findOne(id);
   }

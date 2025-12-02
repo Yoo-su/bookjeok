@@ -36,6 +36,9 @@ export class Review {
   @Column({ default: 0 })
   viewCount: number;
 
+  @Column({ default: 0 })
+  reactionCount: number;
+
   @Column()
   userId: number;
 
