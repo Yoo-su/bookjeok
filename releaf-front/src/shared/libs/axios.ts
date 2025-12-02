@@ -6,7 +6,10 @@ import axios, {
 
 import { useAuthStore } from "@/features/auth/store";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL;
+const baseURL =
+  typeof window === "undefined"
+    ? process.env.API_URL || process.env.NEXT_PUBLIC_API_URL
+    : process.env.NEXT_PUBLIC_API_URL;
 
 export const publicAxios = axios.create({
   baseURL,
