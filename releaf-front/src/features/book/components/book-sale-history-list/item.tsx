@@ -96,7 +96,7 @@ export const BookSaleHistoryItem = ({ sale }: BookSaleHistoryItemProps) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link href={`/my-page/sales/${sale.id}/edit`}>
+                      <Link href={PATHS.MY_PAGE_SALES_EDIT(String(sale.id))}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>수정</span>
                       </Link>

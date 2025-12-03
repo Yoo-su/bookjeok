@@ -4,6 +4,7 @@ import Link from "next/link";
 import { WishlistItem } from "@/features/user/components/wishlist-item";
 import { Button } from "@/shared/components/shadcn/button";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
+import { PATHS } from "@/shared/constants/paths";
 
 import { WishlistItem as WishlistItemType } from "../types";
 
@@ -38,7 +39,7 @@ export const WishlistList = ({ wishlist, isLoading }: WishlistListProps) => {
           마음에 드는 책이나 판매글을 찜해보세요!
         </p>
         <Button asChild className="mt-6">
-          <Link href="/">홈으로 가기</Link>
+          <Link href={PATHS.HOME}>홈으로 가기</Link>
         </Button>
       </div>
     );

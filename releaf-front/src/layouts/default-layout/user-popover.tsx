@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/shared/components/shadcn/popover";
 import { Separator } from "@/shared/components/shadcn/separator";
+import { PATHS } from "@/shared/constants/paths";
 
 export default function UserPopover() {
   const user = useAuthStore((state) => state.user);
@@ -36,7 +37,7 @@ export default function UserPopover() {
 
   if (!user) {
     return (
-      <Link href="/login">
+      <Link href={PATHS.LOGIN}>
         <Button className="bg-white cursor-pointer hover:bg-white text-gray-600 border-[0.5px] rounded-full border-gray-100 p-2">
           <LogIn />
           로그인
@@ -81,7 +82,7 @@ export default function UserPopover() {
             className="justify-start w-full h-auto px-3 py-2"
             asChild
           >
-            <Link href="/my-page">마이페이지</Link>
+            <Link href={PATHS.MY_PAGE}>마이페이지</Link>
           </Button>
 
           <Button
@@ -89,7 +90,7 @@ export default function UserPopover() {
             className="justify-start w-full h-auto px-3 py-2"
             asChild
           >
-            <Link href="/my-page/wishlist">위시리스트</Link>
+            <Link href={PATHS.MY_PAGE_WISHLIST}>위시리스트</Link>
           </Button>
           <Button
             variant="ghost"

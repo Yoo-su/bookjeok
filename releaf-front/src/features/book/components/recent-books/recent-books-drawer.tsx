@@ -21,8 +21,7 @@ export const RecentBooksDrawer = () => {
   const pathname = usePathname();
   const recentBooks = useRecentBookStore((state) => state.recentBooks);
 
-  const shouldShow =
-    pathname === PATHS.HOME || pathname === PATHS.BOOK_SEARCH;
+  const shouldShow = pathname === PATHS.HOME || pathname === PATHS.BOOK_SEARCH;
 
   if (recentBooks.length === 0 || !shouldShow) {
     return null;
@@ -31,9 +30,12 @@ export const RecentBooksDrawer = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full bg-black/80 px-4 py-2 text-sm font-medium text-white shadow-lg backdrop-blur-sm transition-transform hover:scale-105 active:scale-95">
+        <button className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 rounded-full bg-linear-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/30 active:scale-95">
           <History className="h-4 w-4" />
-          <span>최근 본 책 ({recentBooks.length})</span>
+          <span>최근 본 책</span>
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px]">
+            {recentBooks.length}
+          </span>
         </button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-auto rounded-t-2xl">
@@ -43,11 +45,11 @@ export const RecentBooksDrawer = () => {
         <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-10 gap-x-4 gap-y-6 p-4">
           {recentBooks.map((book) => (
             <Link
-              href={`/book/${book.isbn}/detail`}
+              href={PATHS.BOOK_DETAIL(book.isbn)}
               key={book.isbn}
               className="group flex flex-col items-center text-center space-y-2"
             >
-              <div className="w-full aspect-[3/4] overflow-hidden rounded-lg shadow-md transition-all group-hover:shadow-xl group-hover:-translate-y-1">
+              <div className="w-full aspect-3/4 overflow-hidden rounded-lg shadow-md transition-all group-hover:shadow-xl group-hover:-translate-y-1">
                 <Image
                   src={book.image}
                   alt={book.title}

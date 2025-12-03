@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/shadcn/card";
+import { PATHS } from "@/shared/constants/paths";
 
 interface PopularReviewItemProps {
   review: Review;
@@ -21,7 +22,7 @@ interface PopularReviewItemProps {
 
 export function PopularReviewItem({ review }: PopularReviewItemProps) {
   return (
-    <Link href={`/review/${review.id}`}>
+    <Link href={PATHS.REVIEW_DETAIL(review.id)}>
       <Card className="h-full hover:shadow-md transition-shadow cursor-pointer border-stone-200 overflow-hidden group">
         <CardHeader className="p-4 pb-2">
           <div className="flex justify-between items-start gap-2">
@@ -61,14 +62,7 @@ export function PopularReviewItem({ review }: PopularReviewItemProps) {
             <div className="flex items-center gap-3 text-xs text-stone-400">
               <div className="flex items-center gap-1">
                 <ThumbsUp className="w-3 h-3" />
-                <span>
-                  {review.reactionCounts
-                    ? Object.values(review.reactionCounts).reduce(
-                        (a, b) => a + b,
-                        0
-                      )
-                    : 0}
-                </span>
+                <span>{review.reactionCount}</span>
               </div>
             </div>
           </div>

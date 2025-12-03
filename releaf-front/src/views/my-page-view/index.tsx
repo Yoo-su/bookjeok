@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/shared/components/shadcn/card";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
+import { PATHS } from "@/shared/constants/paths";
 
 export const MyPageView = () => {
   const user = useAuthStore((state) => state.user);
@@ -144,7 +145,7 @@ export const MyPageView = () => {
 
       {/* 메뉴 링크 */}
       <div className="space-y-4 mb-12">
-        <Link href="/my-page/sales" className="block">
+        <Link href={PATHS.MY_PAGE_SALES} className="block">
           <Card className="hover:bg-gray-50 transition-colors">
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center">

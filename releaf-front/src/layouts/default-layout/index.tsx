@@ -1,7 +1,5 @@
 "use client";
 
-import { ReactNode } from "react";
-
 import { RecentBooksDrawer } from "@/features/book/components/recent-books/recent-books-drawer";
 
 import { DefaultFooter } from "./default-footer";
@@ -16,7 +14,7 @@ export const DefaultLayout = ({
   fullWidth = false,
 }: DefaultLayoutProps) => {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh w-full flex-col relative">
       <DefaultHeader />
       {/* main 영역이 남은 공간을 모두 차지하도록 grow 속성 추가 */}
       <main

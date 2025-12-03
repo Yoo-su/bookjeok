@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/shared/components/shadcn/card";
 import { Separator } from "@/shared/components/shadcn/separator";
+import { PATHS } from "@/shared/constants/paths";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { useSocketContext } from "@/shared/providers/socket-provider";
 import { formatPostDate } from "@/shared/utils/date";
@@ -140,7 +141,7 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
         {isOwner ? (
           <div className="flex gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link href={`/my-page/sales/${sale.id}/edit`}>
+              <Link href={PATHS.MY_PAGE_SALES_EDIT(String(sale.id))}>
                 <Edit className="w-4 h-4 mr-2" />
                 수정
               </Link>
@@ -187,7 +188,7 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
         <p>{sale.content}</p>
       </div>
 
-      <Link href={`/book/${sale.book.isbn}/detail`}>
+      <Link href={PATHS.BOOK_DETAIL(sale.book.isbn)}>
         <Card className="transition-shadow bg-gray-50 hover:shadow-md">
           <CardHeader>
             <CardTitle className="text-lg">도서 정보</CardTitle>

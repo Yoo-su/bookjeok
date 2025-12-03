@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
+import { PATHS } from "@/shared/constants/paths";
 
 import { BookInfo } from "../../types";
 
@@ -11,7 +12,7 @@ interface BookCardProps {
 
 export const BookCard = ({ book }: BookCardProps) => {
   return (
-    <Link href={`/book/${book.isbn}/detail`} className="group">
+    <Link href={PATHS.BOOK_DETAIL(book.isbn)} className="group">
       <div className="relative w-full h-60 overflow-hidden bg-gray-100 rounded-lg shadow-md">
         <Image
           src={book.image.replace("?type=m1", "")}

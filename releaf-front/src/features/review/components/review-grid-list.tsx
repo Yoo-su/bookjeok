@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Review } from "@/features/review/types";
 import { Button } from "@/shared/components/shadcn/button";
 import { Spinner } from "@/shared/components/shadcn/spinner";
+import { PATHS } from "@/shared/constants/paths";
 
 import { ReviewCard } from "./review-card";
 
@@ -58,7 +59,7 @@ export function ReviewGridList({
             variant="outline"
             className="border-stone-300 hover:bg-stone-50"
           >
-            <Link href="/review/write">첫 리뷰 작성하기</Link>
+            <Link href={PATHS.REVIEW_WRITE}>첫 리뷰 작성하기</Link>
           </Button>
         )}
       </div>

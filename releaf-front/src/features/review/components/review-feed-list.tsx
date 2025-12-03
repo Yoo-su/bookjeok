@@ -34,7 +34,7 @@ export function ReviewFeedList({ feedsData }: ReviewFeedListProps) {
               {feed.category}
             </h2>
             <Link
-              href={`/review?category=${feed.category}`}
+              href={`/book/reviews?category=${feed.category}`}
               className="text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors"
             >
               더보기

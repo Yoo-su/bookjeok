@@ -83,7 +83,7 @@ export const DefaultHeader = () => {
                 <DropdownMenuGroup>
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/book/market"
+                      href={PATHS.BOOK_MARKET}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <Store className="w-4 h-4 mr-2" />
@@ -103,7 +103,7 @@ export const DefaultHeader = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link
-                          href="/my-page/sales"
+                          href={PATHS.MY_PAGE_SALES}
                           className="flex items-center gap-2 cursor-pointer"
                         >
                           <ShoppingBag className="w-4 h-4 mr-2" />

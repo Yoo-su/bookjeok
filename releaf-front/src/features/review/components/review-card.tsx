@@ -13,6 +13,7 @@ import {
 } from "@/shared/components/shadcn/avatar";
 import { Button } from "@/shared/components/shadcn/button";
 import { StarRating } from "@/shared/components/ui/star-rating";
+import { PATHS } from "@/shared/constants/paths";
 
 interface ReviewCardProps {
   review: Review;
@@ -46,7 +47,10 @@ export function ReviewCard({
   };
 
   return (
-    <Link href={`/review/${review.id}`} className="group block h-full relative">
+    <Link
+      href={PATHS.REVIEW_DETAIL(review.id)}
+      className="group block h-full relative"
+    >
       <article className="flex h-[180px] bg-white rounded-xl overflow-hidden border border-stone-100 shadow-sm hover:shadow-md hover:border-stone-200 transition-all duration-300">
         {/* 이미지 컨테이너 (좌측) */}
         <div className="relative w-[120px] shrink-0 overflow-hidden bg-stone-100">

@@ -9,6 +9,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 
 import { TextAnimate } from "@/shared/components/magicui/text-animate";
 import { Button } from "@/shared/components/shadcn/button";
+import { PATHS } from "@/shared/constants/paths";
 
 import { MAIN_PUBLISHERS } from "../../constants";
 import { useBookListQuery } from "../../queries";
@@ -189,7 +190,7 @@ export const MainBookSlider = () => {
                 key={`${book.isbn}-${index}`} // 고유한 키 보장
                 className="w-[240px]! md:w-[300px]!"
               >
-                <Link href={`/book/${book.isbn}/detail`} passHref>
+                <Link href={PATHS.BOOK_DETAIL(book.isbn)} passHref>
                   <div className="group relative w-full h-[360px] md:h-[450px] rounded-lg overflow-hidden shadow-2xl transform transition-transform duration-500">
                     <Image
                       src={book.image || "/placeholder.jpg"}

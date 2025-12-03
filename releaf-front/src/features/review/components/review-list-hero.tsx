@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/shared/components/shadcn/button";
+import { PATHS } from "@/shared/constants/paths";
 
 const HERO_IMAGES = [
   "/imgs/review_list_cover.jpg",
@@ -51,7 +52,7 @@ export function ReviewListHero() {
             size="lg"
             className="rounded-full px-8 h-14 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 bg-white text-stone-900 hover:bg-stone-100 hover:scale-105 border-none"
           >
-            <Link href="/review/write">리뷰 작성하기</Link>
+            <Link href={PATHS.REVIEW_WRITE}>리뷰 작성하기</Link>
           </Button>
         </div>
       </div>

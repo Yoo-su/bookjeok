@@ -134,12 +134,11 @@ export function ReviewDetailActions({
               className="border-stone-200 hover:bg-stone-50"
               asChild
             >
-              <Link href={`/review/${reviewId}/edit`}>
+              <Link href={PATHS.REVIEW_EDIT(reviewId)}>
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Review
+                리뷰 수정하기
               </Link>
             </Button>
-            {/* 삭제 버튼이 여기에 들어갈 예정입니다. */}
           </div>
         )}
       </div>
