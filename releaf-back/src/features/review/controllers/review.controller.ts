@@ -35,7 +35,7 @@ import {
 @ApiTags('리뷰 (Review)')
 @Controller('reviews')
 export class ReviewController {
-  constructor(private readonly reviewsService: ReviewService) {}
+  constructor(private readonly reviewService: ReviewService) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -56,7 +56,7 @@ export class ReviewController {
     @Body() createReviewDto: CreateReviewDto,
     @CurrentUser() user: User,
   ): Promise<Review> {
-    return await this.reviewsService.create(createReviewDto, user.id);
+    return await this.reviewService.create(createReviewDto, user.id);
   }
 
   @Get()
@@ -72,7 +72,7 @@ export class ReviewController {
   async findAll(
     @Query() query: GetReviewsQueryDto,
   ): Promise<GetReviewsResponseDto> {
-    return await this.reviewsService.findAll(query);
+    return await this.reviewService.findAll(query);
   }
 
   @Get('feeds')
@@ -86,7 +86,7 @@ export class ReviewController {
     type: [ReviewFeedDto],
   })
   async findFeeds(): Promise<ReviewFeedDto[]> {
-    return await this.reviewsService.findFeeds();
+    return await this.reviewService.findFeeds();
   }
 
   @Get('popular')
@@ -100,7 +100,7 @@ export class ReviewController {
     type: [ReviewResponseDto],
   })
   async findPopular(): Promise<ReviewResponseDto[]> {
-    return await this.reviewsService.findPopular();
+    return await this.reviewService.findPopular();
   }
 
   @Get(':id')
@@ -122,7 +122,7 @@ export class ReviewController {
   async findOne(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<ReviewResponseDto> {
-    return await this.reviewsService.findOne(id);
+    return await this.reviewService.findOne(id);
   }
 
   @Post(':id/reactions')
@@ -142,7 +142,7 @@ export class ReviewController {
     @Body('type') type: ReviewReactionType,
     @CurrentUser() user: User,
   ): Promise<ReviewResponseDto> {
-    return await this.reviewsService.toggleReaction(id, user.id, type);
+    return await this.reviewService.toggleReaction(id, user.id, type);
   }
 
   @Patch(':id')
@@ -170,7 +170,7 @@ export class ReviewController {
     @Body() updateReviewDto: UpdateReviewDto,
     @CurrentUser() user: User,
   ): Promise<ReviewResponseDto> {
-    return await this.reviewsService.update(id, updateReviewDto, user.id);
+    return await this.reviewService.update(id, updateReviewDto, user.id);
   }
 
   @Delete(':id')
@@ -197,7 +197,7 @@ export class ReviewController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User,
   ): Promise<ReviewResponseDto> {
-    return await this.reviewsService.remove(id, user.id);
+    return await this.reviewService.remove(id, user.id);
   }
 
   @Get(':id/reaction')
@@ -219,6 +219,6 @@ export class ReviewController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: User,
   ) {
-    return await this.reviewsService.getMyReaction(id, user.id);
+    return await this.reviewService.getMyReaction(id, user.id);
   }
 }

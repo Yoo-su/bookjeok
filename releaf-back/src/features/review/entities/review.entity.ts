@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   JoinTable,
   ManyToMany,
@@ -17,6 +18,7 @@ import { ReviewReaction } from './review-reaction.entity';
 import { Tag } from './tag.entity';
 
 @Entity('reviews')
+@Index(['category', 'createdAt'])
 export class Review {
   @PrimaryGeneratedColumn()
   id: number;

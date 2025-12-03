@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Separator } from "@/shared/components/shadcn/separator";
 
@@ -26,6 +26,7 @@ export const BookDetail = () => {
     isSuccess,
   } = useBookDetailQuery(isbn);
   const addRecentBook = useRecentBookStore((state) => state.addRecentBook);
+  const [isSummaryRequested, setIsSummaryRequested] = useState(false);
 
   useEffect(() => {
     if (isSuccess && book) {
@@ -40,9 +41,13 @@ export const BookDetail = () => {
   } = useBookSummaryQuery(
     book?.title || "",
     book?.author || "",
-    !!book,
+    !!book && isSummaryRequested,
     book?.description
   );
+
+  const handleRequestSummary = () => {
+    setIsSummaryRequested(true);
+  };
 
   if (isLoading) return <BookDetailSkeleton />;
 
@@ -78,6 +83,8 @@ export const BookDetail = () => {
         summary={summary}
         isLoading={isSummaryLoading}
         isError={isSummaryError}
+        onRequestSummary={handleRequestSummary}
+        isRequested={isSummaryRequested}
       />
     </section>
   );

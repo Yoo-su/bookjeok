@@ -190,9 +190,8 @@ export class ReviewService {
    */
   async findFeeds(): Promise<ReviewFeedDto[]> {
     const categories = BOOK_DOMAINS;
-    const feeds: ReviewFeedDto[] = [];
 
-    for (const category of categories) {
+    const feedPromises = categories.map(async (category) => {
       const reviews = await this.reviewsRepository.find({
         where: { category },
         relations: ['user', 'book', 'tagEntities'],
@@ -200,21 +199,23 @@ export class ReviewService {
         take: 4,
       });
 
-      if (reviews.length > 0) {
-        // 태그 매핑
-        const reviewDtos = reviews.map((review) => ({
-          ...review,
-          tags: review.tagEntities?.map((t) => t.name) || [],
-        })) as ReviewResponseDto[];
+      if (reviews.length === 0) return null;
 
-        feeds.push({
-          category,
-          reviews: reviewDtos,
-        });
-      }
-    }
+      // 태그 매핑
+      const reviewDtos = reviews.map((review) => ({
+        ...review,
+        tags: review.tagEntities?.map((t) => t.name) || [],
+      })) as ReviewResponseDto[];
 
-    return feeds;
+      return {
+        category,
+        reviews: reviewDtos,
+      };
+    });
+
+    const results = await Promise.all(feedPromises);
+
+    return results.filter((feed) => feed !== null) as ReviewFeedDto[];
   }
 
   /**
