@@ -1,5 +1,6 @@
-import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
+
+import { fetchBookDetail } from "@/features/book/server/service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,23 +8,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const isbn = searchParams.get("isbn");
 
-    const response = await axios.get(
-      `https://openapi.naver.com/v1/search/book_adv.json?d_isbn=${isbn}`,
-      {
-        headers: {
-          "X-Naver-Client-Id": process.env.NAVER_CLIENT_ID,
-          "X-Naver-Client-Secret": process.env.NAVER_CLIENT_SECRET,
-        },
-      }
-    );
+    if (!isbn) {
+      return NextResponse.json(
+        { success: false, message: "ISBN is required" },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: response.data,
-    });
+    const result = await fetchBookDetail(isbn);
+
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("책 상세정보 조회 실패:", error);
-
     return NextResponse.json(
       {
         success: false,

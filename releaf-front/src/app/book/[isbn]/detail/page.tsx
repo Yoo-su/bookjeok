@@ -1,5 +1,9 @@
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Metadata } from "next";
 
+import { fetchBookDetail } from "@/features/book/server/service";
+import { QUERY_KEYS } from "@/shared/constants/query-keys";
+import { getQueryClient } from "@/shared/libs/query-client";
 import { BookDetailView } from "@/views/book-detail-view";
 
 export const metadata: Metadata = {
@@ -13,6 +17,20 @@ type Props = {
 
 export default async function Page({ params }: Props) {
   const { isbn } = await params;
+  const queryClient = getQueryClient();
 
-  return <BookDetailView isbn={isbn} />;
+  await queryClient.prefetchQuery({
+    queryKey: QUERY_KEYS.bookKeys.detail(isbn).queryKey,
+    queryFn: async () => {
+      const response = await fetchBookDetail(isbn);
+      if (!response.success) return null;
+      return response.data.items[0];
+    },
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <BookDetailView isbn={isbn} />
+    </HydrationBoundary>
+  );
 }
