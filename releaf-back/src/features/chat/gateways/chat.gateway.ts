@@ -218,4 +218,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       .to(String(data.roomId))
       .emit('typing', { nickname: user.nickname, isTyping: false });
   }
+
+  @SubscribeMessage('markAsRead')
+  async handleMarkAsRead(
+    @MessageBody() data: { roomId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = client.data.user as User;
+    const { roomId } = data;
+    try {
+      await this.chatService.markMessagesAsRead(roomId, user.id);
+    } catch (error) {
+      this.logger.error(
+        `Failed to mark messages as read for user ${user.id} in room ${roomId}: ${error.message}`,
+      );
+    }
+  }
 }

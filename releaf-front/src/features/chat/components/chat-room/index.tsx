@@ -150,6 +150,13 @@ export const ChatRoom = () => {
     }
   }, [messages]);
 
+  // 채팅방에 입장할 때 메시지를 읽음 처리하는 이펙트
+  useEffect(() => {
+    if (socket && activeChatRoomId) {
+      socket.emit("markAsRead", { roomId: activeChatRoomId });
+    }
+  }, [socket, activeChatRoomId]);
+
   if (isMessagesLoading || !room) {
     return <ChatRoomSkeleton />;
   }
