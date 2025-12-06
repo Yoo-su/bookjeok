@@ -8,6 +8,6 @@ export const metadata: Metadata = {
     "ReLeaf의 메인 페이지입니다. 지금 가장 인기있는 공연 정보와 새로 등록된 중고 서적을 확인해보세요.",
 };
 
-export default function MainPage() {
+export default function Page() {
   return <MainView />;
 }

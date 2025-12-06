@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "내 활동 내역과 정보를 확인하세요.",
 };
 
-export default function MyPage() {
+export default function Page() {
   return (
     <AuthGuard>
       <MyPageView />

@@ -7,6 +7,6 @@ export const metadata: Metadata = {
   description: "다양한 책에 대한 솔직한 리뷰를 만나보세요.",
 };
 
-export default function ReviewListPage() {
+export default function Page() {
   return <ReviewListView />;
 }

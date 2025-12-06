@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: "ReLeaf에 로그인하고 더 많은 기능을 이용해보세요.",
 };
 
-export default function LoginPage() {
+export default function Page() {
   return (
     <GuestGuard>
       <DefaultLayout>

@@ -7,7 +7,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { User } from "@/features/auth/types";
 import { PATHS } from "@/shared/constants/paths";
 
-const CallbackPage = () => {
+export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setTokens, setUser } = useAuthStore();
@@ -33,6 +33,4 @@ const CallbackPage = () => {
   }, [router, searchParams, setTokens, setUser]);
 
   return null;
-};
-
-export default CallbackPage;
+}

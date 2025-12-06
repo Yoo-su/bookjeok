@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "읽은 책에 대한 감상을 공유해주세요.",
 };
 
-export default function WriteReviewPage() {
+export default function Page() {
   return (
     <AuthGuard>
       <ReviewWriteView />

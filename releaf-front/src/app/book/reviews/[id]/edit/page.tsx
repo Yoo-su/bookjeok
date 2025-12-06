@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "도서 리뷰 수정 페이지입니다.",
 };
 
-export default function EditReviewPage() {
+export default function Page() {
   return (
     <AuthGuard>
       <ReviewEditView />

@@ -7,6 +7,6 @@ export const metadata: Metadata = {
   description: "다양한 중고 서적을 탐색하고 저렴하게 구매해보세요.",
 };
 
-export default function BookMarketPage() {
+export default function Page() {
   return <BookMarketView />;
 }
