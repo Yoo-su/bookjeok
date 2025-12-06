@@ -7,15 +7,15 @@ import { useInView } from "react-intersection-observer";
 import { PopularReviewList } from "@/features/review/components/popular-review-list";
 import { ReviewFeedList } from "@/features/review/components/review-feed-list";
 import { ReviewGridList } from "@/features/review/components/review-grid-list";
-import { ReviewListFilters } from "@/features/review/components/review-list-filters";
-import { ReviewListHero } from "@/features/review/components/review-list-hero";
+import { ReviewHomeFilters } from "@/features/review/components/review-home-filters";
+import { ReviewHomeHero } from "@/features/review/components/review-home-hero";
 import {
   useReviewFeedsQuery,
   useReviewsInfiniteQuery,
 } from "@/features/review/queries";
 import { PATHS } from "@/shared/constants/paths";
 
-export const ReviewListView = () => {
+export const ReviewHomeView = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
@@ -91,9 +91,9 @@ export const ReviewListView = () => {
 
   return (
     <>
-      <ReviewListHero />
+      <ReviewHomeHero />
 
-      <ReviewListFilters
+      <ReviewHomeFilters
         searchInput={searchInput}
         setSearchInput={setSearchInput}
         handleSearch={handleSearch}

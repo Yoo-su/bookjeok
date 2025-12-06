@@ -14,7 +14,7 @@ const HERO_IMAGES = [
   "/imgs/review_list_cover4.jpg",
 ];
 
-export function ReviewListHero() {
+export function ReviewHomeHero() {
   const [heroImage, setHeroImage] = useState(HERO_IMAGES[0]);
 
   useEffect(() => {

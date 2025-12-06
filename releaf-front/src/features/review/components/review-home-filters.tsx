@@ -13,7 +13,7 @@ import { Button } from "@/shared/components/shadcn/button";
 import { Input } from "@/shared/components/shadcn/input";
 import { cn } from "@/shared/utils";
 
-interface ReviewListFiltersProps {
+interface ReviewHomeFiltersProps {
   searchInput: string;
   setSearchInput: (value: string) => void;
   handleSearch: (e: React.FormEvent) => void;
@@ -23,7 +23,7 @@ interface ReviewListFiltersProps {
   handleCategoryClick: (category: string) => void;
 }
 
-export function ReviewListFilters({
+export function ReviewHomeFilters({
   searchInput,
   setSearchInput,
   handleSearch,
@@ -31,7 +31,7 @@ export function ReviewListFilters({
   clearFilters,
   selectedCategory,
   handleCategoryClick,
-}: ReviewListFiltersProps) {
+}: ReviewHomeFiltersProps) {
   return (
     <section className="container mx-auto mb-12 space-y-6">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
