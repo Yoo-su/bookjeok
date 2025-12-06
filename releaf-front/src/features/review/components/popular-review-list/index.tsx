@@ -2,27 +2,36 @@
 
 import { usePopularReviewsQuery } from "@/features/review/queries";
 import { Badge } from "@/shared/components/shadcn/badge";
-import { Skeleton } from "@/shared/components/shadcn/skeleton";
 
 import { PopularReviewItem } from "./popular-review-item";
+import { PopularReviewListSkeleton } from "./skeleton";
 
 export function PopularReviewList() {
-  const { data: reviews, isLoading } = usePopularReviewsQuery();
+  // 1. 데이터 조회
+  const { data: reviews, isLoading, isError } = usePopularReviewsQuery();
 
+  // 2. 로딩 가드
   if (isLoading) {
+    return <PopularReviewListSkeleton />;
+  }
+
+  // 3. 에러 가드
+  if (isError) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
-        ))}
-      </div>
+      <section className="mb-12">
+        <div className="h-[200px] w-full rounded-xl border border-dashed border-red-200 bg-red-50 flex flex-col items-center justify-center text-red-500 gap-2">
+          <span>인기 리뷰를 불러오는데 실패했습니다.</span>
+        </div>
+      </section>
     );
   }
 
+  // 4. 빈 상태 가드
   if (!reviews || reviews.length === 0) {
-    return null;
+    return null; // 인기 리뷰가 없으면 섹션 자체를 숨김
   }
 
+  // 5. 성공 렌더링
   return (
     <section className="mb-12">
       <div className="flex items-center gap-2 mb-6">

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 
-import { ReviewListView } from "@/views/review-list-view";
+import { ReviewHomeView } from "@/views/review-home-view";
 
 export const metadata: Metadata = {
   title: "리뷰 목록",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <ReviewListView />;
+  return <ReviewHomeView />;
 }

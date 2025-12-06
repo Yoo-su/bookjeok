@@ -30,16 +30,16 @@ export const RelatedSalesSlider = ({
           nextEl: ".swiper-button-next-related",
           prevEl: ".swiper-button-prev-related",
         }}
-        className="!p-1" // for box-shadow
+        className="p-1!" // 박스 쉐도우를 위해
       >
         {sales.map((sale, index) => (
-          <SwiperSlide key={sale.id} className="!w-[250px] py-8">
+          <SwiperSlide key={sale.id} className="w-[250px]! py-8">
             <BookSaleCard sale={sale} idx={index} />
           </SwiperSlide>
         ))}
 
         {hasNextPage && (
-          <SwiperSlide className="!w-[250px] py-8">
+          <SwiperSlide className="w-[250px]! py-8">
             <div className="flex h-[395px] w-full items-center justify-center">
               <Button
                 variant="outline"
@@ -61,7 +61,6 @@ export const RelatedSalesSlider = ({
         )}
       </Swiper>
 
-      {/* Custom Navigation */}
       <div className="swiper-button-prev-related absolute left-[-5px] top-1/2 z-10 -translate-y-1/2 transform">
         <Button size="icon" variant="outline" className="rounded-full">
           <ChevronLeft className="h-4 w-4" />

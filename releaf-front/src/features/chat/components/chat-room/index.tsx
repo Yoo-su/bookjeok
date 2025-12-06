@@ -19,9 +19,13 @@ import { Input } from "@/shared/components/shadcn/input";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { useSocketContext } from "@/shared/providers/socket-provider";
 
-import { useInfiniteChatMessagesQuery, useMyChatRoomsQuery } from "../queries";
-import { useChatStore } from "../stores/use-chat-store";
-import { ChatMessage } from "../types";
+import {
+  useInfiniteChatMessagesQuery,
+  useMyChatRoomsQuery,
+} from "../../queries";
+import { useChatStore } from "../../stores/use-chat-store";
+import { ChatMessage } from "../../types";
+import { ChatRoomSkeleton } from "./skeleton";
 
 const SystemMessageBubble = ({ content }: { content: string }) => (
   <div className="text-center text-xs text-gray-500 py-2">
@@ -147,11 +151,7 @@ export const ChatRoom = () => {
   }, [messages]);
 
   if (isMessagesLoading || !room) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-      </div>
-    );
+    return <ChatRoomSkeleton />;
   }
 
   const opponent = room.participants.find(
@@ -225,7 +225,7 @@ export const ChatRoom = () => {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
+      <div className="flex items-center justify-between p-4 border-b shrink-0">
         <div className="flex items-center gap-4 overflow-hidden">
           <Button
             variant="ghost"
@@ -235,7 +235,7 @@ export const ChatRoom = () => {
           >
             <ArrowLeft size={20} />
           </Button>
-          <div className="relative h-10 w-10 flex-shrink-0">
+          <div className="relative h-10 w-10 shrink-0">
             <Image
               src={room.usedBookSale.book.image}
               alt={room.usedBookSale.book.title}
@@ -274,7 +274,7 @@ export const ChatRoom = () => {
       </div>
 
       <div
-        className="flex-grow overflow-y-auto p-4 space-y-4"
+        className="grow overflow-y-auto p-4 space-y-4"
         ref={messageContainerRef}
         onScroll={handleScroll}
       >
@@ -293,7 +293,7 @@ export const ChatRoom = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 border-t bg-white flex-shrink-0">
+      <div className="p-4 border-t bg-white shrink-0">
         {isInactive ? (
           <div className="text-center text-sm text-gray-500 bg-gray-100 p-3 rounded-md">
             대화가 종료된 채팅방입니다.
@@ -308,7 +308,7 @@ export const ChatRoom = () => {
               onChange={handleInputChange}
               placeholder="메시지를 입력하세요..."
               autoComplete="off"
-              className="flex-grow"
+              className="grow"
             />
             <Button type="submit" size="icon" disabled={!newMessage.trim()}>
               <SendHorizontal size={20} />

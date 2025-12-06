@@ -1,22 +1,29 @@
 "use client";
 
-// Import Swiper styles
-import "swiper/css";
-import "swiper/css/pagination";
-
 import Link from "next/link";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import { ReviewFeed } from "@/features/review/types";
+import { useReviewFeedsQuery } from "@/features/review/queries";
 
-import { ReviewCard } from "./review-card";
+import { ReviewCard } from "../review-card";
+import { ReviewFeedListSkeleton } from "./skeleton";
 
-interface ReviewFeedListProps {
-  feedsData: ReviewFeed[] | undefined;
-}
+export function ReviewFeedList() {
+  const { data: feedsData, isLoading, isError } = useReviewFeedsQuery();
 
-export function ReviewFeedList({ feedsData }: ReviewFeedListProps) {
+  if (isLoading) {
+    return <ReviewFeedListSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <div className="py-20 text-center text-red-500 bg-red-50 rounded-xl border border-red-100 border-dashed">
+        피드 정보를 불러오는데 실패했습니다.
+      </div>
+    );
+  }
+
   if (!feedsData || feedsData.length === 0) {
     return (
       <div className="text-center py-20 text-stone-500">

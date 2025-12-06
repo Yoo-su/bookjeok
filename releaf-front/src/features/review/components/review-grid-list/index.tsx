@@ -1,34 +1,79 @@
+"use client";
+
 import { MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 
-import { Review } from "@/features/review/types";
+import { useReviewsInfiniteQuery } from "@/features/review/queries";
 import { Button } from "@/shared/components/shadcn/button";
-import { Spinner } from "@/shared/components/shadcn/spinner";
 import { PATHS } from "@/shared/constants/paths";
 
-import { ReviewCard } from "./review-card";
+import { ReviewCard } from "../review-card";
+import { ReviewCardSkeleton } from "../review-card/skeleton";
+import { ReviewGridListSkeleton } from "./review-grid-list-skeleton";
 
 interface ReviewGridListProps {
-  reviews: Review[];
   searchQuery: string;
   category: string | null;
   clearFilters: () => void;
-  loadMoreRef?: (node?: Element | null) => void;
-  isFetchingNextPage?: boolean;
   onDeleteReview?: (id: number) => void;
   onEditReview?: (id: number) => void;
+  userId?: number;
 }
 
 export function ReviewGridList({
-  reviews,
   searchQuery,
   category,
   clearFilters,
-  loadMoreRef,
-  isFetchingNextPage,
   onDeleteReview,
   onEditReview,
+  userId,
 }: ReviewGridListProps) {
+  // 1. 데이터 조회
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useReviewsInfiniteQuery({
+    limit: 12,
+    category,
+    search: searchQuery,
+    userId,
+  });
+
+  // 2. 무한 스크롤
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, fetchNextPage]);
+
+  // 3. 로딩 가드 (초기 로딩)
+  if (isLoading) {
+    return <ReviewGridListSkeleton />;
+  }
+
+  // 4. 에러 가드
+  if (isError) {
+    return (
+      <div className="py-32 flex flex-col items-center justify-center text-red-500">
+        <p className="mb-4">리뷰 목록을 불러오는데 실패했습니다.</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          다시 시도
+        </Button>
+      </div>
+    );
+  }
+
+  const reviews = data?.pages.flatMap((page) => page.reviews) || [];
+
+  // 5. 빈 상태 가드
   if (reviews.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-center">
@@ -66,6 +111,7 @@ export function ReviewGridList({
     );
   }
 
+  // 6. 성공 렌더링
   return (
     <div className="space-y-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
@@ -78,12 +124,16 @@ export function ReviewGridList({
             onEdit={onEditReview}
           />
         ))}
+        {isFetchingNextPage && (
+          <>
+            <ReviewCardSkeleton />
+            <ReviewCardSkeleton />
+          </>
+        )}
       </div>
 
-      {/* Infinite Scroll Trigger & Loading State */}
-      <div ref={loadMoreRef} className="h-10 flex justify-center items-center">
-        {isFetchingNextPage && <Spinner />}
-      </div>
+      {/* Infinite Scroll Trigger */}
+      <div ref={ref} className="h-10 invisible" />
     </div>
   );
 }

@@ -173,3 +173,15 @@ export interface SearchBookSalesResponse {
   limit: number;
   hasNextPage: boolean;
 }
+
+/**
+ * 중고책 마켓 필터 폼의 입력 타입
+ */
+export interface FilterFormInputs {
+  search: string;
+  city: string;
+  district: string;
+  status: SaleStatus[];
+  priceRange: [number, number];
+  sort: string;
+}

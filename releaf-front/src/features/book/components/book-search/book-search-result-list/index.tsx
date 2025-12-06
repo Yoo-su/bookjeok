@@ -4,9 +4,11 @@ import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
-import { useInfiniteBookSearch } from "../../queries";
-import { useBookSearchStore } from "../../stores/use-book-search-store";
-import { BookCard } from "../common/book-card";
+import { useInfiniteBookSearch } from "@/features/book/queries";
+import { useBookSearchStore } from "@/features/book/stores/use-book-search-store";
+
+import { BookCard } from "../../common/book-card";
+import { BookSearchResultListSkeleton } from "./skeleton";
 
 export const BookSearchResultList = () => {
   const query = useBookSearchStore((state) => state.query);
@@ -33,13 +35,7 @@ export const BookSearchResultList = () => {
 
   // Case 1: 최초 로딩 상태 (첫 페이지를 불러오는 중)
   if (status === "pending" && isFetching && !isFetchingNextPage) {
-    return (
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <BookCard.Skeleton key={i} />
-        ))}
-      </div>
-    );
+    return <BookSearchResultListSkeleton />;
   }
 
   // Case 2: 에러 발생

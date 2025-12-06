@@ -12,7 +12,7 @@ import { Button } from "@/shared/components/shadcn/button";
 import { cn } from "@/shared/utils";
 
 import { ArtDomain, Genre, GetArtListParams } from "../../../types";
-import { ArtSliderSkeleton } from "../../skeleton";
+import { ArtSliderSkeleton } from "../skeleton";
 import { MainArtCard } from "./main-art-card";
 
 const NoResults = () => (
@@ -76,7 +76,7 @@ export const MainArtSlider = ({
               variant={activeGenre === chip.genreCode ? "default" : "outline"}
               size="sm"
               className={cn(
-                "rounded-full cursor-pointer px-4 py-1 transition-all duration-300 flex-shrink-0",
+                "rounded-full cursor-pointer px-4 py-1 transition-all duration-300 shrink-0",
                 activeGenre === chip.genreCode
                   ? "bg-emerald-600 text-white shadow-lg scale-105 border-emerald-600"
                   : "text-gray-300 bg-white/10 border-white/20 hover:bg-white/20 hover:text-white"
@@ -87,7 +87,7 @@ export const MainArtSlider = ({
             </Button>
           ))}
         </div>
-        <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-r from-transparent to-gray-900 pointer-events-none sm:hidden" />
+        <div className="absolute inset-y-0 right-0 w-16 bg-linear-to-r from-transparent to-gray-900 pointer-events-none sm:hidden" />
       </div>
 
       <div className="mt-4">
@@ -96,7 +96,7 @@ export const MainArtSlider = ({
         ) : items.length > 0 ? (
           <Swiper
             key={activeGenre}
-            className="!px-4 sm:!px-8 py-8 w-full"
+            className="px-4! sm:px-8! py-8 w-full"
             modules={[Autoplay]}
             slidesPerView={"auto"}
             spaceBetween={16}
@@ -107,7 +107,7 @@ export const MainArtSlider = ({
             {items.map((item) => (
               <SwiperSlide
                 key={item.mt20id}
-                className="!w-[240px] sm:!w-[280px]"
+                className="w-[240px]! sm:w-[280px]!"
               >
                 <MainArtCard item={item} />
               </SwiperSlide>

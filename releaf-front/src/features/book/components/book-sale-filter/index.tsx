@@ -4,7 +4,11 @@ import { RefreshCw, Search } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
-import { SaleStatus, SearchBookSalesParams } from "@/features/book/types";
+import {
+  FilterFormInputs,
+  SaleStatus,
+  SearchBookSalesParams,
+} from "@/features/book/types";
 import { Button } from "@/shared/components/shadcn/button";
 import { Checkbox } from "@/shared/components/shadcn/checkbox";
 import { Input } from "@/shared/components/shadcn/input";
@@ -26,21 +30,12 @@ import {
 import { KOREA_DISTRICTS } from "@/shared/constants/korea-districts";
 import { formatPrice } from "@/shared/utils/format-price";
 
+import { MAX_MARKET_PRICE } from "../../constants";
+
 const statusToKorean: { [key in SaleStatus]: string } = {
   FOR_SALE: "판매중",
   RESERVED: "예약중",
   SOLD: "판매완료",
-};
-
-const MAX_PRICE = 100000;
-
-type FilterFormInputs = {
-  search: string;
-  city: string;
-  district: string;
-  status: SaleStatus[];
-  priceRange: [number, number];
-  sort: string;
 };
 
 interface BookSaleFilterProps {
@@ -61,7 +56,7 @@ export const BookSaleFilter = ({
         city: "all",
         district: "all",
         status: [],
-        priceRange: [0, MAX_PRICE],
+        priceRange: [0, MAX_MARKET_PRICE],
         sort: "createdAt_DESC",
       },
     });
@@ -77,7 +72,7 @@ export const BookSaleFilter = ({
       status: initialParams.status || [],
       priceRange: [
         initialParams.minPrice ?? 0,
-        initialParams.maxPrice ?? MAX_PRICE,
+        initialParams.maxPrice ?? MAX_MARKET_PRICE,
       ],
       sort: `${initialParams.sortBy || "createdAt"}_${
         initialParams.sortOrder || "DESC"
@@ -225,7 +220,7 @@ export const BookSaleFilter = ({
                 <Slider
                   value={field.value}
                   onValueChange={field.onChange}
-                  max={MAX_PRICE}
+                  max={MAX_MARKET_PRICE}
                   step={1000}
                   className="w-full max-w-xs"
                 />

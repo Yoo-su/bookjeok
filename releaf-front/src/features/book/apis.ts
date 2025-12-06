@@ -216,7 +216,7 @@ export const searchBookSales = async (
 ): Promise<SearchBookSalesResponse> => {
   const queryParams = new URLSearchParams();
 
-  // Append all defined parameters
+  // 정의된 모든 파라미터 추가
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       if (Array.isArray(value)) {

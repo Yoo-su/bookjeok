@@ -62,7 +62,7 @@ export const WishlistButton = ({
       addToWishlistMutation.mutate(
         { type, id, bookData },
         {
-          onError: () => setIsWishlisted(false), // Rollback
+          onError: () => setIsWishlisted(false), // 롤백
         }
       );
     }

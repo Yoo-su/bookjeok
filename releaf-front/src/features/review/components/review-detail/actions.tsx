@@ -13,7 +13,7 @@ import { Button } from "@/shared/components/shadcn/button";
 import { PATHS } from "@/shared/constants/paths";
 import { cn } from "@/shared/utils/cn";
 
-import { REACTION_CONFIG } from "../constants";
+import { REACTION_CONFIG } from "../../constants";
 
 interface ReviewDetailActionsProps {
   isAuthor: boolean;

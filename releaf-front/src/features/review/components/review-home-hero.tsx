@@ -14,7 +14,7 @@ const HERO_IMAGES = [
   "/imgs/review_list_cover4.jpg",
 ];
 
-export function ReviewListHero() {
+export function ReviewHomeHero() {
   const [heroImage, setHeroImage] = useState(HERO_IMAGES[0]);
 
   useEffect(() => {
@@ -33,10 +33,10 @@ export function ReviewListHero() {
         className="object-cover transition-transform duration-700 group-hover:scale-105"
       />
 
-      {/* Overlay */}
+      {/* 오버레이 */}
       <div className="absolute inset-0 bg-black/40 transition-colors duration-700 group-hover:bg-black/50" />
 
-      {/* Content */}
+      {/* 콘텐츠 */}
       <div className="relative z-10 container mx-auto px-8 h-full flex flex-col justify-center">
         <div className="max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-white mb-6 tracking-tight leading-tight drop-shadow-lg">

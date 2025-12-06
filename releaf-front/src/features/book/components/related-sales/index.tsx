@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
 
 import { TextAnimate } from "@/shared/components/magicui/text-animate";
 import {
@@ -14,8 +13,8 @@ import {
 import { KOREA_DISTRICTS } from "@/shared/constants/korea-districts";
 
 import { useInfiniteRelatedSalesQuery } from "../../queries";
-import { BookSaleCard } from "../common/book-sale-card";
 import { RelatedSalesSlider } from "./related-sales-slider";
+import { RelatedSalesSkeleton } from "./skeleton";
 
 interface RelatedSalesProps {
   isbn: string;
@@ -88,17 +87,7 @@ export const RelatedSales = ({ isbn }: RelatedSalesProps) => {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="mt-8">
-          <Swiper spaceBetween={16} slidesPerView={"auto"} className="!p-1">
-            {[...Array(4)].map((_, i) => (
-              <SwiperSlide key={i} className="!w-[250px] py-8">
-                <BookSaleCard.Skeleton />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      )}
+      {isLoading && <RelatedSalesSkeleton />}
 
       {isError && (
         <div className="mt-8 text-center text-red-500">

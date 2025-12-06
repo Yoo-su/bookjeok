@@ -50,10 +50,10 @@ export const RecentSalesSlider = () => {
           delay: 2500,
           disableOnInteraction: false,
         }}
-        className="!px-4"
+        className="px-4!"
       >
         {sales.map((sale) => (
-          <SwiperSlide key={sale.id} className="!w-40">
+          <SwiperSlide key={sale.id} className="w-40!">
             <RecentSaleCard sale={sale} />
           </SwiperSlide>
         ))}

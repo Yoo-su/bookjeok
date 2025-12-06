@@ -1,31 +1,24 @@
+"use client";
+
 import { Heart } from "lucide-react";
 import Link from "next/link";
 
 import { WishlistItem } from "@/features/user/components/wishlist-item";
+import { useWishlistQuery } from "@/features/user/queries";
 import { Button } from "@/shared/components/shadcn/button";
-import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { PATHS } from "@/shared/constants/paths";
 
-import { WishlistItem as WishlistItemType } from "../types";
-
-interface WishlistListProps {
-  wishlist: WishlistItemType[] | undefined;
-  isLoading: boolean;
-}
+import { WishlistSkeleton } from "./skeleton";
 
 /**
  * 위시리스트 목록을 보여주는 컴포넌트입니다.
- * 로딩 상태와 빈 목록 상태를 처리합니다.
+ * 내부에서 useWishlistQuery를 호출하여 데이터를 가져옵니다.
  */
-export const WishlistList = ({ wishlist, isLoading }: WishlistListProps) => {
+export const WishlistList = () => {
+  const { data: wishlist, isLoading } = useWishlistQuery();
+
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="w-full h-32 rounded-lg" />
-        ))}
-      </div>
-    );
+    return <WishlistSkeleton />;
   }
 
   if (!wishlist || wishlist.length === 0) {

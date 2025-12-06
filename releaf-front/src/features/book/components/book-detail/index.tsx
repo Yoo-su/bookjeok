@@ -1,6 +1,5 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Separator } from "@/shared/components/shadcn/separator";
@@ -15,10 +14,11 @@ import { BookInfo } from "./book-info";
 import { BookDetailError } from "./error";
 import { BookDetailSkeleton } from "./skeleton";
 
-export const BookDetail = () => {
-  const params = useParams();
-  const isbn = params.isbn as string;
+interface BookDetailProps {
+  isbn: string;
+}
 
+export const BookDetail = ({ isbn }: BookDetailProps) => {
   const {
     data: book,
     isLoading,

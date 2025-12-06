@@ -1,10 +1,18 @@
 "use client";
 
-import { Calendar, Clock, MapPin, Ticket, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  Clock,
+  MapPin,
+  Ticket,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
+import { useArtDetailQuery } from "@/features/art/queries";
 import { Badge } from "@/shared/components/shadcn/badge";
 import { Button } from "@/shared/components/shadcn/button";
 import {
@@ -14,10 +22,10 @@ import {
   CardTitle,
 } from "@/shared/components/shadcn/card";
 
-import { ArtDetailItem } from "../../types";
+import { ArtDetailSkeleton } from "./skeleton";
 
 interface ArtDetailProps {
-  art: ArtDetailItem;
+  artId: string;
 }
 
 const InfoCard = ({
@@ -34,11 +42,31 @@ const InfoCard = ({
       <Icon className="w-6 h-6 text-emerald-400" />
       <CardTitle className="text-lg font-semibold">{title}</CardTitle>
     </CardHeader>
-    <CardContent className="text-sm break-words">{children}</CardContent>
+    <CardContent className="text-sm wrap-break-word">{children}</CardContent>
   </Card>
 );
 
-export const ArtDetail = ({ art }: ArtDetailProps) => {
+export const ArtDetail = ({ artId }: ArtDetailProps) => {
+  const { data: art, isLoading, isError } = useArtDetailQuery(artId);
+
+  if (isLoading) {
+    return <ArtDetailSkeleton />;
+  }
+
+  if (isError || !art) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] bg-gray-900 text-center text-gray-300">
+        <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
+        <h2 className="text-xl font-semibold mb-2">
+          공연 정보를 불러올 수 없습니다.
+        </h2>
+        <p className="text-sm text-gray-500">
+          삭제되었거나 유효하지 않은 정보일 수 있습니다.
+        </p>
+      </div>
+    );
+  }
+
   const introImages = art.styurls?.styurl
     ? Array.isArray(art.styurls.styurl)
       ? art.styurls.styurl
@@ -58,7 +86,7 @@ export const ArtDetail = ({ art }: ArtDetailProps) => {
           className="object-cover object-top"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-transparent" />
         <div className="relative z-10 p-8 md:p-12 max-w-5xl mx-auto w-full">
           <Badge
             variant="secondary"
@@ -66,10 +94,10 @@ export const ArtDetail = ({ art }: ArtDetailProps) => {
           >
             {art.genrenm}
           </Badge>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight drop-shadow-lg break-words">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight drop-shadow-lg wrap-break-word">
             {art.prfnm}
           </h1>
-          <p className="mt-2 text-lg text-gray-300 drop-shadow-md break-words">
+          <p className="mt-2 text-lg text-gray-300 drop-shadow-md wrap-break-word">
             {art.fcltynm}
           </p>
         </div>

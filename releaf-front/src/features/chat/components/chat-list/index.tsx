@@ -2,8 +2,8 @@
 
 import { MessageSquareX } from "lucide-react";
 
-import { useMyChatRoomsQuery } from "../queries";
-import { ChatItem } from "./chat-item";
+import { useMyChatRoomsQuery } from "../../queries";
+import { ChatItem } from "../chat-item";
 import { ChatListSkeleton } from "./skeleton";
 
 /**
@@ -30,7 +30,7 @@ export const ChatList = () => {
       <div className="p-4 border-b">
         <h3 className="text-lg font-bold">채팅 목록</h3>
       </div>
-      <div className="flex-grow overflow-y-auto">
+      <div className="grow overflow-y-auto">
         {rooms.map((room) => (
           <ChatItem key={room.id} room={room} />
         ))}

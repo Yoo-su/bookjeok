@@ -21,10 +21,10 @@ export const GuestGuard = ({ children }: GuestGuardProps) => {
     }
   }, [user, router]);
 
-  // If the user is authenticated, we will redirect, so we can return null or a loader.
-  // If not, we render the children. This prevents rendering the login page for a split second before redirecting.
+  // 유저가 인증되었다면 리다이렉트되므로, null이나 로더를 반환합니다.
+  // 그렇지 않다면 children을 렌더링합니다. 이는 리다이렉트 전에 로그인 페이지가 잠시 렌더링되는 것을 방지합니다.
   if (user) {
-    return null; // or a loading spinner
+    return null; // 또는 로딩 스피너
   }
 
   return children;
