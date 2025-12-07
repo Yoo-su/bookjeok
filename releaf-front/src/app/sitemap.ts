@@ -1,9 +1,11 @@
 import { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+import { getReviews } from "@/features/review/apis";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://releaf-hub.vercel.app";
 
-  return [
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -35,4 +37,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
   ];
+
+  try {
+    // 최신 리뷰 50개를 가져와서 사이트맵에 추가
+    const { reviews } = await getReviews({ page: 1, limit: 50 });
+
+    const reviewRoutes: MetadataRoute.Sitemap = reviews.map((review) => ({
+      url: `${baseUrl}/book/reviews/${review.id}`,
+      lastModified: new Date(review.updatedAt),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
+
+    return [...staticRoutes, ...reviewRoutes];
+  } catch (error) {
+    console.error("Failed to fetch reviews for sitemap:", error);
+    return staticRoutes;
+  }
 }
