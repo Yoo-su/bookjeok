@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     template: "%s | ReLeaf", // 페이지별 제목이 %s 위치에 들어갑니다.
     default: "ReLeaf - 책과 지식의 선순환, 중고책 거래 및 독서 커뮤니티", // 기본 제목
   },
+  applicationName: "ReLeaf",
+  appleWebApp: {
+    title: "ReLeaf",
+  },
   description:
     "ReLeaf(릴리프)에서 중고 서적을 거래하고 공연, 전시 정보를 확인하세요. 독서 모임과 리뷰를 통해 지식의 선순환을 만드는 문화 커뮤니티입니다.",
   keywords: [
