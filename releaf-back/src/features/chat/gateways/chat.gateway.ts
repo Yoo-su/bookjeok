@@ -47,7 +47,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.handshake.headers.authorization?.split(' ')[1];
 
       if (!token) {
-        throw new Error('Missing authorization token');
+        throw new Error('인증 토큰이 없습니다.');
       }
 
       const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
@@ -56,7 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const user = await this.userService.findById(payload.sub);
       if (!user) {
-        throw new Error(`User with id ${payload.sub} not found`);
+        throw new Error(`ID가 ${payload.sub}인 사용자를 찾을 수 없습니다.`);
       }
 
       client.data.user = user;
@@ -65,7 +65,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.log(`Client connected: ${client.id}, User ID: ${user.id}`);
 
       client.emit('connected', {
-        message: 'Successfully connected to chat server.',
+        message: '채팅 서버에 성공적으로 연결되었습니다.',
       });
     } catch (error) {
       this.logger.error(`Authentication failed: ${error.message}`);
@@ -163,7 +163,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ) {
     if (!Array.isArray(roomIds)) {
-      throw new WsException('Invalid roomIds. Must be an array of numbers.');
+      throw new WsException(
+        '유효하지 않은 roomIds입니다. 숫자 배열이어야 합니다.',
+      );
     }
     const roomIdsAsStrings = roomIds.map(String);
     await client.join(roomIdsAsStrings);
@@ -188,7 +190,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
       await client.leave(String(roomId));
       this.logger.log(`User ${user.id} left room ${roomId}`);
-      return { status: 'ok', message: `Successfully left room ${roomId}` };
+      return {
+        status: 'ok',
+        message: `채팅방 ${roomId}에서 성공적으로 퇴장했습니다.`,
+      };
     } catch (error) {
       this.logger.error(
         `Failed to leave room ${roomId} for user ${user.id}: ${error.message}`,

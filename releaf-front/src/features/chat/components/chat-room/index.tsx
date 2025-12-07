@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import debounce from "lodash/debounce";
+import throttle from "lodash/throttle";
 import { ArrowLeft, Loader2, LogOut, SendHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -127,11 +128,26 @@ export const ChatRoom = () => {
     [emitStopTyping]
   );
 
+  const emitStartTyping = useMemo(
+    () =>
+      throttle(
+        () => {
+          if (socket && activeChatRoomId) {
+            socket.emit("startTyping", { roomId: activeChatRoomId });
+          }
+        },
+        3000,
+        { trailing: false }
+      ),
+    [socket, activeChatRoomId]
+  );
+
   useEffect(() => {
     return () => {
       debouncedStopTyping.cancel();
+      emitStartTyping.cancel();
     };
-  }, [debouncedStopTyping]);
+  }, [debouncedStopTyping, emitStartTyping]);
 
   useLayoutEffect(() => {
     if (scrollRef.current && messageContainerRef.current) {
@@ -180,9 +196,7 @@ export const ChatRoom = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewMessage(e.target.value);
-    if (socket && activeChatRoomId) {
-      socket.emit("startTyping", { roomId: activeChatRoomId });
-    }
+    emitStartTyping();
     debouncedStopTyping();
   };
 
@@ -202,6 +216,7 @@ export const ChatRoom = () => {
     );
     setNewMessage("");
     debouncedStopTyping.cancel();
+    emitStartTyping.cancel();
     emitStopTyping();
   };
 
