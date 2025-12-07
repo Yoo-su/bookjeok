@@ -113,6 +113,7 @@ export interface UsedBookSale {
   updatedAt: string; // ISO 8601 형식의 날짜 문자열
   user: SaleAuthor; // 작성자 정보 (중첩 객체)
   book: BookInfo; // 책 정보 (중첩 객체)
+  viewCount: number; // 조회수
 }
 
 // 책 관련 판매게시글 목록 조회 API 요청 파라미터 타입

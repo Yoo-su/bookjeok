@@ -49,6 +49,9 @@ export class UsedBookSale {
   })
   status: SaleStatus;
 
+  @Column({ default: 0 })
+  viewCount: number;
+
   @ManyToOne(() => User, (user) => user.usedBookSales, {
     onDelete: 'CASCADE', // 유저가 삭제되면 판매글도 함께 삭제
   })

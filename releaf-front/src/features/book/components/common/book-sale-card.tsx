@@ -1,4 +1,4 @@
-import { Clock, MapPin } from "lucide-react";
+import { Clock, Eye, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -80,22 +80,28 @@ export const BookSaleCard = ({
               <Clock className="w-3.5 h-3.5 mr-1.5" />
               <span>{formatPostDate(displayDate)}</span>
             </div>
-            <div className="flex items-center text-xs text-gray-500 mt-1">
-              <MapPin className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+            <div className="mt-1 flex items-center text-xs text-gray-500">
+              <MapPin className="w-3.5 h-3.5 mr-1.5" />
               <span className="truncate">
                 {sale.city} {sale.district}
               </span>
             </div>
-            <div className="mt-4 flex items-center gap-2 border-t pt-3">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={sale.user.profileImageUrl || ""} />
-                <AvatarFallback>
-                  {sale.user.nickname.slice(0, 1)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-600">
-                {sale.user.nickname}
-              </span>
+            <div className="mt-4 flex items-center justify-between border-t pt-3">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={sale.user.profileImageUrl || ""} />
+                  <AvatarFallback>
+                    {sale.user.nickname.slice(0, 1)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-gray-600">
+                  {sale.user.nickname}
+                </span>
+              </div>
+              <div className="flex items-center text-xs text-gray-400">
+                <Eye className="w-3.5 h-3.5 mr-1" />
+                <span>{sale.viewCount?.toLocaleString() || 0}</span>
+              </div>
             </div>
           </div>
         </CardContent>

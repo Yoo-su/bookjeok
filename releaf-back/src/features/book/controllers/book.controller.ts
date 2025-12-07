@@ -11,9 +11,11 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { BookService } from '../services/book.service';
+import { UsedBookViewCountInterceptor } from '../interceptors/used-book-view-count.interceptor';
 import { CreateBookSaleDto } from '../dtos/create-book-sale.dto';
 import { UpdateSaleStatusDto } from '../../user/dtos/update-sale-status.dto';
 import { GetBookSalesQueryDto } from '../dtos/get-book-sales-query.dto';
@@ -103,6 +105,7 @@ export class BookController {
   }
 
   @Get('sales/:id')
+  @UseInterceptors(UsedBookViewCountInterceptor)
   @ApiOperation({
     summary: '판매글 상세 조회',
     description: '특정 판매글의 상세 정보를 조회합니다.',

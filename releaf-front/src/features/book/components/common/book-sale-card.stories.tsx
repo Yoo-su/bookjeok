@@ -45,6 +45,7 @@ const mockSale: UsedBookSale = {
     isbn: "9788932920238",
     description: "설명",
   },
+  viewCount: 123,
 };
 
 export const Default: Story = {

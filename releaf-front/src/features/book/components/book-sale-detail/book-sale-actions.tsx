@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Clock, Edit, Loader2, MessageCircle, Trash2 } from "lucide-react";
+import { Clock, Edit, Eye, Loader2, MessageCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -107,6 +107,10 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
             <span>
               {dateLabel} {formatPostDate(displayDate)}
             </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye className="w-3.5 h-3.5" />
+            <span>{sale.viewCount.toLocaleString()}</span>
           </div>
         </div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">

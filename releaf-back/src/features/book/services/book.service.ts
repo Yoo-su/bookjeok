@@ -107,6 +107,14 @@ export class BookService {
   }
 
   /**
+   * 판매글 조회수를 증가시킵니다.
+   * @param id 판매글 ID
+   */
+  async incrementViewCount(id: number): Promise<void> {
+    await this.usedBookSaleRepository.increment({ id }, 'viewCount', 1);
+  }
+
+  /**
    * ID로 판매글을 조회합니다.
    * @param id 판매글 ID
    * @returns 판매글 정보
@@ -156,6 +164,7 @@ export class BookService {
         'sale.imageUrls',
         'sale.city',
         'sale.district',
+        'sale.viewCount',
         'user.id',
         'user.nickname',
         'user.profileImageUrl',
@@ -235,6 +244,7 @@ export class BookService {
         'sale.imageUrls',
         'sale.city',
         'sale.district',
+        'sale.viewCount',
         'user.id',
         'user.nickname',
         'user.profileImageUrl',

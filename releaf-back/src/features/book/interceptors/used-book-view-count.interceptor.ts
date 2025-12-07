@@ -1,23 +1,23 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ReviewService } from '../services/review.service';
+import { BookService } from '../services/book.service';
 import { BaseViewCountInterceptor } from '@/shared/interceptors/base-view-count.interceptor';
 
 @Injectable()
-export class ViewCountInterceptor extends BaseViewCountInterceptor {
+export class UsedBookViewCountInterceptor extends BaseViewCountInterceptor {
   constructor(
     @Inject(CACHE_MANAGER) cacheManager: Cache,
-    private reviewService: ReviewService,
+    private bookService: BookService,
   ) {
     super(cacheManager);
   }
 
   protected get cachePrefix(): string {
-    return 'view_count';
+    return 'used_book_view_count';
   }
 
   protected async incrementCount(id: number): Promise<void> {
-    await this.reviewService.incrementViewCount(id);
+    await this.bookService.incrementViewCount(id);
   }
 }
