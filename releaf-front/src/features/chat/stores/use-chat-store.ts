@@ -12,6 +12,7 @@ interface ChatState {
   typingUsers: { [roomId: number]: string };
   isRoomInactive: { [roomId: number]: boolean };
   hasJoinedRooms: boolean;
+  typingTimeouts: { [roomId: number]: NodeJS.Timeout };
 
   toggleChat: () => void;
   openChatRoom: (roomId: number, queryClient: QueryClient) => void;
@@ -28,6 +29,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   typingUsers: {},
   isRoomInactive: {},
   hasJoinedRooms: false,
+  typingTimeouts: {},
 
   toggleChat: () => set((state) => ({ isChatOpen: !state.isChatOpen })),
 
@@ -41,12 +43,38 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   setTyping: (roomId, nickname) => {
-    set((state) => ({
-      typingUsers: {
-        ...state.typingUsers,
-        [roomId]: nickname,
-      },
-    }));
+    const existingTimeout = get().typingTimeouts[roomId];
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    if (nickname) {
+      // isTyping: true
+      const timeoutId = setTimeout(() => {
+        set((state) => {
+          const newTypingUsers = { ...state.typingUsers };
+          delete newTypingUsers[roomId];
+          return { typingUsers: newTypingUsers };
+        });
+      }, 4000); // 4초 뒤 자동 만료
+
+      set((state) => ({
+        typingUsers: { ...state.typingUsers, [roomId]: nickname },
+        typingTimeouts: { ...state.typingTimeouts, [roomId]: timeoutId },
+      }));
+    } else {
+      // isTyping: false
+      set((state) => {
+        const newTypingUsers = { ...state.typingUsers };
+        delete newTypingUsers[roomId];
+        const newTypingTimeouts = { ...state.typingTimeouts };
+        delete newTypingTimeouts[roomId];
+        return {
+          typingUsers: newTypingUsers,
+          typingTimeouts: newTypingTimeouts,
+        };
+      });
+    }
   },
 
   setRoomInactive: (roomId, isInactive) => {
