@@ -80,7 +80,14 @@ export const metadata: Metadata = {
     images: ["/imgs/releaf.png"],
   },
   icons: {
-    icon: "/logo.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    apple: {
+      url: "/logo.svg",
+      type: "image/svg+xml",
+    },
   },
   robots: {
     index: true,
@@ -102,6 +109,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "ReLeaf",
+  alternateName: ["릴리프", "ReLeaf Hub"],
   url: "https://releaf-hub.vercel.app",
   potentialAction: {
     "@type": "SearchAction",
