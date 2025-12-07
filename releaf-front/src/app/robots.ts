@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/my-page/", "/api/"],
+      disallow: ["/my-page/"],
     },
     sitemap: "https://releaf-hub.vercel.app/sitemap.xml",
   };
