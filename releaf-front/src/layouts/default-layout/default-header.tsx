@@ -45,7 +45,7 @@ export const DefaultHeader = () => {
             <Logo />
           </Link>
           {/* 향후 다른 메뉴 버튼들이 추가될 네비게이션 영역 */}
-          <div className="flex items-center gap-1">
+          <nav className="flex items-center gap-1" aria-label="메인 메뉴">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -73,6 +73,7 @@ export const DefaultHeader = () => {
                   variant="ghost"
                   size="icon"
                   className="rounded-full cursor-pointer text-gray-600 hover:text-gray-900"
+                  aria-label="중고마켓 메뉴 열기"
                 >
                   <Store className="w-5 h-5" />
                 </Button>
@@ -122,6 +123,7 @@ export const DefaultHeader = () => {
                   variant="ghost"
                   size="icon"
                   className="rounded-full cursor-pointer text-gray-600 hover:text-gray-900"
+                  aria-label="리뷰 메뉴 열기"
                 >
                   <MessageSquareQuote className="w-5 h-5" />
                 </Button>
@@ -166,7 +168,7 @@ export const DefaultHeader = () => {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </nav>
         </div>
 
         {/* 우측: 사용자 정보 */}

@@ -111,16 +111,35 @@ export const metadata: Metadata = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "ReLeaf",
-  alternateName: ["릴리프", "ReLeaf Hub"],
-  url: "https://releaf-hub.vercel.app",
-  potentialAction: {
-    "@type": "SearchAction",
-    target:
-      "https://releaf-hub.vercel.app/book/search?keyword={search_term_string}",
-    "query-input": "required name=search_term_string",
-  },
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: "ReLeaf",
+      alternateName: ["릴리프", "ReLeaf Hub"],
+      url: "https://releaf-hub.vercel.app",
+      potentialAction: {
+        "@type": "SearchAction",
+        target:
+          "https://releaf-hub.vercel.app/book/search?keyword={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@type": "SiteNavigationElement",
+      name: "중고마켓",
+      url: "https://releaf-hub.vercel.app/book/market",
+    },
+    {
+      "@type": "SiteNavigationElement",
+      name: "도서리뷰",
+      url: "https://releaf-hub.vercel.app/review",
+    },
+    {
+      "@type": "SiteNavigationElement",
+      name: "도서검색",
+      url: "https://releaf-hub.vercel.app/book/search",
+    },
+  ],
 };
 
 const nanum_gothic = Nanum_Gothic({

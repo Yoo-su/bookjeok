@@ -101,12 +101,16 @@ export const BookSearchModal = ({
         </DialogHeader>
         <div className="px-6 py-2 shrink-0">
           <div className="relative flex items-center">
-            <Search className="absolute left-4 w-5 h-5 text-muted-foreground transition-colors group-focus-within:text-primary" />
+            <Search
+              className="absolute left-4 w-5 h-5 text-muted-foreground transition-colors group-focus-within:text-primary"
+              aria-hidden="true"
+            />
             <Input
               placeholder="책 제목, 저자 또는 출판사로 검색해보세요"
               defaultValue=""
               onChange={handleSearchChange}
               className="pl-12 h-14 text-lg bg-muted/30 border-none shadow-inner focus-visible:ring-0 focus-visible:bg-muted/50 rounded-2xl transition-all"
+              aria-label="책 검색"
             />
           </div>
         </div>
