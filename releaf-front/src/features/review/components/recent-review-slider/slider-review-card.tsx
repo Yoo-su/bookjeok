@@ -32,7 +32,7 @@ export const SliderReviewCard = ({ review }: SliderReviewCardProps) => {
       <div className="relative w-[260px] h-[340px] rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-md transition-all duration-300 ease-out hover:shadow-xl hover:-translate-y-1">
         {/* 상단 책 이미지 영역 */}
         <div className="relative h-[140px] bg-linear-to-br from-sky-50 to-teal-50 flex items-center justify-center">
-          <div className="w-20 h-28 rounded-md overflow-hidden shadow-lg ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105">
+          <div className="relative w-20 h-28 rounded-md overflow-hidden shadow-lg ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105">
             {book?.image ? (
               <Image
                 src={book.image}
