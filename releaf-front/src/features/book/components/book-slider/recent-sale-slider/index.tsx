@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
@@ -10,24 +11,45 @@ import { RecentSaleCard } from "./recent-sale-card";
 export const RecentSalesSlider = () => {
   const { data: sales, isLoading, isError } = useRecentBookSalesQuery();
 
+  // 슬라이드가 화면을 충분히 채울 수 있도록 아이템 복제
+  // 최소 8개 이상의 슬라이드가 있어야 loop가 자연스럽게 작동
+  const displaySales = useMemo(() => {
+    if (!sales || sales.length === 0) return [];
+    if (sales.length >= 8) return sales;
+
+    // 아이템이 8개 미만이면 복제해서 최소 8개로 만듦
+    const multiplier = Math.ceil(8 / sales.length);
+    return Array(multiplier)
+      .fill(sales)
+      .flat()
+      .slice(0, Math.max(8, sales.length * 2));
+  }, [sales]);
+
   const SliderHeader = () => (
-    <div className="text-center mb-10">
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-        <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-500 to-teal-500">
+    <div className="text-left mb-12">
+      <span className="inline-block px-4 py-1.5 mb-4 text-xs font-semibold tracking-wider text-emerald-600 uppercase bg-emerald-50 rounded-full">
+        Just Arrived
+      </span>
+      <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+        <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-600 via-teal-500 to-cyan-500">
           새로운 만남,
-        </span>
+        </span>{" "}
         방금 등록된 책
       </h2>
-      <p className="mt-4 text-lg text-gray-600">
-        가장 새로운 중고 서적들을 만나보세요.
+      <p className="mt-4 text-lg text-gray-500 max-w-2xl">
+        다른 독자들이 소중히 읽은 책들을 만나보세요.
+        <br className="hidden sm:block" />
+        지금 이 순간에도 새로운 책들이 등록되고 있습니다.
       </p>
     </div>
   );
 
   if (isLoading) {
     return (
-      <section className="w-full py-12 bg-gray-50/50 overflow-hidden">
-        <SliderHeader />
+      <section className="w-full py-16  overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4">
+          <SliderHeader />
+        </div>
         <RecentSalesSliderSkeleton />
       </section>
     );
@@ -38,22 +60,26 @@ export const RecentSalesSlider = () => {
   }
 
   return (
-    <section className="w-full py-12 bg-gray-50/50 overflow-hidden">
-      <SliderHeader />
+    <section className="w-full py-16 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4">
+        <SliderHeader />
+      </div>
       <Swiper
         modules={[Autoplay]}
         slidesPerView={"auto"}
-        spaceBetween={32}
-        loop={sales.length > 5}
+        spaceBetween={24}
+        loop={true}
         centeredSlides={true}
+        speed={800}
         autoplay={{
-          delay: 2500,
+          delay: 3000,
           disableOnInteraction: false,
+          pauseOnMouseEnter: true,
         }}
         className="px-4!"
       >
-        {sales.map((sale) => (
-          <SwiperSlide key={sale.id} className="w-40!">
+        {displaySales.map((sale, index) => (
+          <SwiperSlide key={`${sale.id}-${index}`} className="w-[200px]! py-4">
             <RecentSaleCard sale={sale} />
           </SwiperSlide>
         ))}
