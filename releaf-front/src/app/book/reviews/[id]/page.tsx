@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = `${review.title} | Releaf`;
+  const title = review.title;
   // HTML 태그가 포함된 content 대신, 책 제목과 리뷰 제목을 조합하여 깔끔하게 표시
   const description = `${review.book.title} - ${review.book.author}`;
   const images = review.book.image ? [review.book.image] : [];
