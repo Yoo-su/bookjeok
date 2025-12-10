@@ -31,13 +31,12 @@ export class AuthService {
     if (user) {
       let isChanged = false;
 
-      // 프로필 이미지가 변경되었다면 업데이트
+      // 프로필 이미지 및 닉네임이 변경되었다면 업데이트
       if (profileImg && user.profileImageUrl !== profileImg) {
         user.profileImageUrl = profileImg;
         isChanged = true;
       }
 
-      // 닉네임이 변경되었다면 업데이트
       if (nickname && user.nickname !== nickname) {
         user.nickname = nickname;
         isChanged = true;
