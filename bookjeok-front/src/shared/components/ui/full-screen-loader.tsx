@@ -43,7 +43,7 @@ export const FullScreenLoader = () => {
   }, [text, isDeleting, loopNum, typingSpeed]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen bg-white fixed inset-0 z-[100] overflow-hidden">
+    <div className="flex flex-col items-center justify-center h-screen w-screen bg-white fixed inset-0 z-100 overflow-hidden">
       <div className="relative flex flex-col items-center justify-center gap-12">
         {/* 로고 컨테이너 (물결 및 플로팅 애니메이션 포함) */}
         <div className="relative flex items-center justify-center w-40 h-40">
