@@ -1,5 +1,5 @@
 {
-  "name": "releaf-monorepo",
+  "name": "bookjeok-monorepo",
   "private": true,
   "scripts": {
     "dev": "turbo dev",
