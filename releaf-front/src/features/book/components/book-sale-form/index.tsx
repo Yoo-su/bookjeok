@@ -2,7 +2,9 @@
 
 import { BookOpen, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 
+import { MapLocationSelector } from "@/shared/components/map/map-location-selector";
 import { Button } from "@/shared/components/shadcn/button";
 import {
   Card,
@@ -49,7 +51,7 @@ export const BookSaleForm = () => {
       </CardHeader>
       <CardContent className="px-0 sm:px-6">
         <Form {...form}>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-8">
             <FormField
               control={form.control}
               name="book"
@@ -127,23 +129,26 @@ export const BookSaleForm = () => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>게시글 제목</FormLabel>
-                  <FormControl>
-                    <Input placeholder="판매글 제목을 입력하세요" {...field} />
-                  </FormControl>
-                  <div className="mt-1 min-h-5">
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>게시글 제목</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="판매글 제목을 입력하세요"
+                        {...field}
+                      />
+                    </FormControl>
+                    <div className="mt-1 min-h-5">
+                      <FormMessage />
+                    </div>
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-3">
               <FormField
                 control={form.control}
                 name="price"
@@ -163,35 +168,87 @@ export const BookSaleForm = () => {
                   </FormItem>
                 )}
               />
+            </div>
 
-              <div className="md:col-span-2">
-                <LocationSelector
-                  city={form.watch("city")}
-                  district={form.watch("district")}
-                  onCityChange={(value) => {
-                    form.setValue("city", value, { shouldValidate: true });
-                    form.setValue("district", "", { shouldValidate: true });
-                  }}
-                  onDistrictChange={(value) => {
-                    form.setValue("district", value, { shouldValidate: true });
-                  }}
-                />
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2">
-                  <div className="flex-1 min-h-5">
-                    {form.formState.errors.city && (
-                      <p className="text-sm font-medium text-destructive">
-                        {form.formState.errors.city.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex-1 min-h-5">
-                    {form.formState.errors.district && (
-                      <p className="text-sm font-medium text-destructive">
-                        {form.formState.errors.district.message}
-                      </p>
-                    )}
+            <div className="border rounded-xl p-4 sm:p-6 bg-muted/20 space-y-4">
+              <div className="space-y-1">
+                <h3 className="font-semibold text-base">직거래 희망 장소</h3>
+                <p className="text-sm text-muted-foreground">
+                  구매자와 만나서 거래할 안전한 장소를 지도로 선택해주세요.
+                </p>
+              </div>
+              <MapLocationSelector
+                onLocationSelect={(lat, lng, addressInfo) => {
+                  form.setValue("latitude", lat);
+                  form.setValue("longitude", lng);
+
+                  if (addressInfo) {
+                    if (addressInfo.placeName) {
+                      form.setValue("placeName", addressInfo.placeName);
+                    } else {
+                      form.setValue("placeName", "");
+                    }
+                  } else {
+                    if (!addressInfo && (lat !== 0 || lng !== 0)) {
+                      toast.error(
+                        "주소가 확인되지 않는 지역입니다. 정확한 위치를 다시 선택해주세요."
+                      );
+                    }
+                    form.setValue("placeName", "");
+                  }
+                }}
+              />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="md:col-span-2 space-y-2">
+                  <LocationSelector
+                    className="bg-background"
+                    city={form.watch("city")}
+                    district={form.watch("district")}
+                    onCityChange={(value) => {
+                      form.setValue("city", value, { shouldValidate: true });
+                      form.setValue("district", "", { shouldValidate: true });
+                    }}
+                    onDistrictChange={(value) => {
+                      form.setValue("district", value, {
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                  <div className="flex gap-4">
+                    <div className="flex-1 min-h-5">
+                      {form.formState.errors.city && (
+                        <p className="text-sm font-medium text-destructive">
+                          {form.formState.errors.city.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex-1 min-h-5">
+                      {form.formState.errors.district && (
+                        <p className="text-sm font-medium text-destructive">
+                          {form.formState.errors.district.message}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="placeName"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>상세 위치명 (직접 수정 가능)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="예: 강남역 10번 출구 (지도 선택 시 자동 입력)"
+                          className="bg-background"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 

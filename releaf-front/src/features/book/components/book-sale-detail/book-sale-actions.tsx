@@ -16,12 +16,6 @@ import {
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
 import { Button } from "@/shared/components/shadcn/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/shadcn/card";
 import { Separator } from "@/shared/components/shadcn/separator";
 import { PATHS } from "@/shared/constants/paths";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
@@ -188,38 +182,9 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
 
       <Separator />
 
-      <div className="prose max-w-none text-gray-700">
-        <p>{sale.content}</p>
+      <div className="prose max-w-none text-gray-700 min-h-[200px] bg-gray-50/50 p-6 rounded-xl border border-gray-100">
+        <p className="whitespace-pre-wrap leading-relaxed">{sale.content}</p>
       </div>
-
-      <Link href={PATHS.BOOK_DETAIL(sale.book.isbn)}>
-        <Card className="transition-shadow bg-gray-50 hover:shadow-md">
-          <CardHeader>
-            <CardTitle className="text-lg">도서 정보</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <div className="relative w-20 h-[120px] shrink-0">
-                <Image
-                  src={sale.book.image}
-                  alt={sale.book.title}
-                  fill
-                  sizes="80px"
-                  className="object-cover rounded-md"
-                />
-              </div>
-              <div className="space-y-1 text-sm">
-                <p className="font-bold text-gray-800">{sale.book.title}</p>
-                <p className="text-gray-600">저자: {sale.book.author}</p>
-                <p className="text-gray-600">출판사: {sale.book.publisher}</p>
-                <p className="text-gray-500 pt-1 line-clamp-2">
-                  {sale.book.description}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
     </div>
   );
 };

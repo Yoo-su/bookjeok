@@ -10,11 +10,13 @@ export const sellFormSchema = z
       .max(50, "제목은 50자를 초과할 수 없습니다."),
     price: z
       .string()
-      .min(1, "가격을 입력해주세요.")
       .refine((val) => /^\d+$/.test(val), "숫자만 입력 가능합니다.")
       .refine((val) => parseInt(val) > 0, "가격은 0보다 커야 합니다."),
     city: z.string().min(1, "시/도를 선택해주세요."),
     district: z.string(),
+    latitude: z.number(),
+    longitude: z.number(),
+    placeName: z.string().min(1, "거래 희망 위치를 선택해주세요."),
     content: z
       .string()
       .min(10, "상세 내용은 10자 이상 입력해주세요.")

@@ -1,5 +1,12 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+  IsNumber,
+} from 'class-validator';
 
 export class GetBookSalesQueryDto {
   @IsOptional()
@@ -22,4 +29,19 @@ export class GetBookSalesQueryDto {
   @IsOptional()
   @IsString()
   district?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lng?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  radius?: number = 5000; // Default 5km (meter unit?) or let's use meters. 5000m.
 }

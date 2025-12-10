@@ -74,9 +74,12 @@ export const BookSaleFilter = ({
         initialParams.minPrice ?? 0,
         initialParams.maxPrice ?? MAX_MARKET_PRICE,
       ],
-      sort: `${initialParams.sortBy || "createdAt"}_${
-        initialParams.sortOrder || "DESC"
-      }`,
+      sort:
+        initialParams.sortBy === "distance"
+          ? "distance_ASC"
+          : `${initialParams.sortBy || "createdAt"}_${
+              initialParams.sortOrder || "DESC"
+            }`,
     });
   }, [initialParams, reset]);
 
@@ -94,7 +97,7 @@ export const BookSaleFilter = ({
       onSubmit={handleSubmit(onApply)}
       className="mb-8 space-y-4 rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
     >
-      {/* Row 1: Search & Location */}
+      {/* 1행: 검색 및 지역 선택 */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative grow min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -155,7 +158,7 @@ export const BookSaleFilter = ({
         </div>
       </div>
 
-      {/* Row 2: Status & Sort */}
+      {/* 2행: 판매 상태 및 정렬 */}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
         <div className="flex items-center gap-4">
           <Label className="shrink-0 font-semibold">상태:</Label>
@@ -201,6 +204,7 @@ export const BookSaleFilter = ({
                   <SelectItem value="createdAt_DESC">최신순</SelectItem>
                   <SelectItem value="price_ASC">낮은 가격순</SelectItem>
                   <SelectItem value="price_DESC">높은 가격순</SelectItem>
+                  <SelectItem value="distance_ASC">거리순</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -208,7 +212,7 @@ export const BookSaleFilter = ({
         </div>
       </div>
 
-      {/* Row 3: Price Slider & Buttons */}
+      {/* 3행: 가격 슬라이더 및 버튼 */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex grow items-center gap-4">
           <Label className="shrink-0 font-semibold">가격대:</Label>

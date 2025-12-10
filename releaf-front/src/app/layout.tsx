@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Nanum_Gothic } from "next/font/google";
 import localFont from "next/font/local";
+import Script from "next/script";
 
 import { Toaster } from "@/shared/components/shadcn/sonner";
 import { ChatProvider } from "@/shared/providers/chat-provider";
@@ -177,6 +178,7 @@ export default async function Layout({
           <Analytics />
           <SpeedInsights />
         </QueryProvider>
+        <Toaster position="bottom-center" />
         <Toaster position="bottom-center" />
         <script
           type="application/ld+json"

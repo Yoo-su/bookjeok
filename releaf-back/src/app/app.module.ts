@@ -1,7 +1,13 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  OnModuleInit,
+} from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { AuthModule } from '@/features/auth/auth.module';
 import { UserModule } from '@/features/user/user.module';
 import { User } from '@/features/user/entities/user.entity';
@@ -56,7 +62,14 @@ import { Review } from '@/features/review/entities/review.entity';
   controllers: [],
   providers: [],
 })
-export class AppModule implements NestModule {
+export class AppModule implements NestModule, OnModuleInit {
+  constructor(private readonly dataSource: DataSource) {}
+
+  async onModuleInit() {
+    await this.dataSource.query('CREATE EXTENSION IF NOT EXISTS cube');
+    await this.dataSource.query('CREATE EXTENSION IF NOT EXISTS earthdistance');
+  }
+
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
   }

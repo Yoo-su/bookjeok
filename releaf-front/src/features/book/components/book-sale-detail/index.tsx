@@ -5,8 +5,10 @@ import { AlertTriangle } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store";
 import { useBookSaleDetailQuery } from "@/features/book/queries";
 
+import { BookInfoCard } from "./book-info-card";
 import { BookSaleActions } from "./book-sale-actions";
 import { BookSaleInfo } from "./book-sale-info";
+import { SaleLocationMap } from "./sale-location-map";
 import { BookSaleDetailSkeleton } from "./skeleton";
 
 interface BookSaleDetailProps {
@@ -36,11 +38,39 @@ export const BookSaleDetail = ({ saleId }: BookSaleDetailProps) => {
   // 현재 로그인한 유저가 판매자인지 확인
   const isOwner = currentUser?.id === sale.user.id;
 
+  const AdditionalInfo = () => (
+    <div className="space-y-8 mt-10">
+      {sale.latitude && sale.longitude && (
+        <SaleLocationMap
+          latitude={sale.latitude}
+          longitude={sale.longitude}
+          placeName={sale.placeName}
+          city={sale.city}
+          district={sale.district}
+        />
+      )}
+      <BookInfoCard sale={sale} />
+    </div>
+  );
+
   return (
     <div className="max-w-5xl mx-auto py-8 md:py-12 px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        <BookSaleInfo sale={sale} />
-        <BookSaleActions sale={sale} isOwner={isOwner} />
+        <div className="space-y-8">
+          <BookSaleInfo sale={sale} />
+          {/* Desktop View: 왼쪽 컬럼 하단에 배치 */}
+          <div className="hidden md:block">
+            <AdditionalInfo />
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <BookSaleActions sale={sale} isOwner={isOwner} />
+          {/* Mobile View: 오른쪽(모바일은 하단) 컬럼 하단에 배치 */}
+          <div className="md:hidden">
+            <AdditionalInfo />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -26,7 +26,16 @@ export const useBookSaleSearchParams = (): SearchBookSalesParams => {
     if (sortBy) params.sortBy = sortBy;
     if (sortOrder) params.sortOrder = sortOrder;
     if (minPrice) params.minPrice = Number(minPrice);
+    if (minPrice) params.minPrice = Number(minPrice);
     if (maxPrice) params.maxPrice = Number(maxPrice);
+
+    const lat = searchParams.get("lat");
+    const lng = searchParams.get("lng");
+    const radius = searchParams.get("radius");
+
+    if (lat) params.lat = Number(lat);
+    if (lng) params.lng = Number(lng);
+    if (radius) params.radius = Number(radius);
 
     return params;
   }, [searchParams]);

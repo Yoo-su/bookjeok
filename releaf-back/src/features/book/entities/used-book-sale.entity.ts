@@ -36,6 +36,15 @@ export class UsedBookSale {
   @Column()
   district: string;
 
+  @Column({ type: 'double precision' })
+  latitude: number;
+
+  @Column({ type: 'double precision' })
+  longitude: number;
+
+  @Column()
+  placeName: string;
+
   @Column('text')
   content: string;
 

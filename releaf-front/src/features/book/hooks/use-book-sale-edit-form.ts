@@ -33,6 +33,9 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
       price: String(sale.price),
       city: sale.city,
       district: sale.district,
+      latitude: sale.latitude ?? undefined,
+      longitude: sale.longitude ?? undefined,
+      placeName: sale.placeName ?? "",
       content: sale.content,
     },
     mode: "onBlur",
@@ -82,6 +85,9 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
       price: Number(data.price),
       city: data.city,
       district: data.district,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      placeName: data.placeName,
       content: data.content,
       imageUrls: existingImages,
     };
@@ -102,6 +108,9 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
     handleImagesAdd,
     handleExistingImageRemove,
     handleNewImageRemove,
-    onSubmit: form.handleSubmit(onSubmit),
+    onSubmit: form.handleSubmit(onSubmit, (errors) => {
+      console.log("Validation errors:", errors);
+      toast.error("입력 정보를 다시 확인해주세요. (필수 항목 누락 등)");
+    }),
   };
 };

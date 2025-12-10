@@ -41,6 +41,14 @@ export class CreateBookSaleDto {
   @ApiProperty({ description: '거래 희망 구/군', example: '강남구' })
   district: string;
 
+  @IsNumber()
+  @ApiProperty({ description: '위도', example: 37.123456 })
+  latitude: number;
+
+  @IsNumber()
+  @ApiProperty({ description: '경도', example: 127.123456 })
+  longitude: number;
+
   @IsString()
   @IsNotEmpty()
   @MinLength(10)
@@ -66,4 +74,9 @@ export class CreateBookSaleDto {
   @Type(() => BookInfoDto)
   @ApiProperty({ description: '책 정보', type: BookInfoDto })
   book: BookInfoDto;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: '장소명', example: '스타벅스 앞' })
+  placeName: string;
 }

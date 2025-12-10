@@ -24,6 +24,9 @@ export const useBookSaleForm = () => {
       content: "",
       city: "",
       district: "",
+      latitude: undefined,
+      longitude: undefined,
+      placeName: "",
       book: null,
     },
     mode: "onBlur",
@@ -77,6 +80,9 @@ export const useBookSaleForm = () => {
       price: Number(data.price),
       city: data.city,
       district: data.district,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      placeName: data.placeName,
       content: data.content,
       book: {
         isbn: data.book.isbn,
@@ -100,6 +106,9 @@ export const useBookSaleForm = () => {
     setSelectedBook: handleBookSelect,
     handleImagesAdd,
     handleImageRemove,
-    onSubmit: form.handleSubmit(onSubmit),
+    onSubmit: form.handleSubmit(onSubmit, (errors) => {
+      console.log("Validation errors:", errors);
+      toast.error("입력 정보를 다시 확인해주세요. (필수 항목 누락 등)");
+    }),
   };
 };

@@ -12,7 +12,12 @@ import { BookInfoDto } from '../dtos/book-info.dto';
 import { UserService } from '../../user/services/user.service';
 import { GetBookSalesQueryDto } from '../dtos/get-book-sales-query.dto';
 import { UpdateBookSaleDto } from '../dtos/update-book-sale.dto';
-import { QueryBookSaleDto } from '../dtos/query-book-sale.dto';
+import { BookSaleSortBy, QueryBookSaleDto } from '../dtos/query-book-sale.dto';
+import {
+  applyCommonFilters,
+  applyLocationFilter,
+  applySorting,
+} from '../utils/book-query.builder';
 
 @Injectable()
 export class BookService {
@@ -156,17 +161,36 @@ export class BookService {
     const {
       page = 1,
       limit = 12,
-      search,
-      city,
-      district,
-      minPrice,
-      maxPrice,
-      status,
-      sortBy = 'createdAt',
+      sortBy = BookSaleSortBy.CREATED_AT,
       sortOrder = 'DESC',
+      lat,
+      lng,
     } = queryDto;
 
-    const queryBuilder = this.usedBookSaleRepository
+    const queryBuilder = this.createBaseSearchQuery();
+
+    applyCommonFilters(queryBuilder, queryDto);
+    applyLocationFilter(queryBuilder, queryDto);
+    applySorting(queryBuilder, sortBy, sortOrder, lat, lng);
+
+    // 페이지네이션
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    const [sales, total] = await queryBuilder.getManyAndCount();
+
+    const hasNextPage = page * limit < total;
+
+    return {
+      sales,
+      total,
+      page,
+      limit,
+      hasNextPage,
+    };
+  }
+
+  private createBaseSearchQuery() {
+    return this.usedBookSaleRepository
       .createQueryBuilder('sale')
       .leftJoinAndSelect('sale.user', 'user')
       .leftJoinAndSelect('sale.book', 'book')
@@ -186,57 +210,6 @@ export class BookService {
         'user.profileImageUrl',
         'book',
       ]);
-
-    // 검색어 필터
-    if (search) {
-      queryBuilder.andWhere(
-        '(sale.title LIKE :search OR sale.content LIKE :search OR book.title LIKE :search OR book.author LIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-
-    // 시/도, 시/군/구 필터
-    if (city) {
-      queryBuilder.andWhere('sale.city = :city', { city });
-    }
-    if (district) {
-      queryBuilder.andWhere('sale.district = :district', { district });
-    }
-
-    // 가격대 필터
-    if (minPrice !== undefined) {
-      queryBuilder.andWhere('sale.price >= :minPrice', { minPrice });
-    }
-    if (maxPrice !== undefined) {
-      queryBuilder.andWhere('sale.price <= :maxPrice', { maxPrice });
-    }
-
-    // 판매글 상태 필터
-    if (status && status.length > 0) {
-      // Defensively ensure 'status' is an array before passing to TypeORM
-      const statusArray = Array.isArray(status) ? status : [status];
-      queryBuilder.andWhere('sale.status IN (:...status)', {
-        status: statusArray,
-      });
-    }
-
-    // 정렬
-    queryBuilder.orderBy(`sale.${sortBy}`, sortOrder);
-
-    // 페이지네이션
-    queryBuilder.skip((page - 1) * limit).take(limit);
-
-    const [sales, total] = await queryBuilder.getManyAndCount();
-
-    const hasNextPage = page * limit < total;
-
-    return {
-      sales,
-      total,
-      page,
-      limit,
-      hasNextPage,
-    };
   }
 
   /**

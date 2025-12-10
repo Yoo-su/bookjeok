@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -12,6 +12,7 @@ import { SaleStatus } from '../entities/used-book-sale.entity';
 export enum BookSaleSortBy {
   CREATED_AT = 'createdAt',
   PRICE = 'price',
+  DISTANCE = 'distance',
 }
 
 export enum SortOrder {
@@ -45,6 +46,7 @@ export class QueryBookSaleDto {
   maxPrice?: number;
 
   @IsOptional()
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   @IsEnum(SaleStatus, { each: true })
   @IsArray()
   status?: SaleStatus[];
@@ -68,4 +70,19 @@ export class QueryBookSaleDto {
   @IsNumber()
   @Min(1)
   limit?: number = 12;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  lng?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  radius?: number;
 }

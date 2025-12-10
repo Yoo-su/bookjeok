@@ -66,6 +66,9 @@ export interface CreateBookSaleParams {
   district: string;
   content: string;
   imageUrls: string[];
+  latitude?: number;
+  longitude?: number;
+  placeName?: string;
   book: {
     isbn: string;
     title: string;
@@ -114,6 +117,9 @@ export interface UsedBookSale {
   user: SaleAuthor; // 작성자 정보 (중첩 객체)
   book: BookInfo; // 책 정보 (중첩 객체)
   viewCount: number; // 조회수
+  latitude?: number;
+  longitude?: number;
+  placeName?: string;
 }
 
 // 책 관련 판매게시글 목록 조회 API 요청 파라미터 타입
@@ -148,6 +154,9 @@ export type UpdateBookSaleParams = Partial<{
   district: string;
   content: string;
   imageUrls: string[];
+  latitude: number;
+  longitude: number;
+  placeName: string;
 }>;
 
 export type CommonBookSaleResponse = ApiResponse<UsedBookSale>;
@@ -165,6 +174,9 @@ export interface SearchBookSalesParams {
   status?: SaleStatus[];
   sortBy?: string; // 'createdAt' | 'price'
   sortOrder?: string; // 'ASC' | 'DESC'
+  lat?: number;
+  lng?: number;
+  radius?: number;
 }
 
 export interface SearchBookSalesResponse {
