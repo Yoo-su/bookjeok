@@ -1,10 +1,10 @@
-# Releaf Project Guidelines
+# bookjeok Project Guidelines
 
-This document serves as a reference for the development rules, directory structure, and conventions used in the Releaf project.
+This document serves as a reference for the development rules, directory structure, and conventions used in the bookjeok project.
 
 ## 1. Technology Stack
 
-### Frontend (`releaf-front`)
+### Frontend (`bookjeok-front`)
 
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
@@ -14,7 +14,7 @@ This document serves as a reference for the development rules, directory structu
 - **Form Handling**: React Hook Form + Zod
 - **Testing**: Vitest, React Testing Library, Storybook
 
-### Backend (`releaf-back`)
+### Backend (`bookjeok-back`)
 
 - **Framework**: NestJS
 - **Language**: TypeScript

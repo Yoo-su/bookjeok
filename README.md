@@ -1,6 +1,6 @@
-# ReLeaf (릴리프) - 책과 지식의 선순환 플랫폼
+# bookjeok (북적) - 책과 지식의 선순환 플랫폼
 
-ReLeaf(릴리프)는 **종합 도서 플랫폼**입니다.
+bookjeok(북적)은 **종합 도서 플랫폼**입니다.
 단순한 중고 거래를 넘어, 도서 정보를 탐색하고, 깊이 있는 리뷰를 나누며, 실시간으로 소통하는 커뮤니티를 지향합니다.
 더불어 공연, 전시 등 다양한 문화 예술 정보를 제공하여 풍요로운 문화 생활을 지원합니다.
 
@@ -53,7 +53,7 @@ ReLeaf(릴리프)는 **종합 도서 플랫폼**입니다.
 
 이 프로젝트는 최신 웹 기술을 적극 도입하여 성능과 개발 생산성을 극대화했습니다. **TurboRepo**를 기반으로 한 모노레포(Monorepo) 구조입니다.
 
-### Frontend (`releaf-front`)
+### Frontend (`bookjeok-front`)
 
 - **Framework**: [Next.js 15](https://nextjs.org/) (App Router) - 최신 React 기능을 활용한 서버 사이드 렌더링 및 라우팅
 - **Language**: [TypeScript](https://www.typescriptlang.org/) - 정적 타입 시스템을 통한 안정성 확보
@@ -65,7 +65,7 @@ ReLeaf(릴리프)는 **종합 도서 플랫폼**입니다.
 - **Animation**: [Framer Motion](https://www.framer.com/motion/) - 자연스럽고 강력한 애니메이션 구현
 - **Editor**: [Tiptap](https://tiptap.dev/) - 확장 가능한 리치 텍스트 에디터
 
-### Backend (`releaf-back`)
+### Backend (`bookjeok-back`)
 
 - **Framework**: [NestJS 11](https://nestjs.com/) - 확장성 있고 유지보수가 용이한 서버 사이드 애플리케이션 프레임워크
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
@@ -86,8 +86,8 @@ ReLeaf(릴리프)는 **종합 도서 플랫폼**입니다.
 ## 프로젝트 구조 (Project Structure)
 
 ```
-releaf/
-├── releaf-front/           # 프론트엔드 애플리케이션
+bookjeok-monorepo/
+├── bookjeok-front/           # 프론트엔드 애플리케이션
 │   ├── src/
 │   │   ├── app/            # Next.js App Router 페이지
 │   │   ├── features/       # 기능별 모듈 (도메인 로직, 컴포넌트, 훅)
@@ -96,7 +96,7 @@ releaf/
 │   │   └── shared/         # 공통 유틸리티, UI 컴포넌트
 │   └── ...
 │
-├── releaf-back/            # 백엔드 API 서버
+├── bookjeok-back/            # 백엔드 API 서버
 │   ├── src/
 │   │   ├── features/       # 기능별 모듈 (Controller, Service, Entity)
 │   │   ├── common/         # 공통 모듈 (Guard, Filter, Interceptor)
@@ -121,8 +121,8 @@ releaf/
 1. 저장소를 클론합니다.
 
    ```bash
-   git clone https://github.com/your-username/releaf.git
-   cd releaf
+   git clone https://github.com/your-username/bookjeok.git
+   cd bookjeok
    ```
 
 2. 의존성을 설치합니다.
@@ -132,7 +132,7 @@ releaf/
    ```
 
 3. 환경 변수를 설정합니다.
-   - `releaf-front/.env.local` 및 `releaf-back/.env` 파일을 생성하고 필요한 키 값을 입력합니다. (예: DB 접속 정보, API 키 등)
+   - `bookjeok-front/.env.local` 및 `bookjeok-back/.env` 파일을 생성하고 필요한 키 값을 입력합니다. (예: DB 접속 정보, API 키 등)
 
 ### 실행 (Running)
 
@@ -147,12 +147,12 @@ pnpm dev
 
 - Frontend:
   ```bash
-  cd releaf-front
+  cd bookjeok-front
   pnpm dev
   ```
 - Backend:
   ```bash
-  cd releaf-back
+  cd bookjeok-back
   pnpm start:dev
   ```
 
