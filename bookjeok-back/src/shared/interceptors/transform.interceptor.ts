@@ -12,7 +12,9 @@ export interface Response<T> {
   data: T;
   timestamp: string;
 }
-
+/**
+ * 통일된 응답 형태를 위한 인터셉터
+ */
 @Injectable()
 export class TransformInterceptor<T>
   implements NestInterceptor<T, Response<T>>
