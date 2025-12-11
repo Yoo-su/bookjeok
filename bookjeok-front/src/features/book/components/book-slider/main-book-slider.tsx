@@ -15,78 +15,6 @@ import { MAIN_PUBLISHERS } from "../../constants";
 import { useBookListQuery } from "../../queries";
 import { BookSliderSkeleton } from "./skeleton";
 
-// 슬라이더에 적용할 커스텀 스타일
-const SwiperStyles = () => (
-  <style>{`
-    .book-swiper-container {
-      padding-top: 20px;
-      padding-bottom: 50px;
-    }
-    .book-swiper {
-      padding: 4rem 0;
-      overflow: visible;
-    }
-    .book-swiper .swiper-wrapper {
-      align-items: center;
-    }
-    .book-swiper .swiper-slide {
-      transition: transform 0.4s ease-in-out, filter 0.4s ease-in-out;
-      filter: brightness(0.6);
-      transform: scale(0.8);
-      opacity: 1;
-      cursor: pointer;
-    }
-    .book-swiper .swiper-slide-active {
-      transform: scale(1.05) translateY(-25px);
-      filter: brightness(1);
-      z-index: 10;
-    }
-    .book-swiper .swiper-slide-next,
-    .book-swiper .swiper-slide-prev {
-      transform: scale(0.9);
-      filter: brightness(0.8);
-    }
-    .book-swiper .swiper-button-next,
-    .book-swiper .swiper-button-prev {
-      color: #374151; /* gray-700 */
-      background-color: rgba(255, 255, 255, 0.7);
-      border-radius: 9999px;
-      width: 44px;
-      height: 44px;
-      transition: background-color 0.3s, box-shadow 0.3s;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    }
-    .book-swiper .swiper-button-next:hover,
-    .book-swiper .swiper-button-prev:hover {
-      background-color: rgba(255, 255, 255, 1);
-    }
-    .book-swiper .swiper-button-next::after,
-    .book-swiper .swiper-button-prev::after {
-      display: none;
-    }
-    .book-info-overlay {
-      transition: background-color 0.5s, opacity 0.5s;
-    }
-    .book-info-overlay > * {
-      transform: translateY(16px);
-      transition: transform 0.5s;
-    }
-    .swiper-slide-active .group:hover .book-info-overlay {
-      background-color: rgba(0, 0, 0, 0.7);
-      opacity: 1;
-    }
-    .swiper-slide-active .group:hover .book-info-overlay > * {
-      transform: translateY(0);
-    }
-    .swiper-slide-active .group:hover .book-info-overlay h3 {
-      transition-delay: 0.1s;
-    }
-    .swiper-slide-active .group:hover .book-info-overlay p {
-      transition-delay: 0.2s;
-    }
-  `}</style>
-);
-
 export const MainBookSlider = () => {
   const [activePublisher, setActivePublisher] = useState(MAIN_PUBLISHERS[0]);
   const swiperRef = useRef<any>(null);
@@ -108,7 +36,6 @@ export const MainBookSlider = () => {
 
   return (
     <div className="w-full bg-linear-to-b from-white via-gray-50 to-white py-8">
-      <SwiperStyles />
       <div className="mx-auto max-w-5xl px-4 text-center">
         <TextAnimate
           as="h2"
