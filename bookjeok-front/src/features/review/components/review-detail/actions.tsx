@@ -29,14 +29,14 @@ export function ReviewDetailActions({
 }: ReviewDetailActionsProps) {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { mutate: toggleReaction } = useToggleReviewReactionMutation(
-    Number(reviewId)
-  );
+  const { mutate: toggleReaction, isPending: isMutating } =
+    useToggleReviewReactionMutation(Number(reviewId));
 
   const { data: myReaction, isPending: isReactionPending } =
     useMyReviewReactionQuery(Number(reviewId), !!user);
 
-  const isReactionLoading = !!user && isReactionPending;
+  // 쿼리 로딩 중이거나 mutation 진행 중일 때 버튼 비활성화
+  const isReactionLoading = !!user && (isReactionPending || isMutating);
 
   const handleReactionClick = (type: ReviewReactionType) => {
     if (!user) {

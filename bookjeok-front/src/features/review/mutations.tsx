@@ -15,16 +15,18 @@ import {
   ReviewFormValues,
   ReviewReactionType,
 } from "@/features/review/types";
+import { MUTATION_KEYS } from "@/shared/constants/mutation-keys";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
 /**
  * 리뷰 리액션을 토글하는 뮤테이션 훅입니다.
- * 낙관적 업데이트를 지원합니다.
+ * 낙관적 업데이트를 지원하며, mutationKey를 통해 중복 요청을 방지합니다.
  */
 export const useToggleReviewReactionMutation = (reviewId: number) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: MUTATION_KEYS.reviewKeys.toggleReaction(reviewId),
     mutationFn: (type: ReviewReactionType) =>
       toggleReviewReaction(reviewId, type),
     onMutate: async (type) => {
@@ -92,6 +94,7 @@ export const useToggleReviewReactionMutation = (reviewId: number) => {
       return { previousReview, previousMyReaction };
     },
     onError: (err, newTodo, context) => {
+      // 에러 발생 시 이전 값으로 롤백
       if (context?.previousReview) {
         queryClient.setQueryData(
           QUERY_KEYS.reviewKeys.detail(reviewId).queryKey,
@@ -105,17 +108,8 @@ export const useToggleReviewReactionMutation = (reviewId: number) => {
         );
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.reviewKeys.detail(reviewId).queryKey,
-      });
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...QUERY_KEYS.reviewKeys.detail(reviewId).queryKey,
-          "reaction",
-        ],
-      });
-    },
+    // 낙관적 업데이트만 사용하므로 onSettled에서 invalidateQueries 제거
+    // 서버와의 정확한 동기화가 필요한 경우 onSuccess에서 서버 응답 데이터를 직접 설정
   });
 };
 
