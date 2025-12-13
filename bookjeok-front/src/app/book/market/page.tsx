@@ -7,8 +7,17 @@ import { getQueryClient } from "@/shared/libs/query-client";
 import { BookMarketView } from "@/views/book-market-view";
 
 export const metadata: Metadata = {
-  title: "중고 서적 마켓",
-  description: "다양한 중고 서적을 탐색하고 저렴하게 구매해보세요.",
+  title: "중고책 마켓 | 내 주변 중고 도서 거래",
+  description:
+    "다양한 중고 서적을 탐색하고 저렴하게 구매하세요. 지역별 중고책 거래, 판매 등록까지 한 번에. 베스트셀러부터 희귀본까지 북적 중고마켓에서 만나보세요.",
+  keywords: [
+    "중고책",
+    "중고 도서",
+    "중고책 거래",
+    "중고책 판매",
+    "중고책 구매",
+    "중고서적",
+  ],
 };
 
 export default async function Page() {
