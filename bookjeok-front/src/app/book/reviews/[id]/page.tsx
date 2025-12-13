@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { cache } from "react";
 
 import { getReview } from "@/features/review/apis";
+import { ReviewJsonLd } from "@/features/review/components/review-json-ld";
 import { ReviewDetailView } from "@/views/review-detail-view";
 
 interface Props {
@@ -58,5 +59,10 @@ export default async function Page({ params }: Props) {
   // 캐시된 API 함수 호출 (이미 generateMetadata에서 호출되었다면 캐시된 데이터 사용)
   const initialReview = await getCachedReview(reviewId);
 
-  return <ReviewDetailView initialReview={initialReview} />;
+  return (
+    <>
+      {initialReview && <ReviewJsonLd review={initialReview} />}
+      <ReviewDetailView initialReview={initialReview} />
+    </>
+  );
 }

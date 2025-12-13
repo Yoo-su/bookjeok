@@ -29,7 +29,6 @@ export const useBookSaleForm = () => {
       placeName: "",
       book: null,
     },
-    mode: "onBlur",
   });
 
   const selectedBook = form.watch("book");
