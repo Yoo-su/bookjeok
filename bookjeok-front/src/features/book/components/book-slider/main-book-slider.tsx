@@ -134,6 +134,7 @@ export const MainBookSlider = () => {
                       alt={book.title}
                       fill
                       sizes="(max-width: 768px) 240px, 300px"
+                      priority={true}
                       loading="eager" // 빠른 스와이프 시 하얀 화면 방지
                       className="object-cover transition-transform duration-500 group-hover:scale-110"
                       onError={(e) => {
