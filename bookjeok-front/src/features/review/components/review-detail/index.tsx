@@ -3,11 +3,11 @@
 import { useAuthStore } from "@/features/auth/store";
 import { useReviewDetailQuery } from "@/features/review/queries";
 import { Review } from "@/features/review/types";
-import { Spinner } from "@/shared/components/shadcn/spinner";
 
 import { ReviewDetailActions } from "./actions";
 import { ReviewDetailContent } from "./content";
 import { ReviewDetailHeader } from "./header";
+import { ReviewDetailSkeleton } from "./skeleton";
 
 interface ReviewDetailProps {
   id: number;
@@ -24,11 +24,7 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
   } = useReviewDetailQuery(id, !!id, initialReview ?? undefined);
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-20 flex justify-center">
-        <Spinner className="size-8 text-primary" />
-      </div>
-    );
+    return <ReviewDetailSkeleton />;
   }
 
   if (error || !review) {
