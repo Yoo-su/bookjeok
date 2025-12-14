@@ -37,6 +37,8 @@ export const SocketProvider = ({
         auth: {
           token: accessToken,
         },
+        reconnection: true, // 자동 재연결 활성화
+        reconnectionAttempts: 1, // 최대 1회 시도
       });
 
       newSocket.on("connect", () => {
