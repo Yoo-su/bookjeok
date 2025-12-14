@@ -1,7 +1,7 @@
 import { API_PATHS } from "@/shared/constants/apis";
 import { internalAxios, privateAxios, publicAxios } from "@/shared/libs/axios";
 
-import { DEFAULT_DISPLAY, DEFAULT_SORT, DEFAULT_START } from "./constants";
+import { DEFAULT_DISPLAY, DEFAULT_SORT, DEFAULT_START } from "../constants";
 import {
   CommonBookSaleResponse,
   CreateBookSaleParams,
@@ -17,7 +17,7 @@ import {
   SearchBookSalesResponse,
   UpdateBookSaleParams,
   UsedBookSale,
-} from "./types";
+} from "../types";
 
 /**
  * 책 검색결과를 조회합니다.

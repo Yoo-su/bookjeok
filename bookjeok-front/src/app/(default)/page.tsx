@@ -1,7 +1,8 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Metadata } from "next";
 
-import { getBookList, getRecentBookSales } from "@/features/book/apis";
+import { getRecentBookSales } from "@/features/book/apis";
+import { getPublisherBooksServer } from "@/features/book/apis/server";
 import { MAIN_PUBLISHERS } from "@/features/book/constants";
 import { getReviews } from "@/features/review/apis";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
@@ -18,15 +19,12 @@ export default async function Page() {
   const queryClient = getQueryClient();
 
   // 5개 출판사별 책 목록 prefetch (display=10)
+  // 서버 전용 함수로 네이버 API 직접 호출 (CORS 없음)
   const publisherPrefetches = MAIN_PUBLISHERS.map((publisher) =>
     queryClient.prefetchQuery({
       queryKey: QUERY_KEYS.bookKeys.list({ query: publisher, display: 10 })
         .queryKey,
-      queryFn: async () => {
-        const result = await getBookList({ query: publisher, display: 10 });
-        if (!result.success) return [];
-        return result.items;
-      },
+      queryFn: () => getPublisherBooksServer(publisher, 10),
     })
   );
 
