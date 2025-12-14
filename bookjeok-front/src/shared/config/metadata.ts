@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "bookjeok",
   },
   description:
-    "북적(bookjeok)은 도서 리뷰와 중고책 거래를 한곳에서! 책 리뷰를 작성하고, 중고 도서를 사고팔며 독서의 즐거움을 나눠보세요.",
+    "도서 검색과 리뷰 중고책 거래를 한곳에서! 책 리뷰를 작성하고, 중고 도서를 사고팔며 독서의 즐거움을 나눠보세요.",
   keywords: [
     // 브랜드 키워드 (한글/영문 조합)
     "bookjeok",

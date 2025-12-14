@@ -1,16 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Book } from "@/features/book/types";
-import { getReview } from "@/features/review/apis";
 import { ReviewForm } from "@/features/review/components/review-form";
 import { useUpdateReviewMutation } from "@/features/review/mutations";
+import { useReviewDetailQuery } from "@/features/review/queries";
 import { ReviewFormValues } from "@/features/review/types";
-import { Spinner } from "@/shared/components/shadcn/spinner";
 import { PATHS } from "@/shared/constants/paths";
+
+import { ReviewEditSkeleton } from "./skeleton";
 
 interface ReviewEditProps {
   id: number;
@@ -19,50 +18,14 @@ interface ReviewEditProps {
 export const ReviewEdit = ({ id }: ReviewEditProps) => {
   const router = useRouter();
 
-  const [initialData, setInitialData] = useState<{
-    title: string;
-    content: string;
-    bookIsbn: string;
-    category: string;
-    tags: string[];
-    rating: number;
-    book?: Book;
-  } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // React Query를 사용하여 리뷰 데이터 조회 (캐시 활용)
+  const { data: review, isLoading, error } = useReviewDetailQuery(id, !!id);
+
   const {
     mutateAsync: updateReview,
     isPending: isSubmitting,
     isSuccess,
   } = useUpdateReviewMutation();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!id) return;
-
-      try {
-        const review = await getReview(id);
-        const bookData = review.book;
-
-        setInitialData({
-          title: review.title,
-          content: review.content,
-          bookIsbn: review.bookIsbn,
-          category: review.category || "",
-          tags: review.tags || [],
-          rating: review.rating || 0,
-          book: bookData,
-        });
-      } catch (error: any) {
-        console.error("Failed to fetch data:", error);
-        toast.error(error.message);
-        router.push(PATHS.MY_PAGE);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [id, router]);
 
   const handleSubmit = async (
     data: ReviewFormValues,
@@ -72,17 +35,28 @@ export const ReviewEdit = ({ id }: ReviewEditProps) => {
     router.push(PATHS.REVIEW_DETAIL(id));
   };
 
+  // 로딩 중: 스켈레톤 UI 표시
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-8 flex justify-center">
-        <Spinner />
-      </div>
-    );
+    return <ReviewEditSkeleton />;
   }
 
-  if (!initialData) {
+  // 에러 또는 데이터 없음
+  if (error || !review) {
+    toast.error("리뷰를 불러오는데 실패했습니다.");
+    router.push(PATHS.MY_PAGE);
     return null;
   }
+
+  // 리뷰 데이터를 폼 초기값으로 변환
+  const initialData = {
+    title: review.title,
+    content: review.content,
+    bookIsbn: review.bookIsbn,
+    category: review.category || "",
+    tags: review.tags || [],
+    rating: review.rating || 0,
+    book: review.book,
+  };
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
