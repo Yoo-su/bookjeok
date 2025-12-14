@@ -18,6 +18,10 @@ export const metadata: Metadata = {
 export default async function Page() {
   const queryClient = getQueryClient();
 
+  console.log("[Page] Starting prefetch...");
+  console.log("[Page] API_URL:", process.env.API_URL);
+  console.log("[Page] NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
+
   // 5개 출판사별 책 목록 prefetch (display=10)
   // 서버 전용 함수로 네이버 API 직접 호출 (CORS 없음)
   const publisherPrefetches = MAIN_PUBLISHERS.map((publisher) =>
@@ -28,20 +32,25 @@ export default async function Page() {
     })
   );
 
-  await Promise.all([
-    // 출판사별 책 목록 prefetch
-    ...publisherPrefetches,
-    // 최근 판매글 prefetch
-    queryClient.prefetchQuery({
-      queryKey: QUERY_KEYS.bookKeys.recentSales.queryKey,
-      queryFn: getRecentBookSales,
-    }),
-    // 최신 리뷰 prefetch (page: 1, limit: 10)
-    queryClient.prefetchQuery({
-      queryKey: QUERY_KEYS.reviewKeys.list({ page: 1, limit: 10 }).queryKey,
-      queryFn: () => getReviews({ page: 1, limit: 10 }),
-    }),
-  ]);
+  try {
+    await Promise.all([
+      // 출판사별 책 목록 prefetch
+      ...publisherPrefetches,
+      // 최근 판매글 prefetch
+      queryClient.prefetchQuery({
+        queryKey: QUERY_KEYS.bookKeys.recentSales.queryKey,
+        queryFn: getRecentBookSales,
+      }),
+      // 최신 리뷰 prefetch (page: 1, limit: 10)
+      queryClient.prefetchQuery({
+        queryKey: QUERY_KEYS.reviewKeys.list({ page: 1, limit: 10 }).queryKey,
+        queryFn: () => getReviews({ page: 1, limit: 10 }),
+      }),
+    ]);
+    console.log("[Page] Prefetch completed successfully");
+  } catch (error) {
+    console.error("[Page] Prefetch failed:", error);
+  }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
