@@ -11,12 +11,12 @@ import { TextAnimate } from "@/shared/components/magicui/text-animate";
 import { Button } from "@/shared/components/shadcn/button";
 import { PATHS } from "@/shared/constants/paths";
 
-import { MAIN_PUBLISHERS } from "../../constants";
+import { HOME_PUBLISHERS } from "../../constants";
 import { useBookListQuery } from "../../queries";
 import { BookSliderSkeleton } from "./skeleton";
 
 export const MainBookSlider = () => {
-  const [activePublisher, setActivePublisher] = useState(MAIN_PUBLISHERS[0]);
+  const [activePublisher, setActivePublisher] = useState(HOME_PUBLISHERS[0]);
   const swiperRef = useRef<any>(null);
 
   const {
@@ -65,7 +65,7 @@ export const MainBookSlider = () => {
 
       {/* 출판사 필터 칩 */}
       <div className="flex justify-center items-center gap-2 mt-8 flex-wrap px-4">
-        {MAIN_PUBLISHERS.map((publisher) => (
+        {HOME_PUBLISHERS.map((publisher) => (
           <Button
             key={publisher}
             variant={activePublisher === publisher ? "default" : "outline"}

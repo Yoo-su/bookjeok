@@ -4,7 +4,7 @@ export const DEFAULT_DISPLAY = 20;
 export const DEFAULT_START = 1;
 export const DEFAULT_SORT: BookSortParam = "sim";
 
-export const MAIN_PUBLISHERS = [
+export const HOME_PUBLISHERS = [
   "민음사",
   "문학동네",
   "열린책들",

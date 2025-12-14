@@ -2,15 +2,13 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Metadata } from "next";
 
 import { getRecentBookSales } from "@/features/book/apis";
-import { getPublisherBooksServer } from "@/features/book/apis/server";
-import { MAIN_PUBLISHERS } from "@/features/book/constants";
 import { getReviews } from "@/features/review/apis";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { MainView } from "@/views/main-view";
 
-// 동적 렌더링 강제 (매 요청마다 서버에서 실행)
-export const dynamic = "force-dynamic";
+// ISR: 60초마다 페이지 재검증 (캐시된 페이지 사용으로 빠른 응답)
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "홈",
@@ -21,19 +19,9 @@ export const metadata: Metadata = {
 export default async function Page() {
   const queryClient = getQueryClient();
 
-  // 5개 출판사별 책 목록 prefetch (display=10)
-  // 서버 전용 함수로 네이버 API 직접 호출 (CORS 없음)
-  const publisherPrefetches = MAIN_PUBLISHERS.map((publisher) =>
-    queryClient.prefetchQuery({
-      queryKey: QUERY_KEYS.bookKeys.list({ query: publisher, display: 10 })
-        .queryKey,
-      queryFn: () => getPublisherBooksServer(publisher, 10),
-    })
-  );
-
+  // 백엔드 API만 서버에서 prefetch (ISR 호환)
+  // 네이버 API(출판사 책)는 클라이언트에서 useQuery로 로드
   await Promise.all([
-    // 출판사별 책 목록 prefetch
-    ...publisherPrefetches,
     // 최근 판매글 prefetch
     queryClient.prefetchQuery({
       queryKey: QUERY_KEYS.bookKeys.recentSales.queryKey,
