@@ -23,6 +23,7 @@ export const useReviewsQuery = (params: GetReviewsParams) => {
     queryKey: QUERY_KEYS.reviewKeys.list(params).queryKey,
     queryFn: () => getReviews(params),
     enabled: params.enabled !== false,
+    staleTime: 60 * 5 * 1000, // 5분
   });
 };
 

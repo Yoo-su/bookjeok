@@ -7,8 +7,7 @@ import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { MainView } from "@/views/main-view";
 
-// ISR: 60초마다 페이지 재검증 (캐시된 페이지 사용으로 빠른 응답)
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "홈",
@@ -19,8 +18,6 @@ export const metadata: Metadata = {
 export default async function Page() {
   const queryClient = getQueryClient();
 
-  // 백엔드 API만 서버에서 prefetch (ISR 호환)
-  // 네이버 API(출판사 책)는 클라이언트에서 useQuery로 로드
   await Promise.all([
     // 최근 판매글 prefetch
     queryClient.prefetchQuery({
