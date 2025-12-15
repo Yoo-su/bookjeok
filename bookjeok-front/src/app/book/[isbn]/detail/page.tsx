@@ -6,6 +6,9 @@ import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { BookDetailView } from "@/views/book-detail-view";
 
+// 책 정보는 변경되지 않으므로 24시간 캐시
+export const revalidate = 60 * 60 * 24; // 24시간
+
 export const metadata: Metadata = {
   title: "도서 상세",
   description: "도서 상세 정보를 확인하세요.",
