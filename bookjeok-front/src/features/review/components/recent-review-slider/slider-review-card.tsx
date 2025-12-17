@@ -96,7 +96,7 @@ export const SliderReviewCard = ({ review }: SliderReviewCardProps) => {
           {/* 작성자 정보 */}
           <div className="flex items-center justify-between mt-auto">
             <div className="flex items-center gap-2">
-              <Avatar className="w-6 h-6 ring-1 ring-gray-100">
+              <Avatar className="w-6 h-6 ring-1 ring-gray-100" data-nosnippet>
                 <AvatarImage
                   src={review.user?.profileImageUrl || undefined}
                   alt={review.user?.nickname}

@@ -109,7 +109,10 @@ export function ReviewCard({
 
           <div className="mt-2 pt-2 border-t border-stone-100 flex items-center gap-2 justify-between">
             <div className="flex items-center gap-2">
-              <Avatar className="w-5 h-5 border border-stone-200">
+              <Avatar
+                className="w-5 h-5 border border-stone-200"
+                data-nosnippet
+              >
                 <AvatarImage
                   src={review.user?.profileImageUrl || undefined}
                   alt={review.user?.nickname}

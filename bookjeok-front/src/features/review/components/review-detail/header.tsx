@@ -52,7 +52,7 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
 
         <div className="flex items-center justify-center gap-6 text-stone-500 text-sm mb-10">
           <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8 border border-stone-200">
+            <Avatar className="w-8 h-8 border border-stone-200" data-nosnippet>
               <AvatarImage
                 src={review.user?.profileImageUrl || undefined}
                 alt={review.user?.nickname}

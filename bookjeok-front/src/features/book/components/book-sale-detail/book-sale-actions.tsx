@@ -124,7 +124,7 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Avatar>
+          <Avatar data-nosnippet>
             <AvatarImage
               src={sale.user.profileImageUrl || undefined}
               alt={sale.user.nickname}
