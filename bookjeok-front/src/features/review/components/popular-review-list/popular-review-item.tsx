@@ -58,7 +58,10 @@ export function PopularReviewItem({ review }: PopularReviewItemProps) {
 
           <div className="flex items-center justify-between mt-auto pt-4 border-t border-stone-100/50">
             <div className="flex items-center gap-2.5">
-              <Avatar className="w-6 h-6 border border-stone-100">
+              <Avatar
+                className="w-6 h-6 border border-stone-100"
+                data-nosnippet
+              >
                 <AvatarImage src={review.user?.profileImageUrl || undefined} />
                 <AvatarFallback className="text-[9px] bg-stone-100 text-stone-500">
                   {review.user?.nickname?.[0]}

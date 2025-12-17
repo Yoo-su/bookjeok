@@ -41,7 +41,7 @@ export const ChatItem = ({ room }: { room: ChatRoom }) => {
       className="flex items-center gap-4 p-4 cursor-pointer transition-colors hover:bg-gray-50"
       onClick={handleOpenRoom}
     >
-      <Avatar className="h-14 w-14">
+      <Avatar className="h-14 w-14" data-nosnippet>
         <AvatarImage src={opponent?.profileImageUrl || ""} />
         <AvatarFallback>{opponent?.nickname.slice(0, 1)}</AvatarFallback>
       </Avatar>

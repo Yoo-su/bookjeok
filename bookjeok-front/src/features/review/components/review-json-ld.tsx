@@ -19,7 +19,7 @@ export function ReviewJsonLd({ review }: ReviewJsonLdProps) {
     author: {
       "@type": "Person",
       name: review.user?.nickname || "Anonymous",
-      image: review.user?.profileImageUrl,
+      // 프로필 이미지는 검색 엔진 노출 방지를 위해 제외
     },
     // 리뷰 평점 (평점이 있는 경우에만)
     ...(review.rating > 0 && {

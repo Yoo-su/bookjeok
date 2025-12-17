@@ -52,7 +52,7 @@ const MessageBubble = ({
       }`}
     >
       {!isMine && (
-        <Avatar className="h-8 w-8">
+        <Avatar className="h-8 w-8" data-nosnippet>
           <AvatarImage src={message.sender.profileImageUrl || ""} />
           <AvatarFallback>{message.sender.nickname.slice(0, 1)}</AvatarFallback>
         </Avatar>

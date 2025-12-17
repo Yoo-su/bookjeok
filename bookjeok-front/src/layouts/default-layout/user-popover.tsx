@@ -54,7 +54,7 @@ export default function UserPopover() {
           variant="ghost"
           className="relative w-10 h-10 transition-transform duration-200 rounded-full hover:scale-105"
         >
-          <Avatar className="w-10 h-10">
+          <Avatar className="w-10 h-10" data-nosnippet>
             <AvatarImage src={user.profileImageUrl || ""} alt={user.nickname} />
             <AvatarFallback>
               {user.nickname.slice(0, 2).toUpperCase()}

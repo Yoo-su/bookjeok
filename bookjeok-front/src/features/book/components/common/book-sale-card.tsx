@@ -115,7 +115,7 @@ export const BookSaleCard = ({
             {/* Footer: User & View Count */}
             <div className="mt-auto flex items-center justify-between pt-3 border-t border-dashed border-gray-100">
               <div className="flex items-center gap-1.5">
-                <Avatar className="h-5 w-5">
+                <Avatar className="h-5 w-5" data-nosnippet>
                   <AvatarImage src={sale.user.profileImageUrl || ""} />
                   <AvatarFallback className="text-[9px]">
                     {sale.user.nickname.slice(0, 1)}
