@@ -37,7 +37,7 @@ export const RecentReviewSlider = () => {
         </span>
       </div>
       <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-        <span className="text-sky-600">가병게 한 줄,</span> 최근 리뷰
+        <span className="text-sky-600">가볍게 한 줄,</span> 최근 리뷰
       </h2>
       <p className="mt-4 text-lg text-gray-500 max-w-2xl ml-auto">
         부담 없이 읽고, 부담 없이 써보세요.
