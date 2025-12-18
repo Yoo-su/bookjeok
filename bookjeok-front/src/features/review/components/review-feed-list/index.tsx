@@ -53,17 +53,19 @@ export function ReviewFeedList() {
               </div>
             </div>
 
-            {/* 더보기 버튼 */}
-            <Link
-              href={`/book/reviews?category=${feed.category}`}
-              className="group flex items-center gap-1 text-stone-500 hover:text-emerald-600 transition-colors"
-            >
-              <span className="text-sm font-medium relative">
-                더보기
-                <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-emerald-500 transition-all duration-300 group-hover:w-full" />
-              </span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-            </Link>
+            {/* 더보기 버튼 (리뷰가 4개 이상일 때만 표시) */}
+            {feed.reviews.length >= 4 && (
+              <Link
+                href={`/book/reviews?category=${feed.category}`}
+                className="group flex items-center gap-1 text-stone-500 hover:text-emerald-600 transition-colors"
+              >
+                <span className="text-sm font-medium relative">
+                  더보기
+                  <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-emerald-500 transition-all duration-300 group-hover:w-full" />
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            )}
           </div>
 
           <Swiper
