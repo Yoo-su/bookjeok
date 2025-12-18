@@ -1,39 +1,50 @@
-import { MapPin, Ticket } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { ArtItem } from "@/features/art/types";
+import { Badge } from "@/shared/components/shadcn/badge";
 
 interface MainArtCardProps {
   item: ArtItem;
 }
+
 export const MainArtCard = ({ item }: MainArtCardProps) => {
   return (
     <Link href={`/art/${item.mt20id}`} passHref>
-      <div className="group relative w-full h-[380px] rounded-xl overflow-hidden shadow-lg transition-all duration-300 ease-in-out transform-gpu hover:!scale-105 hover:shadow-2xl hover:shadow-emerald-500/20">
-        {/* Background Image */}
-        <Image
-          src={item.poster}
-          alt={item.prfnm}
-          fill
-          sizes="280px"
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
-        />
+      <div className="group relative w-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ease-out hover:-translate-y-1 border border-stone-100">
+        {/* 포스터 이미지 */}
+        <div className="relative aspect-3/4 overflow-hidden">
+          <Image
+            src={item.poster}
+            alt={item.prfnm}
+            fill
+            sizes="300px"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+          {/* 상태 배지 */}
+          <div className="absolute top-3 left-3">
+            <Badge className="bg-white/90 backdrop-blur-sm text-stone-700 font-medium text-xs border-0 shadow-sm">
+              {item.genrenm}
+            </Badge>
+          </div>
+        </div>
 
-        {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-          <h3 className="text-xl font-bold drop-shadow-lg">{item.prfnm}</h3>
-          <div className="mt-2 space-y-1.5 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {/* 콘텐츠 */}
+        <div className="p-4">
+          <h3 className="text-base font-bold text-stone-900 line-clamp-2 leading-snug mb-2 group-hover:text-rose-600 transition-colors">
+            {item.prfnm}
+          </h3>
+          <div className="space-y-1.5 text-xs text-stone-500">
             <div className="flex items-center gap-1.5">
-              <Ticket className="w-3.5 h-3.5" />
-              <span className="truncate">{item.genrenm}</span>
+              <MapPin className="w-3.5 h-3.5 text-stone-400" />
+              <span className="truncate">{item.fcltynm}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              <span className="truncate">{item.fcltynm}</span>
+              <Calendar className="w-3.5 h-3.5 text-stone-400" />
+              <span className="truncate">
+                {item.prfpdfrom} ~ {item.prfpdto}
+              </span>
             </div>
           </div>
         </div>
