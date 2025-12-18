@@ -9,16 +9,26 @@ export interface GetBookListParams {
   sort?: BookSortParam;
 }
 
-export interface BookInfo {
-  title: string;
-  link: string;
-  image: string;
-  author: string;
-  discount: string;
-  publisher: string;
-  pubdate: string;
+/**
+ * 책 정보의 공통 필드 (네이버 API, 백엔드 DB 모두에서 사용)
+ * - 슬라이더, 카드 등 UI 컴포넌트에서 필요한 최소 필드
+ */
+export interface BaseBookInfo {
   isbn: string;
+  title: string;
+  author: string;
+  publisher: string;
   description: string;
+  image: string;
+}
+
+/**
+ * 네이버 책 API 응답 형태
+ */
+export interface BookInfo extends BaseBookInfo {
+  link: string;
+  discount: string;
+  pubdate: string;
 }
 
 export type Book = BookInfo;

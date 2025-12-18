@@ -6,11 +6,17 @@ import { Book } from './entities/book.entity';
 import { UsedBookSale } from './entities/used-book-sale.entity';
 import { UserModule } from '../user/user.module';
 import { DataSource } from 'typeorm';
+import { UsedBookViewCountInterceptor } from './interceptors/used-book-view-count.interceptor';
+import { BookViewCountInterceptor } from './interceptors/book-view-count.interceptor';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Book, UsedBookSale]), UserModule],
   controllers: [BookController],
-  providers: [BookService],
+  providers: [
+    BookService,
+    UsedBookViewCountInterceptor,
+    BookViewCountInterceptor,
+  ],
 })
 export class BookModule implements OnModuleInit {
   constructor(private readonly dataSource: DataSource) {}

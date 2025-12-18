@@ -8,6 +8,7 @@ import {
   getBookSaleDetail,
   getBookSummary,
   getMyBookSales,
+  getPopularBooks,
   getPopularBookSales,
   getRecentBookSales,
   getRelatedSales,
@@ -175,6 +176,18 @@ export const usePopularBookSalesQuery = () => {
   return useQuery({
     queryKey: QUERY_KEYS.bookKeys.popularSales.queryKey,
     queryFn: getPopularBookSales,
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+};
+
+/**
+ * 인기책 목록을 조회하는 쿼리 훅입니다.
+ * 조회수, 판매글, 리뷰 데이터 기반으로 계산됩니다.
+ */
+export const usePopularBooksQuery = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.bookKeys.popularBooks.queryKey,
+    queryFn: getPopularBooks,
     staleTime: 5 * 60 * 1000, // 5분
   });
 };

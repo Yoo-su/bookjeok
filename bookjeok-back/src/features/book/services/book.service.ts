@@ -120,6 +120,74 @@ export class BookService {
   }
 
   /**
+   * 책 상세페이지 조회수를 증가시킵니다.
+   * @param isbn 책 ISBN
+   */
+  async incrementBookViewCount(isbn: string): Promise<void> {
+    // 책이 존재하는 경우에만 조회수 증가
+    const result = await this.bookRepository.increment(
+      { isbn },
+      'viewCount',
+      1,
+    );
+    // affected가 0이면 책이 존재하지 않음 (아무 작업도 하지 않음)
+    if (result.affected === 0) {
+      // 책이 DB에 없으면 조용히 무시 (네이버 API로만 조회된 책)
+      return;
+    }
+  }
+
+  /**
+   * 인기책 목록을 조회합니다.
+   * 인기도 점수 = 책 조회수*1 + 판매글 조회수 합계*2 + 리뷰 조회수 합계*2 + 리액션 합계*3
+   * @returns 인기책 목록 (최대 10개)
+   */
+  async findPopularBooks(): Promise<Book[]> {
+    // getRawMany()를 사용하여 집계 결과와 함께 조회
+    const rawResults = await this.bookRepository
+      .createQueryBuilder('book')
+      .leftJoin('book.usedBookSales', 'sale')
+      .leftJoin('reviews', 'review', 'review.bookIsbn = book.isbn')
+      .select([
+        'book.isbn AS isbn',
+        'book.title AS title',
+        'book.author AS author',
+        'book.publisher AS publisher',
+        'book.description AS description',
+        'book.image AS image',
+        'COALESCE(book.viewCount, 0) AS "viewCount"',
+        'book.createdAt AS "createdAt"',
+        'book.updatedAt AS "updatedAt"',
+      ])
+      .addSelect(
+        `COALESCE(book.viewCount, 0) * 1 
+         + COALESCE(SUM(sale.viewCount), 0) * 2 
+         + COALESCE(SUM(review.viewCount), 0) * 2 
+         + COALESCE(SUM(review.reactionCount), 0) * 3`,
+        'popularityScore',
+      )
+      .groupBy('book.isbn')
+      .orderBy('"popularityScore"', 'DESC')
+      .addOrderBy('"viewCount"', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    // Raw 결과를 Book 형태로 변환
+    return rawResults.map((raw) => ({
+      isbn: raw.isbn,
+      title: raw.title,
+      author: raw.author,
+      publisher: raw.publisher,
+      description: raw.description,
+      image: raw.image,
+      viewCount: Number(raw.viewCount) || 0,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
+      usedBookSales: [],
+    })) as Book[];
+  }
+
+  /**
    * 인기 판매글을 조회합니다.
    * 조회수 내림차순, 최신순으로 정렬하여 상위 6개를 반환합니다.
    */

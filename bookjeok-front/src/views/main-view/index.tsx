@@ -3,6 +3,7 @@
 import { MainArtSlider } from "@/features/art/components/art-slider/main-art-slider";
 import { MAIN_ARTS } from "@/features/art/constants";
 import { MainBookSlider } from "@/features/book/components/book-slider/main-book-slider";
+import { PopularBookSlider } from "@/features/book/components/book-slider/popular-book-slider";
 import { RecentSalesSlider } from "@/features/book/components/book-slider/recent-sale-slider";
 import { RecentReviewSlider } from "@/features/review/components/recent-review-slider";
 
@@ -10,6 +11,8 @@ export const MainView = () => {
   return (
     <div className="flex flex-col gap-8">
       <MainBookSlider />
+
+      <PopularBookSlider />
 
       <RecentSalesSlider />
 

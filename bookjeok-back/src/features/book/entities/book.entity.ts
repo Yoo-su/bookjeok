@@ -31,6 +31,9 @@ export class Book {
   @OneToMany(() => UsedBookSale, (sale) => sale.book)
   usedBookSales: UsedBookSale[];
 
+  @Column({ default: 0 })
+  viewCount: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

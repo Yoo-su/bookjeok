@@ -16,6 +16,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { BookService } from '../services/book.service';
 import { UsedBookViewCountInterceptor } from '../interceptors/used-book-view-count.interceptor';
+import { BookViewCountInterceptor } from '../interceptors/book-view-count.interceptor';
 import { CreateBookSaleDto } from '../dtos/create-book-sale.dto';
 import { UpdateSaleStatusDto } from '../../user/dtos/update-sale-status.dto';
 import { GetBookSalesQueryDto } from '../dtos/get-book-sales-query.dto';
@@ -112,6 +113,30 @@ export class BookController {
   @ApiResponse({ status: 200, description: '인기 판매글 목록을 반환합니다.' })
   async getPopularSales() {
     return await this.bookService.findPopularSales();
+  }
+
+  @Get('popular')
+  @ApiOperation({
+    summary: '인기책 조회',
+    description: '조회수, 판매글, 리뷰 데이터 기반 인기책 목록을 조회합니다.',
+  })
+  @ApiResponse({ status: 200, description: '인기책 목록을 반환합니다.' })
+  async getPopularBooks() {
+    return await this.bookService.findPopularBooks();
+  }
+
+  @Post(':isbn/view')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseInterceptors(BookViewCountInterceptor)
+  @ApiOperation({
+    summary: '책 상세 조회수 기록',
+    description:
+      '책 상세페이지 접근 시 조회수를 기록합니다. (IP 기반 24시간 중복 방지)',
+  })
+  @ApiResponse({ status: 204, description: '조회수가 기록되었습니다.' })
+  @ApiParam({ name: 'isbn', description: '책 ISBN' })
+  recordBookView(): void {
+    // 인터셉터가 조회수 처리, 204 No Content 응답
   }
 
   @Get('sales/:id')

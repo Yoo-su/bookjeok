@@ -17,7 +17,7 @@ export class ViewCountInterceptor extends BaseViewCountInterceptor {
     return 'view_count';
   }
 
-  protected async incrementCount(id: number): Promise<void> {
-    await this.reviewService.incrementViewCount(id);
+  protected async incrementCount(id: number | string): Promise<void> {
+    await this.reviewService.incrementViewCount(Number(id));
   }
 }

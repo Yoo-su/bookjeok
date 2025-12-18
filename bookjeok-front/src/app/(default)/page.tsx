@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Metadata } from "next";
 
-import { getRecentBookSales } from "@/features/book/apis";
+import { getPopularBooks, getRecentBookSales } from "@/features/book/apis";
 import { getReviews } from "@/features/review/apis";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { getQueryClient } from "@/shared/libs/query-client";
@@ -23,6 +23,11 @@ export default async function Page() {
     queryClient.prefetchQuery({
       queryKey: QUERY_KEYS.bookKeys.recentSales.queryKey,
       queryFn: getRecentBookSales,
+    }),
+    // 인기책 prefetch
+    queryClient.prefetchQuery({
+      queryKey: QUERY_KEYS.bookKeys.popularBooks.queryKey,
+      queryFn: getPopularBooks,
     }),
     // 최신 리뷰 prefetch (page: 1, limit: 10)
     queryClient.prefetchQuery({

@@ -3,6 +3,7 @@ import { internalAxios, privateAxios, publicAxios } from "@/shared/libs/axios";
 
 import { DEFAULT_DISPLAY, DEFAULT_SORT, DEFAULT_START } from "../constants";
 import {
+  BaseBookInfo,
   CommonBookSaleResponse,
   CreateBookSaleParams,
   GetBookDetailErrorResponse,
@@ -191,6 +192,27 @@ export const getRecentBookSales = async (): Promise<UsedBookSale[]> => {
  */
 export const getPopularBookSales = async (): Promise<UsedBookSale[]> => {
   const { data } = await publicAxios.get<UsedBookSale[]>("/book/sales/popular");
+  return data;
+};
+
+/**
+ * 책 상세페이지 조회수를 기록합니다.
+ * IP 기반 24시간 중복 방지가 적용됩니다.
+ * @param isbn 책 ISBN
+ */
+export const recordBookView = async (isbn: string): Promise<void> => {
+  await publicAxios.post(API_PATHS.book.recordView(isbn));
+};
+
+/**
+ * 인기책 목록을 조회합니다.
+ * 조회수, 판매글, 리뷰 데이터 기반으로 계산됩니다.
+ * @returns 인기책 목록
+ */
+export const getPopularBooks = async (): Promise<BaseBookInfo[]> => {
+  const { data } = await publicAxios.get<BaseBookInfo[]>(
+    API_PATHS.book.popularBooks
+  );
   return data;
 };
 

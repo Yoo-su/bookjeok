@@ -17,6 +17,8 @@ export const API_PATHS = {
     updateSale: (saleId: number) => `/book/sales/${saleId}`,
     deleteSale: (saleId: number) => `/book/sales/${saleId}`,
     recentSales: "/book/sales/recent",
+    popularBooks: "/book/popular",
+    recordView: (isbn: string) => `/book/${isbn}/view`,
     summary: "/llm/book-summary",
   },
   art: {

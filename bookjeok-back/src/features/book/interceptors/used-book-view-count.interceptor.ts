@@ -17,7 +17,7 @@ export class UsedBookViewCountInterceptor extends BaseViewCountInterceptor {
     return 'used_book_view_count';
   }
 
-  protected async incrementCount(id: number): Promise<void> {
-    await this.bookService.incrementViewCount(id);
+  protected async incrementCount(id: number | string): Promise<void> {
+    await this.bookService.incrementViewCount(Number(id));
   }
 }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Separator } from "@/shared/components/shadcn/separator";
 
+import { useBookView } from "../../hooks/use-book-view";
 import { useBookDetailQuery, useBookSummaryQuery } from "../../queries";
 import { useRecentBookStore } from "../../stores/use-recent-book-store";
 import { AISummary } from "./ai-summary";
@@ -27,6 +28,9 @@ export const BookDetail = ({ isbn }: BookDetailProps) => {
   } = useBookDetailQuery(isbn);
   const addRecentBook = useRecentBookStore((state) => state.addRecentBook);
   const [isSummaryRequested, setIsSummaryRequested] = useState(false);
+
+  // 책 상세페이지 조회수 기록
+  useBookView(isbn);
 
   useEffect(() => {
     if (isSuccess && book) {
