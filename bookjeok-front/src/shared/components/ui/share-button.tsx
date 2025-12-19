@@ -191,7 +191,7 @@ export const ShareButton = ({
           {showLabel && <span className="text-xs">공유하기</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-2" align="end">
+      <PopoverContent className="w-auto p-2" align="center">
         <div className="flex gap-1">
           {/* 카카오톡 */}
           <Button
