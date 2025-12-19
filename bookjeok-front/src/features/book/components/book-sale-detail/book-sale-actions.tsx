@@ -2,7 +2,6 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Edit, Eye, Loader2, MessageCircle, Trash2 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -30,11 +29,11 @@ import { SaleStatusBadge } from "../common/sale-status-badge";
 
 interface BookSaleActionsProps {
   sale: UsedBookSale;
-  isOwner: boolean;
 }
 
-export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
+export const BookSaleActions = ({ sale }: BookSaleActionsProps) => {
   const currentUser = useAuthStore((state) => state.user);
+  const isOwner = currentUser?.id === sale.user.id;
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const { openChatRoom } = useChatStore();
   const { socket } = useSocketContext();

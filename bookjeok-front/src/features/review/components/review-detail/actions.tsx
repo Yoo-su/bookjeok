@@ -16,19 +16,20 @@ import { cn } from "@/shared/utils/cn";
 import { REACTION_CONFIG } from "../../constants";
 
 interface ReviewDetailActionsProps {
-  isAuthor: boolean;
   reviewId: string;
+  reviewUserId: number;
   reactionCounts?: {
     [key in ReviewReactionType]: number;
   };
 }
 export function ReviewDetailActions({
-  isAuthor,
   reviewId,
+  reviewUserId,
   reactionCounts,
 }: ReviewDetailActionsProps) {
   const router = useRouter();
   const { user } = useAuthStore();
+  const isAuthor = user?.id === reviewUserId;
   const { mutate: toggleReaction, isPending: isMutating } =
     useToggleReviewReactionMutation(Number(reviewId));
 

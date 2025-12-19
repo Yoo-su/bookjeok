@@ -2,7 +2,6 @@
 
 import { AlertTriangle } from "lucide-react";
 
-import { useAuthStore } from "@/features/auth/store";
 import { useBookSaleDetailQuery } from "@/features/book/queries";
 
 import { BookInfoCard } from "./book-info-card";
@@ -16,7 +15,6 @@ interface BookSaleDetailProps {
 }
 
 export const BookSaleDetail = ({ saleId }: BookSaleDetailProps) => {
-  const currentUser = useAuthStore((state) => state.user);
   const { data: sale, isLoading, isError } = useBookSaleDetailQuery(saleId);
 
   if (isLoading) {
@@ -34,9 +32,6 @@ export const BookSaleDetail = ({ saleId }: BookSaleDetailProps) => {
       </div>
     );
   }
-
-  // 현재 로그인한 유저가 판매자인지 확인
-  const isOwner = currentUser?.id === sale.user.id;
 
   const AdditionalInfo = () => (
     <div className="space-y-8 mt-10">
@@ -65,7 +60,7 @@ export const BookSaleDetail = ({ saleId }: BookSaleDetailProps) => {
         </div>
 
         <div className="space-y-8">
-          <BookSaleActions sale={sale} isOwner={isOwner} />
+          <BookSaleActions sale={sale} />
           {/* Mobile View: 오른쪽(모바일은 하단) 컬럼 하단에 배치 */}
           <div className="md:hidden">
             <AdditionalInfo />

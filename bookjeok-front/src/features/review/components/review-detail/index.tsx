@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthStore } from "@/features/auth/store";
 import { useReviewDetailQuery } from "@/features/review/queries";
 import { Review } from "@/features/review/types";
 
@@ -15,8 +14,6 @@ interface ReviewDetailProps {
 }
 
 export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
-  const { user } = useAuthStore();
-
   const {
     data: review,
     isLoading,
@@ -36,7 +33,6 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
   }
 
   const book = review.book;
-  const isAuthor = user?.id === review.userId;
 
   return (
     <article className="min-h-screen bg-white pb-20">
@@ -45,8 +41,8 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
       <div className="container mx-auto px-4 max-w-4xl py-16">
         <ReviewDetailContent content={review.content} />
         <ReviewDetailActions
-          isAuthor={isAuthor}
           reviewId={String(id)}
+          reviewUserId={review.userId}
           reactionCounts={review.reactionCounts}
         />
       </div>
