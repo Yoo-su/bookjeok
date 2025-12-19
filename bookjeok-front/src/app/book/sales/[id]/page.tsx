@@ -2,7 +2,6 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Metadata } from "next";
 import { cache } from "react";
 
-import { AuthGuard } from "@/features/auth/components/auth-guard";
 import { getBookSaleDetail } from "@/features/book/apis";
 import { BookSaleJsonLd } from "@/features/book/components/book-sale-json-ld";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
@@ -74,10 +73,8 @@ export default async function Page({ params }: Props) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <AuthGuard>
-        {sale && <BookSaleJsonLd sale={sale} />}
-        <BookSaleDetailView saleId={id} />
-      </AuthGuard>
+      {sale && <BookSaleJsonLd sale={sale} />}
+      <BookSaleDetailView saleId={id} />
     </HydrationBoundary>
   );
 }

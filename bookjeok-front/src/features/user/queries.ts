@@ -44,13 +44,16 @@ export const useWishlistQuery = () => {
  * 특정 항목의 위시리스트 포함 여부를 확인하는 쿼리 훅입니다.
  * @param type 타입 (BOOK, SALE)
  * @param id 대상 ID
+ * @param enabled 쿼리 활성화 여부 (기본: true)
  */
 export const useWishlistStatusQuery = (
   type: "BOOK" | "SALE",
-  id: string | number
+  id: string | number,
+  enabled: boolean = true
 ) => {
   return useQuery({
     queryKey: QUERY_KEYS.userKeys.wishlistCheck(type, id).queryKey,
     queryFn: () => checkWishlistStatus(type, id),
+    enabled,
   });
 };

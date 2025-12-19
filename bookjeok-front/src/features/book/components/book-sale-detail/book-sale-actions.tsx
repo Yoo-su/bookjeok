@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useAuthStore } from "@/features/auth/store";
 import { findOrCreateRoom } from "@/features/chat/apis";
 import { useChatStore } from "@/features/chat/stores/use-chat-store";
 import { WishlistButton } from "@/features/user/components/wishlist-button";
@@ -17,6 +18,7 @@ import {
 } from "@/shared/components/shadcn/avatar";
 import { Button } from "@/shared/components/shadcn/button";
 import { Separator } from "@/shared/components/shadcn/separator";
+import { ShareButton } from "@/shared/components/ui/share-button";
 import { PATHS } from "@/shared/constants/paths";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { useSocketContext } from "@/shared/providers/socket-provider";
@@ -32,6 +34,7 @@ interface BookSaleActionsProps {
 }
 
 export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
+  const currentUser = useAuthStore((state) => state.user);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const { openChatRoom } = useChatStore();
   const { socket } = useSocketContext();
@@ -155,27 +158,34 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
             </Button>
           </div>
         ) : (
-          <div className="flex gap-2 w-full sm:w-auto">
-            {sale.status === "FOR_SALE" && (
-              <WishlistButton
-                type="SALE"
-                id={sale.id}
-                className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 w-11 rounded-md"
-              />
-            )}
-            <Button
-              size="lg"
-              className="flex-1 sm:flex-none"
-              onClick={handleStartChat}
-              disabled={isCreatingChat}
-            >
-              {isCreatingChat ? (
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              ) : (
-                <MessageCircle className="w-5 h-5 mr-2" />
+          <div className="flex flex-col gap-2 w-full sm:w-auto">
+            <div className="flex gap-2">
+              {sale.status === "FOR_SALE" && (
+                <WishlistButton
+                  type="SALE"
+                  id={sale.id}
+                  className="border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 w-11 rounded-md"
+                />
               )}
-              {isCreatingChat ? "채팅방 여는 중..." : "판매자와 채팅하기"}
-            </Button>
+              <Button
+                size="lg"
+                className="flex-1 sm:flex-none"
+                onClick={handleStartChat}
+                disabled={isCreatingChat || !currentUser}
+              >
+                {isCreatingChat ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                )}
+                {isCreatingChat ? "채팅방 여는 중..." : "판매자와 채팅하기"}
+              </Button>
+            </div>
+            {!currentUser && (
+              <p className="text-xs text-stone-400 text-center sm:text-right">
+                채팅 및 찜하기는 로그인 후 이용 가능합니다
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -184,6 +194,16 @@ export const BookSaleActions = ({ sale, isOwner }: BookSaleActionsProps) => {
 
       <div className="prose max-w-none text-gray-700 min-h-[200px] bg-gray-50/50 p-6 rounded-xl border border-gray-100">
         <p className="whitespace-pre-wrap leading-relaxed">{sale.content}</p>
+      </div>
+
+      {/* 공유 버튼 */}
+      <div className="flex justify-end pt-4">
+        <ShareButton
+          title={sale.title}
+          description={`${sale.book.title} | ${sale.price.toLocaleString()}원`}
+          imageUrl={sale.imageUrls[0] || sale.book.image}
+          showLabel
+        />
       </div>
     </div>
   );

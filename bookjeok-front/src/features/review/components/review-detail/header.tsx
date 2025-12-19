@@ -12,6 +12,7 @@ import {
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
 import { Badge } from "@/shared/components/shadcn/badge";
+import { ShareButton } from "@/shared/components/ui/share-button";
 import { StarRating } from "@/shared/components/ui/star-rating";
 
 interface ReviewDetailHeaderProps {
@@ -74,6 +75,12 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
             <Eye className="w-4 h-4" />
             <span>{review.viewCount.toLocaleString()}</span>
           </div>
+          <span className="w-1 h-1 rounded-full bg-stone-300" />
+          <ShareButton
+            title={review.title}
+            description={`${book?.title} - ${book?.author}`}
+            imageUrl={book?.image}
+          />
         </div>
 
         {/* 책 정보 카드 - 플로팅 */}

@@ -28,7 +28,11 @@ export const WishlistButton = ({
   bookData,
 }: WishlistButtonProps) => {
   const user = useAuthStore((state) => state.user);
-  const { data: statusData, isLoading } = useWishlistStatusQuery(type, id);
+  const { data: statusData, isLoading } = useWishlistStatusQuery(
+    type,
+    id,
+    !!user
+  );
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const addToWishlistMutation = useAddToWishlistMutation();
@@ -44,10 +48,8 @@ export const WishlistButton = ({
     e.preventDefault();
     e.stopPropagation();
 
-    if (!user) {
-      toast.error("로그인이 필요한 기능입니다.");
-      return;
-    }
+    // 비로그인 시 버튼이 disabled이므로 여기로 오지 않지만, 방어 코드 유지
+    if (!user) return;
 
     if (isWishlisted) {
       setIsWishlisted(false);
@@ -68,7 +70,8 @@ export const WishlistButton = ({
     }
   };
 
-  if (isLoading) {
+  // 로딩 중이거나 비로그인 상태면 disabled
+  if (isLoading || !user) {
     return (
       <Button
         variant="ghost"

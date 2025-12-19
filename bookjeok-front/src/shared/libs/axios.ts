@@ -78,7 +78,15 @@ privateAxios.interceptors.response.use(
       _retry?: boolean;
     };
 
+    // refresh 요청 자체가 실패한 경우 (refresh 토큰 만료)
     if (originalRequest.url?.includes("/auth/refresh")) {
+      // 401이면 토큰이 완전히 만료된 것이므로 로그아웃 처리
+      if (error.response?.status === 401) {
+        useAuthStore.getState().clearAuth();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+      }
       return Promise.reject(error);
     }
 
@@ -99,11 +107,15 @@ privateAxios.interceptors.response.use(
 
       const refreshToken = useAuthStore.getState().refreshToken;
       if (!refreshToken) {
+        // refresh token이 없으면 로그아웃 처리
+        useAuthStore.getState().clearAuth();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
         return Promise.reject(error);
       }
 
       try {
-        console.log("Attempting to refresh token...");
         const { data } = await publicAxios.post(
           `/auth/refresh`,
           {},
@@ -113,13 +125,11 @@ privateAxios.interceptors.response.use(
             },
           }
         );
-        console.log("Refresh response data:", data);
 
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
           data;
 
         if (!newAccessToken) {
-          console.error("New access token is missing!");
           throw new Error("Failed to retrieve new access token");
         }
 
@@ -132,10 +142,12 @@ privateAxios.interceptors.response.use(
         processQueue(null, newAccessToken);
         return privateAxios(originalRequest);
       } catch (refreshError) {
-        console.error("Refresh failed:", refreshError);
         processQueue(refreshError as AxiosError, null);
         useAuthStore.getState().clearAuth();
-        location.reload();
+        // 무한 리디렉션 방지를 위해 reload 대신 login 페이지로 이동
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
