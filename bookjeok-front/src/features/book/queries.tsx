@@ -144,6 +144,7 @@ export const useInfiniteRelatedSalesQuery = ({
   city,
   district,
   limit = 10,
+  enabled = true,
 }: UseInfiniteRelatedSalesQueryProps) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.bookKeys.relatedSales({ isbn, city, district, limit })
@@ -154,10 +155,34 @@ export const useInfiniteRelatedSalesQuery = ({
     getNextPageParam: (lastPage, allPages) => {
       return lastPage.hasNextPage ? allPages.length + 1 : undefined;
     },
-    enabled: !!isbn, // isbn이 있을 때만 쿼리 실행
+    enabled: !!isbn && enabled, // isbn이 있고 enabled일 때만 쿼리 실행
     staleTime: 0,
   });
 };
+
+/**
+ * 관련 판매글 목록을 조회하는 쿼리 훅입니다. (제한된 개수)
+ * @param isbn 책 ISBN
+ * @param limit 조회할 개수 (기본 4개)
+ * @param enabled 쿼리 활성화 여부
+ */
+export const useRelatedSalesQuery = ({
+  isbn,
+  limit = 4,
+  enabled = true,
+}: {
+  isbn: string;
+  limit?: number;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.bookKeys.relatedSales({ isbn, limit }).queryKey,
+    queryFn: () => getRelatedSales({ isbn, page: 1, limit }),
+    enabled: !!isbn && enabled,
+    staleTime: 5 * 60 * 1000, // 5분
+  });
+};
+
 /**
  * 최근 중고책 판매글 목록을 조회하는 쿼리 훅입니다.
  */

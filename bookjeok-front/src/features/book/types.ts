@@ -154,6 +154,7 @@ export interface UseInfiniteRelatedSalesQueryProps {
   city?: string;
   district?: string;
   limit?: number;
+  enabled?: boolean;
 }
 
 // 판매글 수정을 위한 타입. 모든 필드는 선택적(optional)입니다.

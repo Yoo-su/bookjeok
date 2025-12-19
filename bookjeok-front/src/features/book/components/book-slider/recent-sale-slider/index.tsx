@@ -31,24 +31,17 @@ export const RecentSalesSlider = () => {
 
   const SliderHeader = () => (
     <div className="text-left mb-12">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4">
         <span className="inline-block px-4 py-1.5 text-xs font-semibold tracking-wider text-emerald-600 uppercase bg-emerald-50 rounded-full">
           Just Arrived
         </span>
-        <Link
-          href={PATHS.BOOK_MARKET}
-          className="group flex items-center gap-1 text-stone-500 hover:text-emerald-600 transition-colors"
-        >
-          <span className="text-sm font-medium relative">
-            더보기
-            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-emerald-500 transition-all duration-300 group-hover:w-full" />
-          </span>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-        </Link>
       </div>
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-        <span className="text-emerald-800">새로운 만남,</span> 방금 등록된 책
-      </h2>
+      <Link href={PATHS.BOOK_MARKET} className="group inline-block">
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl group-hover:text-emerald-700 transition-colors">
+          <span className="text-emerald-800">새로운 만남,</span> 방금 등록된 책
+          <ArrowRight className="inline-block w-6 h-6 ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+        </h2>
+      </Link>
       <p className="mt-4 text-lg text-gray-500 max-w-2xl">
         다른 독자들이 소중히 읽은 책들을 만나보세요.
         <br className="hidden sm:block" />

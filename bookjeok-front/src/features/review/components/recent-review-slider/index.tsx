@@ -21,24 +21,17 @@ export const RecentReviewSlider = () => {
 
   const SliderHeader = () => (
     <div className="text-right mb-12">
-      <div className="flex items-center justify-between mb-4">
-        <Link
-          href={PATHS.REVIEWS}
-          className="group flex items-center gap-1 text-stone-500 hover:text-sky-600 transition-colors"
-        >
-          <span className="text-sm font-medium relative">
-            더보기
-            <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-sky-500 transition-all duration-300 group-hover:w-full" />
-          </span>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-        </Link>
+      <div className="mb-4 flex justify-end">
         <span className="inline-block px-4 py-1.5 text-xs font-semibold tracking-wider text-sky-600 uppercase bg-sky-50 rounded-full">
           Fresh Reviews
         </span>
       </div>
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-        <span className="text-sky-600">가볍게 한 줄,</span> 최근 리뷰
-      </h2>
+      <Link href={PATHS.REVIEWS} className="group inline-block">
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl group-hover:text-sky-700 transition-colors">
+          <ArrowRight className="inline-block w-6 h-6 mr-2 opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 rotate-180" />
+          <span className="text-sky-600">가볍게 한 줄,</span> 최근 리뷰
+        </h2>
+      </Link>
       <p className="mt-4 text-lg text-gray-500 max-w-2xl ml-auto">
         부담 없이 읽고, 부담 없이 써보세요.
       </p>

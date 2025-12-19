@@ -71,22 +71,30 @@ export const SliderReviewCard = ({ review }: SliderReviewCardProps) => {
             {review.title}
           </h3>
 
-          {/* 책 제목 */}
-          <p className="text-xs text-gray-400 truncate mb-2">
+          {/* 책 제목 & 저자 */}
+          <p className="text-xs text-gray-400 truncate">
             {book?.title || "Unknown"}
           </p>
+          <p className="text-[10px] text-gray-300 truncate mb-2">
+            {book?.author || ""}
+          </p>
 
-          {/* 태그 */}
+          {/* 태그 (하단 고정, overflow 처리) */}
           {review.tags && review.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-auto">
-              {review.tags.slice(0, 2).map((tag: string) => (
+            <div className="flex gap-1 overflow-hidden mt-auto">
+              {review.tags.slice(0, 3).map((tag: string) => (
                 <span
                   key={tag}
-                  className="px-2 py-0.5 text-[10px] font-medium text-sky-600 bg-sky-50 rounded-full"
+                  className="px-2 py-0.5 text-[10px] font-medium text-sky-600 bg-sky-50 rounded-full whitespace-nowrap shrink-0"
                 >
                   #{tag}
                 </span>
               ))}
+              {review.tags.length > 3 && (
+                <span className="text-[10px] text-gray-400 shrink-0">
+                  +{review.tags.length - 3}
+                </span>
+              )}
             </div>
           )}
 
