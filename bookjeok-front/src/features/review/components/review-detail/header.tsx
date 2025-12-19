@@ -51,7 +51,7 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-6 text-stone-500 text-sm mb-10">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-stone-500 text-sm mb-6">
           <div className="flex items-center gap-2">
             <Avatar className="w-8 h-8 border border-stone-200" data-nosnippet>
               <AvatarImage
@@ -66,20 +66,24 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
               {review.user?.nickname || "Anonymous"}
             </span>
           </div>
-          <span className="w-1 h-1 rounded-full bg-stone-300" />
+          <span className="w-1 h-1 rounded-full bg-stone-300 hidden sm:block" />
           <time dateTime={review.createdAt}>
             {format(new Date(review.createdAt), "MMMM d, yyyy")}
           </time>
-          <span className="w-1 h-1 rounded-full bg-stone-300" />
+          <span className="w-1 h-1 rounded-full bg-stone-300 hidden sm:block" />
           <div className="flex items-center gap-1.5">
             <Eye className="w-4 h-4" />
             <span>{review.viewCount.toLocaleString()}</span>
           </div>
-          <span className="w-1 h-1 rounded-full bg-stone-300" />
+        </div>
+
+        {/* 공유 버튼 */}
+        <div className="flex justify-center mb-10">
           <ShareButton
             title={review.title}
             description={`${book?.title} - ${book?.author}`}
             imageUrl={book?.image}
+            showLabel
           />
         </div>
 
