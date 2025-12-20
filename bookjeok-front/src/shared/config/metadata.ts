@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 // SEO를 위한 기본 메타데이터 객체
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.bookjeok.com"),
+  metadataBase: new URL("https://bookjeok.com"),
   title: {
     template: "%s | 북적", // 페이지별 제목이 %s 위치에 들어갑니다.
     default: "북적 - 도서 리뷰와 중고책 거래 플랫폼", // 기본 제목 (홈페이지용)
@@ -55,13 +55,13 @@ export const metadata: Metadata = {
   ],
   // 표준(canonical) URL 명시 - Google 중복 페이지 문제 해결
   alternates: {
-    canonical: "https://www.bookjeok.com",
+    canonical: "https://bookjeok.com",
   },
   openGraph: {
     title: "북적 - 책과 사람을 잇는 독서 플랫폼",
     description:
       "솔직한 도서 리뷰를 공유하고 중고책을 거래하세요. 북적에서 나만의 독서 기록을 시작해보세요.",
-    url: "https://www.bookjeok.com",
+    url: "https://bookjeok.com",
     siteName: "북적",
     images: [
       {
