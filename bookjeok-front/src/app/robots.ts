@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/my-page/"],
     },
-    sitemap: "https://www.bookjeok.com/sitemap.xml",
+    sitemap: "https://bookjeok.com/sitemap.xml",
   };
 }
