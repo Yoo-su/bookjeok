@@ -53,11 +53,15 @@ export const metadata: Metadata = {
     "북클럽",
     "독서모임",
   ],
+  // 표준(canonical) URL 명시 - Google 중복 페이지 문제 해결
+  alternates: {
+    canonical: "https://www.bookjeok.com",
+  },
   openGraph: {
     title: "북적 - 책과 사람을 잇는 독서 플랫폼",
     description:
       "솔직한 도서 리뷰를 공유하고 중고책을 거래하세요. 북적에서 나만의 독서 기록을 시작해보세요.",
-    url: "https://bookjeok.com",
+    url: "https://www.bookjeok.com",
     siteName: "북적",
     images: [
       {
