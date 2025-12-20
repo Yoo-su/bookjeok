@@ -77,7 +77,7 @@ export const FullScreenLoader = () => {
           >
             <Image
               src="/logo.svg"
-              alt="bookjeok Logo"
+              alt="북적"
               fill
               className="object-contain drop-shadow-lg"
               priority

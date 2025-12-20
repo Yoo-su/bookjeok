@@ -4,15 +4,19 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.bookjeok.com"),
   title: {
-    template: "%s | bookjeok", // 페이지별 제목이 %s 위치에 들어갑니다.
-    default: "bookjeok - 중고책 거래와 리뷰를 한곳에", // 기본 제목
+    template: "%s | 북적", // 페이지별 제목이 %s 위치에 들어갑니다.
+    default: "북적 - 도서 리뷰와 중고책 거래 플랫폼", // 기본 제목 (홈페이지용)
   },
-  applicationName: "bookjeok",
+  applicationName: "북적",
   appleWebApp: {
-    title: "bookjeok",
+    title: "북적",
+  },
+  icons: {
+    // favicon.ico는 app 폴더에서 자동 인식됨
+    apple: "/logo.png",
   },
   description:
-    "도서 검색과 리뷰 중고책 거래를 한곳에서! 책 리뷰를 작성하고, 중고 도서를 사고팔며 독서의 즐거움을 나눠보세요.",
+    "책과 사람을 잇는 북적. 솔직한 도서 리뷰를 공유하고, 중고책을 거래하며 새로운 독서 경험을 발견하세요.",
   keywords: [
     // 브랜드 키워드 (한글/영문 조합)
     "bookjeok",
@@ -49,17 +53,17 @@ export const metadata: Metadata = {
     "독서모임",
   ],
   openGraph: {
-    title: "북적(bookjeok) - 도서 리뷰와 중고책 거래 플랫폼",
+    title: "북적 - 책과 사람을 잇는 독서 플랫폼",
     description:
-      "책 리뷰를 작성하고 공유하며, 중고 도서를 거래하는 독서 커뮤니티. 북적에서 나만의 독서 기록을 시작하세요.",
+      "솔직한 도서 리뷰를 공유하고 중고책을 거래하세요. 북적에서 나만의 독서 기록을 시작해보세요.",
     url: "https://bookjeok.com",
-    siteName: "북적 bookjeok",
+    siteName: "북적",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "북적(bookjeok) - 도서 리뷰와 중고책 거래 플랫폼",
+        alt: "북적 - 도서 리뷰와 중고책 거래 플랫폼",
       },
     ],
     locale: "ko_KR",
@@ -67,9 +71,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "북적(bookjeok) - 도서 리뷰와 중고책 거래 플랫폼",
+    title: "북적 - 책과 사람을 잇는 독서 플랫폼",
     description:
-      "책 리뷰 작성, 중고 도서 거래, 독서 기록까지. 북적에서 독서의 즐거움을 나눠보세요.",
+      "솔직한 도서 리뷰 공유, 중고책 거래까지. 북적에서 독서의 즐거움을 나눠보세요.",
     images: ["/logo.png"],
   },
 

@@ -10,9 +10,8 @@ import { MainView } from "@/views/main-view";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "홈",
   description:
-    "bookjeok의 홈 페이지입니다. 지금 가장 인기있는 중고 서적과 솔직한 도서 리뷰를 확인해보세요.",
+    "책과 사람을 잇는 북적에서 인기 중고책을 거래하고 솔직한 도서 리뷰를 확인하세요. 나만의 독서 경험을 공유해보세요.",
 };
 
 export default async function Page() {

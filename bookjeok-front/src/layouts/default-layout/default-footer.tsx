@@ -17,7 +17,7 @@ export const DefaultFooter = () => {
             <Link href={PATHS.HOME} className="flex items-center gap-1.5">
               <Image
                 src="/logo.svg"
-                alt="bookjeok Logo"
+                alt="북적"
                 width={28}
                 height={28}
                 className="h-7 w-7"
@@ -27,11 +27,7 @@ export const DefaultFooter = () => {
               </span>
             </Link>
             <p className="text-sm text-stone-500 leading-relaxed">
-              책과 사람을 잇는 새로운 방법.
-              <br />
-              북적에서 당신의 독서 경험을 공유하고
-              <br />
-              새로운 이야기를 발견하세요.
+              도서 리뷰 공유와 중고책 거래 플랫폼
             </p>
           </div>
 

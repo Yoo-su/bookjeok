@@ -15,12 +15,12 @@ export const Logo = () => {
     <div
       className="group flex items-center gap-0.5 cursor-pointer select-none"
       onClick={handleClickLogo}
-      aria-label="bookjeok Home"
+      aria-label="북적 홈으로 이동"
     >
       <div className="relative w-9 h-9 transition-transform duration-500 ease-out group-hover:rotate-[-5deg] group-hover:scale-105">
         <Image
           src="/logo.svg"
-          alt="bookjeok Logo"
+          alt="북적"
           width={36}
           height={36}
           className="w-full h-full"

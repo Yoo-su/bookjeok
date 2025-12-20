@@ -3,8 +3,10 @@ export const jsonLd = {
   "@graph": [
     {
       "@type": "WebSite",
-      name: "bookjeok",
-      alternateName: ["북적", "bookjeok"],
+      name: "북적",
+      alternateName: ["북적", "bookjeok", "Bookjeok"],
+      description:
+        "책과 사람을 잇는 북적. 솔직한 도서 리뷰를 공유하고, 중고책을 거래하며 새로운 독서 경험을 발견하세요.",
       url: "https://bookjeok.com",
       potentialAction: {
         "@type": "SearchAction",
