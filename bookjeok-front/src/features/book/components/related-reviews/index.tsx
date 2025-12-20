@@ -80,7 +80,10 @@ export const RelatedReviews = ({ isbn }: RelatedReviewsProps) => {
           className="w-full"
         >
           {reviews.map((review, index) => (
-            <SwiperSlide key={review.id} className="w-[320px]! sm:w-[380px]!">
+            <SwiperSlide
+              key={review.id}
+              className="w-[320px]! sm:w-[380px]! px-0.5 py-1"
+            >
               <ReviewCard review={review} priority={index < 2} />
             </SwiperSlide>
           ))}

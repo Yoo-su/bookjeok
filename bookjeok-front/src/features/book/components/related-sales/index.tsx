@@ -80,7 +80,7 @@ export const RelatedSales = ({ isbn }: RelatedSalesProps) => {
           className="w-full"
         >
           {sales.map((sale, index) => (
-            <SwiperSlide key={sale.id} className="w-[260px]!">
+            <SwiperSlide key={sale.id} className="w-[260px]! px-0.5 py-1">
               <BookSaleCard sale={sale} idx={index} />
             </SwiperSlide>
           ))}
