@@ -77,10 +77,10 @@ export const RelatedSales = ({ isbn }: RelatedSalesProps) => {
           modules={[Autoplay]}
           slidesPerView="auto"
           spaceBetween={16}
-          className="w-full"
+          className="w-full overflow-visible! [clip-path:inset(-100px_-10px)]"
         >
           {sales.map((sale, index) => (
-            <SwiperSlide key={sale.id} className="w-[260px]! px-0.5 py-1">
+            <SwiperSlide key={sale.id} className="w-[260px]!">
               <BookSaleCard sale={sale} idx={index} />
             </SwiperSlide>
           ))}
