@@ -21,6 +21,11 @@ export const BookSearchInput = () => {
     [setQuery]
   );
 
+  // 외부 쿼리 변경 시 인풋 값 동기화 (Sticky Search Bar 등과 연동)
+  useEffect(() => {
+    setInputValue(query);
+  }, [query]);
+
   useEffect(() => {
     return () => {
       debouncedSetQuery.cancel();

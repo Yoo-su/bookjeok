@@ -2,6 +2,7 @@
 
 import { useReviewDetailQuery } from "@/features/review/queries";
 import { Review } from "@/features/review/types";
+import { ScrollTopButton } from "@/shared/components/ui/scroll-top-button";
 
 import { ReviewDetailActions } from "./actions";
 import { ReviewDetailContent } from "./content";
@@ -46,6 +47,7 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
           reactionCounts={review.reactionCounts}
         />
       </div>
+      <ScrollTopButton />
     </article>
   );
 };
