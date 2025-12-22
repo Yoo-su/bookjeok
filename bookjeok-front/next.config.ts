@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   images: {
+    unoptimized: true, // Vercel 무료 플랜 Image Optimization 제한 회피
     remotePatterns: [
       {
         protocol: "https",
