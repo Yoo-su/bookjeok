@@ -10,6 +10,7 @@ import {
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
 import { Button } from "@/shared/components/shadcn/button";
+import { Spinner } from "@/shared/components/shadcn/spinner";
 import { Textarea } from "@/shared/components/shadcn/textarea";
 import { cn } from "@/shared/utils";
 
@@ -98,9 +99,9 @@ export const CommentForm = ({ targetType, targetId }: CommentFormProps) => {
                 type="submit"
                 size="sm"
                 disabled={!content.trim() || isPending}
-                className="px-6"
+                className="min-w-[60px]"
               >
-                {isPending ? "작성 중..." : "작성"}
+                {isPending ? <Spinner /> : "작성"}
               </Button>
             </div>
           </div>

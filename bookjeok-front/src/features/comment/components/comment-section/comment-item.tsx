@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Heart, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Heart, Loader2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { useAuthStore } from "@/features/auth/store";
@@ -152,6 +152,7 @@ export const CommentItem = ({
                 <DropdownMenuContent align="end" className="min-w-[100px]">
                   <DropdownMenuItem
                     onClick={() => setIsEditing(true)}
+                    disabled={isDeletePending}
                     className="text-xs"
                   >
                     <Pencil className="h-3 w-3 mr-1.5" />
@@ -159,9 +160,14 @@ export const CommentItem = ({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleDelete}
+                    disabled={isDeletePending}
                     className="text-xs text-destructive focus:text-destructive"
                   >
-                    <Trash2 className="h-3 w-3 mr-1.5" />
+                    {isDeletePending ? (
+                      <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-3 w-3 mr-1.5" />
+                    )}
                     삭제
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -233,15 +239,20 @@ export const CommentItem = ({
                 comment.isLiked
                   ? "text-rose-500"
                   : "text-muted-foreground/50 hover:text-rose-400",
-                !isAuthenticated && "cursor-not-allowed"
+                !isAuthenticated && "cursor-not-allowed",
+                isLikePending && "opacity-50 pointer-events-none"
               )}
             >
-              <Heart
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform",
-                  comment.isLiked && "fill-current scale-110"
-                )}
-              />
+              {isLikePending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Heart
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform",
+                    comment.isLiked && "fill-current scale-110"
+                  )}
+                />
+              )}
               {comment.likeCount > 0 && <span>{comment.likeCount}</span>}
             </button>
           </div>
