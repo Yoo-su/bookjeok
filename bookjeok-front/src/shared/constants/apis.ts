@@ -31,4 +31,9 @@ export const API_PATHS = {
     messages: (roomId: number) => `/chat/rooms/${roomId}/messages`,
     read: (roomId: number) => `/chat/rooms/${roomId}/read`,
   },
+  comment: {
+    base: "/comments",
+    detail: (id: number) => `/comments/${id}`,
+    like: (id: number) => `/comments/${id}/like`,
+  },
 };

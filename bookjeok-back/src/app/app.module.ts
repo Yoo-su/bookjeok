@@ -19,6 +19,7 @@ import { ChatModule } from '@/features/chat/chat.module';
 import { LlmModule } from '@/features/llm/llm.module';
 import { ReviewModule } from '@/features/review/review.module';
 import { Review } from '@/features/review/entities/review.entity';
+import { CommentModule } from '@/features/comment/comment.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { Review } from '@/features/review/entities/review.entity';
     ChatModule,
     LlmModule,
     ReviewModule,
+    CommentModule,
   ],
   controllers: [],
   providers: [],
