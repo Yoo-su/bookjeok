@@ -1,6 +1,8 @@
 import { upload } from "@vercel/blob/client";
 import { useRef, useState } from "react";
 
+import { compressImage } from "@/shared/utils/compress-image";
+
 interface UseEditorImageHandlerOptions {
   uploadPath: (file: File) => string;
   initialContent?: string;
@@ -37,8 +39,10 @@ export const useEditorImageHandler = ({
       if (imagesToUpload.length > 0) {
         // @vercel/blob/client를 사용한 클라이언트 측 업로드
         const blobs = await Promise.all(
-          imagesToUpload.map((file) => {
-            return upload(uploadPath(file), file, {
+          imagesToUpload.map(async (file) => {
+            // 이미지 압축 후 업로드
+            const compressedFile = await compressImage(file);
+            return upload(uploadPath(compressedFile), compressedFile, {
               access: "public",
               handleUploadUrl: "/api/upload",
             });

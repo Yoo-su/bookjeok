@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { PATHS } from "@/shared/constants/paths";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
+import { compressImages } from "@/shared/utils/compress-image";
 
 import { useAuthStore } from "../auth/store";
 import { deleteImages } from "./actions/delete-action";
@@ -38,9 +39,12 @@ export const useCreateBookSaleMutation = () => {
 
   return useMutation<UsedBookSale, Error, CreateSaleVariables>({
     mutationFn: async ({ imageFiles, payload }) => {
-      // 1. 클라이언트에서 직접 Vercel Blob으로 이미지 업로드
+      // 1. 이미지 압축
+      const compressedFiles = await compressImages(imageFiles);
+
+      // 2. 클라이언트에서 직접 Vercel Blob으로 이미지 업로드
       const blobs = await Promise.all(
-        imageFiles.map((file) => {
+        compressedFiles.map((file) => {
           const filePath = `${provider}-${id}/sales-images/${file.name}`;
           return upload(filePath, file, {
             access: "public",
@@ -135,11 +139,14 @@ export const useUpdateBookSaleMutation = () => {
         await deleteImages(deletedImageUrls);
       }
 
-      // 2. 새로 추가할 이미지가 있으면 Vercel Blob에 업로드
+      // 2. 새로 추가할 이미지가 있으면 압축 후 Vercel Blob에 업로드
       let newImageUrls: string[] = [];
       if (newImageFiles.length > 0) {
+        // 이미지 압축
+        const compressedFiles = await compressImages(newImageFiles);
+
         const formData = new FormData();
-        newImageFiles.forEach((file) => formData.append("images", file));
+        compressedFiles.forEach((file) => formData.append("images", file));
         const uploadResult = await uploadImages(formData, provider, id);
         if (!uploadResult.success || !uploadResult.blobs) {
           throw new Error("새 이미지 업로드에 실패했습니다.");
