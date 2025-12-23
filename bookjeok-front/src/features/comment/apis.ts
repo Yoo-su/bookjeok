@@ -1,5 +1,5 @@
 import { API_PATHS } from "@/shared/constants/apis";
-import { privateAxios, publicAxios } from "@/shared/libs/axios";
+import { privateAxios } from "@/shared/libs/axios";
 
 import {
   Comment,
@@ -11,13 +11,14 @@ import {
 
 /**
  * 댓글 목록을 조회합니다.
+ * 로그인 시 좋아요 상태(isLiked)도 함께 반환됩니다.
  * @param params 조회 파라미터 (타겟 타입, 타겟 ID, 페이지, 개수)
  * @returns 댓글 목록 및 메타 정보
  */
 export const getComments = async (
   params: GetCommentsParams
 ): Promise<GetCommentsResponse> => {
-  const { data } = await publicAxios.get<GetCommentsResponse>(
+  const { data } = await privateAxios.get<GetCommentsResponse>(
     API_PATHS.comment.base,
     { params }
   );
