@@ -1,7 +1,11 @@
 import { upload } from "@vercel/blob/client";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 
-import { compressImage } from "@/shared/utils/compress-image";
+import {
+  compressImage,
+  validateImageForUpload,
+} from "@/shared/utils/compress-image";
 
 interface UseEditorImageHandlerOptions {
   uploadPath: (file: File) => string;
@@ -16,6 +20,13 @@ export const useEditorImageHandler = ({
   const imageMapRef = useRef<Map<string, File>>(new Map());
 
   const handleImageAdd = (file: File) => {
+    // 이미지 용량 검증 (10MB 제한)
+    const validationError = validateImageForUpload(file);
+    if (validationError) {
+      toast.error(validationError);
+      return null;
+    }
+
     const url = URL.createObjectURL(file);
     imageMapRef.current.set(url, file);
     return url;
@@ -40,7 +51,7 @@ export const useEditorImageHandler = ({
         // @vercel/blob/client를 사용한 클라이언트 측 업로드
         const blobs = await Promise.all(
           imagesToUpload.map(async (file) => {
-            // 이미지 압축 후 업로드
+            // 이미지 압축 후 업로드 (압축 시 UUID 파일명 자동 생성)
             const compressedFile = await compressImage(file);
             return upload(uploadPath(compressedFile), compressedFile, {
               access: "public",

@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { validateImageForUpload } from "@/shared/utils/compress-image";
+
 import {
   editFormSchema,
   EditFormValues,
@@ -50,6 +52,16 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
 
   const handleImagesAdd = (newFiles: FileList) => {
     const files = Array.from(newFiles);
+
+    // 각 파일에 대해 용량 검증 (10MB 제한)
+    for (const file of files) {
+      const validationError = validateImageForUpload(file);
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+    }
+
     const totalImages =
       existingImages.length + newImageFiles.length + files.length;
 

@@ -75,7 +75,7 @@ export const ImageUploader = ({
               type="button"
               onClick={() => onExistingImageRemove(url)}
               aria-label={`기존 이미지 삭제`}
-              className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+              className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
             >
               <X className="w-3 h-3" />
             </button>
@@ -97,7 +97,7 @@ export const ImageUploader = ({
             type="button"
             onClick={() => onImageRemove(index)}
             aria-label={`이미지 ${index + 1} 삭제`}
-            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white shadow-md hover:bg-red-600 transition-colors opacity-70 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
           >
             <X className="w-3 h-3" />
           </button>

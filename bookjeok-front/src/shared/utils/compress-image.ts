@@ -1,115 +1,108 @@
 /**
  * 이미지 압축 유틸리티
- * Canvas API를 사용하여 클라이언트 사이드에서 이미지를 압축합니다.
+ * browser-image-compression 라이브러리를 사용하여 클라이언트 사이드에서 이미지를 압축합니다.
  */
 
+import imageCompression from "browser-image-compression";
+
+import { generateUniqueFilename } from "./generate-unique-filename";
+
+// 첨부 시점 용량 제한 (10MB)
+export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
+
+// 압축 목표 용량 (500KB) - Next.js Image가 추가 최적화하므로 충분
+const TARGET_SIZE_MB = 0.5;
+
+// 압축 최대 해상도 (긴 쪽 기준)
+const MAX_WIDTH_OR_HEIGHT = 1920;
+
 export interface CompressImageOptions {
-  /** 최대 너비/높이 (기본값: 1200) */
-  maxSize?: number;
-  /** JPEG 품질 0-1 (기본값: 0.8) */
-  quality?: number;
-  /** 출력 타입 (기본값: image/jpeg) */
-  type?: "image/jpeg" | "image/webp";
+  /** 목표 용량 MB (기본값: 0.5MB = 500KB) */
+  maxSizeMB?: number;
+  /** 최대 너비/높이 (기본값: 1920) */
+  maxWidthOrHeight?: number;
+  /** 웹 워커 사용 여부 (기본값: true, 메인 스레드 블로킹 방지) */
+  useWebWorker?: boolean;
 }
 
 const DEFAULT_OPTIONS: Required<CompressImageOptions> = {
-  maxSize: 1200,
-  quality: 0.8,
-  type: "image/jpeg",
+  maxSizeMB: TARGET_SIZE_MB,
+  maxWidthOrHeight: MAX_WIDTH_OR_HEIGHT,
+  useWebWorker: true,
 };
 
 /**
+ * 이미지 파일을 첨부할 수 있는지 검증합니다.
+ * @param file - 검증할 이미지 파일
+ * @returns 에러 메시지 (유효하면 null)
+ */
+export function validateImageForUpload(file: File): string | null {
+  // 이미지 타입 검증
+  if (!file.type.startsWith("image/")) {
+    return "이미지 파일만 업로드할 수 있습니다.";
+  }
+
+  // 용량 검증 (10MB)
+  if (file.size > MAX_UPLOAD_SIZE) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    return `이미지 크기가 너무 큽니다 (${sizeMB}MB). 10MB 이하의 이미지만 첨부할 수 있습니다.`;
+  }
+
+  return null;
+}
+
+/**
  * 이미지 파일을 압축합니다.
+ * browser-image-compression 라이브러리를 사용하여 목표 용량까지 자동으로 최적화합니다.
+ * UUID 기반 파일명을 생성하여 충돌을 방지합니다.
+ *
  * @param file - 압축할 이미지 파일
  * @param options - 압축 옵션
- * @returns 압축된 이미지 File 객체
+ * @returns 압축된 이미지 File 객체 (UUID 파일명 적용)
  */
 export async function compressImage(
   file: File,
   options: CompressImageOptions = {}
 ): Promise<File> {
-  const { maxSize, quality, type } = { ...DEFAULT_OPTIONS, ...options };
+  const { maxSizeMB, maxWidthOrHeight, useWebWorker } = {
+    ...DEFAULT_OPTIONS,
+    ...options,
+  };
 
-  // 이미지가 아니면 원본 반환
+  // 이미지가 아니면 파일명만 UUID로 변경하여 반환
   if (!file.type.startsWith("image/")) {
-    return file;
+    const extension = file.name.slice(file.name.lastIndexOf("."));
+    const newFilename = generateUniqueFilename(file.name, extension);
+    return new File([file], newFilename, { type: file.type });
   }
 
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
+  try {
+    // browser-image-compression으로 압축
+    const compressedBlob = await imageCompression(file, {
+      maxSizeMB,
+      maxWidthOrHeight,
+      useWebWorker,
+      // EXIF 회전 정보 자동 처리
+      // JPEG 출력 (WebP보다 호환성 좋음)
+      fileType: "image/jpeg",
+    });
 
-    if (!ctx) {
-      reject(new Error("Canvas context를 생성할 수 없습니다."));
-      return;
-    }
+    // UUID 기반 파일명 생성
+    const newFilename = generateUniqueFilename(file.name, ".jpg");
 
-    img.onload = () => {
-      // 원본 크기가 maxSize보다 작으면 리사이즈 불필요
-      let { width, height } = img;
+    // Blob을 File로 변환
+    const compressedFile = new File([compressedBlob], newFilename, {
+      type: "image/jpeg",
+    });
 
-      if (width > maxSize || height > maxSize) {
-        if (width > height) {
-          height = Math.round((height * maxSize) / width);
-          width = maxSize;
-        } else {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-
-      // 흰색 배경 (투명 PNG 대응)
-      ctx.fillStyle = "#FFFFFF";
-      ctx.fillRect(0, 0, width, height);
-
-      // 이미지 그리기
-      ctx.drawImage(img, 0, 0, width, height);
-
-      // Blob으로 변환
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            reject(new Error("이미지 압축에 실패했습니다."));
-            return;
-          }
-
-          // 새 파일명 생성 (확장자 변경)
-          const extension = type === "image/webp" ? ".webp" : ".jpg";
-          const newFileName = file.name.replace(/\.[^/.]+$/, "") + extension;
-
-          const compressedFile = new File([blob], newFileName, { type });
-
-          // 압축 후 오히려 커지면 원본 반환 (이미 최적화된 이미지)
-          if (compressedFile.size >= file.size) {
-            resolve(file);
-            return;
-          }
-
-          resolve(compressedFile);
-        },
-        type,
-        quality
-      );
-    };
-
-    img.onerror = () => {
-      reject(new Error("이미지를 로드할 수 없습니다."));
-    };
-
-    // 파일을 Data URL로 읽기
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = () => {
-      reject(new Error("파일을 읽을 수 없습니다."));
-    };
-    reader.readAsDataURL(file);
-  });
+    return compressedFile;
+  } catch (error) {
+    console.error("이미지 압축 실패:", error);
+    // 압축 실패 시 원본 파일에 UUID 파일명만 적용하여 반환
+    const extension = file.name.slice(file.name.lastIndexOf("."));
+    const newFilename = generateUniqueFilename(file.name, extension);
+    return new File([file], newFilename, { type: file.type });
+  }
 }
 
 /**

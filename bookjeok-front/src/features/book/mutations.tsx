@@ -39,7 +39,7 @@ export const useCreateBookSaleMutation = () => {
 
   return useMutation<UsedBookSale, Error, CreateSaleVariables>({
     mutationFn: async ({ imageFiles, payload }) => {
-      // 1. 이미지 압축
+      // 1. 이미지 압축 (압축 시 UUID 파일명 자동 생성됨)
       const compressedFiles = await compressImages(imageFiles);
 
       // 2. 클라이언트에서 직접 Vercel Blob으로 이미지 업로드
@@ -140,9 +140,10 @@ export const useUpdateBookSaleMutation = () => {
       }
 
       // 2. 새로 추가할 이미지가 있으면 압축 후 Vercel Blob에 업로드
+      //    압축 시 UUID 파일명이 자동 생성되어 충돌 방지됨
       let newImageUrls: string[] = [];
       if (newImageFiles.length > 0) {
-        // 이미지 압축
+        // 이미지 압축 (UUID 파일명 자동 생성)
         const compressedFiles = await compressImages(newImageFiles);
 
         const formData = new FormData();
