@@ -24,7 +24,7 @@ interface TiptapEditorProps {
   content: string;
   onChange: (content: string) => void;
   placeholder?: string;
-  onImageAdd?: (file: File) => string; // 객체 URL 반환
+  onImageAdd?: (file: File) => string | null; // 객체 URL 반환 (웉량 초과 시 null)
 }
 
 export const TiptapEditor = ({
@@ -72,6 +72,8 @@ export const TiptapEditor = ({
           const file = event.dataTransfer.files[0];
           if (file.type.startsWith("image/") && onImageAdd) {
             const url = onImageAdd(file);
+            // 용량 초과 등으로 이미지 추가 실패 시 무시
+            if (!url) return true;
             const { schema } = view.state;
             const coordinates = view.posAtCoords({
               left: event.clientX,
@@ -111,6 +113,11 @@ export const TiptapEditor = ({
       const file = e.target.files?.[0];
       if (file && onImageAdd && editor) {
         const url = onImageAdd(file);
+        // 용량 초과 등으로 이미지 추가 실패 시 무시
+        if (!url) {
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          return;
+        }
 
         // 이미지를 삽입한 다음 단락을 추가하여 대체를 방지하고 입력을 허용합니다.
         editor

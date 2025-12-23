@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { validateImageForUpload } from "@/shared/utils/compress-image";
+
 import {
   sellFormSchema,
   SellFormValues,
@@ -39,7 +41,18 @@ export const useBookSaleForm = () => {
 
   const handleImagesAdd = (newFiles: FileList) => {
     const currentFiles = Array.from(form.getValues("images") || []);
-    const combinedFiles = [...currentFiles, ...Array.from(newFiles)];
+    const newFilesArray = Array.from(newFiles);
+
+    // 각 파일에 대해 용량 검증 (10MB 제한)
+    for (const file of newFilesArray) {
+      const validationError = validateImageForUpload(file);
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+    }
+
+    const combinedFiles = [...currentFiles, ...newFilesArray];
 
     if (combinedFiles.length > 5) {
       toast.error("이미지는 최대 5개까지 첨부할 수 있습니다.");
