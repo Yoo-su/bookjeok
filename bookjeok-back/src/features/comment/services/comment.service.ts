@@ -27,8 +27,10 @@ export class CommentService {
 
   /**
    * 댓글 목록을 페이지네이션으로 조회합니다.
+   * @param dto 조회 파라미터
+   * @param userId 현재 로그인한 사용자 ID (옵션, 좋아요 상태 확인용)
    */
-  async getComments(dto: GetCommentsDto) {
+  async getComments(dto: GetCommentsDto, userId?: number) {
     const { targetType, targetId, page = 1, limit = 10 } = dto;
     const skip = (page - 1) * limit;
 
@@ -40,8 +42,24 @@ export class CommentService {
       take: limit,
     });
 
+    // 로그인한 사용자의 좋아요 상태 확인
+    let likedCommentIds: Set<number> = new Set();
+    if (userId) {
+      const likes = await this.commentLikeRepository.find({
+        where: comments.map((c) => ({ commentId: c.id, userId })),
+        select: ['commentId'],
+      });
+      likedCommentIds = new Set(likes.map((l) => l.commentId));
+    }
+
+    // isLiked 필드 추가
+    const commentsWithLikeStatus = comments.map((comment) => ({
+      ...comment,
+      isLiked: likedCommentIds.has(comment.id),
+    }));
+
     return {
-      data: comments,
+      data: commentsWithLikeStatus,
       meta: {
         total,
         page,

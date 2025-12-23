@@ -14,6 +14,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+import { OptionalJwtAuthGuard } from '@/features/auth/guards/optional-jwt-auth.guard';
 import { CurrentUser } from '@/features/user/decorators/current-user.decorator';
 import { User } from '@/features/user/entities/user.entity';
 
@@ -29,19 +30,24 @@ export class CommentController {
 
   /**
    * 댓글 목록 조회 (페이지네이션)
+   * 로그인한 경우 좋아요 상태(isLiked)도 함께 반환
    */
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
   @ApiOperation({
     summary: '댓글 목록 조회',
     description:
-      '특정 타겟(도서/리뷰)의 댓글 목록을 페이지네이션으로 조회합니다.',
+      '특정 타겟(도서/리뷰)의 댓글 목록을 페이지네이션으로 조회합니다. 로그인 시 좋아요 상태도 반환됩니다.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: '댓글 목록을 반환합니다.',
   })
-  async getComments(@Query() query: GetCommentsDto) {
-    return this.commentService.getComments(query);
+  async getComments(
+    @Query() query: GetCommentsDto,
+    @CurrentUser() user: User | null,
+  ) {
+    return this.commentService.getComments(query, user?.id);
   }
 
   /**
