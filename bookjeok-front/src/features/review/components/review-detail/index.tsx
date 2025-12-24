@@ -1,8 +1,16 @@
 "use client";
 
+import { Edit } from "lucide-react";
+import Link from "next/link";
+
+import { useAuthStore } from "@/features/auth/store";
+import { CommentSection } from "@/features/comment/components/comment-section";
+import { CommentTargetType } from "@/features/comment/types";
 import { useReviewDetailQuery } from "@/features/review/queries";
 import { Review } from "@/features/review/types";
+import { Button } from "@/shared/components/shadcn/button";
 import { ScrollTopButton } from "@/shared/components/ui/scroll-top-button";
+import { PATHS } from "@/shared/constants/paths";
 
 import { ReviewDetailActions } from "./actions";
 import { ReviewDetailContent } from "./content";
@@ -15,6 +23,7 @@ interface ReviewDetailProps {
 }
 
 export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
+  const { user } = useAuthStore();
   const {
     data: review,
     isLoading,
@@ -34,6 +43,7 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
   }
 
   const book = review.book;
+  const isAuthor = user?.id === review.userId;
 
   return (
     <article className="min-h-screen bg-white pb-20">
@@ -43,9 +53,39 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
         <ReviewDetailContent content={review.content} />
         <ReviewDetailActions
           reviewId={String(id)}
-          reviewUserId={review.userId}
           reactionCounts={review.reactionCounts}
         />
+
+        {/* 댓글 섹션 */}
+        <CommentSection
+          targetType={CommentTargetType.REVIEW}
+          targetId={String(id)}
+        />
+
+        {/* 네비게이션 & 편집 버튼 */}
+        <div className="flex items-center justify-between pt-8 mt-8 border-t border-stone-100">
+          <Button
+            variant="ghost"
+            className="text-stone-500 hover:text-stone-900"
+            asChild
+          >
+            <Link href={PATHS.REVIEWS}>← Back to Reviews</Link>
+          </Button>
+
+          {isAuthor && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-stone-200 hover:bg-stone-50"
+              asChild
+            >
+              <Link href={PATHS.REVIEW_EDIT(String(id))}>
+                <Edit className="w-4 h-4 mr-2" />
+                리뷰 수정하기
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
       <ScrollTopButton />
     </article>

@@ -1,15 +1,12 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Edit } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuthStore } from "@/features/auth/store";
 import { useToggleReviewReactionMutation } from "@/features/review/mutations";
 import { useMyReviewReactionQuery } from "@/features/review/queries";
 import { ReviewReactionType } from "@/features/review/types";
-import { Button } from "@/shared/components/shadcn/button";
 import { PATHS } from "@/shared/constants/paths";
 import { cn } from "@/shared/utils/cn";
 
@@ -17,19 +14,16 @@ import { REACTION_CONFIG } from "../../constants";
 
 interface ReviewDetailActionsProps {
   reviewId: string;
-  reviewUserId: number;
   reactionCounts?: {
     [key in ReviewReactionType]: number;
   };
 }
 export function ReviewDetailActions({
   reviewId,
-  reviewUserId,
   reactionCounts,
 }: ReviewDetailActionsProps) {
   const router = useRouter();
   const { user } = useAuthStore();
-  const isAuthor = user?.id === reviewUserId;
   const { mutate: toggleReaction, isPending: isMutating } =
     useToggleReviewReactionMutation(Number(reviewId));
 
@@ -50,7 +44,7 @@ export function ReviewDetailActions({
   return (
     <div className="mt-16 pt-8 border-t border-stone-100">
       {/* Reaction Buttons */}
-      <div className="flex justify-center gap-4 mb-12">
+      <div className="flex justify-center gap-4">
         {REACTION_CONFIG.map(
           ({ type, icon: Icon, label, color, bgColor, ringColor }) => {
             const isActive = myReaction === type;
@@ -114,33 +108,6 @@ export function ReviewDetailActions({
               </motion.button>
             );
           }
-        )}
-      </div>
-
-      {/* 네비게이션 & 편집 버튼 */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          className="text-stone-500 hover:text-stone-900"
-          asChild
-        >
-          <Link href={PATHS.REVIEWS}>← Back to Reviews</Link>
-        </Button>
-
-        {isAuthor && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-stone-200 hover:bg-stone-50"
-              asChild
-            >
-              <Link href={PATHS.REVIEW_EDIT(reviewId)}>
-                <Edit className="w-4 h-4 mr-2" />
-                리뷰 수정하기
-              </Link>
-            </Button>
-          </div>
         )}
       </div>
     </div>
