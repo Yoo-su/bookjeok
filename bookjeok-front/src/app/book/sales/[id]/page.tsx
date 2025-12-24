@@ -32,8 +32,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = sale.title;
-  const description = `${sale.book.title} | ${sale.price.toLocaleString()}원 | ${sale.city} ${sale.district}`;
+  const title = `${sale.book.title} 중고책 | ${sale.title}`;
+  const description = `${sale.book.author}의 ${sale.book.title} 중고책 판매 - ${sale.price.toLocaleString()}원 | ${sale.city} ${sale.district}`;
   const images =
     sale.imageUrls.length > 0
       ? [sale.imageUrls[0]]

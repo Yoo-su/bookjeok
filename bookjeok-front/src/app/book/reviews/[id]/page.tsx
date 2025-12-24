@@ -33,8 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = review.title;
-  const description = `${review.book.title} - ${review.book.author}`;
+  const title = `${review.book.title} 리뷰 | ${review.title}`;
+  const description = `${review.book.author}의 ${review.book.title} 도서 리뷰 - ${review.title}`;
   const images = review.book.image ? [review.book.image] : [];
 
   return {
