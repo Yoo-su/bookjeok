@@ -69,7 +69,7 @@ export const RecentReviewSlider = () => {
           disableOnInteraction: false,
           pauseOnMouseEnter: true,
         }}
-        className="px-4!"
+        className="px-4! overflow-visible! [clip-path:inset(-100px_-10px)]"
       >
         {reviews.map((review) => (
           <SwiperSlide key={review.id} className="w-[260px]! py-4">

@@ -97,7 +97,7 @@ export const MainArtSlider = ({
         ) : items.length > 0 ? (
           <Swiper
             key={activeGenre}
-            className="px-4! sm:px-8! py-8 w-full"
+            className="px-4! sm:px-8! py-8 w-full overflow-visible! [clip-path:inset(-100px_-10px)]"
             modules={[Autoplay]}
             slidesPerView={"auto"}
             spaceBetween={20}
