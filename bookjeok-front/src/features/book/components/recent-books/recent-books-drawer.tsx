@@ -21,7 +21,7 @@ export const RecentBooksDrawer = () => {
   const pathname = usePathname();
   const recentBooks = useRecentBookStore((state) => state.recentBooks);
 
-  const shouldShow = pathname === PATHS.HOME || pathname === PATHS.BOOK_SEARCH;
+  const shouldShow = pathname === PATHS.HOME;
 
   if (recentBooks.length === 0 || !shouldShow) {
     return null;

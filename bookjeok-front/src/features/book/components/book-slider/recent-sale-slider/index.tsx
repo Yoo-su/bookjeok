@@ -82,7 +82,7 @@ export const RecentSalesSlider = () => {
           disableOnInteraction: false,
           pauseOnMouseEnter: true,
         }}
-        className="px-4!"
+        className="px-4! overflow-visible! [clip-path:inset(-100px_-10px)]"
       >
         {displaySales.map((sale, index) => (
           <SwiperSlide key={`${sale.id}-${index}`} className="w-[200px]! py-4">
