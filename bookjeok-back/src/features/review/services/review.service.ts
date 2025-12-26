@@ -160,9 +160,9 @@ export class ReviewService {
           subQb
             .where('review.title LIKE :search', { search: `%${search}%` })
             .orWhere('review.content LIKE :search', { search: `%${search}%` })
-            // 태그 이름으로 검색 (조인된 테이블 사용)
             .orWhere('tags.name LIKE :search', { search: `%${search}%` })
-            .orWhere('book.title LIKE :search', { search: `%${search}%` });
+            .orWhere('book.title LIKE :search', { search: `%${search}%` })
+            .orWhere('user.nickname LIKE :search', { search: `%${search}%` });
         }),
       );
     }
