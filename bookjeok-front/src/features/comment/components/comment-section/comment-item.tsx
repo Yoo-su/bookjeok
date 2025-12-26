@@ -6,11 +6,6 @@ import { Heart, Loader2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { useAuthStore } from "@/features/auth/store";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/shadcn/avatar";
 import { Button } from "@/shared/components/shadcn/button";
 import {
   DropdownMenu,
@@ -19,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/shadcn/dropdown-menu";
 import { Textarea } from "@/shared/components/shadcn/textarea";
+import { UserAvatarMenu } from "@/shared/components/ui/user-avatar-menu";
 import { cn } from "@/shared/utils";
 
 import { COMMENT_LINE_CLAMP, MAX_COMMENT_LENGTH } from "../../constants";
@@ -93,20 +89,17 @@ export const CommentItem = ({
   return (
     <div className="flex gap-3 group">
       {/* 아바타 */}
-      <Avatar
+      <UserAvatarMenu
+        user={comment.user}
+        showNickname={false}
+        size="md"
+        menuSide="right"
+        menuAlign="center"
         className={cn(
-          "w-9 h-9 shrink-0 ring-2 ring-background shadow-sm",
-          isOwner && "ring-primary/20"
+          "shrink-0",
+          isOwner && "ring-2 ring-sky-200 rounded-full"
         )}
-      >
-        <AvatarImage
-          src={comment.user.profileImageUrl || ""}
-          alt={comment.user.nickname}
-        />
-        <AvatarFallback className="bg-linear-to-br from-primary/20 to-primary/5 text-primary text-xs font-medium">
-          {comment.user.nickname.slice(0, 2)}
-        </AvatarFallback>
-      </Avatar>
+      />
 
       {/* 말풍선 */}
       <div className="flex-1 min-w-0">

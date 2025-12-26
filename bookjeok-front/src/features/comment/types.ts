@@ -74,3 +74,27 @@ export interface GetCommentsParams {
   page?: number;
   limit?: number;
 }
+
+/**
+ * 내 댓글 (간소화 버전)
+ */
+export interface MyComment {
+  id: number;
+  content: string;
+  targetType: CommentTargetType;
+  targetId: string;
+  /** 대상 제목 (리뷰 제목 또는 도서 제목) */
+  targetTitle: string | null;
+  /** 대상 부제목 (리뷰인 경우 도서 제목) */
+  targetSubtitle: string | null;
+  likeCount: number;
+  createdAt: string;
+}
+
+/**
+ * 내 댓글 목록 응답
+ */
+export interface GetMyCommentsResponse {
+  data: MyComment[];
+  meta: CommentsMeta;
+}

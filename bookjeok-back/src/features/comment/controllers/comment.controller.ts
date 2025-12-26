@@ -29,6 +29,27 @@ export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
   /**
+   * 내 댓글 목록 조회 (페이지네이션)
+   */
+  @Get('my')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: '내 댓글 목록 조회',
+    description: '내가 작성한 댓글 목록을 페이지네이션으로 조회합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '내 댓글 목록을 반환합니다.',
+  })
+  async getMyComments(
+    @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
+    @CurrentUser() user: User,
+  ) {
+    return this.commentService.getMyComments(user.id, page, limit);
+  }
+
+  /**
    * 댓글 목록 조회 (페이지네이션)
    * 로그인한 경우 좋아요 상태(isLiked)도 함께 반환
    */

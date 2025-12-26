@@ -9,4 +9,5 @@ export const commentKeys = createQueryKeys("comment", {
   like: (commentId: number) => ({
     queryKey: [commentId],
   }),
+  my: null,
 });

@@ -1,8 +1,8 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
-
 import { useBookSaleDetailQuery } from "@/features/book/queries";
+import { NotFoundRedirect } from "@/shared/components/ui/not-found-redirect";
+import { PATHS } from "@/shared/constants/paths";
 
 import { BookInfoCard } from "./book-info-card";
 import { BookSaleActions } from "./book-sale-actions";
@@ -23,13 +23,10 @@ export const BookSaleDetail = ({ saleId }: BookSaleDetailProps) => {
 
   if (isError || !sale) {
     return (
-      <div className="flex flex-col items-center justify-center text-center py-20 text-red-500">
-        <AlertTriangle className="mx-auto h-12 w-12" />
-        <p className="mt-4 font-semibold">판매글을 불러올 수 없습니다.</p>
-        <p className="text-sm text-gray-600">
-          존재하지 않거나 삭제된 게시글일 수 있습니다.
-        </p>
-      </div>
+      <NotFoundRedirect
+        message="존재하지 않거나 삭제된 판매글입니다."
+        fallbackPath={PATHS.BOOK_MARKET}
+      />
     );
   }
 

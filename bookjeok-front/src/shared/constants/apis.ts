@@ -33,6 +33,7 @@ export const API_PATHS = {
   },
   comment: {
     base: "/comments",
+    my: "/comments/my",
     detail: (id: number) => `/comments/${id}`,
     like: (id: number) => `/comments/${id}/like`,
   },

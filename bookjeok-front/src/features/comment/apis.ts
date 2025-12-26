@@ -6,6 +6,7 @@ import {
   CreateCommentParams,
   GetCommentsParams,
   GetCommentsResponse,
+  GetMyCommentsResponse,
   UpdateCommentParams,
 } from "./types";
 
@@ -89,4 +90,21 @@ export const getMyLikeStatus = async (id: number): Promise<boolean> => {
     API_PATHS.comment.like(id)
   );
   return data.isLiked;
+};
+
+/**
+ * 내 댓글 목록을 조회합니다.
+ * @param page 페이지 번호
+ * @param limit 페이지당 항목 수
+ * @returns 내 댓글 목록 및 메타 정보
+ */
+export const getMyComments = async (
+  page: number = 1,
+  limit: number = 10
+): Promise<GetMyCommentsResponse> => {
+  const { data } = await privateAxios.get<GetMyCommentsResponse>(
+    API_PATHS.comment.my,
+    { params: { page, limit } }
+  );
+  return data;
 };

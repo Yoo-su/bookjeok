@@ -10,14 +10,10 @@ import { useAuthStore } from "@/features/auth/store";
 import { findOrCreateRoom } from "@/features/chat/apis";
 import { useChatStore } from "@/features/chat/stores/use-chat-store";
 import { WishlistButton } from "@/features/user/components/wishlist-button";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/shadcn/avatar";
 import { Button } from "@/shared/components/shadcn/button";
 import { Separator } from "@/shared/components/shadcn/separator";
 import { ShareButton } from "@/shared/components/ui/share-button";
+import { UserAvatarMenu } from "@/shared/components/ui/user-avatar-menu";
 import { PATHS } from "@/shared/constants/paths";
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 import { useSocketContext } from "@/shared/providers/socket-provider";
@@ -125,19 +121,12 @@ export const BookSaleActions = ({ sale }: BookSaleActionsProps) => {
       <Separator />
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar data-nosnippet>
-            <AvatarImage
-              src={sale.user.profileImageUrl || undefined}
-              alt={sale.user.nickname}
-            />
-            <AvatarFallback>{sale.user.nickname.slice(0, 1)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-semibold text-gray-800">{sale.user.nickname}</p>
-            <p className="text-sm text-gray-500">판매자</p>
-          </div>
-        </div>
+        <UserAvatarMenu
+          user={sale.user}
+          showNickname
+          label="판매자"
+          size="lg"
+        />
         {isOwner ? (
           <div className="flex gap-2">
             <Button asChild variant="outline" size="sm">

@@ -14,6 +14,8 @@ export const PATHS = {
   REVIEW_EDIT: (id: string | number) => `/book/reviews/${id}/edit`,
   MY_PAGE: "/my-page",
   MY_REVIEWS: "/my-page/reviews",
+  MY_COMMENTS: "/my-page/comments",
   MY_PAGE_WISHLIST: "/my-page/wishlist",
   BOOK_MARKET: "/book/market",
+  USER_PROFILE: (id: number) => `/users/${id}`,
 } as const;

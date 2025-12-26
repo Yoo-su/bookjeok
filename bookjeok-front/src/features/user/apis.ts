@@ -1,7 +1,8 @@
-import { privateAxios } from "@/shared/libs/axios";
+import { privateAxios, publicAxios } from "@/shared/libs/axios";
 
 import { BookInfo } from "../book/types";
 import { UserStats } from "./queries";
+import { PublicUserProfile } from "./types";
 
 /**
  * 사용자의 활동 통계(판매, 채팅, 리뷰 수 등)를 조회합니다.
@@ -9,6 +10,20 @@ import { UserStats } from "./queries";
  */
 export const getUserStats = async (): Promise<UserStats> => {
   const { data } = await privateAxios.get<UserStats>("/user/stats");
+  return data;
+};
+
+/**
+ * 공개 사용자 프로필을 조회합니다.
+ * @param userId 사용자 ID
+ * @returns 공개 프로필 정보
+ */
+export const getPublicProfile = async (
+  userId: number
+): Promise<PublicUserProfile> => {
+  const { data } = await publicAxios.get<PublicUserProfile>(
+    `/user/profile/${userId}`
+  );
   return data;
 };
 

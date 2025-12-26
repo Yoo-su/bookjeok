@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
+import { commentKeys } from "@/shared/constants/query-keys/comment";
 
-import { getComments } from "./apis";
+import { getComments, getMyComments } from "./apis";
 import { COMMENTS_PER_PAGE } from "./constants";
 import { CommentTargetType } from "./types";
 
@@ -32,5 +33,20 @@ export const useCommentsQuery = (
       }),
     staleTime: 1000 * 60, // 1분
     enabled,
+  });
+};
+
+/**
+ * 내 댓글 목록을 무한 스크롤로 조회하는 훅
+ */
+export const useMyCommentsInfiniteQuery = (limit: number = 10) => {
+  return useInfiniteQuery({
+    queryKey: commentKeys.my.queryKey,
+    queryFn: ({ pageParam = 1 }) => getMyComments(pageParam, limit),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta;
+      return page < totalPages ? page + 1 : undefined;
+    },
+    initialPageParam: 1,
   });
 };

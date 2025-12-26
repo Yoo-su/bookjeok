@@ -6,6 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { Book } from '@/features/book/entities/book.entity';
+import { Review } from '@/features/review/entities/review.entity';
+
 import { Comment, CommentTargetType } from '../entities/comment.entity';
 import { CommentLike } from '../entities/comment-like.entity';
 import { CreateCommentDto } from '../dto/create-comment.dto';
@@ -60,6 +63,73 @@ export class CommentService {
 
     return {
       data: commentsWithLikeStatus,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * 내가 쓴 댓글 목록을 조회합니다.
+   * 대상 정보(도서/리뷰 제목)도 함께 반환합니다.
+   * @param userId 사용자 ID
+   * @param page 페이지 번호
+   * @param limit 페이지당 항목 수
+   */
+  async getMyComments(userId: number, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const [comments, total] = await this.commentRepository.findAndCount({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    // 대상 정보 조회를 위한 데이터 구성
+    const commentsWithTargetInfo = await Promise.all(
+      comments.map(async (comment) => {
+        let targetTitle: string | null = null;
+        let targetSubtitle: string | null = null;
+
+        if (comment.targetType === CommentTargetType.REVIEW) {
+          // 리뷰의 경우: 리뷰 제목과 도서 제목
+          const review = await this.commentRepository.manager.findOne(Review, {
+            where: { id: parseInt(comment.targetId, 10) },
+            relations: ['book'],
+          });
+          if (review) {
+            targetTitle = review.title;
+            targetSubtitle = review.book?.title ?? null;
+          }
+        } else if (comment.targetType === CommentTargetType.BOOK) {
+          // 도서의 경우: ISBN으로 도서 정보 조회
+          const book = await this.commentRepository.manager.findOne(Book, {
+            where: { isbn: comment.targetId },
+          });
+          if (book) {
+            targetTitle = book.title;
+          }
+        }
+
+        return {
+          id: comment.id,
+          content: comment.content,
+          targetType: comment.targetType,
+          targetId: comment.targetId,
+          targetTitle,
+          targetSubtitle,
+          likeCount: comment.likeCount,
+          createdAt: comment.createdAt,
+        };
+      }),
+    );
+
+    return {
+      data: commentsWithTargetInfo,
       meta: {
         total,
         page,

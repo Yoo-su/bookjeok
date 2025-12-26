@@ -9,6 +9,7 @@ import { CommentTargetType } from "@/features/comment/types";
 import { useReviewDetailQuery } from "@/features/review/queries";
 import { Review } from "@/features/review/types";
 import { Button } from "@/shared/components/shadcn/button";
+import { NotFoundRedirect } from "@/shared/components/ui/not-found-redirect";
 import { ScrollTopButton } from "@/shared/components/ui/scroll-top-button";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -36,9 +37,10 @@ export const ReviewDetail = ({ id, initialReview }: ReviewDetailProps) => {
 
   if (error || !review) {
     return (
-      <div className="container mx-auto py-20 text-center text-destructive">
-        리뷰를 불러오는데 실패했습니다.
-      </div>
+      <NotFoundRedirect
+        message="존재하지 않거나 삭제된 리뷰입니다."
+        fallbackPath={PATHS.REVIEWS}
+      />
     );
   }
 

@@ -6,14 +6,10 @@ import Image from "next/image";
 
 import { BookInfo } from "@/features/book/types";
 import { Review } from "@/features/review/types";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/shadcn/avatar";
 import { Badge } from "@/shared/components/shadcn/badge";
 import { ShareButton } from "@/shared/components/ui/share-button";
 import { StarRating } from "@/shared/components/ui/star-rating";
+import { UserAvatarMenu } from "@/shared/components/ui/user-avatar-menu";
 
 interface ReviewDetailHeaderProps {
   review: Review;
@@ -52,20 +48,9 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
         )}
 
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-stone-500 text-sm mb-6">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8 border border-stone-200" data-nosnippet>
-              <AvatarImage
-                src={review.user?.profileImageUrl || undefined}
-                alt={review.user?.nickname}
-              />
-              <AvatarFallback className="bg-stone-200 text-xs font-bold text-stone-600">
-                {review.user?.nickname?.[0] || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-stone-900">
-              {review.user?.nickname || "Anonymous"}
-            </span>
-          </div>
+          {review.user && (
+            <UserAvatarMenu user={review.user} showNickname size="sm" />
+          )}
           <span className="w-1 h-1 rounded-full bg-stone-300 hidden sm:block" />
           <time dateTime={review.createdAt}>
             {format(new Date(review.createdAt), "MMMM d, yyyy")}

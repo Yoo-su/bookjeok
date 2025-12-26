@@ -1,6 +1,16 @@
 "use client";
 
-import { ChevronRight, ShoppingBag, User } from "lucide-react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import {
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  Heart,
+  MessageSquare,
+  ShoppingBag,
+  User,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,6 +19,42 @@ import { UserStatsDashboard } from "@/features/user/components/user-stats-dashbo
 import { WithdrawalModal } from "@/features/user/components/withdrawal-modal";
 import { Card, CardContent } from "@/shared/components/shadcn/card";
 import { PATHS } from "@/shared/constants/paths";
+
+// 활동 메뉴 정의
+const activityMenus = [
+  {
+    icon: ShoppingBag,
+    label: "나의 판매 내역",
+    description: "등록한 중고책 판매글 관리",
+    href: PATHS.MY_PAGE_SALES,
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-50",
+  },
+  {
+    icon: BookOpen,
+    label: "나의 리뷰",
+    description: "작성한 도서 리뷰 확인",
+    href: PATHS.MY_REVIEWS,
+    color: "text-blue-500",
+    bgColor: "bg-blue-50",
+  },
+  {
+    icon: Heart,
+    label: "위시리스트",
+    description: "찜한 도서 목록",
+    href: PATHS.MY_PAGE_WISHLIST,
+    color: "text-rose-500",
+    bgColor: "bg-rose-50",
+  },
+  {
+    icon: MessageSquare,
+    label: "나의 댓글",
+    description: "작성한 댓글 관리",
+    href: PATHS.MY_COMMENTS,
+    color: "text-amber-500",
+    bgColor: "bg-amber-50",
+  },
+];
 
 export const MyPageView = () => {
   const user = useAuthStore((state) => state.user);
@@ -23,47 +69,71 @@ export const MyPageView = () => {
 
       {/* 프로필 섹션 */}
       <Card className="mb-8">
-        <CardContent className="flex items-center p-6">
-          <div
-            className="relative w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center mr-6"
-            data-nosnippet
-          >
-            {user.profileImageUrl ? (
-              <Image
-                src={user.profileImageUrl}
-                alt={user.nickname}
-                fill
-                sizes="80px"
-                className="rounded-full object-cover"
-              />
-            ) : (
-              <User className="w-10 h-10 text-gray-500" />
-            )}
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">{user.nickname}</h2>
-            <p className="text-gray-500">{user.email}</p>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            {/* 아바타 */}
+            <div
+              className="relative w-24 h-24 rounded-full bg-stone-100 flex items-center justify-center shrink-0 overflow-hidden"
+              data-nosnippet
+            >
+              {user.profileImageUrl ? (
+                <Image
+                  src={user.profileImageUrl}
+                  alt={user.nickname}
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                />
+              ) : (
+                <User className="w-10 h-10 text-stone-400" />
+              )}
+            </div>
+
+            {/* 사용자 정보 */}
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl font-semibold text-stone-900">
+                {user.nickname}
+              </h2>
+              <p className="text-stone-500 text-sm mt-1">{user.email}</p>
+              {user.createdAt && (
+                <div className="flex items-center justify-center sm:justify-start gap-1.5 text-xs text-stone-400 mt-2">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>
+                    {format(new Date(user.createdAt), "yyyy년 M월 가입", {
+                      locale: ko,
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* 대시보드 통계 */}
+      {/* 통계 대시보드 */}
       <UserStatsDashboard />
 
-      {/* 메뉴 링크 */}
-      <div className="space-y-4 mb-12">
-        <Link href={PATHS.MY_PAGE_SALES} className="block">
-          <Card className="hover:bg-gray-50 transition-colors">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <ShoppingBag className="mr-4 h-5 w-5 text-gray-500" />
-                <span className="font-medium">나의 판매 내역 관리</span>
-              </div>
-              <ChevronRight className="h-5 w-5 text-gray-400" />
-            </CardContent>
-          </Card>
-        </Link>
-        {/* 추후 추가될 메뉴들... */}
+      {/* 활동 메뉴 */}
+      <h3 className="text-lg font-semibold mb-4">활동 관리</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+        {activityMenus.map((menu) => (
+          <Link key={menu.href} href={menu.href} className="block">
+            <Card className="hover:bg-stone-50 transition-colors h-full">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${menu.bgColor}`}>
+                  <menu.icon className={`w-5 h-5 ${menu.color}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-stone-900">{menu.label}</p>
+                  <p className="text-xs text-stone-500 truncate">
+                    {menu.description}
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-stone-300 shrink-0" />
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
       </div>
 
       {/* 위험 구역 (탈퇴) */}

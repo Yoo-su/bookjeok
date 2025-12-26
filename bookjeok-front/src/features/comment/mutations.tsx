@@ -146,3 +146,25 @@ export const useToggleCommentLikeMutation = (
     },
   });
 };
+
+/**
+ * 내 댓글 삭제 뮤테이션 훅 (마이페이지용)
+ * 삭제 후 내 댓글 목록을 새로고침합니다.
+ */
+export const useDeleteMyCommentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteComment,
+    onSuccess: () => {
+      // 내 댓글 목록 새로고침
+      queryClient.invalidateQueries({
+        queryKey: ["comment", "my"],
+      });
+      toast.success("댓글이 삭제되었습니다.");
+    },
+    onError: () => {
+      toast.error("댓글 삭제에 실패했습니다.");
+    },
+  });
+};

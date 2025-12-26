@@ -78,6 +78,76 @@ export class UserService {
   }
 
   /**
+   * 공개 사용자 프로필을 조회합니다.
+   * 민감 정보를 제외한 공개 가능한 정보만 반환합니다.
+   * @param userId 사용자 ID
+   * @returns 공개 프로필 정보
+   */
+  async getPublicProfile(userId: number) {
+    // 1. 사용자 기본 정보 조회
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'nickname', 'profileImageUrl', 'createdAt', 'deletedAt'],
+    });
+
+    if (!user || user.deletedAt) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    // 2. 통계 조회
+    const [salesCount, reviewsCount] = await Promise.all([
+      this.usedBookSaleRepository.count({
+        where: { user: { id: userId }, status: SaleStatus.FOR_SALE },
+      }),
+      this.reviewRepository.count({
+        where: { user: { id: userId } },
+      }),
+    ]);
+
+    // 3. 최근 리뷰 3개 조회
+    const recentReviews = await this.reviewRepository.find({
+      where: { user: { id: userId } },
+      relations: ['book'],
+      order: { createdAt: 'DESC' },
+      take: 3,
+    });
+
+    // 4. 최근 판매글 3개 조회 (판매 중인 것만)
+    const recentSales = await this.usedBookSaleRepository.find({
+      where: { user: { id: userId } },
+      relations: ['book'],
+      order: { createdAt: 'DESC' },
+      take: 3,
+    });
+
+    return {
+      id: user.id,
+      nickname: user.nickname,
+      profileImageUrl: user.profileImageUrl,
+      createdAt: user.createdAt,
+      stats: {
+        salesCount,
+        reviewsCount,
+      },
+      recentReviews: recentReviews.map((review) => ({
+        id: review.id,
+        title: review.title,
+        bookTitle: review.book?.title || '',
+        bookImage: review.book?.image || null,
+        createdAt: review.createdAt,
+      })),
+      recentSales: recentSales.map((sale) => ({
+        id: sale.id,
+        bookTitle: sale.book?.title || '',
+        bookImage: sale.book?.image || null,
+        price: sale.price,
+        status: sale.status,
+        createdAt: sale.createdAt,
+      })),
+    };
+  }
+
+  /**
    * 특정 사용자가 작성한 모든 중고책 판매글을 조회합니다.
    * @param userId - 사용자 ID
    * @returns 사용자의 판매글 목록

@@ -6,6 +6,8 @@ import {
   Post,
   Body,
   Query,
+  Param,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { UserService } from '../services/user.service';
@@ -19,6 +21,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiQuery,
+  ApiParam,
 } from '@nestjs/swagger';
 
 @ApiTags('사용자 (User)')
@@ -58,6 +61,22 @@ export class UserController {
   @ApiResponse({ status: 200, description: '사용자 프로필 정보를 반환합니다.' })
   getUser(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Get('profile/:id')
+  @ApiOperation({
+    summary: '공개 프로필 조회',
+    description:
+      '다른 사용자의 공개 프로필 정보(닉네임, 프로필 이미지, 활동 통계 등)를 조회합니다.',
+  })
+  @ApiParam({ name: 'id', description: '사용자 ID' })
+  @ApiResponse({
+    status: 200,
+    description: '공개 프로필 정보를 반환합니다.',
+  })
+  @ApiResponse({ status: 404, description: '사용자를 찾을 수 없습니다.' })
+  async getPublicProfile(@Param('id', ParseIntPipe) id: number) {
+    return await this.userService.getPublicProfile(id);
   }
 
   @Delete('me')

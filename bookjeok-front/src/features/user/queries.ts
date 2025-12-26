@@ -4,7 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 
 import { QUERY_KEYS } from "@/shared/constants/query-keys";
 
-import { checkWishlistStatus, getUserStats, getWishlist } from "./apis";
+import {
+  checkWishlistStatus,
+  getPublicProfile,
+  getUserStats,
+  getWishlist,
+} from "./apis";
+import { PublicUserProfile, WishlistItem } from "./types";
 
 export interface UserStats {
   salesCount: number;
@@ -28,7 +34,21 @@ export const useMyStatsQuery = () => {
   });
 };
 
-import { WishlistItem } from "./types";
+/**
+ * 공개 사용자 프로필을 조회하는 쿼리 훅입니다.
+ * @param userId 사용자 ID
+ * @param enabled 쿼리 활성화 여부
+ */
+export const usePublicProfileQuery = (
+  userId: number,
+  enabled: boolean = true
+) => {
+  return useQuery<PublicUserProfile>({
+    queryKey: QUERY_KEYS.userKeys.profile(userId).queryKey,
+    queryFn: () => getPublicProfile(userId),
+    enabled: enabled && !!userId,
+  });
+};
 
 /**
  * 내 위시리스트 목록을 조회하는 쿼리 훅입니다.

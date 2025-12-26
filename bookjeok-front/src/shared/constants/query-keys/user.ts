@@ -6,4 +6,7 @@ export const userKeys = createQueryKeys("user", {
   wishlistCheck: (type: string, id: string | number) => ({
     queryKey: [type, id],
   }),
+  profile: (userId: number) => ({
+    queryKey: [userId],
+  }),
 });
