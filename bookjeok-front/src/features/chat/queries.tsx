@@ -12,7 +12,8 @@ import { getChatMessages, getMyChatRooms } from "./apis";
 import { ChatRoom } from "./types";
 
 /**
- * 내 채팅방 목록을 조회하는 쿼리 훅입니다.
+ * 내 채팅방 목록 조회
+ * 소켓으로 실시간 업데이트, React Query는 폴백용
  */
 export const useMyChatRoomsQuery = (
   options?: Omit<UseQueryOptions<ChatRoom[]>, "queryKey" | "queryFn">
@@ -20,14 +21,15 @@ export const useMyChatRoomsQuery = (
   return useQuery({
     queryKey: QUERY_KEYS.chatKeys.rooms.queryKey,
     queryFn: getMyChatRooms,
-    staleTime: Infinity,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
     ...options,
   });
 };
 
 /**
- * 채팅 메시지 목록을 조회하는 무한 스크롤 쿼리 훅입니다.
- * @param roomId 채팅방 ID
+ * 채팅 메시지 히스토리 조회 (무한 스크롤)
+ * 새 메시지는 소켓으로 수신, 이 쿼리는 이전 메시지 로딩용
  */
 export const useInfiniteChatMessagesQuery = (roomId: number | null) => {
   return useInfiniteQuery({
@@ -40,5 +42,6 @@ export const useInfiniteChatMessagesQuery = (roomId: number | null) => {
     getNextPageParam: () => undefined,
     enabled: !!roomId,
     refetchOnWindowFocus: false,
+    staleTime: Infinity,
   });
 };

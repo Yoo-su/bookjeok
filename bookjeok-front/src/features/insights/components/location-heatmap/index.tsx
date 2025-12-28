@@ -105,8 +105,7 @@ export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
           setMapCenter(coords);
           const moveLatLng = new kakao.maps.LatLng(coords.lat, coords.lng);
           mapRef.current.panTo(moveLatLng);
-          // 구/군 레벨로 넓게 보여줌
-          mapRef.current.setLevel(6);
+          mapRef.current.setLevel(7);
         }
       } finally {
         setIsLoadingSales(false);
@@ -237,7 +236,7 @@ export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
             <Map
               center={mapCenter}
               style={{ width: "100%", height: "300px" }}
-              level={6}
+              level={5}
               onCreate={(map) => {
                 mapRef.current = map;
               }}
@@ -291,7 +290,10 @@ export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
                       <div className="mb-1 text-xs text-gray-500">
                         {selectedSale.placeName}
                       </div>
-                      <div className="mb-1 line-clamp-1 text-sm font-semibold text-gray-800">
+                      <div
+                        className="mb-1 truncate text-sm font-semibold text-gray-800"
+                        title={selectedSale.bookTitle}
+                      >
                         {selectedSale.bookTitle}
                       </div>
                       <div
@@ -304,6 +306,7 @@ export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
                         href={PATHS.BOOK_SALES_DETAIL(String(selectedSale.id))}
                         className="block rounded-md py-1.5 text-center text-xs font-medium text-white transition-opacity hover:opacity-90"
                         style={{ backgroundColor: COLORS.matcha.medium }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         상세보기
                       </Link>

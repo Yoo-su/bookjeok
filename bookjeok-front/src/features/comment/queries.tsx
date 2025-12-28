@@ -10,11 +10,7 @@ import { COMMENTS_PER_PAGE } from "./constants";
 import { CommentTargetType } from "./types";
 
 /**
- * 댓글 목록을 조회하는 쿼리 훅
- * @param targetType 타겟 타입 (BOOK | REVIEW)
- * @param targetId 타겟 ID (ISBN 또는 Review ID)
- * @param page 페이지 번호
- * @param enabled 쿼리 활성화 여부
+ * 댓글 목록 조회
  */
 export const useCommentsQuery = (
   targetType: CommentTargetType,
@@ -31,13 +27,12 @@ export const useCommentsQuery = (
         page,
         limit: COMMENTS_PER_PAGE,
       }),
-    staleTime: 1000 * 60, // 1분
     enabled,
   });
 };
 
 /**
- * 내 댓글 목록을 무한 스크롤로 조회하는 훅
+ * 내 댓글 목록 (무한 스크롤, 내 데이터 - 짧은 staleTime)
  */
 export const useMyCommentsInfiniteQuery = (limit: number = 10) => {
   return useInfiniteQuery({
@@ -48,5 +43,6 @@ export const useMyCommentsInfiniteQuery = (limit: number = 10) => {
       return page < totalPages ? page + 1 : undefined;
     },
     initialPageParam: 1,
+    staleTime: 60 * 1000,
   });
 };

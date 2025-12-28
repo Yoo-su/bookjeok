@@ -25,19 +25,18 @@ export interface UserStats {
 }
 
 /**
- * 내 활동 통계를 조회하는 쿼리 훅입니다.
+ * 내 활동 통계 (내 데이터 - 짧은 staleTime)
  */
 export const useMyStatsQuery = () => {
   return useQuery<UserStats>({
     queryKey: QUERY_KEYS.userKeys.stats.queryKey,
     queryFn: getUserStats,
+    staleTime: 60 * 1000,
   });
 };
 
 /**
- * 공개 사용자 프로필을 조회하는 쿼리 훅입니다.
- * @param userId 사용자 ID
- * @param enabled 쿼리 활성화 여부
+ * 공개 사용자 프로필 조회
  */
 export const usePublicProfileQuery = (
   userId: number,
@@ -51,20 +50,18 @@ export const usePublicProfileQuery = (
 };
 
 /**
- * 내 위시리스트 목록을 조회하는 쿼리 훅입니다.
+ * 내 위시리스트 (내 데이터 - 짧은 staleTime)
  */
 export const useWishlistQuery = () => {
   return useQuery<WishlistItem[]>({
     queryKey: QUERY_KEYS.userKeys.wishlist.queryKey,
     queryFn: getWishlist,
+    staleTime: 30 * 1000,
   });
 };
 
 /**
- * 특정 항목의 위시리스트 포함 여부를 확인하는 쿼리 훅입니다.
- * @param type 타입 (BOOK, SALE)
- * @param id 대상 ID
- * @param enabled 쿼리 활성화 여부 (기본: true)
+ * 위시리스트 포함 여부 (내 데이터 - 짧은 staleTime)
  */
 export const useWishlistStatusQuery = (
   type: "BOOK" | "SALE",
@@ -75,5 +72,6 @@ export const useWishlistStatusQuery = (
     queryKey: QUERY_KEYS.userKeys.wishlistCheck(type, id).queryKey,
     queryFn: () => checkWishlistStatus(type, id),
     enabled,
+    staleTime: 30 * 1000,
   });
 };

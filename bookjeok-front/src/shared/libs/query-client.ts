@@ -8,8 +8,10 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000,
-        gcTime: 5 * 60 * 1000,
+        // 대부분의 데이터는 사용자 세션 동안 변경되지 않음
+        staleTime: Infinity,
+        // 캐시는 30분 동안 유지
+        gcTime: 30 * 60 * 1000,
         retry: 1,
         refetchOnWindowFocus: false,
       },
