@@ -6,7 +6,6 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { User } from '@/features/user/entities/user.entity';
 import { Book } from './book.entity';
@@ -77,7 +76,11 @@ export class UsedBookSale {
   @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @Column({
+    type: 'timestamptz',
+    precision: 6,
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   updatedAt: Date;
 
   // 하나의 판매글은 여러개의 채팅방을 가질 수 있습니다.

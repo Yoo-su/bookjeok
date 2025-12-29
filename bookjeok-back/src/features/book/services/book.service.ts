@@ -108,6 +108,7 @@ export class BookService {
     }
 
     sale.status = status;
+    sale.updatedAt = new Date();
     return await this.usedBookSaleRepository.save(sale);
   }
 
@@ -362,6 +363,8 @@ export class BookService {
       sale,
       updateBookSaleDto,
     );
+
+    updatedSale.updatedAt = new Date();
 
     return await this.usedBookSaleRepository.save(updatedSale);
   }

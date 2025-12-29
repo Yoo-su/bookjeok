@@ -38,7 +38,7 @@ export const InsightsHeader = ({ summary }: InsightsHeaderProps) => {
       iconColor: COLORS.mustard.dark,
     },
     {
-      label: "받은 리액션",
+      label: "누적 리액션",
       value: summary.totalReactions,
       icon: Heart,
       bgColor: COLORS.cream.dark,
