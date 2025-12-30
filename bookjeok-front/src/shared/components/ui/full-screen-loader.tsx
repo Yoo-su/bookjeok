@@ -48,29 +48,37 @@ export const FullScreenLoader = () => {
     <div className="flex flex-col items-center justify-center h-screen w-screen bg-white fixed inset-0 z-100 overflow-hidden">
       <div className="relative flex flex-col items-center justify-center gap-12">
         {/* 로고 컨테이너 (물결 및 플로팅 애니메이션 포함) */}
-        <div className="relative flex items-center justify-center w-40 h-40">
+        <div className="relative flex items-center justify-center w-64 h-64">
           {/* 물결 효과 */}
-          {[...Array(3)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <motion.div
-              key={i}
-              className="absolute inset-0 rounded-full bg-sky-100/50"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 2.0, opacity: [0, 0.5, 0] }}
+              key={`ripple-${i}`}
+              className="absolute inset-0 rounded-full border border-emerald-200/40 bg-emerald-100/10"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{
+                scale: 2.5,
+                opacity: [0, 0.5, 0],
+              }}
               transition={{
-                duration: 4,
+                duration: 3,
                 repeat: Infinity,
-                delay: i * 1.2,
-                ease: "easeInOut",
+                delay: i * 0.6,
+                ease: "easeOut",
               }}
             />
           ))}
 
-          {/* 둥둥 떠있는 로고 */}
+          {/* 팝콘처럼 튀어오르는 로고들 */}
+          {[...Array(12)].map((_, i) => (
+            <PopcornLogo key={`popcorn-${i}`} index={i} total={12} />
+          ))}
+
+          {/* 둥둥 떠있는 메인 로고 */}
           <motion.div
             className="relative w-28 h-28 z-10"
-            animate={{ y: [-10, 10, -10] }}
+            animate={{ y: [-8, 8, -8] }}
             transition={{
-              duration: 4,
+              duration: 3,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -88,17 +96,63 @@ export const FullScreenLoader = () => {
         {/* 커스텀 타이핑 애니메이션 텍스트 */}
         <div className="h-8 flex items-center justify-center">
           <motion.span
-            key={loopNum} // 선택 사항: 단어가 바뀔 때 애니메이션을 적용하려면 사용
-            className="text-[#1a2a4b] text-lg font-medium leading-normal"
+            key={loopNum}
+            className="text-emerald-900 text-lg font-medium leading-normal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             {text}
-            <span className="animate-pulse ml-1">|</span>
+            <span className="animate-pulse ml-1 text-emerald-500">|</span>
           </motion.span>
         </div>
       </div>
     </div>
+  );
+};
+
+const PopcornLogo = ({ index, total }: { index: number; total: number }) => {
+  const [mounted, setMounted] = useState(false);
+  const [randoms, setRandoms] = useState({ x: 0, y: 0, r: 0, d: 0 });
+
+  useEffect(() => {
+    setMounted(true);
+    setRandoms({
+      x: (Math.random() - 0.5) * 200, // 조금 더 멀리 퍼지게
+      y: (Math.random() - 0.5) * 200,
+      r: (Math.random() - 0.5) * 360,
+      d: Math.random() * 2,
+    });
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <motion.div
+      className="absolute z-0"
+      initial={{ scale: 0, x: 0, y: 0, opacity: 0 }}
+      animate={{
+        scale: [0, 1, 0],
+        x: randoms.x,
+        y: randoms.y,
+        rotate: randoms.r,
+        opacity: [0, 1, 0],
+      }}
+      transition={{
+        duration: 2.5, // 조금 더 천천히
+        repeat: Infinity,
+        delay: index * 0.2 + randoms.d,
+        ease: "easeOut",
+      }}
+    >
+      <div className="relative w-6 h-6 opacity-80">
+        <Image
+          src="/logo.svg"
+          alt="mini-logo"
+          fill
+          className="object-contain"
+        />
+      </div>
+    </motion.div>
   );
 };
