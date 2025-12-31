@@ -83,11 +83,14 @@ export const RecommendReviews = ({ id, category }: RecommendReviewsProps) => {
         modules={[Autoplay]}
         slidesPerView="auto"
         spaceBetween={16}
-        className="w-full overflow-visible! [clip-path:inset(-100px_-10px)]"
+        className="w-full !p-1"
         autoplay={{ delay: 5000, disableOnInteraction: false }}
       >
         {reviews.map((review, index) => (
-          <SwiperSlide key={review.id} className="w-[280px]! sm:w-[320px]!">
+          <SwiperSlide
+            key={review.id}
+            className="w-[280px]! sm:w-[320px]! h-auto"
+          >
             <ReviewCard review={review} priority={index < 2} />
           </SwiperSlide>
         ))}
