@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getMyReviewReaction,
   getPopularReviews,
+  getRecommendedReviews,
   getReview,
   getReviewFeeds,
   getReviews,
@@ -93,5 +94,19 @@ export const useMyReviewReactionQuery = (
     queryFn: () => getMyReviewReaction(id),
     enabled,
     staleTime: 30 * 1000,
+  });
+};
+
+/**
+ * 추천 리뷰 조회 (복합 로직)
+ */
+export const useRecommendedReviewsQuery = (
+  id: number,
+  enabled: boolean = true
+) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.reviewKeys.recommend(id).queryKey,
+    queryFn: () => getRecommendedReviews(id),
+    enabled,
   });
 };

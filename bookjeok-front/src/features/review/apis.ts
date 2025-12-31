@@ -121,6 +121,18 @@ export const getReview = async (id: number) => {
 };
 
 /**
+ * 추천 리뷰(복합 로직)를 조회합니다.
+ * @param id 현재 리뷰 ID
+ * @returns 추천 리뷰 목록
+ */
+export const getRecommendedReviews = async (id: number) => {
+  const { data } = await publicAxios.get<Review[]>(
+    `${API_PATHS.review.detail(id)}/recommend`
+  );
+  return data;
+};
+
+/**
  * 나의 리액션 정보를 조회합니다.
  * @param id 리뷰 ID
  * @returns 나의 리액션 타입 (없으면 null)

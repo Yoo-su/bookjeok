@@ -15,4 +15,7 @@ export const reviewKeys = createQueryKeys("review", {
   detail: (id: number) => ({
     queryKey: [id],
   }),
+  recommend: (id: number) => ({
+    queryKey: [id],
+  }),
 });

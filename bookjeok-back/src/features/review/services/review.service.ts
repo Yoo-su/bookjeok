@@ -280,6 +280,66 @@ export class ReviewService {
   }
 
   /**
+   * 추천 리뷰를 조회합니다. (같은 작가의 다른 책 + 같은 카테고리)
+   * @param id 기준 리뷰 ID
+   * @returns 추천 리뷰 목록
+   */
+  async getRecommendedReviews(id: number): Promise<ReviewResponseDto[]> {
+    const currentReview = await this.reviewsRepository.findOne({
+      where: { id },
+      relations: ['book'],
+    });
+
+    if (!currentReview) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
+
+    const { book, category } = currentReview;
+    const author = book.author;
+    const limit = 4;
+    const recommendations: Review[] = [];
+
+    // 1. 같은 작가가 쓴 다른 책의 리뷰 조회 (최대 2개)
+    if (author) {
+      const authorReviews = await this.reviewsRepository
+        .createQueryBuilder('review')
+        .leftJoinAndSelect('review.user', 'user')
+        .leftJoinAndSelect('review.book', 'book')
+        .leftJoinAndSelect('review.tagEntities', 'tagEntities')
+        .where('review.id != :id', { id })
+        .andWhere('book.author = :author', { author })
+        .andWhere('book.isbn != :isbn', { isbn: book.isbn }) // 같은 책 제외
+        .orderBy('review.createdAt', 'DESC')
+        .take(2)
+        .getMany();
+
+      recommendations.push(...authorReviews);
+    }
+
+    // 2. 나머지는 같은 카테고리의 최신 리뷰로 채움
+    const remainingLimit = limit - recommendations.length;
+
+    if (remainingLimit > 0) {
+      const excludedIds = [id, ...recommendations.map((r) => r.id)];
+
+      const categoryReviews = await this.reviewsRepository
+        .createQueryBuilder('review')
+        .leftJoinAndSelect('review.user', 'user')
+        .leftJoinAndSelect('review.book', 'book')
+        .leftJoinAndSelect('review.tagEntities', 'tagEntities')
+        .where('review.id NOT IN (:...ids)', { ids: excludedIds })
+        .andWhere('review.category = :category', { category })
+        .orderBy('review.createdAt', 'DESC')
+        .take(remainingLimit)
+        .getMany();
+
+      recommendations.push(...categoryReviews);
+    }
+
+    return this.attachReactionCounts(recommendations);
+  }
+
+  /**
    * 리뷰 목록에 리액션 카운트 정보를 첨부합니다.
    * @param reviews 리뷰 목록
    * @returns 리액션 카운트가 포함된 리뷰 목록

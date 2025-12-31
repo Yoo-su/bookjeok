@@ -125,6 +125,28 @@ export class ReviewController {
     return await this.reviewService.findOne(id);
   }
 
+  @Get(':id/recommend')
+  @ApiOperation({
+    summary: '추천 리뷰 조회',
+    description:
+      '같은 작가의 다른 책 리뷰(최대 2개) + 같은 카테고리 리뷰를 조합하여 추천합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '추천 리뷰 목록을 반환합니다.',
+    type: [ReviewResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: '리뷰를 찾을 수 없습니다.',
+  })
+  @ApiParam({ name: 'id', description: '리뷰 ID' })
+  async getRecommendedReviews(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ReviewResponseDto[]> {
+    return await this.reviewService.getRecommendedReviews(id);
+  }
+
   @Post(':id/reactions')
   @UseGuards(AuthGuard('jwt'))
   @ApiOperation({
