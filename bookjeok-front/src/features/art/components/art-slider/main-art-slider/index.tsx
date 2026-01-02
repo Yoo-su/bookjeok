@@ -67,27 +67,23 @@ export const MainArtSlider = ({
       </div>
 
       {/* 장르 필터 칩 */}
-      <div className="relative">
-        <div className="flex justify-start sm:justify-center gap-2 py-2 px-4 sm:px-8 overflow-x-auto scrollbar-hide">
-          {chips.map((chip) => (
-            <Button
-              key={chip.genreCode}
-              variant={activeGenre === chip.genreCode ? "default" : "outline"}
-              size="sm"
-              className={cn(
-                "rounded-full cursor-pointer px-5 py-2 transition-all duration-300 shrink-0 font-medium",
-                activeGenre === chip.genreCode
-                  ? "bg-rose-500 text-white shadow-lg shadow-rose-200 scale-105 border-rose-500 hover:bg-rose-600"
-                  : "text-stone-600 bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300"
-              )}
-              onClick={() => setActiveGenre(chip.genreCode)}
-            >
-              {chip.title}
-            </Button>
-          ))}
-        </div>
-        {/* 모바일 우측 페이드 */}
-        <div className="absolute inset-y-0 right-0 w-16 bg-linear-to-r from-transparent to-stone-50 pointer-events-none sm:hidden" />
+      <div className="flex flex-wrap justify-center gap-2 py-2 px-4 sm:px-8">
+        {chips.map((chip) => (
+          <Button
+            key={chip.genreCode}
+            variant={activeGenre === chip.genreCode ? "default" : "outline"}
+            size="sm"
+            className={cn(
+              "rounded-full cursor-pointer px-5 py-2 transition-all duration-300 font-medium",
+              activeGenre === chip.genreCode
+                ? "bg-rose-500 text-white shadow-lg shadow-rose-200 scale-105 border-rose-500 hover:bg-rose-600"
+                : "text-stone-600 bg-white border-stone-200 hover:bg-stone-50 hover:border-stone-300"
+            )}
+            onClick={() => setActiveGenre(chip.genreCode)}
+          >
+            {chip.title}
+          </Button>
+        ))}
       </div>
 
       {/* 슬라이더 */}
