@@ -45,28 +45,58 @@ export function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
+/** 일치 강도. 쿼리 파라미터 이름과 같다. */
+type MatchKind = 'exact' | 'prefix' | 'like';
+
+/**
+ * 통합 검색의 관련도 순위. 앞에 올수록 상위입니다.
+ *
+ * **출판사 완전일치가 제목 접두·부분일치보다 위에 있는 것이 이 배열의 요점입니다.**
+ * 근거는 `docs/book-data-migration-plan.md` 8-d에 있습니다.
+ */
+const KEYWORD_RELEVANCE_ORDER: ReadonlyArray<
+  readonly [BookSearchColumn, MatchKind]
+> = [
+  ['title', 'exact'],
+  // "민음사"처럼 출판사명을 그대로 친 검색은 그 출판사 책을 보려는 의도다.
+  // 제목에 출판사명이 든 전집 세트가 카탈로그 전체를 밀어내면 안 된다.
+  ['publisher', 'exact'],
+  ['title', 'prefix'],
+  ['title', 'like'],
+  // 저자는 승격하지 않는다. `김영하` / `김영하 (지은이)`로 표기가 섞여 있어
+  // (괄호 13% · 다중저자 15%) 완전일치 티어가 한 저자의 책을 갈라놓는다.
+  ['author', 'exact'],
+  ['author', 'prefix'],
+  ['author', 'like'],
+  ['publisher', 'prefix'],
+  ['publisher', 'like'],
+];
+
 /**
  * 관련도 정렬용 CASE 식을 만듭니다. 값이 낮을수록 상위입니다.
- * 컬럼 우선순위 안에서 완전일치, 접두일치, 부분일치 순으로 순위를 매깁니다.
  * 알라딘의 Sort=Accuracy를 대신하는 부분입니다.
  * @param alias 테이블 별칭
- * @param columns 우선순위 순으로 정렬된 검색 대상 컬럼
+ * @param columns 검색 대상 컬럼
  * @returns ORDER BY에 넣을 CASE 식
  */
 export function relevanceCaseSql(
   alias: string,
   columns: readonly BookSearchColumn[],
 ): string {
-  const branches: string[] = [];
-  let rank = 0;
+  // 단일 필드 검색은 그 필드 안에서 완전 → 접두 → 부분 순이면 충분하다.
+  const order =
+    columns.length === 1
+      ? (['exact', 'prefix', 'like'] as const).map(
+          (kind) => [columns[0], kind] as const,
+        )
+      : KEYWORD_RELEVANCE_ORDER.filter(([column]) => columns.includes(column));
 
-  for (const column of columns) {
-    branches.push(`WHEN ${alias}.${column} ILIKE :exact THEN ${rank++}`);
-    branches.push(`WHEN ${alias}.${column} ILIKE :prefix THEN ${rank++}`);
-    branches.push(`WHEN ${alias}.${column} ILIKE :like THEN ${rank++}`);
-  }
+  const branches = order.map(
+    ([column, kind], rank) =>
+      `WHEN ${alias}.${column} ILIKE :${kind} THEN ${rank}`,
+  );
 
-  return `CASE ${branches.join(' ')} ELSE ${rank} END`;
+  return `CASE ${branches.join(' ')} ELSE ${branches.length} END`;
 }
 
 /**

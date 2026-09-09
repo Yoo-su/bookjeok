@@ -61,14 +61,37 @@ describe('LocalDbBookCatalogProvider 검색 규칙', () => {
       );
     });
 
-    /** 통합 검색에서는 제목 부분일치가 저자 완전일치보다 앞선다. */
-    it('컬럼 우선순위가 계단으로 이어진다', () => {
+    /**
+     * "민음사"를 치면 제목에 그 말이 든 전집 세트 12권이 아니라 그 출판사 책이
+     * 나와야 한다. 운영 실측에서 세트(지수 203)가 싯다르타(319,512)를 눌렀다.
+     */
+    it('출판사 완전일치가 제목 접두·부분일치보다 앞선다', () => {
       const sql = relevanceCaseSql('book', ['title', 'author', 'publisher']);
 
       expect(sql).toContain('WHEN book.title ILIKE :exact THEN 0');
-      expect(sql).toContain('WHEN book.author ILIKE :exact THEN 3');
-      expect(sql).toContain('WHEN book.publisher ILIKE :exact THEN 6');
+      expect(sql).toContain('WHEN book.publisher ILIKE :exact THEN 1');
+      expect(sql).toContain('WHEN book.title ILIKE :prefix THEN 2');
+      expect(sql).toContain('WHEN book.title ILIKE :like THEN 3');
+    });
+
+    /** 저자는 표기가 섞여 있어(`김영하` / `김영하 (지은이)`) 승격하지 않는다. */
+    it('저자 완전일치는 제목 부분일치보다 뒤에 둔다', () => {
+      const sql = relevanceCaseSql('book', ['title', 'author', 'publisher']);
+
+      expect(sql).toContain('WHEN book.author ILIKE :exact THEN 4');
+      expect(sql).toContain('WHEN book.publisher ILIKE :prefix THEN 7');
       expect(sql).toContain('ELSE 9 END');
+    });
+
+    /** 출판사 단독 검색은 승격 규칙과 무관하게 완전 → 접두 → 부분이어야 한다. */
+    it('단일 필드 검색은 그 필드 안에서만 순위를 매긴다', () => {
+      expect(relevanceCaseSql('book', ['publisher'])).toBe(
+        'CASE ' +
+          'WHEN book.publisher ILIKE :exact THEN 0 ' +
+          'WHEN book.publisher ILIKE :prefix THEN 1 ' +
+          'WHEN book.publisher ILIKE :like THEN 2 ' +
+          'ELSE 3 END',
+      );
     });
 
     it('테이블 별칭을 그대로 반영한다', () => {
