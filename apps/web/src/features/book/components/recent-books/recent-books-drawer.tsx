@@ -53,6 +53,7 @@ export const RecentBooksDrawer = () => {
           {recentBooks.map((book) => (
             <Link
               href={PATHS.BOOK_DETAIL(book.isbn)}
+              prefetch={false}
               key={book.isbn}
               className="group flex flex-col items-center text-center space-y-2"
             >

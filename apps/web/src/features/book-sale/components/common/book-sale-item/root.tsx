@@ -33,6 +33,7 @@ export const Root = ({
     <BookSaleContext.Provider value={{ sale, rank, priority }}>
       <Link
         href={linkHref}
+        prefetch={false}
         passHref
         className={cn("block h-full w-full group", className)}
       >

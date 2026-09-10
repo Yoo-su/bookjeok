@@ -73,6 +73,7 @@ export const PopularBookSlider = () => {
             >
               <Link
                 href={PATHS.BOOK_DETAIL(activeBook.isbn)}
+                prefetch={false}
                 className="w-full p-5 sm:p-7 lg:p-8 bg-[#2C2C2C] text-white flex flex-col justify-between group border border-neutral-800 shadow-xs hover:shadow-[0_16px_36px_-8px_rgba(0,0,0,0.35)] transition-shadow duration-300 relative overflow-hidden"
               >
                 <AnimatePresence mode="wait">
@@ -170,6 +171,7 @@ export const PopularBookSlider = () => {
                 >
                   <Link
                     href={PATHS.BOOK_DETAIL(book.isbn)}
+                    prefetch={false}
                     className={`flex-1 p-4 sm:p-5 border transition-all duration-200 flex gap-3.5 sm:gap-4 items-center group w-full ${
                       isSelected
                         ? "bg-white border-neutral-400 shadow-md"
@@ -237,6 +239,7 @@ export const PopularBookSlider = () => {
                     >
                       <Link
                         href={PATHS.BOOK_DETAIL(book.isbn)}
+                        prefetch={false}
                         className={`py-2.5 sm:py-3 flex items-center justify-between gap-3 group px-2 transition-all ${
                           isSelected
                             ? "bg-white text-neutral-950 font-medium"

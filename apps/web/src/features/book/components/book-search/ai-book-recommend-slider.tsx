@@ -52,6 +52,7 @@ export const AiBookRecommendSlider = memo(function AiBookRecommendSlider({
               {/* 책 표지 (줄어든 크기, 좌측) */}
               <Link
                 href={PATHS.BOOK_DETAIL(book.isbn)}
+                prefetch={false}
                 className="relative w-20 sm:w-24 shrink-0 aspect-3/4 overflow-hidden rounded-lg bg-stone-100 shadow-xs group block"
               >
                 <Image
@@ -70,6 +71,7 @@ export const AiBookRecommendSlider = memo(function AiBookRecommendSlider({
                 <div>
                   <Link
                     href={PATHS.BOOK_DETAIL(book.isbn)}
+                    prefetch={false}
                     className="group block"
                   >
                     <h3 className="text-xs sm:text-sm font-semibold text-stone-800 line-clamp-1 group-hover:text-emerald-700 transition-colors">

@@ -45,7 +45,7 @@ function BookCardRoot({
   return (
     <BookCardContext.Provider value={{ book }}>
       {asLink ? (
-        <Link href={linkHref} className="block">
+        <Link href={linkHref} prefetch={false} className="block">
           {inner}
         </Link>
       ) : (

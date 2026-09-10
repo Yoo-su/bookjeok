@@ -46,7 +46,12 @@ export const Root = ({
   return (
     <ReviewCardContext.Provider value={{ review, priority }}>
       {asLink ? (
-        <Link href={linkHref} passHref className="group block h-full relative">
+        <Link
+          href={linkHref}
+          prefetch={false}
+          passHref
+          className="group block h-full relative"
+        >
           {content}
         </Link>
       ) : (
