@@ -117,6 +117,7 @@ const BookCard = memo(
           >
             <Link
               href={PATHS.BOOK_DETAIL(book.isbn)}
+              prefetch={false}
               passHref
               onClick={onCardClick}
               onDragStart={(e) => e.preventDefault()} // 드래그 제스처 방해 방지를 위해 브라우저 기본 링크 드래그 차단

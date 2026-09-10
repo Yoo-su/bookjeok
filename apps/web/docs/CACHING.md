@@ -72,6 +72,49 @@ refetchOnWindowFocus: false,
 
 브라우저 Router Cache는 또 별개라, 호출부는 `purgeRouteCache(재검증, () => router.refresh())`로 순서를 고정합니다. 역순이면 아직 파괴되지 않은 HTML을 다시 캐싱합니다.
 
+## 목록 링크의 prefetch
+
+`<Link>`의 기본 prefetch는 **뷰포트 진입만으로** 대상 라우트의 RSC 페이로드를 당겨옵니다. 대상이 ISR 라우트면 그 요청이 캐시 MISS가 되어 **재생성 → ISR 쓰기**로 이어집니다. 사용자가 클릭하지 않으면 그렇게 구운 엔트리는 한 번도 읽히지 않습니다.
+
+2026-09-10 Vercel ISR 지표에서 `/book/[isbn]/detail`이 **쓰기 890건 / 고유 경로 466개 / 읽기 160회**였습니다. TTL이 24시간이라 경로당 쓰기는 1회가 상한인데 평균 1.9회였고, 읽기는 경로 수의 3분의 1이었습니다. 목록·슬라이더의 prefetch 팬아웃이 만든 숫자입니다.
+
+그래서 규칙은 이렇습니다:
+
+> **한 화면에 여러 개가 동시에 깔리는 링크는 `prefetch={false}`.**
+
+| 컴포넌트                                               | 노출당 링크                      |
+| ------------------------------------------------------ | -------------------------------- |
+| `book/components/common/book-card`                     | 검색 결과 20 · 연관 도서 5~10    |
+| `book/components/book-slider/main-book-slider`         | 홈 출판사 서가 18                |
+| `book/components/book-slider/popular-book-slider`      | 홈 인기책 목록 2벌 + 히어로      |
+| `book/components/book-search/ai-book-recommend-slider` | AI 추천 N                        |
+| `book/components/recent-books/recent-books-drawer`     | 최근 본 책 N                     |
+| `book-sale/components/common/book-sale-item/root`      | 마켓 무한목록 · 홈 최근 판매     |
+| `review/components/common/review-card/root`            | 리뷰 목록 · 홈 리뷰 섹션         |
+| `book-sale/.../market-hero/live-listing-feed`          | 실시간 피드 (60초 폴링마다 갱신) |
+
+`popular-book-slider`의 히어로는 링크가 하나지만 `hoveredBook`으로 href가 바뀌므로, 순위 목록을 훑는 동작만으로 새 경로를 계속 굽습니다. 그래서 여기도 차단합니다.
+
+**단일 문맥 링크는 기본값을 유지합니다** — 판매 상세의 도서 링크, 리뷰 상세의 도서 링크, 프로필 링크처럼 다음 목적지가 하나로 좁혀진 자리에서는 prefetch가 제값을 합니다. 로그인 뒤 마이페이지 목록(위시리스트·판매 내역·내 댓글)도 남겨뒀습니다. 트래픽이 낮고 본인 항목이라 클릭률이 높습니다.
+
+### 지연은 `loading.tsx`가 가린다
+
+prefetch를 끄면 클릭 시점에 페이로드를 받아오므로 수백 ms의 공백이 생깁니다. 이 저장소에는 전역 내비게이션 진행 표시기가 없어서, 그 구간이 **아무 반응 없음**으로 보입니다.
+
+그래서 차단한 링크의 목적지 세 곳에 `loading.tsx`를 뒀습니다.
+
+| 라우트                | 로딩 UI                                             |
+| --------------------- | --------------------------------------------------- |
+| `/book/[isbn]/detail` | `BookDetailSkeleton` + 연관 도서 5장 + AI 요약 블록 |
+| `/book/sales/[id]`    | `BookSaleDetailSkeleton`                            |
+| `/book/reviews/[id]`  | `ReviewDetailSkeleton`                              |
+
+**컴포넌트가 이미 쓰는 스켈레톤을 그대로 재사용합니다.** 페이지 전용 스켈레톤을 새로 그리면 두 벌이 갈라지고, 전환 순간에 골격이 튑니다.
+
+조건부로만 렌더되는 요소는 골격에 넣지 않습니다. 판매 상세의 지도·도서 정보 카드는 좌표가 없는 판매글에서 사라지므로, 자리를 잡아두면 오히려 레이아웃이 흔들립니다.
+
+`loading.tsx`는 ISR 쓰기를 만들지 않습니다. prefetch는 지연을 **미리 구워서** 가렸고, 이쪽은 같은 일을 공짜로 합니다.
+
 ## 새 쿼리를 추가할 때
 
 **서버에서 시드하지 않는 쿼리**(클라이언트에서만 조회)라면 신경 쓸 것이 없습니다. 그냥 추가하세요.

@@ -86,6 +86,7 @@ export const LiveListingFeed = ({
               >
                 <Link
                   href={PATHS.BOOK_SALES_DETAIL(sale.id)}
+                  prefetch={false}
                   className="pointer-events-auto group flex items-center gap-3.5 px-4 py-3 transition-colors hover:bg-white/[0.05]"
                 >
                   <div className="relative h-[46px] w-[34px] shrink-0 overflow-hidden bg-white/10">
