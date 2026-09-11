@@ -541,6 +541,7 @@ export class ReadingLogService {
     // 저장 후 도서 정보를 포함하여 다시 조회
     return await this.readingLogRepository.findOne({
       where: { id: savedLog.id },
+      relations: ['book'],
     });
   }
 
@@ -725,6 +726,7 @@ export class ReadingLogService {
     // 수정 후 도서 정보를 포함하여 다시 조회
     return await this.readingLogRepository.findOne({
       where: { id: updatedLog.id },
+      relations: ['book'],
     });
   }
 
