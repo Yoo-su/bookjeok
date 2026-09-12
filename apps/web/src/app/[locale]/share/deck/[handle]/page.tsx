@@ -34,12 +34,16 @@ export async function generateMetadata({
   const title = `${nickname}님의 독서 카드 덱`;
   const description = `${year ? `${year}년` : "올해"} 완독한 소중한 책들의 카드 컬렉션을 둘러보세요.`;
 
-  return createPageMetadata({
-    title,
-    description,
-    locale,
-    path: `/share/deck/${encodeURIComponent(decodedHandle)}`,
-  });
+  return {
+    ...createPageMetadata({
+      title,
+      description,
+      locale,
+      path: `/share/deck/${encodeURIComponent(decodedHandle)}`,
+    }),
+    // SNS 카드용 페이지라 색인 가치가 없다. force-dynamic이라 크롤당 함수가 깨어난다.
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function Page({ params, searchParams }: Props) {

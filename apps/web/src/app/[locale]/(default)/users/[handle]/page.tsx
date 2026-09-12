@@ -16,8 +16,9 @@ interface UserProfilePageProps {
   params: Promise<{ locale: string; handle: string }>;
 }
 
-// 닉네임·통계 변경 반영을 위해 10분 캐시 (revalidate 누락 시 s-maxage 1년으로 고착)
-export const revalidate = 600;
+// 닉네임·통계 변경 반영용. 방문자는 refetchOnMount로 최신을 보므로
+// 시간 기반 주기는 크롤러 기준으로 잡는다. (revalidate 누락 시 s-maxage 1년 고착)
+export const revalidate = 3600; // 1시간
 
 // ISR 활성화용 빈 파라미터 목록
 // - generateStaticParams가 없으면 Next가 Dynamic으로 분류해 revalidate를 무시

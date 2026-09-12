@@ -1,3 +1,4 @@
+import { isValidIsbn } from "@bookjeok/core";
 import { NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 
@@ -5,6 +6,21 @@ import { routing } from "./shared/config/i18n/routing";
 
 // 차단할 봇 User-Agent 패턴 목록
 const BLOCKED_BOT_PATTERNS = [/GoogleOther/i, /Google-Extended/i];
+
+/** `/{locale}/book/{isbn}/detail` 경로의 ISBN이 형식에 맞는지 확인한다. 다른 경로는 항상 통과. */
+function isRenderableBookDetail(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  const withoutLocale = routing.locales.includes(segments[0] as never)
+    ? segments.slice(1)
+    : segments;
+
+  const isBookDetail =
+    withoutLocale.length === 3 &&
+    withoutLocale[0] === "book" &&
+    withoutLocale[2] === "detail";
+
+  return !isBookDetail || isValidIsbn(withoutLocale[1]);
+}
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -27,6 +43,14 @@ export default function middleware(request: NextRequest) {
   } */
 
   const { pathname } = request.nextUrl;
+
+  // 3. 형식이 틀린 ISBN은 렌더 전에 끊는다
+  //
+  // 도서 상세는 dynamicParams가 열려 있어 임의 문자열이 그대로 ISR 엔트리가 된다.
+  // 내부 링크는 전부 DB의 ISBN이라 사람이 여기 걸릴 일은 사실상 없다.
+  if (!isRenderableBookDetail(pathname)) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   const isSnsBot = [
     /facebookexternalhit/i,
