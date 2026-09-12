@@ -108,7 +108,7 @@
 
 ### 키워드 기반 도서 검색
 
-네이버 도서 API와 알라딘 Open API를 연동해 제목·저자·출판사 등 다양한 조건으로 도서를 검색합니다. TanStack Query 기반 무한 스크롤로 검색 결과를 점진적으로 탐색하며, 사용자 검색어는 정규화 후 별도로 기록되어(초성 제거·공백 정리·2글자 미만 폐기) 최근 1년 기준 인기 검색어 Top 10을 집계합니다.
+자체 DB에 적재한 도서 약 5.7만 종을 제목·저자·출판사로 검색합니다. `pg_trgm` GIN 인덱스 기반 부분일치이며, 관련도(완전일치 → 접두일치 → 부분일치)로 버킷을 나눈 뒤 알라딘 판매지수(`salesPoint`)로 순서를 가립니다. **런타임에 외부 도서 API를 호출하지 않습니다**(아래 「외부 서비스 연동」 참고). TanStack Query 기반 무한 스크롤로 결과를 점진적으로 탐색하며, 사용자 검색어는 정규화 후 별도로 기록되어(초성 제거·공백 정리·2글자 미만 폐기) 최근 1년 기준 인기 검색어 Top 10을 집계합니다.
 
 ---
 
@@ -183,6 +183,13 @@
 
 판매글은 거래 방식을 `DIRECT_ONLY`(직거래) / `DELIVERY_ONLY`(택배) / `BOTH`로 선택할 수 있고, 택배 거래에는 **토스페이먼츠 에스크로 결제**가 연결됩니다.
 
+> **결제는 현재 운영에서 꺼져 있습니다.** PG 심사 전이라 `FEATURE_PAYMENT_ENABLED`
+> 플래그 뒤에 봉인돼 있고, `orders` 테이블은 0행입니다. 아래 상태 머신과 스케줄러는
+> **구현돼 있으나 동작하지 않는 상태**입니다. 직거래는 결제 없이 정상 동작합니다.
+> 플래그를 켜기 전에 처리할 항목이
+> [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md) 9-c
+> 「결제 활성화 전 점검 항목」에 있습니다.
+
 ```
 판매자가 채팅방에서 구매자 선택
         │
@@ -208,7 +215,7 @@
 - **스케줄러 6종** — 미결제 만료, 미배송 환불, 자동 구매확정, 분쟁 만료 환불, 배송 상태 폴링(30분 주기), 만료 임박 알림(매일 자정)
 - **Feature Flag** — `FEATURE_PAYMENT_ENABLED`와 `PaymentFeatureGuard`로 PG 심사 전에도 결제 경로만 차단한 채 안전 배포
 - **이메일 인증 게이트** — `EmailVerifiedGuard`로 판매글 작성·거래 채팅·구매자 지정·결제를 인증 회원으로 제한
-- **거래 후기** — 구매자→판매자 단방향 `TradeReview`, 프로필에 "거래 완료 N건 · 긍정 후기 N%" 신뢰 지표 노출
+- **거래 후기** — 거래 완료(`TradeCompletion`) 1건당 구매자·판매자가 각각 한 건씩 남기는 양방향 `TradeReview`, 프로필에 "거래 완료 N건 · 긍정 후기 N%" 신뢰 지표 노출
 
 상세 설계는 [docs/used-book-pay-implementation.md](docs/used-book-pay-implementation.md)를 참고하세요.
 
@@ -382,20 +389,26 @@ KOPIS(공연예술통합전산망) 공공 API를 프록시하여 공연·전시 
 
 ## 외부 서비스 연동
 
-| 서비스                                | 용도                                                      | 사용 위치                                      |
-| ------------------------------------- | --------------------------------------------------------- | ---------------------------------------------- |
-| **네이버 도서 검색 API**              | 도서 메타데이터 검색                                      | `server: book`                                 |
-| **알라딘 Open API (TTB)**             | 도서 상세·표지 고화질 보정                                | `server: book`, `core: formatAladinCoverImage` |
-| **네이버 / 카카오 OAuth**             | 소셜 로그인                                               | `server: auth` (Passport 전략)                 |
-| **Google Gemini**                     | 의도 분류·RAG 합성(Flash), 임베딩(`gemini-embedding-001`) | `server: llm, search`                          |
-| **토스페이먼츠**                      | 에스크로 결제 승인·취소·웹훅                              | `server: order`, `web: order`                  |
-| **Delivery Tracker**                  | 택배 배송 상태 조회 및 30분 주기 폴링                     | `server: order`                                |
-| **Resend**                            | 회원가입 이메일 인증 링크, 채팅 개설 알림 메일            | `server: shared/mail`                          |
-| **Vercel Blob**                       | 리뷰·판매글·프로필 이미지 업로드/삭제                     | `web: /api/upload`, `server`                   |
-| **카카오 맵 SDK**                     | 거래 위치 지도, 지오코딩                                  | `web: shared/components/map`                   |
-| **다음 우편번호**                     | 배송지 주소 입력                                          | `web: order/address-input`                     |
-| **KOPIS 공공 API**                    | 공연·전시 정보                                            | `server: art`                                  |
-| **GA4 · Microsoft Clarity · AdSense** | 트래픽 분석, 행동 분석, 광고                              | `web: shared/components/analytics, ads`        |
+| 서비스                                | 용도                                                      | 사용 위치                               |
+| ------------------------------------- | --------------------------------------------------------- | --------------------------------------- |
+| **네이버 / 카카오 OAuth**             | 소셜 로그인                                               | `server: auth` (Passport 전략)          |
+| **Google Gemini**                     | 의도 분류·RAG 합성(Flash), 임베딩(`gemini-embedding-001`) | `server: llm, search`                   |
+| **토스페이먼츠**                      | 에스크로 결제 승인·취소·웹훅                              | `server: order`, `web: order`           |
+| **Delivery Tracker**                  | 택배 배송 상태 조회 및 30분 주기 폴링                     | `server: order`                         |
+| **Resend**                            | 회원가입 이메일 인증 링크, 채팅 개설 알림 메일            | `server: shared/mail`                   |
+| **Vercel Blob**                       | 리뷰·판매글·프로필 이미지 업로드/삭제                     | `web: /api/upload`, `server`            |
+| **카카오 맵 SDK**                     | 거래 위치 지도, 지오코딩                                  | `web: shared/components/map`            |
+| **다음 우편번호**                     | 배송지 주소 입력                                          | `web: order/address-input`              |
+| **KOPIS 공공 API**                    | 공연·전시 정보                                            | `server: art`                           |
+| **GA4 · Microsoft Clarity · AdSense** | 트래픽 분석, 행동 분석, 광고                              | `web: shared/components/analytics, ads` |
+
+> **도서 데이터는 런타임에 외부 API를 쓰지 않습니다.** 과거에는 네이버 도서 API와
+> 알라딘 Open API를 연동했으나, 알라딘 종료(2026-10-30)에 대비해 2026-09-08에
+> 공급처 체인에서 제거했습니다. 지금은 검색·상세 모두 자체 DB 단독이며, **외부
+> 공급처를 런타임 경로에 두지 않는 것이 방침입니다.** 신규 도서는 서버가 아니라
+> 운영자가 주기적으로 돌리는 스크립트로 확보합니다. 표지도 2026-09-09 컷오버로
+> Cloudflare R2(`cdn.bookjeok.com`)에서 나갑니다. 경위와 남은 정리 항목은
+> [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)에 있습니다.
 
 ---
 
@@ -454,7 +467,8 @@ bookjeok/
 ├── docs/                         # 운영·설계 문서
 │   ├── used-book-pay-implementation.md
 │   ├── book-data-migration-plan.md
-│   └── manual-ddl-log.md
+│   ├── manual-ddl-log.md
+│   └── ddl/                      # 운영에 적용한 DDL 원본
 ├── .agents/rules/                # 코드베이스 컨벤션 (개발자 & AI 에이전트 공용)
 ├── .github/workflows/            # CI, Azure Container Apps 배포
 ├── docker-compose.yml            # 로컬 PostgreSQL + pgvector
@@ -568,9 +582,9 @@ pnpm test
 | `DATABASE_URL`                                       |  ✅  | PostgreSQL 연결 문자열                                         |
 | `JWT_SECRET` / `JWT_REFRESH_SECRET`                  |  ✅  | 액세스/리프레시 토큰 서명 키                                   |
 | `CLIENT_DOMAIN`                                      |  ✅  | CORS 및 소셜 로그인 리다이렉트 대상                            |
-| `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 로그인 & 도서 검색                                      |
+| `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 소셜 로그인 (도서 검색에는 쓰지 않음)                   |
 | `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                  |
-| `ALADIN_TTB_KEY`                                     |  ✅  | 알라딘 Open API                                                |
+| `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 서지 수확 스크립트 전용 — 지우지 말 것   |
 | `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                  |
 | `GEMINI_MODEL_NAME`                                  |      | 사용할 Gemini 모델명                                           |
 | `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                            |
@@ -617,9 +631,9 @@ pnpm test
 
 | 문서                                                                         | 내용                                                                                                                                                                                                                                 |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [docs/used-book-pay-implementation.md](docs/used-book-pay-implementation.md) | 에스크로 결제 시스템 설계·상태 머신·엣지 케이스·단계별 실행 계획                                                                                                                                                                     |
+| [docs/used-book-pay-implementation.md](docs/used-book-pay-implementation.md) | 에스크로 결제 시스템 설계·상태 머신·엣지 케이스·단계별 실행 계획 (기능은 현재 플래그로 비활성)                                                                                                                                       |
 | [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)         | 알라딘 API 종료(2026-10-30) 대응 — 표지·서지·검색 탈외부화 계획과 진행 상황 (진행 중)                                                                                                                                                |
-| [docs/manual-ddl-log.md](docs/manual-ddl-log.md)                             | 운영 DB에 수동 적용한 DDL 이력 (필독)                                                                                                                                                                                                |
+| [docs/manual-ddl-log.md](docs/manual-ddl-log.md)                             | 운영 DB에 수동 적용한 DDL 이력 (필독). 실행한 SQL 원본은 [docs/ddl/](docs/ddl/)                                                                                                                                                      |
 | [.agents/rules/](.agents/rules/)                                             | 코드베이스 컨벤션 — [모노레포/패키지](.agents/rules/01-monorepo-packages.md) · [서버](.agents/rules/02-server-conventions.md) · [프론트엔드](.agents/rules/03-frontend-conventions.md) · [체크리스트](.agents/rules/04-checklist.md) |
 
 ---

@@ -33,17 +33,17 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 
 ## 적용 이력
 
-| 날짜       | 내용                                                                     | 관련 커밋               |
-| ---------- | ------------------------------------------------------------------------ | ----------------------- |
-| 2026-09-02 | 채팅 테이블 인덱스 5개 추가                                              | `e0eed214`              |
-| 2026-09-02 | 읽음 워터마크 컬럼 추가·백필, `read_receipts` 드롭                       | `778ef588`              |
-| 2026-09-05 | 거래 완료(`trade_completions`) 도입, `trade_reviews` 재구성              | `f34ba26b` ~ `390b4fcc` |
-| 2026-09-07 | `books` 검색용 pg_trgm GIN 인덱스 3개 추가                               | (미커밋)                |
-| 2026-09-08 | `books.pubDate` 컬럼 추가 (출간일)                                       | `026abfd5`              |
-| 2026-09-09 | 위 컬럼 값 채움 + `books.discount` 판매가 → 정가 (DDL 아님, 데이터 반영) | (스크립트)              |
-| 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                           | (미커밋)                |
-| 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                       | (미커밋)                |
-| 2026-09-12 | 인덱스 정리: 제거 4·교체 3·외래키 인덱스 16 추가·유니크 이름 2 변경      | (미커밋)                |
+| 날짜       | 내용                                                                           | 관련 커밋               |
+| ---------- | ------------------------------------------------------------------------------ | ----------------------- |
+| 2026-09-02 | 채팅 테이블 인덱스 5개 추가                                                    | `e0eed214`              |
+| 2026-09-02 | 읽음 워터마크 컬럼 추가·백필, `read_receipts` 드롭                             | `778ef588`              |
+| 2026-09-05 | 거래 완료(`trade_completions`) 도입, `trade_reviews` 재구성                    | `f34ba26b` ~ `390b4fcc` |
+| 2026-09-07 | `books` 검색용 pg_trgm GIN 인덱스 3개 추가                                     | (미커밋)                |
+| 2026-09-08 | `books.pubDate` 컬럼 추가 (출간일)                                             | `026abfd5`              |
+| 2026-09-09 | 위 컬럼 값 채움 + `books.discount` 판매가 → 정가 (DDL 아님, 데이터 반영)       | (스크립트)              |
+| 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                                 | (미커밋)                |
+| 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                             | (미커밋)                |
+| 2026-09-12 | 인덱스 정리 (제거 4·교체 3·외래키 16 추가·유니크 이름 2 변경) + 고아 enum 드롭 | (미커밋)                |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -869,6 +869,29 @@ Postgres는 FK 컬럼에 인덱스를 자동으로 만들지 않습니다. 부�
 쓰기 비용은 확인했습니다. 자주 갱신되는 컬럼(`viewCount`, `reactionCount`)은
 어느 인덱스에도 들어 있지 않아 HOT 업데이트가 그대로 유지됩니다.
 
+#### 제거 — 고아 enum 타입
+
+`used_book_posts_status_enum`(`FOR_SALE, RESERVED, SOLD`)은 쓰는 컬럼이 하나도
+없었습니다. `used_book_posts` → `used_book_sales` 개명 때 남은 잔재입니다.
+Postgres는 테이블 이름을 바꿔도 enum 타입 이름을 따라 바꾸지 않아서 이런 것이
+생깁니다(3절 0단계의 경고와 같은 뿌리).
+
+현행 enum은 값이 하나 더 많은 `used_book_sales_status_enum`
+(`FOR_SALE, RESERVED, SOLD, WITHDRAWN`)이라 이름이 헷갈리기 쉬웠습니다.
+
+```sql
+DROP TYPE "used_book_posts_status_enum";
+```
+
+**`CASCADE`를 붙이지 않은 것이 안전장치입니다.** 컬럼·함수·도메인 등 무엇이라도
+의존하고 있으면 Postgres가 거부하고 아무것도 바꾸지 않습니다. 그래서 사전 조사
+없이 그냥 실행해도 됩니다. 되돌리려면 아래로 다시 만들 수 있지만, 쓰는 데가
+없으므로 되돌릴 이유가 없습니다.
+
+```sql
+CREATE TYPE "used_book_posts_status_enum" AS ENUM ('FOR_SALE', 'RESERVED', 'SOLD');
+```
+
 ### 함께 고친 코드
 
 - **거리 검색이 GiST 인덱스를 타도록 수정.** `used_book_sales_location_idx`는
@@ -886,6 +909,14 @@ Postgres는 FK 컬럼에 인덱스를 자동으로 만들지 않습니다. 부�
 
 DDL 전문 끝에 확인 쿼리가 있습니다. `should_be_gone`, `missing`, `invalid`
 셋이 모두 빈 배열이고 `email_uniques`가 1개면 정상입니다.
+
+고아 enum이 사라졌는지는 아래로 봅니다. 0행이면 정상입니다.
+
+```sql
+SELECT t.typname FROM pg_type t
+JOIN pg_namespace n ON n.oid = t.typnamespace
+WHERE n.nspname = 'public' AND t.typname = 'used_book_posts_status_enum';
+```
 
 엔티티 쪽은 TypeORM 메타데이터를 직접 떠서 대조했습니다. 텍스트 검색이 아니라
 `getMetadataArgsStorage()`로 읽으면 관계 프로퍼티가 실제 FK 컬럼으로 어떻게
