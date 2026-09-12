@@ -66,10 +66,15 @@ export class ReviewService {
     });
     const savedReview = await manager.save(Review, review);
 
-    // DTO로 변환하여 반환
+    // 저장 후 도서·유저 정보를 포함하여 다시 조회
+    const fullReview = await manager.findOne(Review, {
+      where: { id: savedReview.id },
+      relations: ['user', 'book', 'tagEntities'],
+    });
+
     return {
-      ...savedReview,
-      tags: tags || [],
+      ...fullReview!,
+      tags: fullReview?.tagEntities?.map((t) => t.name) || tags || [],
     } as ReviewResponseDto;
   }
 

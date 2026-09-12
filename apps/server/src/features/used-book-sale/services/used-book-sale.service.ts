@@ -86,7 +86,12 @@ export class UsedBookSaleService {
 
     const savedSale = await this.usedBookSaleRepository.save(newSale);
     await this.cacheManager.del(UsedBookSaleService.REGIONS_CACHE_KEY);
-    return savedSale;
+
+    // 저장 후 도서·유저 정보를 포함하여 다시 조회
+    return await this.usedBookSaleRepository.findOneOrFail({
+      where: { id: savedSale.id },
+      relations: ['user', 'book'],
+    });
   }
 
   /**
@@ -99,7 +104,7 @@ export class UsedBookSaleService {
   ): Promise<UsedBookSale> {
     const sale = await this.usedBookSaleRepository.findOne({
       where: { id: saleId },
-      relations: ['user'],
+      relations: ['user', 'book'],
     });
 
     if (!sale) {
@@ -411,7 +416,7 @@ export class UsedBookSaleService {
   ): Promise<UsedBookSale> {
     const sale = await this.usedBookSaleRepository.findOne({
       where: { id: saleId },
-      relations: ['user'],
+      relations: ['user', 'book'],
     });
 
     if (!sale) {
