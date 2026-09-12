@@ -160,6 +160,16 @@ COMMIT;
 
 
 -- ############################################################################
+-- 3단계 — 고아 enum 타입 제거
+--
+-- used_book_posts -> used_book_sales 개명 때 남은 잔재입니다. 쓰는 컬럼이
+-- 없습니다. CASCADE를 붙이지 않았으므로, 무엇이라도 의존하고 있으면 Postgres가
+-- 거부하고 아무것도 바뀌지 않습니다. 사전 조사 없이 실행해도 안전합니다.
+-- ############################################################################
+DROP TYPE "used_book_posts_status_enum";
+
+
+-- ############################################################################
 -- 확인 — 아래 셋이 모두 비어 있으면 정상입니다.
 -- ############################################################################
 SELECT jsonb_build_object(
@@ -217,6 +227,7 @@ SELECT jsonb_build_object(
 -- BEGIN;
 -- ALTER TABLE ai_book_summaries ALTER COLUMN "createdAt" DROP NOT NULL;
 -- ALTER TABLE ai_book_summaries ALTER COLUMN "updatedAt" DROP NOT NULL;
+-- CREATE TYPE "used_book_posts_status_enum" AS ENUM ('FOR_SALE', 'RESERVED', 'SOLD');
 -- ALTER TABLE users ADD CONSTRAINT "users_email_key" UNIQUE (email);
 -- ALTER TABLE wishlists RENAME CONSTRAINT "UQ_wishlists_userId_isbn" TO "UQ_4c6ab594791b82a95bcbf63d8f5";
 -- ALTER TABLE wishlists RENAME CONSTRAINT "UQ_wishlists_userId_usedBookSaleId" TO "UQ_7bcdc864b7dfced5cd03c920d1c";
