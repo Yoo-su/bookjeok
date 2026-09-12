@@ -2,7 +2,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
@@ -12,12 +14,16 @@ import {
  * - keyword는 정규화된 상태로 저장됨 (초성 제거, 공백 정리 등)
  */
 @Entity({ name: 'search_keywords' })
+@Unique('search_keywords_keyword_key', ['keyword'])
+// 인기 검색어는 searchCount 역순이 먼저다. 운영에 있던 인덱스는 lastSearchedAt이
+// 선행이라 정렬에 쓸 수 없었다. ASC로 만들어도 역방향 스캔으로 받는다.
+@Index('idx_search_keywords_popular', ['searchCount', 'lastSearchedAt'])
 export class SearchKeyword {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: number;
 
   /** 정규화된 검색어 (UNIQUE) */
-  @Column({ unique: true, length: 100 })
+  @Column({ length: 100 })
   keyword: string;
 
   /** 누적 검색 횟수 */

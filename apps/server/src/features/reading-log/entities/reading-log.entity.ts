@@ -13,9 +13,11 @@ import { Book } from '@/features/book/entities/book.entity';
 import { User } from '@/features/user/entities/user.entity';
 
 @Entity({ name: 'reading_logs' })
-@Index(['isbn', 'date']) // 라운지 피드 (isbn별 그룹화 및 최신 날짜 정렬) 용도
-@Index(['date']) // 라운지 인기작 (최근 N일 조회) 용도
-@Index(['userId', 'date']) // 개인 독서 기록 조회 용도
+// 이름은 운영에 이미 만들어진 것과 맞춘다. 무명으로 두면 TypeORM이 해시 이름을
+// 기대해 개발·운영 스키마가 갈린다.
+@Index('idx_reading_logs_isbn_date', ['isbn', 'date']) // 라운지 피드 (isbn별 그룹화 및 최신 날짜 정렬) 용도
+@Index('idx_reading_logs_date', ['date']) // 라운지 인기작 (최근 N일 조회) 용도
+@Index('idx_reading_logs_userid_date', ['userId', 'date']) // 개인 독서 기록 조회 용도
 export class ReadingLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;

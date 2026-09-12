@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity('tags')
-@Unique(['name'])
+@Unique('tags_name_key', ['name'])
 export class Tag {
   @PrimaryGeneratedColumn()
   id: number;

@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -18,6 +19,8 @@ import { Comment } from './comment.entity';
  */
 @Entity('comment_likes')
 @Unique(['commentId', 'userId']) // 중복 좋아요 방지
+// 위 유니크는 userId가 선행이 아니라 탈퇴 시 CASCADE를 받아주지 못한다.
+@Index('IDX_comment_likes_userId', ['userId'])
 export class CommentLike {
   @PrimaryGeneratedColumn()
   id: number;

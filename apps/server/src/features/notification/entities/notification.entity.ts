@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -31,6 +32,10 @@ export enum NotificationType {
 }
 
 @Entity('notifications')
+// 목록은 recipientId로 거르고 id 커서로 넘긴다. 안 읽음 개수는 isRead까지 본다.
+@Index('idx_notifications_recipient_id', ['recipientId', 'id'])
+@Index('idx_notifications_recipient_is_read', ['recipientId', 'isRead'])
+@Index('IDX_notifications_actorId', ['actorId'])
 export class Notification {
   @PrimaryGeneratedColumn()
   id: number;

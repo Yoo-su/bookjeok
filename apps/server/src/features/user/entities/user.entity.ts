@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   Unique,
@@ -16,6 +17,11 @@ import { UsedBookSale } from '@/features/used-book-sale/entities/used-book-sale.
 
 @Entity({ name: 'users' })
 @Unique(['provider', 'providerId'])
+// 컬럼 옵션(`unique: true`)으로는 제약 이름을 지정할 수 없어 운영 이름과
+// 어긋난다. 클래스 레벨로 올려 운영에 있는 이름을 그대로 박는다.
+@Unique('UQ_users_handle', ['handle'])
+// findByNickname()이 닉네임 중복 검사에 쓴다.
+@Index('idx_users_nickname', ['nickname'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,13 +36,13 @@ export class User {
   email: string;
 
   @Exclude()
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   password: string;
 
   @Column()
   nickname: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ nullable: true })
   handle: string;
 
   @Column({ name: 'profileImageUrl', nullable: true })
@@ -57,7 +63,7 @@ export class User {
   @Column({ nullable: true, type: 'timestamptz' })
   lastActiveAt: Date;
 
-  @Column({ type: 'varchar', default: 'USER' })
+  @Column({ type: 'varchar', length: 20, default: 'USER' })
   role: 'USER' | 'ADMIN';
 
   @Column({ type: 'varchar', nullable: true })

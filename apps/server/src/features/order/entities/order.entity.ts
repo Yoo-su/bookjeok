@@ -25,11 +25,15 @@ export enum OrderStatus {
 }
 
 @Entity({ name: 'orders' })
-@Index(['status', 'expiresAt'])
-@Index(['status', 'deliveredAt'])
-@Index(['status', 'disputedAt'])
-@Index(['buyerId'])
-@Index(['sellerId'])
+// 이름은 운영에 이미 만들어진 것과 맞춘다.
+@Index('IDX_orders_status_expiresAt', ['status', 'expiresAt'])
+@Index('IDX_orders_status_deliveredAt', ['status', 'deliveredAt'])
+@Index('IDX_orders_status_disputedAt', ['status', 'disputedAt'])
+@Index('IDX_orders_buyerId', ['buyerId'])
+@Index('IDX_orders_sellerId', ['sellerId'])
+// 판매글 상세가 매번 부르는 hasActiveOrder()가 saleId로 찾는다.
+@Index('IDX_orders_saleId', ['saleId'])
+@Index('IDX_orders_chatRoomId', ['chatRoomId'])
 export class Order {
   @PrimaryColumn({ type: 'varchar' })
   id: string;

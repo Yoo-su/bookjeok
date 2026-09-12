@@ -2,10 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('ai_request_logs')
+// userId는 탈퇴 정리가 쓰고, 나머지 둘은 토큰·비용 집계를 손으로 볼 때 쓴다.
+@Index('idx_ai_request_logs_user_id', ['userId'])
+@Index('idx_ai_request_logs_feature', ['feature'])
+@Index('idx_ai_request_logs_created_at', ['createdAt'])
 export class AiRequestLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;

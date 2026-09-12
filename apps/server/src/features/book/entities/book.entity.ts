@@ -9,6 +9,10 @@ import {
 
 import { UsedBookSale } from '@/features/used-book-sale/entities/used-book-sale.entity';
 
+// 운영에는 TypeORM 데코레이터로 표현할 수 없는 인덱스가 셋 있다.
+//   IDX_books_title_trgm / IDX_books_author_trgm / IDX_books_publisher_trgm
+//   → gin (컬럼 gin_trgm_ops). 연산자 클래스를 지정할 수 없어 여기 선언할 수 없다.
+// 지우지 말 것. 검색이 전부 풀스캔으로 돌아간다 (docs/manual-ddl-log.md 4절).
 @Entity({ name: 'books' })
 export class Book {
   @PrimaryColumn()
@@ -29,7 +33,7 @@ export class Book {
    * 의미를 바꿉니다. 정가는 판(edition)의 속성이라 갱신할 필요가 없습니다.
    * 중고 판매글의 "N% OFF"도 정가 기준이 맞습니다.
    */
-  @Column({ default: '' })
+  @Column({ type: 'varchar', length: 255, default: '' })
   discount: string;
 
   /**
@@ -64,6 +68,19 @@ export class Book {
 
   @Column()
   image: string;
+
+  /**
+   * 시맨틱 검색용 임베딩(gemini-embedding-001, 768차원 정규화).
+   *
+   * 운영에는 처음부터 있었으나 엔티티에 선언이 없어, `derive-ddl.ts`가 이 컬럼을
+   * DROP하는 DDL을 뱉는 상태였습니다. 비용과 무료 티어 한계 때문에 일괄 생성만
+   * 하고 상시 생성을 두지 않은 값이라 한 번 지우면 되돌리기 어렵습니다.
+   *
+   * `select: false`인 이유는 도서 조회가 768개 실수를 매번 실어 나르지 않게
+   * 하려는 것입니다. `match_books()` RPC는 이 컬럼을 DB 안에서만 읽습니다.
+   */
+  @Column({ type: 'vector', length: 768, nullable: true, select: false })
+  embedding?: string | null;
 
   @OneToMany(() => UsedBookSale, (sale) => sale.book)
   usedBookSales: UsedBookSale[];
