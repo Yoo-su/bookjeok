@@ -8,6 +8,9 @@ import { BusinessException } from '@/shared/exceptions/business.exception';
 
 import { Book } from '../entities/book.entity';
 
+/** 인기 도서 노출 개수. 홈 화면 슬라이더가 이 수만큼 받는다. */
+const POPULAR_BOOK_LIMIT = 10;
+
 @Injectable()
 export class BookService {
   constructor(
@@ -104,20 +107,11 @@ export class BookService {
       .where(
         'book.salesPoint > 0 OR rl.isbn IS NOT NULL OR wl.isbn IS NOT NULL OR rv.isbn IS NOT NULL',
       )
-      .select([
-        'book.isbn AS isbn',
-        'book.title AS title',
-        'book.author AS author',
-        'book.publisher AS publisher',
-        'book.discount AS discount',
-        'book.description AS description',
-        'book.image AS image',
-        'book.pubDate AS "pubDate"',
-        'book.salesPoint AS "salesPoint"',
-        'COALESCE(book.viewCount, 0) AS "viewCount"',
-        'book.createdAt AS "createdAt"',
-        'book.updatedAt AS "updatedAt"',
-      ])
+      // 순위를 가리는 단계에서는 isbn과 점수만 읽는다. 상세 컬럼을 여기서
+      // 끌고 가면 정렬 대상 전체를 들고 다니게 되는데, 특히 description은
+      // books 370MB 중 200MB 이상을 차지하는 TOAST 컬럼이다. 10권을 뽑으려고
+      // 5만 권의 책 소개를 읽어 정렬하던 것이 호출당 3.8초의 원인이었다.
+      .select('book.isbn', 'isbn')
       // 우리 사용자의 활동을 시장 인기도보다 위에 둔다. 여기는 독서 커뮤니티라
       // 누가 실제로 읽고 담고 쓴 책이 곧 인기책이다.
       //
@@ -136,24 +130,20 @@ export class BookService {
       .addOrderBy('book.salesPoint', 'DESC', 'NULLS LAST')
       // 동점일 때 순서가 흔들리지 않도록 고정한다.
       .addOrderBy('book.isbn', 'ASC')
-      .limit(10)
-      .getRawMany();
+      .limit(POPULAR_BOOK_LIMIT)
+      .getRawMany<{ isbn: string }>();
 
-    return rawResults.map((raw) => ({
-      isbn: raw.isbn,
-      title: raw.title,
-      author: raw.author,
-      publisher: raw.publisher,
-      discount: raw.discount,
-      description: raw.description,
-      image: raw.image,
-      pubDate: raw.pubDate ?? null,
-      salesPoint: raw.salesPoint ?? null,
-      viewCount: Number(raw.viewCount) || 0,
-      createdAt: raw.createdAt,
-      updatedAt: raw.updatedAt,
-      usedBookSales: [],
-    })) as Book[];
+    const isbns = rawResults.map((raw) => raw.isbn);
+    if (isbns.length === 0) return [];
+
+    // 상세는 10건만 따로 가져온다. 순위 쿼리가 매긴 순서를 그대로 지킨다.
+    const books = await this.findBooksByIsbns(isbns);
+    const byIsbn = new Map(books.map((book) => [book.isbn, book]));
+
+    return isbns
+      .map((isbn) => byIsbn.get(isbn))
+      .filter((book): book is Book => !!book)
+      .map((book) => ({ ...book, usedBookSales: [] })) as Book[];
   }
 
   /**

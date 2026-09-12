@@ -27,6 +27,7 @@ describe('BookService', () => {
           provide: getRepositoryToken(Book),
           useValue: {
             findOneBy: jest.fn(),
+            findBy: jest.fn().mockResolvedValue([]),
             create: jest.fn(),
             save: jest.fn(),
             increment: jest.fn(),
@@ -105,28 +106,24 @@ describe('BookService', () => {
   });
 
   describe('findPopularBooks', () => {
+    const buildQb = (isbns: string[]) => ({
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(isbns.map((isbn) => ({ isbn }))),
+    });
+
     it('활동 테이블을 미리 집계해 조인한다', async () => {
       const repo = module.get(getRepositoryToken(Book));
-      const qb = {
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        addOrderBy: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        getRawMany: jest.fn().mockResolvedValue([
-          {
-            isbn: '1',
-            title: 'Pop',
-            viewCount: 10,
-            pubDate: '2024-01-01',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ]),
-      };
+      const qb = buildQb(['1']);
       (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+      (repo.findBy as jest.Mock).mockResolvedValue([
+        { isbn: '1', title: 'Pop', viewCount: 10, pubDate: '2024-01-01' },
+      ]);
 
       const result = await service.findPopularBooks();
 
@@ -139,26 +136,45 @@ describe('BookService', () => {
       expect(result[0].pubDate).toBe('2024-01-01');
     });
 
-    it('viewCount가 없어도 0으로 채운다', async () => {
+    it('순위 쿼리는 isbn만 읽는다', async () => {
       const repo = module.get(getRepositoryToken(Book));
-      const qb = {
-        leftJoin: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        select: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        addOrderBy: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        getRawMany: jest
-          .fn()
-          .mockResolvedValue([{ isbn: '1', title: 'X', viewCount: null }]),
-      };
+      const qb = buildQb(['1']);
       (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.findPopularBooks();
+
+      // 상세 컬럼을 정렬 단계로 끌고 가면 5만 행의 description을 읽어
+      // 정렬하게 되어 호출당 수 초가 걸린다. 그 회귀를 여기서 막는다.
+      expect(qb.select).toHaveBeenCalledWith('book.isbn', 'isbn');
+      const selected = qb.addSelect.mock.calls.map(([expr]) => String(expr));
+      expect(selected.some((e) => e.includes('description'))).toBe(false);
+    });
+
+    it('상세를 따로 가져와도 순위 순서를 지킨다', async () => {
+      const repo = module.get(getRepositoryToken(Book));
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(
+        buildQb(['3', '1', '2']),
+      );
+      // IN 조회는 순서를 보장하지 않으므로 일부러 뒤섞어 돌려준다.
+      (repo.findBy as jest.Mock).mockResolvedValue([
+        { isbn: '1' },
+        { isbn: '2' },
+        { isbn: '3' },
+      ]);
 
       const result = await service.findPopularBooks();
 
-      expect(result[0].viewCount).toBe(0);
-      expect(result[0].pubDate).toBeNull();
+      expect(result.map((book) => book.isbn)).toEqual(['3', '1', '2']);
+    });
+
+    it('후보가 없으면 상세를 조회하지 않는다', async () => {
+      const repo = module.get(getRepositoryToken(Book));
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(buildQb([]));
+
+      const result = await service.findPopularBooks();
+
+      expect(result).toEqual([]);
+      expect(repo.findBy).not.toHaveBeenCalled();
     });
   });
 
