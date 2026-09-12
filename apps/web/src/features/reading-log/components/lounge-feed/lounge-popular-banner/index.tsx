@@ -40,7 +40,9 @@ export function LoungePopularBanner({ onCardClick }: LoungePopularBannerProps) {
     );
   }
 
-  if (!data || data.items.length === 0) return null;
+  // 백엔드가 형태가 어긋난 200을 주면 여기서 터지고, 페이지 전체가 500이 된다.
+  // 500은 ISR에 남지 않아 매 요청 재렌더되므로 섹션 부재로 흡수한다.
+  if (!data?.items?.length) return null;
 
   return (
     <section>

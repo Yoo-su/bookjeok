@@ -256,7 +256,7 @@ export const MainBookSlider = () => {
 
   // 실린더에 최소 15개 이상 카드를 확보하도록 데이터 복제
   const displayBooks = useMemo<BookInfo[]>(() => {
-    if (!books || books.length === 0) return [];
+    if (!Array.isArray(books) || books.length === 0) return [];
 
     const minCount = 15;
     if (books.length >= minCount) return books;
@@ -495,7 +495,7 @@ export const MainBookSlider = () => {
 
       {isLayoutReady &&
         !isLoading &&
-        (isError || !books || books.length === 0) && (
+        (isError || !Array.isArray(books) || books.length === 0) && (
           <div className="text-center py-20 text-stone-400">
             <BookOpen className="mx-auto h-10 w-10 opacity-20" />
             <p className="mt-4 font-light">{tError("load_books")}</p>

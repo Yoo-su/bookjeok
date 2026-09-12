@@ -76,7 +76,7 @@ export function LoungeFeedList({ onCardClick }: LoungeFeedListProps) {
     );
   }
 
-  const items = data?.pages.flatMap((page) => page.items) || [];
+  const items = data?.pages.flatMap((page) => page.items ?? []) ?? [];
 
   if (isError && items.length === 0) {
     return (

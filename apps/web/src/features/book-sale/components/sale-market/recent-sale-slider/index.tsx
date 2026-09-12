@@ -19,16 +19,18 @@ import { RecentSalesSliderSkeleton } from "./skeleton";
 
 export const RecentSalesSlider = () => {
   const t = useTranslations("home.sections.recent_sales");
-  const { data: sales, isLoading, isError } = useRecentBookSalesQuery();
+  const { data, isLoading, isError } = useRecentBookSalesQuery();
+  // 훅은 조기 반환보다 먼저 돌기 때문에 렌더 가드로는 늦다. 진입 지점에서 한 번 정규화한다.
+  const sales = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const router = useRouter();
 
   // PC 무한 이미지 필드용 데이터 가공
   const imageItems: InfiniteImageItem[] = useMemo(
     () =>
-      (sales || []).map((sale) => ({
+      sales.map((sale) => ({
         id: sale.id,
         image:
-          sale.imageUrls[0] ||
+          sale.imageUrls?.[0] ||
           sale.book?.image ||
           "/images/placeholder-image.svg",
         title: sale.title,
@@ -75,7 +77,7 @@ export const RecentSalesSlider = () => {
     );
   }
 
-  if (isError || !sales || sales.length === 0) {
+  if (isError || sales.length === 0) {
     return null;
   }
 

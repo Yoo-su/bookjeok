@@ -21,7 +21,9 @@ export const PopularKeywords = () => {
   const t = useTranslations("book.search");
   const router = useRouter();
   const pathname = usePathname();
-  const { data: keywords = [], isLoading } = usePopularKeywordsQuery();
+  const { data, isLoading } = usePopularKeywordsQuery();
+  // 기본값은 undefined에만 걸린다. 형태가 어긋난 200은 그대로 통과해 아래 map에서 터진다.
+  const keywords = Array.isArray(data) ? data : [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);

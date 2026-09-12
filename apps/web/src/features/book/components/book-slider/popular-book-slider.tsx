@@ -29,7 +29,7 @@ export const PopularBookSlider = () => {
     return <PopularBookSliderSkeleton />;
   }
 
-  if (isError || !books || books.length === 0) {
+  if (isError || !Array.isArray(books) || books.length === 0) {
     return null;
   }
 

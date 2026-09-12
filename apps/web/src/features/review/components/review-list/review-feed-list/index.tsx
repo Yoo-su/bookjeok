@@ -27,7 +27,7 @@ export function ReviewFeedList() {
     );
   }
 
-  if (!feedsData || feedsData.length === 0) {
+  if (!Array.isArray(feedsData) || feedsData.length === 0) {
     return (
       <div className="text-center py-20 text-stone-400 font-light">
         {t("no_reviews")}
