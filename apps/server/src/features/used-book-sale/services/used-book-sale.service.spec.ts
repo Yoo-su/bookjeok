@@ -117,9 +117,12 @@ describe('UsedBookSaleService', () => {
         ...createDto,
         isbn: undefined,
         book: { isbn: '123' },
+        user: { id: userId },
       };
       mockUsedBookSaleRepository.create.mockReturnValue(expectedSale);
       mockUsedBookSaleRepository.save.mockResolvedValue(expectedSale);
+      // save 후 relations 포함 재조회
+      mockUsedBookSaleRepository.findOne.mockResolvedValue(expectedSale);
 
       // 실행
       const result = await service.createUsedBookSale(createDto, userId);
@@ -128,6 +131,10 @@ describe('UsedBookSaleService', () => {
       expect(result).toEqual(expectedSale);
       expect(mockUsedBookSaleRepository.create).toHaveBeenCalled();
       expect(mockUsedBookSaleRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockUsedBookSaleRepository.findOne).toHaveBeenCalledWith({
+        where: { id: expectedSale.id },
+        relations: ['user', 'book'],
+      });
     });
   });
 

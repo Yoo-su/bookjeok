@@ -88,10 +88,10 @@ export class UsedBookSaleService {
     await this.cacheManager.del(UsedBookSaleService.REGIONS_CACHE_KEY);
 
     // 저장 후 도서·유저 정보를 포함하여 다시 조회
-    return await this.usedBookSaleRepository.findOneOrFail({
+    return (await this.usedBookSaleRepository.findOne({
       where: { id: savedSale.id },
       relations: ['user', 'book'],
-    });
+    }))!;
   }
 
   /**
