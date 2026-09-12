@@ -10,43 +10,46 @@ interface BookSliderSkeletonProps {
   cardHeight?: number;
 }
 
+// 화면 너비별 반응형 치수 계산 헬퍼 함수
+const getSliderDimensions = (width?: number) => {
+  const w =
+    width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
+  if (w > 1024) {
+    return { radius: 580, cardWidth: 180, cardHeight: 270 };
+  } else if (w > 768) {
+    return { radius: 480, cardWidth: 150, cardHeight: 225 };
+  } else if (w > 480) {
+    return { radius: 420, cardWidth: 130, cardHeight: 195 };
+  } else {
+    return { radius: 350, cardWidth: 110, cardHeight: 165 };
+  }
+};
+
 export const BookSliderSkeleton = ({
   radius: propRadius,
   cardWidth: propCardWidth,
   cardHeight: propCardHeight,
 }: BookSliderSkeletonProps = {}) => {
-  // 화면 크기별 반응형 파라미터 (여백 최적화 및 간격 조정)
-  const [radius, setRadius] = useState(propRadius ?? 580);
-  const [cardWidth, setCardWidth] = useState(propCardWidth ?? 180);
-  const [cardHeight, setCardHeight] = useState(propCardHeight ?? 270);
+  // 화면 크기별 반응형 파라미터 (클라이언트 마운트 시 즉시 현재 창 크기 반영)
+  const defaultDimensions = getSliderDimensions();
+  const [dimensions, setDimensions] = useState(() => ({
+    radius: propRadius ?? defaultDimensions.radius,
+    cardWidth: propCardWidth ?? defaultDimensions.cardWidth,
+    cardHeight: propCardHeight ?? defaultDimensions.cardHeight,
+  }));
 
   useEffect(() => {
     if (propRadius && propCardWidth && propCardHeight) {
-      setRadius(propRadius);
-      setCardWidth(propCardWidth);
-      setCardHeight(propCardHeight);
+      setDimensions({
+        radius: propRadius,
+        cardWidth: propCardWidth,
+        cardHeight: propCardHeight,
+      });
       return;
     }
 
     const handleResize = () => {
-      const width = window.innerWidth;
-      if (width > 1024) {
-        setRadius(580);
-        setCardWidth(180);
-        setCardHeight(270);
-      } else if (width > 768) {
-        setRadius(480);
-        setCardWidth(150);
-        setCardHeight(225);
-      } else if (width > 480) {
-        setRadius(420);
-        setCardWidth(130);
-        setCardHeight(195);
-      } else {
-        setRadius(350);
-        setCardWidth(110);
-        setCardHeight(165);
-      }
+      setDimensions(getSliderDimensions(window.innerWidth));
     };
 
     handleResize();
@@ -54,9 +57,9 @@ export const BookSliderSkeleton = ({
     return () => window.removeEventListener("resize", handleResize);
   }, [propRadius, propCardWidth, propCardHeight]);
 
-  const activeRadius = propRadius ?? radius;
-  const activeCardWidth = propCardWidth ?? cardWidth;
-  const activeCardHeight = propCardHeight ?? cardHeight;
+  const activeRadius = propRadius ?? dimensions.radius;
+  const activeCardWidth = propCardWidth ?? dimensions.cardWidth;
+  const activeCardHeight = propCardHeight ?? dimensions.cardHeight;
 
   // MainBookSlider와 동일하게 18개 도서 기준 20도 각도로 배치
   const CARD_COUNT = 18;

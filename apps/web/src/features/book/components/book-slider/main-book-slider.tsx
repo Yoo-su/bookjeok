@@ -205,6 +205,21 @@ const ActiveBookInfo = memo(
 
 ActiveBookInfo.displayName = "ActiveBookInfo";
 
+// 화면 너비별 반응형 치수 계산 헬퍼 함수
+const getSliderDimensions = (width?: number) => {
+  const w =
+    width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
+  if (w > 1024) {
+    return { radius: 580, cardWidth: 180, cardHeight: 270 };
+  } else if (w > 768) {
+    return { radius: 480, cardWidth: 150, cardHeight: 225 };
+  } else if (w > 480) {
+    return { radius: 420, cardWidth: 130, cardHeight: 195 };
+  } else {
+    return { radius: 350, cardWidth: 110, cardHeight: 165 };
+  }
+};
+
 export const MainBookSlider = () => {
   const t = useTranslations("home.sections.main_books");
   const tError = useTranslations("home.errors");
@@ -220,31 +235,13 @@ export const MainBookSlider = () => {
   // 반응형 치수가 확정되기 전까지 슬라이더를 숨겨 레이아웃 점프(FOUC) 방지
   const [isLayoutReady, setIsLayoutReady] = useState(false);
 
-  // 화면 크기별 반응형 파라미터 (여백 최적화 및 간격 조정)
-  const [radius, setRadius] = useState(580);
-  const [cardWidth, setCardWidth] = useState(180);
-  const [cardHeight, setCardHeight] = useState(270);
+  // 화면 크기별 반응형 파라미터 (클라이언트 마운트 시 즉시 현재 창 크기 반영)
+  const [dimensions, setDimensions] = useState(getSliderDimensions);
+  const { radius, cardWidth, cardHeight } = dimensions;
 
   useEffect(() => {
     const handleResize = () => {
-      const width = window.innerWidth;
-      if (width > 1024) {
-        setRadius(580);
-        setCardWidth(180);
-        setCardHeight(270);
-      } else if (width > 768) {
-        setRadius(480);
-        setCardWidth(150);
-        setCardHeight(225);
-      } else if (width > 480) {
-        setRadius(420);
-        setCardWidth(130);
-        setCardHeight(195);
-      } else {
-        setRadius(350);
-        setCardWidth(110);
-        setCardHeight(165);
-      }
+      setDimensions(getSliderDimensions(window.innerWidth));
     };
 
     handleResize();
