@@ -65,6 +65,18 @@ export const applyLocationFilter = (
       'distance',
     );
 
+    // GiST 인덱스(used_book_sales_location_idx)는 `earth_box(...) @> ll_to_earth(...)`
+    // 형태만 받는다. `earth_distance(...) <= r`은 인덱스 조건으로 변환되지 않아
+    // 지금까지 매번 전체 스캔이었고, 인덱스는 만들어진 이래 한 번도 쓰이지 않았다.
+    //
+    // earth_box는 반지름의 외접 정육면체라 모서리 쪽이 더 딸려온다. 그래서 아래
+    // 정확한 거리 조건을 그대로 남긴다. 두 조건을 함께 걸면 결과 집합은 전과
+    // 완전히 같고, 인덱스가 후보를 먼저 줄여줄 뿐이다.
+    queryBuilder.andWhere(
+      'earth_box(ll_to_earth(:lat, :lng), :radius) @> ll_to_earth(sale.latitude, sale.longitude)',
+      { lat, lng, radius: searchRadius },
+    );
+
     queryBuilder.andWhere(
       'earth_distance(ll_to_earth(:lat, :lng), ll_to_earth(sale.latitude, sale.longitude)) <= :radius',
       { lat, lng, radius: searchRadius },

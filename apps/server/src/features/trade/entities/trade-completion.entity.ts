@@ -44,6 +44,7 @@ export enum TradeCompletionMethod {
   'completedAt',
 ])
 @Index('IDX_trade_completions_buyerId_completedAt', ['buyerId', 'completedAt'])
+@Index('IDX_trade_completions_chatRoomId', ['chatRoomId'])
 @Unique('UQ_trade_completions_orderId', ['orderId'])
 @Unique('UQ_trade_completions_saleId', ['saleId'])
 export class TradeCompletion {

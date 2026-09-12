@@ -12,7 +12,7 @@ import { Book } from '@/features/book/entities/book.entity';
 
 @Entity({ name: 'ai_book_summaries' })
 export class AiBookSummary {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'varchar', length: 255 })
   isbn: string;
 
   @OneToOne(() => Book, { onDelete: 'CASCADE' })

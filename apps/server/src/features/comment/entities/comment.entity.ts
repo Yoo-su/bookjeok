@@ -25,7 +25,10 @@ export enum CommentTargetType {
 }
 
 @Entity('comments')
-@Index(['targetType', 'targetId']) // 조회 성능 최적화
+// 목록은 (targetType, targetId)로 거른 뒤 항상 id 역순이다. id를 끝에 두어야
+// 정렬까지 인덱스가 받는다.
+@Index('IDX_comments_targetType_targetId_id', ['targetType', 'targetId', 'id'])
+@Index('IDX_comments_userId', ['userId'])
 export class Comment {
   @PrimaryGeneratedColumn()
   id: number;

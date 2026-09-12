@@ -19,7 +19,11 @@ import { ReviewReaction } from './review-reaction.entity';
 import { Tag } from './tag.entity';
 
 @Entity('reviews')
-@Index(['category', 'isPublic', 'createdAt', 'id'])
+// 목록 정렬은 createdAt이 아니라 id 역순이다. 사이에 createdAt이 끼어 있으면
+// 정렬에 못 쓴다.
+@Index('IDX_reviews_category_isPublic_id', ['category', 'isPublic', 'id'])
+@Index('IDX_reviews_isbn', ['isbn'])
+@Index('IDX_reviews_userId', ['userId'])
 export class Review {
   @PrimaryGeneratedColumn()
   id: number;

@@ -28,8 +28,17 @@ export enum TradeMethod {
 }
 
 @Entity({ name: 'used_book_sales' })
-@Index(['status', 'createdAt', 'id'])
-@Index(['status', 'price', 'id'])
+// 이름은 운영에 이미 만들어진 것과 맞춘다.
+@Index('IDX_used_book_sales_status_createdAt_id', ['status', 'createdAt', 'id'])
+@Index('IDX_used_book_sales_status_price_id', ['status', 'price', 'id'])
+// 도서 상세의 "이 책 판매글"과 마이페이지의 "내 판매글"이 각각 타는 경로다.
+@Index('IDX_used_book_sales_isbn', ['isbn'])
+@Index('IDX_used_book_sales_userId', ['user'])
+@Index('IDX_used_book_sales_reservedForUserId', ['reservedForUserId'])
+//
+// 운영에는 TypeORM 데코레이터로 표현할 수 없는 인덱스가 하나 더 있다.
+//   used_book_sales_location_idx: gist (ll_to_earth(latitude, longitude))
+// 표현식 인덱스라 여기 선언할 수 없다. 지우지 말 것 (docs/manual-ddl-log.md 8절).
 export class UsedBookSale {
   @PrimaryGeneratedColumn()
   id: number;

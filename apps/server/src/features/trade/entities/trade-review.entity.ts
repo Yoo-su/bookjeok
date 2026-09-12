@@ -27,6 +27,7 @@ import { TradeCompletion } from './trade-completion.entity';
   'targetUserId',
   'createdAt',
 ])
+@Index('IDX_trade_reviews_reviewerId', ['reviewerId'])
 @Unique('UQ_trade_reviews_completionId_reviewerId', [
   'completionId',
   'reviewerId',

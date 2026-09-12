@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -20,6 +21,8 @@ export enum ReviewReactionType {
 
 @Entity('review_reactions')
 @Unique(['reviewId', 'userId'])
+// 위 유니크는 userId가 선행이 아니라 탈퇴 시 CASCADE를 받아주지 못한다.
+@Index('IDX_review_reactions_userId', ['userId'])
 export class ReviewReaction {
   @PrimaryGeneratedColumn()
   id: number;

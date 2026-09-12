@@ -25,6 +25,8 @@ export enum ChatMessageType {
 // 안 읽음 집계는 내가 보내지 않은 메시지를 방 단위로 스캔
 // (참여자의 lastReadMessageId 워터마크 이후 메시지를 세는 경로)
 @Index('idx_chat_messages_room_sender', ['chatRoom', 'sender'])
+// 위 인덱스는 senderId가 선행이 아니라 탈퇴 시 외래키 검사를 받아주지 못한다.
+@Index('IDX_chat_messages_senderId', ['sender'])
 @Entity({ name: 'chat_messages' })
 export class ChatMessage {
   @PrimaryGeneratedColumn()
