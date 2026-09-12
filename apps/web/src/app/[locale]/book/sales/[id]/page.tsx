@@ -14,8 +14,9 @@ import { getQueryClient } from "@/shared/libs/query-client";
 import { isNotFoundError } from "@/shared/utils/api-error";
 import { BookSaleDetailView } from "@/views/book-sale-detail-view";
 
-// 판매 상태 변경이 빠르게 반영되도록 5분 간격으로 재검증
-export const revalidate = 300;
+// 판매 상태 변경은 /api/revalidate 웹훅이 즉시 걷어낸다.
+// 5분 주기는 쓰기만 늘리고 적중률을 떨어뜨려 ISR을 SSR로 퇴화시킨다.
+export const revalidate = 3600; // 1시간
 
 // ISR 활성화용 빈 파라미터 목록
 // - generateStaticParams가 없으면 Next가 Dynamic으로 분류해 revalidate를 무시
@@ -29,8 +30,14 @@ type Props = {
 };
 
 // React.cache를 사용하여 API 요청 중복 제거
-// 부재(404)만 null 반환, 일시적 API 장애는 재던짐 (장애로 만든 404가 5분 캐시되는 것 방지)
+// 부재(404)만 null 반환, 일시적 API 장애는 재던짐 (장애로 만든 404가 캐시에 고착되는 것 방지)
 const getCachedBookSale = cache(async (id: string) => {
+  // 숫자가 아닌 URL(/sales/abc)은 API 호출 없이 404 처리
+  // - 400 응답이 장애로 분류되면 500이 나가고, 500은 ISR에 안 남아 매 요청 재렌더된다
+  if (!/^[1-9]\d*$/.test(id)) {
+    return null;
+  }
+
   try {
     return await getBookSaleDetail(id);
   } catch (error) {

@@ -19,7 +19,7 @@ export const AiBookRecommendSlider = memo(function AiBookRecommendSlider({
   books,
 }: AiBookRecommendSliderProps) {
   const t = useTranslations("book.ai_recommend_slider");
-  if (!books || books.length === 0) return null;
+  if (!Array.isArray(books) || books.length === 0) return null;
 
   return (
     <div className="mt-3 w-full bg-white/70 backdrop-blur-md border border-white/80 rounded-2xl p-4 space-y-3 shadow-sm shadow-stone-900/5 ring-1 ring-stone-900/5">

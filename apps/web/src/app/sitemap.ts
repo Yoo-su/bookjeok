@@ -3,7 +3,9 @@ import "@/shared/libs/axios";
 import { getBookSales, getReviews } from "@bookjeok/api-client";
 import { MetadataRoute } from "next";
 
-export const dynamic = "force-dynamic";
+// 봇이 칠 때마다 함수를 깨우고 백엔드를 두 번 치던 자리.
+// 내용은 목록 상위 50건이라 6시간 단위로 굳혀도 색인에 영향이 없다.
+export const revalidate = 21600; // 6시간
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Preview 환경(test.bookjeok.com 등)에서는 sitemap 비활성화

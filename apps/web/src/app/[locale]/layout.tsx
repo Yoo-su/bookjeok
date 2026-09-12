@@ -24,6 +24,7 @@ import { NotificationProvider } from "@/features/notification/providers/notifica
 import GoogleAnalytics from "@/shared/components/analytics/google-analytics";
 import MicrosoftClarity from "@/shared/components/analytics/microsoft-clarity";
 import { JsonLd } from "@/shared/components/json-ld";
+import { NavigationProgress } from "@/shared/components/navigation-progress";
 import { Toaster } from "@/shared/components/shadcn/sonner";
 import { config } from "@/shared/config/env";
 import { Locale, routing } from "@/shared/config/i18n/routing";
@@ -93,6 +94,7 @@ export default async function Layout({
           {t("common.aria.skip_to_content")}
         </a>
         <NextIntlClientProvider messages={messages}>
+          <NavigationProgress />
           <QueryProvider>
             <UserProvider>
               {/* 알림 시스템 */}

@@ -12,18 +12,24 @@ import axios from "axios";
 import { cache } from "react";
 
 import { config } from "@/shared/config/env";
+import { TtlLruCache } from "@/shared/utils/ttl-lru-cache";
 
 // 서버 인메모리 캐시 (10분 유효)
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
-}
+//
+// 상한을 두는 이유: 크롤러가 훑는 ISBN 수가 카탈로그 크기(5만+)라
+// eviction 없는 Map은 인스턴스 수명 내내 늘기만 한다.
 const CACHE_TTL_MS = 10 * 60 * 1000;
-const bookDetailCache = new Map<
-  string,
-  CacheEntry<GetBookDetailResponseData>
->();
-const bookListCache = new Map<string, CacheEntry<GetBookListSuccessResponse>>();
+const DETAIL_CACHE_MAX = 500;
+const LIST_CACHE_MAX = 200;
+
+const bookDetailCache = new TtlLruCache<GetBookDetailResponseData>(
+  DETAIL_CACHE_MAX,
+  CACHE_TTL_MS,
+);
+const bookListCache = new TtlLruCache<GetBookListSuccessResponse>(
+  LIST_CACHE_MAX,
+  CACHE_TTL_MS,
+);
 
 /**
  * SSR/ISR에서 쓰는 백엔드 주소. 내부망 주소를 우선하고 없으면 공개 주소로 폴백합니다.
@@ -77,8 +83,8 @@ export const getBookListServer = async (
 
   const cacheKey = `${params.query}:${display}:${start}:${sort}:${queryType}`;
   const cached = bookListCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.data;
+  if (cached) {
+    return cached;
   }
 
   try {
@@ -89,7 +95,7 @@ export const getBookListServer = async (
     const data = unwrap<GetBookListSuccessResponse>(response.data);
     assertBookListShape(data, "도서 목록 조회");
 
-    bookListCache.set(cacheKey, { data, timestamp: Date.now() });
+    bookListCache.set(cacheKey, data);
     return data;
   } catch (error) {
     console.error("서버에서 책 목록 조회 실패:", error);
@@ -119,8 +125,8 @@ export const getPublisherBooksServer = async (
  */
 export const fetchBookDetail = cache(async (isbn: string) => {
   const cached = bookDetailCache.get(isbn);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.data;
+  if (cached) {
+    return cached;
   }
 
   try {
@@ -131,7 +137,7 @@ export const fetchBookDetail = cache(async (isbn: string) => {
     const data = unwrap<GetBookDetailResponseData>(response.data);
     assertBookListShape(data, "도서 상세 조회");
 
-    bookDetailCache.set(isbn, { data, timestamp: Date.now() });
+    bookDetailCache.set(isbn, data);
     return data;
   } catch (error) {
     console.error("책 상세정보 조회 실패:", error);

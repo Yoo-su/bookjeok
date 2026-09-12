@@ -15,6 +15,8 @@ export function LoungePopularBannerCard({
   index = 0,
 }: LoungePopularBannerCardProps) {
   const t = useTranslations("lounge.popular");
+  // 서버 페이로드에서 배열이 빠져도 카드 한 장 때문에 페이지가 500이 되지 않게
+  const recentReaders = item.recentReaders ?? [];
 
   return (
     <motion.div
@@ -57,13 +59,13 @@ export function LoungePopularBannerCard({
       {/* Avatar Circles */}
       <AvatarCircles
         size="sm"
-        avatars={item.recentReaders.map((r) => ({
+        avatars={recentReaders.map((r) => ({
           imageUrl: r.profileImageUrl,
           name: r.nickname,
         }))}
         extraCount={
-          item.readerCount > item.recentReaders.length
-            ? item.readerCount - item.recentReaders.length
+          item.readerCount > recentReaders.length
+            ? item.readerCount - recentReaders.length
             : 0
         }
       />

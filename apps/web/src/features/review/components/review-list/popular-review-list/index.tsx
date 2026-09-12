@@ -29,7 +29,7 @@ export function PopularReviewList() {
   }
 
   // 4. 빈 상태 가드
-  if (!reviews || reviews.length === 0) {
+  if (!Array.isArray(reviews) || reviews.length === 0) {
     return null; // 인기 리뷰가 없으면 섹션 자체를 숨김
   }
 

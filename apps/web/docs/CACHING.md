@@ -6,8 +6,8 @@
 
 | 층                   | 위치          | TTL                | 책임                                                          |
 | -------------------- | ------------- | ------------------ | ------------------------------------------------------------- |
-| 모듈 레벨 Map        | 서버 프로세스 | 10분               | 알라딘 호출 중복 제거 (`features/book/apis/server.ts`)        |
-| ISR Full Route Cache | Next 서버     | 5분~24시간         | 차가운 트래픽·크롤러용 HTML. `dehydrate()` 결과가 여기 구워짐 |
+| 모듈 레벨 LRU        | 서버 프로세스 | 10분 / 항목 상한   | 백엔드 호출 중복 제거 (`features/book/apis/server.ts`)        |
+| ISR Full Route Cache | Next 서버     | 1시간~30일         | 차가운 트래픽·크롤러용 HTML. `dehydrate()` 결과가 여기 구워짐 |
 | Router Cache         | 브라우저      | 서버 액션이 무효화 | SPA 재진입 시 재사용되는 RSC 페이로드                         |
 | TanStack Query       | 브라우저      | 기본 1분           | **상호작용 중인 사용자의 신선도**                             |
 
@@ -52,11 +52,11 @@ refetchOnWindowFocus: false,
 | `review.popular`                 | `/book/reviews`       | 1시간   | 전역                             |
 | `review.feeds()`                 | `/book/reviews`       | 1시간   | 전역                             |
 | `book.popularKeywords`           | `/book/search`        | 1시간   | 호출부 지정                      |
-| `user.publicProfile(handle)`     | `/users/[handle]`     | 10분    | 전역                             |
-| `book.detail(isbn)`              | `/book/[isbn]/detail` | 24시간  | 5분                              |
-| `book.summary(isbn)`             | `/book/[isbn]/detail` | 24시간  | Infinity (불변)                  |
-| `review.detail(id)`              | `/book/reviews/[id]`  | 1시간   | 전역                             |
-| `bookSale.saleDetail(id)`        | `/book/sales/[id]`    | 5분     | 전역                             |
+| `user.publicProfile(handle)`     | `/users/[handle]`     | 1시간   | 전역                             |
+| `book.detail(isbn)`              | `/book/[isbn]/detail` | 30일    | 5분                              |
+| `book.summary(isbn)`             | `/book/[isbn]/detail` | 30일    | Infinity (불변)                  |
+| `review.detail(id)`              | `/book/reviews/[id]`  | 24시간  | 전역                             |
+| `bookSale.saleDetail(id)`        | `/book/sales/[id]`    | 1시간   | 전역                             |
 
 `readingLog.loungePopular`는 두 라우트가 각각 독립된 시각에 굽습니다. 방문 순서에 따라 더 최신 스냅샷이 이깁니다 (`hydrate()`는 `dataUpdatedAt`이 더 클 때만 덮어씀).
 
@@ -97,23 +97,65 @@ refetchOnWindowFocus: false,
 
 **단일 문맥 링크는 기본값을 유지합니다** — 판매 상세의 도서 링크, 리뷰 상세의 도서 링크, 프로필 링크처럼 다음 목적지가 하나로 좁혀진 자리에서는 prefetch가 제값을 합니다. 로그인 뒤 마이페이지 목록(위시리스트·판매 내역·내 댓글)도 남겨뒀습니다. 트래픽이 낮고 본인 항목이라 클릭률이 높습니다.
 
-### 지연은 `loading.tsx`가 가린다
+### 지연은 진행 표시기가 가린다 — `loading.tsx`는 쓰지 않는다
 
-prefetch를 끄면 클릭 시점에 페이로드를 받아오므로 수백 ms의 공백이 생깁니다. 이 저장소에는 전역 내비게이션 진행 표시기가 없어서, 그 구간이 **아무 반응 없음**으로 보입니다.
+prefetch를 끄면 클릭 시점에 페이로드를 받아오므로 수백 ms의 공백이 생깁니다. 그 구간을
+`loading.tsx`로 가리면 **404가 200이 됩니다.**
 
-그래서 차단한 링크의 목적지 세 곳에 `loading.tsx`를 뒀습니다.
+`loading.tsx`는 해당 세그먼트에 Suspense 경계를 만듭니다. 그러면 Next가 `notFound()`가
+실행되기 전에 200 셸을 flush하고, 그 200이 그대로 ISR 캐시에 구워집니다. 도서 상세는
+`dynamicParams`가 열려 있어 경로 공간이 사실상 무한하므로, 없는 ISBN 하나하나가 영구
+엔트리가 됩니다. 검색엔진이 그 soft 404를 색인하면 크롤이 늘어 악순환이 됩니다.
 
-| 라우트                | 로딩 UI                                             |
-| --------------------- | --------------------------------------------------- |
-| `/book/[isbn]/detail` | `BookDetailSkeleton` + 연관 도서 5장 + AI 요약 블록 |
-| `/book/sales/[id]`    | `BookSaleDetailSkeleton`                            |
-| `/book/reviews/[id]`  | `ReviewDetailSkeleton`                              |
+2026-09-03에 이 이유로 상세 3개 라우트의 `loading.tsx`를 지웠는데, 2026-09-10에 prefetch를
+끄면서 같은 자리에 다시 넣어 회귀했습니다. 운영에서 `/ko/book/9999999999999/detail`이
+`200 + x-nextjs-prerender: 1`로 응답하는 것을 확인하고 2026-09-12에 되돌렸습니다.
 
-**컴포넌트가 이미 쓰는 스켈레톤을 그대로 재사용합니다.** 페이지 전용 스켈레톤을 새로 그리면 두 벌이 갈라지고, 전환 순간에 골격이 튑니다.
+> **상세 라우트에 `loading.tsx`를 두지 마세요.** 인증이 필요해 크롤되지 않는
+> `reviews/[id]/edit`만 예외입니다.
 
-조건부로만 렌더되는 요소는 골격에 넣지 않습니다. 판매 상세의 지도·도서 정보 카드는 좌표가 없는 판매글에서 사라지므로, 자리를 잡아두면 오히려 레이아웃이 흔들립니다.
+대신 라우트 밖에서 지연을 가립니다 — `shared/components/navigation-progress.tsx`가
+`[locale]/layout.tsx`에 상시 마운트돼 있습니다. 같은 출처 앵커 클릭을 듣고 막대를 띄우며,
+`usePathname()`이 바뀌면 내립니다. `useSearchParams()`는 정적 렌더링을 무효화하므로 쓰지
+않습니다. 라우트 트리 밖이라 Suspense 경계를 만들지 않고, 따라서 응답 상태에 관여하지 않습니다.
 
-`loading.tsx`는 ISR 쓰기를 만들지 않습니다. prefetch는 지연을 **미리 구워서** 가렸고, 이쪽은 같은 일을 공짜로 합니다.
+## 크롤 표면
+
+ISR 쓰기와 Fluid 실행 시간은 **고유 경로 수**에 비례합니다. 경로 공간을 닫아두는 장치가 셋입니다.
+
+| 장치                              | 위치                                  | 막는 것                                       |
+| --------------------------------- | ------------------------------------- | --------------------------------------------- |
+| `isValidIsbn` (미들웨어 + 라우트) | `middleware.ts`, 도서 상세 `page.tsx` | 형식이 틀린 ISBN. 렌더 없이 404               |
+| 숫자 id 가드                      | 리뷰·판매 상세 `page.tsx`             | `/reviews/abc` 류. 400이 500으로 새는 것 방지 |
+| `ZERO_VALUE_CRAWLERS`             | `app/robots.ts`                       | 검색 유입 없이 카탈로그를 훑는 봇             |
+
+**부재는 404로, 장애는 5xx로 나가야 합니다.** 404는 캐시돼 재렌더를 막지만, 5xx는 ISR에
+남지 않아 매 요청 재렌더됩니다. 그래서 부재(404 응답)와 장애(그 외)를 각 라우트의
+`getCached*`에서 갈라둡니다.
+
+`/en`은 `noindex, nofollow`이지만 robots.txt로 막지 않습니다. 수집을 끊으면 크롤러가 그
+noindex를 읽지 못해 이미 색인된 페이지가 그대로 남습니다. 색인에서 빠진 뒤 `Disallow`로
+전환하세요.
+
+### 시드한 배열은 `Array.isArray`로 받는다
+
+서버가 시드한 데이터를 소비할 때 이 저장소의 관용구는 `!x || x.length === 0`이었습니다.
+이건 `undefined`만 막습니다. 백엔드가 형태가 어긋난 200을 주면 `{}`가 그대로 통과해
+(`{}.length`는 `0`이 아니라 `undefined`) 바로 다음 줄의 `map`·`slice`·`filter`에서 터집니다.
+
+터지면 **섹션 하나가 비는 게 아니라 페이지 전체가 500**이 됩니다. 그리고 500은 ISR에
+남지 않으므로, 그 경로는 캐시 없이 매 요청 재렌더됩니다 — 지금 줄이려는 비용 그 자체입니다.
+
+> **프리렌더되는 라우트에서 시드 배열을 쓸 때는 `Array.isArray`로 받으세요.**
+
+훅은 조기 반환보다 먼저 돌기 때문에 렌더 가드만으로는 늦습니다. `useMemo`에서 가공한다면
+**진입 지점에서 한 번 정규화**하세요 (`recent-sale-slider`가 그 형태입니다).
+
+무한 쿼리의 `pages.flatMap((page) => page.items)`도 같습니다. `items`가 빠진 페이지가 하나라도
+있으면 `undefined`가 항목으로 섞여 카드 컴포넌트에서 터집니다. `?? []`로 페이지 단위로 막으세요.
+
+인증 뒤에서만 열리는 화면(채팅·마이페이지)은 이 규칙의 대상이 아닙니다. 프리렌더되지 않아
+500이 나도 ISR 병리로 이어지지 않습니다.
 
 ## 새 쿼리를 추가할 때
 

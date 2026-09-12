@@ -70,7 +70,11 @@ export const BookSaleGrid = ({ filterParams }: BookSaleGridProps) => {
     }
   }, [inView, hasNextPage, isFetching, fetchNextPage, queryEnabled]);
 
-  const sales = data?.pages.flatMap((page) => page.sales) || [];
+  // 페이지에 sales가 없으면 flatMap이 undefined를 항목으로 흘려보내 카드에서 터진다
+  const sales =
+    data?.pages.flatMap((page) =>
+      Array.isArray(page?.sales) ? page.sales : [],
+    ) ?? [];
 
   // 거리순인데 위치 로딩 중
   if (isDistanceSort && locationStatus === "loading") {

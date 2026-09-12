@@ -43,7 +43,10 @@ export const RelatedSales = ({ isbn }: RelatedSalesProps) => {
     enabled: inView,
   });
 
-  const sales = data?.pages.flatMap((page) => page.sales) || [];
+  const sales =
+    data?.pages.flatMap((page) =>
+      Array.isArray(page?.sales) ? page.sales : [],
+    ) ?? [];
   const totalCount = data?.pages[0]?.total || 0;
 
   return (

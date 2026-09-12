@@ -45,7 +45,7 @@ export function PopularBookSaleList() {
     );
   }
 
-  if (isError || !sales || sales.length === 0) {
+  if (isError || !Array.isArray(sales) || sales.length === 0) {
     return null;
   }
 

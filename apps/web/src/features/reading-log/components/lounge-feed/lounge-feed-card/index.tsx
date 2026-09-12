@@ -25,9 +25,11 @@ export const LoungeFeedCard = memo(function LoungeFeedCard({
   const t = useTranslations("lounge.feed");
   const locale = useLocale();
 
-  const firstReader = item.readers[0];
+  // 서버 페이로드에서 배열이 빠져도 카드 한 장 때문에 페이지가 500이 되지 않게
+  const readers = item.readers ?? [];
+  const firstReader = readers[0];
   // 최근 독자들 중 메모를 작성한 가장 최근 독자 찾기
-  const readerWithMemo = item.readers.find((r) => Boolean(r.memo?.trim()));
+  const readerWithMemo = readers.find((r) => Boolean(r.memo?.trim()));
 
   return (
     <Card
@@ -95,8 +97,8 @@ export const LoungeFeedCard = memo(function LoungeFeedCard({
               </p>
             ) : (
               <p className="text-xs text-stone-400 dark:text-stone-500 line-clamp-1 pt-0.5">
-                {item.readers[0]?.nickname
-                  ? `${item.readers[0].nickname}님이 기록한 도서입니다.`
+                {firstReader?.nickname
+                  ? `${firstReader.nickname}님이 기록한 도서입니다.`
                   : "최근 기록된 도서입니다."}
               </p>
             )}
@@ -108,7 +110,7 @@ export const LoungeFeedCard = memo(function LoungeFeedCard({
           <div className="flex items-center gap-2 min-w-0">
             <AvatarCircles
               size="sm"
-              avatars={item.readers.slice(0, 3).map((r) => ({
+              avatars={readers.slice(0, 3).map((r) => ({
                 imageUrl: r.profileImageUrl,
                 name: r.nickname,
               }))}
@@ -117,7 +119,7 @@ export const LoungeFeedCard = memo(function LoungeFeedCard({
               }
             />
             <span className="text-xs text-stone-500 dark:text-stone-400 font-medium truncate">
-              {item.readers.length === 1 && firstReader
+              {readers.length === 1 && firstReader
                 ? firstReader.nickname
                 : t("readers_summary", { count: item.totalReaderCount })}
             </span>

@@ -43,7 +43,7 @@ export const RecommendReviews = ({ id, category }: RecommendReviewsProps) => {
     );
   }
 
-  if (!reviews || reviews.length === 0) {
+  if (!Array.isArray(reviews) || reviews.length === 0) {
     return (
       <section
         ref={ref}

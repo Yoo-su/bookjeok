@@ -32,7 +32,12 @@ export function useMarketHeroStats() {
   );
   const { data: regions } = useBookSaleRegionsQuery();
 
-  const sales = useMemo(() => recentSales ?? [], [recentSales]);
+  // `?? []`로는 부족하다. 백엔드가 형태가 어긋난 200을 주면 배열이 아닌 값이
+  // 그대로 통과해 아래 filter에서 터지고, 페이지 전체가 500이 된다.
+  const sales = useMemo(
+    () => (Array.isArray(recentSales) ? recentSales : []),
+    [recentSales],
+  );
 
   const { freshCount, newTodayLabel, regionCount, sellers } = useMemo(() => {
     const now = Date.now();
@@ -55,7 +60,8 @@ export function useMarketHeroStats() {
         freshCount >= RECENT_LIMIT ? `${RECENT_LIMIT}+` : String(freshCount),
       regionCount: regions
         ? Object.values(regions).reduce(
-            (total, districts) => total + districts.length,
+            (total, districts) =>
+              total + (Array.isArray(districts) ? districts.length : 0),
             0,
           )
         : 0,

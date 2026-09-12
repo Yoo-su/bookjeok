@@ -38,7 +38,9 @@ export const InsightsView = () => {
     return <FullScreenLoader />;
   }
 
-  if (isError || !data) {
+  // 형태가 어긋난 200도 오류로 취급한다. 아래 차트들은 배열을 전제하므로
+  // 여기서 막지 않으면 페이지 전체가 500이 되고, 500은 ISR에 남지 않아 매 요청 재렌더된다.
+  if (isError || !data?.summary) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
@@ -59,25 +61,25 @@ export const InsightsView = () => {
       {/* 섹션별 구분 */}
       <div className="space-y-6">
         {/* 지도 섹션 */}
-        <LocationHeatmap data={data.locationStats} />
+        <LocationHeatmap data={data.locationStats ?? []} />
 
         {/* 활동 추이 */}
-        <ActivityTrendChart data={data.activityTrend} />
+        <ActivityTrendChart data={data.activityTrend ?? []} />
 
         {/* 2열 그리드: 카테고리 + 가격 */}
         <div className="grid gap-6 lg:grid-cols-2">
           {/* 카테고리별 리뷰 */}
-          <CategoryChart data={data.categoryStats} />
+          <CategoryChart data={data.categoryStats ?? []} />
 
           {/* 가격 분포 */}
-          <PriceHistogram data={data.priceDistribution} />
+          <PriceHistogram data={data.priceDistribution ?? []} />
         </div>
 
         {/* 리액션 분포 */}
-        <ReactionDonutChart data={data.reactionStats} />
+        <ReactionDonutChart data={data.reactionStats ?? []} />
 
         {/* 인기 태그 */}
-        <PopularTagsList data={data.popularTags} />
+        <PopularTagsList data={data.popularTags ?? []} />
       </div>
     </div>
   );

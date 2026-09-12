@@ -70,7 +70,7 @@ export const InsightsHeader = ({ summary }: InsightsHeaderProps) => {
               <stat.icon className="h-5 w-5" />
             </div>
             <div className="text-3xl font-serif font-bold text-stone-800 mb-1">
-              {stat.value.toLocaleString()}
+              {(stat.value ?? 0).toLocaleString()}
             </div>
             <div className="text-xs font-bold text-stone-500 uppercase tracking-widest">
               {stat.label}

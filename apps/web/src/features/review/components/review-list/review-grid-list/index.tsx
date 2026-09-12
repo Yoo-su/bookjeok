@@ -91,7 +91,10 @@ export function ReviewGridList({
     );
   }
 
-  const reviews = data?.pages.flatMap((page) => page.reviews) || [];
+  const reviews =
+    data?.pages.flatMap((page) =>
+      Array.isArray(page?.reviews) ? page.reviews : [],
+    ) ?? [];
 
   // 결과 없음
   if (reviews.length === 0) {

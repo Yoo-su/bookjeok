@@ -13,8 +13,9 @@ import { getQueryClient } from "@/shared/libs/query-client";
 import { isNotFoundError } from "@/shared/utils/api-error";
 import { ReviewDetailView } from "@/views/review-detail-view";
 
-// 리뷰 내용은 자주 변경되지 않으므로 1시간 간격으로 재검증
-export const revalidate = 3600;
+// 본문 수정은 /api/revalidate 웹훅이 즉시 걷어낸다. 상호작용 중인 사용자는
+// refetchOnMount가 교정하므로 시간 기반 주기는 크롤러용으로만 남긴다.
+export const revalidate = 86400; // 24시간
 
 // ISR 활성화용 빈 파라미터 목록
 // - generateStaticParams가 없으면 Next가 Dynamic으로 분류해 revalidate를 무시

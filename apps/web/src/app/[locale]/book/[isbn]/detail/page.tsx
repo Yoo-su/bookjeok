@@ -1,4 +1,4 @@
-import { bookKeys } from "@bookjeok/core";
+import { bookKeys, isValidIsbn } from "@bookjeok/core";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -12,8 +12,9 @@ import { createPageMetadata } from "@/shared/config/metadata";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { BookDetailView } from "@/views/book-detail-view";
 
-// 책 정보는 변경되지 않으므로 24시간 캐시
-export const revalidate = 86400; // 24시간 (60 * 60 * 24)
+// 서지 정보는 운영자가 수집 스크립트를 돌릴 때만 바뀐다.
+// 변경분은 /api/revalidate 웹훅이 즉시 걷어내므로 시간 기반 주기는 길게 둔다.
+export const revalidate = 2592000; // 30일 (60 * 60 * 24 * 30)
 
 // ISR 활성화용 빈 파라미터 목록
 // - generateStaticParams가 없으면 Next가 Dynamic으로 분류해 revalidate를 무시
@@ -33,6 +34,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     locale,
     namespace: "book.detail.metadata",
   });
+
+  if (!isValidIsbn(isbn)) {
+    return createPageMetadata({
+      title: t("title"),
+      description: t("description"),
+      locale,
+      path: `/book/${isbn}/detail`,
+    });
+  }
 
   try {
     const data = await fetchBookDetail(isbn);
@@ -71,6 +81,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { locale, isbn } = await params;
   setRequestLocale(locale);
+
+  // 미들웨어가 이미 걸러내지만, 라우트 단독으로도 경로 공간을 닫아둔다
+  if (!isValidIsbn(isbn)) {
+    notFound();
+  }
 
   const queryClient = getQueryClient();
 
