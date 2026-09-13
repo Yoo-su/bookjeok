@@ -106,50 +106,54 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
       {activeTab === "READING" && (
         <div className="space-y-10">
           {/* 독서 기록 영역 (PC: 캘린더, 모바일: 리스트) */}
-          {profile.readingLogs && profile.readingLogs.length > 0 && (
-            <div>
-              {/* PC 뷰 (md 이상: 캘린더) */}
-              <div className="hidden md:block rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs sm:p-8">
-                <div className="mb-6 flex items-center justify-between gap-3">
-                  <h3 className="font-serif text-xl font-semibold text-stone-900 break-keep">
-                    {t("reading_log_calendar_title", {
-                      name: profile.nickname,
-                    })}
-                  </h3>
-                  <span className="text-xs text-stone-400 font-serif shrink-0 whitespace-nowrap">
-                    {t("sections.badge_calendar")}
-                  </span>
+          {Array.isArray(profile.readingLogs) &&
+            profile.readingLogs.length > 0 && (
+              <div>
+                {/* PC 뷰 (md 이상: 캘린더) */}
+                <div className="hidden md:block rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs sm:p-8">
+                  <div className="mb-6 flex items-center justify-between gap-3">
+                    <h3 className="font-serif text-xl font-semibold text-stone-900 break-keep">
+                      {t("reading_log_calendar_title", {
+                        name: profile.nickname,
+                      })}
+                    </h3>
+                    <span className="text-xs text-stone-400 font-serif shrink-0 whitespace-nowrap">
+                      {t("sections.badge_calendar")}
+                    </span>
+                  </div>
+                  <ReadingLogCalendar
+                    currentDate={currentDate}
+                    onDateChange={setCurrentDate}
+                    readOnly
+                    initialLogs={profile.readingLogs}
+                  />
                 </div>
-                <ReadingLogCalendar
-                  currentDate={currentDate}
-                  onDateChange={setCurrentDate}
-                  readOnly
-                  initialLogs={profile.readingLogs}
-                />
-              </div>
 
-              {/* 모바일 뷰 (md 미만: 리스트 & 무한 스크롤) */}
-              <div className="block md:hidden rounded-2xl border border-stone-200/80 bg-white p-4 sm:p-5 shadow-xs">
-                <div className="mb-4">
-                  <h3 className="font-serif text-base sm:text-lg font-semibold text-stone-900 break-keep">
-                    {t("reading_log_calendar_title", {
-                      name: profile.nickname,
-                    })}
-                  </h3>
+                {/* 모바일 뷰 (md 미만: 리스트 & 무한 스크롤) */}
+                <div className="block md:hidden rounded-2xl border border-stone-200/80 bg-white p-4 sm:p-5 shadow-xs">
+                  <div className="mb-4">
+                    <h3 className="font-serif text-base sm:text-lg font-semibold text-stone-900 break-keep">
+                      {t("reading_log_calendar_title", {
+                        name: profile.nickname,
+                      })}
+                    </h3>
+                  </div>
+                  <ReadingLogListView logs={profile.readingLogs} readOnly />
                 </div>
-                <ReadingLogListView logs={profile.readingLogs} readOnly />
               </div>
-            </div>
-          )}
+            )}
 
           {/* 최근 리뷰 및 최근 판매글 (2-column layout) */}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {profile.recentReviews.length > 0 && (
-              <UserRecentReviews reviews={profile.recentReviews} />
-            )}
-            {profile.recentSales.length > 0 && (
-              <UserRecentSales sales={profile.recentSales} />
-            )}
+            {/* 형태가 어긋난 응답에서 `{}.length`는 0이 아니라 undefined라 가드를 통과한다 */}
+            {Array.isArray(profile.recentReviews) &&
+              profile.recentReviews.length > 0 && (
+                <UserRecentReviews reviews={profile.recentReviews} />
+              )}
+            {Array.isArray(profile.recentSales) &&
+              profile.recentSales.length > 0 && (
+                <UserRecentSales sales={profile.recentSales} />
+              )}
           </div>
         </div>
       )}

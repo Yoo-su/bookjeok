@@ -121,13 +121,43 @@ prefetch를 끄면 클릭 시점에 페이로드를 받아오므로 수백 ms의
 
 ## 크롤 표면
 
-ISR 쓰기와 Fluid 실행 시간은 **고유 경로 수**에 비례합니다. 경로 공간을 닫아두는 장치가 셋입니다.
+**ISR read는 캐시 HIT에도 과금됩니다.** 그래서 적중률을 올리는 것으로는 read가 줄지 않습니다.
+줄이는 길은 둘뿐입니다 — 요청이 ISR 라우트에 닿기 전에 끊거나, 그 라우트를 ISR이 아니게 하거나.
+
+**미들웨어는 ISR 캐시 조회와 렌더보다 먼저 돕니다.** 여기서 끊은 요청은 ISR 단위도
+Fluid 실행 시간도 만들지 않습니다. 그래서 경로 공간과 봇을 닫는 장치를 전부 미들웨어에 둡니다.
 
 | 장치                              | 위치                                  | 막는 것                                       |
 | --------------------------------- | ------------------------------------- | --------------------------------------------- |
+| `isBlockedCrawler`                | `middleware.ts`                       | 검색 유입 없는 크롤러. 렌더 없이 403          |
+| 로케일 세그먼트 허용 목록         | `middleware.ts`                       | `/ko/wp-admin` 류. `[...not_found]` 렌더 차단 |
+| 파일형 루트 경로 차단             | `middleware.ts`                       | `/index.php`·`/.env` 류. `[locale]` 렌더 차단 |
 | `isValidIsbn` (미들웨어 + 라우트) | `middleware.ts`, 도서 상세 `page.tsx` | 형식이 틀린 ISBN. 렌더 없이 404               |
 | 숫자 id 가드                      | 리뷰·판매 상세 `page.tsx`             | `/reviews/abc` 류. 400이 500으로 새는 것 방지 |
-| `ZERO_VALUE_CRAWLERS`             | `app/robots.ts`                       | 검색 유입 없이 카탈로그를 훑는 봇             |
+| `ZERO_VALUE_CRAWLERS`             | `app/robots.ts`                       | 위 차단 목록의 사전 고지 (강제는 미들웨어)    |
+
+### 미들웨어 matcher의 확장자 목록은 좁게 유지한다
+
+matcher가 `.*\..*`로 "점이 있으면 제외"였을 때, `/index.php`·`/.env` 같은 스캐너 경로가
+미들웨어를 건너뛰고 `[locale]`까지 들어갔습니다. `[locale]`은 `dynamicParams`가 열려 있어
+`.env`를 로케일 파라미터로 받고, **249KB짜리 not-found를 렌더한 뒤 ISR 엔트리로 남겼습니다.**
+경로 공간이 무한합니다.
+
+확장자 목록은 `public/`과 라우트 핸들러가 **실제로 서빙하는 것만** 적으세요. 방어적으로
+넓히면 그만큼 구멍이 다시 열립니다 (`.json`을 넣었더니 `/config.json`이 25KB를 렌더했습니다).
+
+> **`[locale]/layout.tsx`에 `dynamicParams = false`를 넣지 마세요.** 막힐 것 같지만
+> 도서·리뷰·판매·프로필 상세가 전부 404가 됩니다. Next는 라우트의 `dynamicParams`를
+> `segments.every((s) => s.config?.dynamicParams !== false)`로 계산하므로, 상위 레이아웃의
+> `false`가 체인 전체를 `FallbackMode.NOT_FOUND`로 만들고 하위의 `true`가 이를 덮지 못합니다
+> (`next/dist/build/static-paths/app.js`, "granular per segment"는 미지원이라는 주석이 있습니다).
+
+### 크롤러 차단 목록은 한 곳에서 관리한다
+
+`shared/config/crawlers.ts`가 robots.txt와 미들웨어의 공통 출처입니다. robots.txt는 부탁이고
+강제는 미들웨어가 합니다. **허용 목록이 항상 먼저** 평가됩니다 — `bot` 같은 느슨한 패턴이
+Googlebot을 삼키면 색인 전체가 날아갑니다. 회귀 테스트는
+`shared/config/__tests__/crawlers.test.ts`에 있습니다.
 
 **부재는 404로, 장애는 5xx로 나가야 합니다.** 404는 캐시돼 재렌더를 막지만, 5xx는 ISR에
 남지 않아 매 요청 재렌더됩니다. 그래서 부재(404 응답)와 장애(그 외)를 각 라우트의
@@ -156,6 +186,26 @@ noindex를 읽지 못해 이미 색인된 페이지가 그대로 남습니다. �
 
 인증 뒤에서만 열리는 화면(채팅·마이페이지)은 이 규칙의 대상이 아닙니다. 프리렌더되지 않아
 500이 나도 ISR 병리로 이어지지 않습니다.
+
+### 관계 누락도 같은 규칙을 받는다
+
+배열뿐 아니라 **관계 객체**도 빠진 채로 내려온 적이 있습니다(`bc2bf9d2`·`eb6fd4d5`).
+`review.book.title`·`sale.book.isbn`처럼 관계를 바로 파고들면 그 한 줄이 페이지를 500으로
+만듭니다. 구조화 데이터 한 블록이 비는 것과 페이지가 통째로 죽는 것은 무게가 다릅니다.
+
+- `generateMetadata`와 JSON-LD에서는 관계 블록을 **통째로 생략**하세요 (`...(book && {...})`)
+- 하위 컴포넌트가 각자 방어하는 대신 **진입 지점에서 한 번 정규화**하세요
+  (`sale-detail/book-sale-detail/index.tsx`가 그 형태입니다)
+
+단, **스칼라 필드가 통째로 빠진 응답은 장애이고 5xx가 맞습니다.** `price`까지 기본값을 씌우면
+틀린 화면을 조용히 내보내게 됩니다. 방어는 관계·배열까지입니다.
+
+### `setRequestLocale` 누락은 라우트를 동적으로 떨어뜨린다
+
+next-intl은 `setRequestLocale`이 없으면 헤더에서 로케일을 읽고, 그 순간 라우트가 동적이 됩니다.
+정적이어야 할 페이지가 **요청마다 렌더**되어 Fluid 실행 시간을 먹습니다. 약관·개인정보·로그인
+·회원가입이 이 상태였습니다. 새 페이지를 추가하면 `setRequestLocale(locale)`를 함께 넣고,
+빌드 출력에서 `●`(SSG)로 찍히는지 확인하세요.
 
 ## 새 쿼리를 추가할 때
 

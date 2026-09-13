@@ -11,6 +11,9 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     css: false,
     testTimeout: 15000,
+    // next-intl의 ESM 번들은 `next/server` 같은 서브패스를 확장자 없이 import한다.
+    // pnpm 중첩 구조에서 Node 해석기가 이를 못 찾으므로 vite 해석기를 태운다.
+    server: { deps: { inline: [/next-intl/] } },
   },
   resolve: {
     alias: {

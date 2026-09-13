@@ -26,13 +26,22 @@ export function BookSaleJsonLd({ sale, locale = "ko" }: BookSaleJsonLdProps) {
     }
   };
 
+  // book 관계가 빠진 응답이 실제로 나간 적이 있다. 구조화 데이터 한 블록이 비는 것과
+  // 페이지 전체가 500이 되는 것은 무게가 다르다. 500은 ISR에 안 남아 매 요청 재렌더된다.
+  const book = sale.book;
+  const imageUrls = Array.isArray(sale.imageUrls) ? sale.imageUrls : [];
+  const fallbackImages = book?.image ? [book.image] : [];
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: sale.title,
-    description: sale.content || `${sale.book.title} - ${sale.book.author}`,
-    image: sale.imageUrls.length > 0 ? sale.imageUrls : [sale.book.image],
-    gtin13: sale.book.isbn, // Google 쇼핑 연동을 위한 ISBN-13 바인딩
+    description:
+      sale.content ||
+      (book ? `${book.title} - ${book.author}` : sale.title) ||
+      "",
+    image: imageUrls.length > 0 ? imageUrls : fallbackImages,
+    ...(book?.isbn && { gtin13: book.isbn }), // Google 쇼핑 연동을 위한 ISBN-13 바인딩
     url: `https://bookjeok.com/${locale}/book/sales/${sale.id}`, // Canonical URL 연동
     brand: {
       "@type": "Organization",
@@ -48,7 +57,7 @@ export function BookSaleJsonLd({ sale, locale = "ko" }: BookSaleJsonLdProps) {
         .split("T")[0], // 현재로부터 1년 후
       seller: {
         "@type": "Person",
-        name: sale.user.nickname,
+        name: sale.user?.nickname || "bookjeok",
       },
       itemCondition: "https://schema.org/UsedCondition",
       areaServed: {
@@ -57,16 +66,18 @@ export function BookSaleJsonLd({ sale, locale = "ko" }: BookSaleJsonLdProps) {
       },
     },
     // 책 정보 연결
-    isRelatedTo: {
-      "@type": "Book",
-      name: sale.book.title,
-      author: {
-        "@type": "Person",
-        name: sale.book.author,
+    ...(book && {
+      isRelatedTo: {
+        "@type": "Book",
+        name: book.title,
+        author: {
+          "@type": "Person",
+          name: book.author,
+        },
+        isbn: book.isbn,
+        image: book.image,
       },
-      isbn: sale.book.isbn,
-      image: sale.book.image,
-    },
+    }),
   };
 
   return <JsonLd data={jsonLd} />;

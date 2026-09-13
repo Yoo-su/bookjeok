@@ -67,8 +67,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const title = review.title;
-  const description = `${review.book.title} - ${review.book.author}`;
-  const images = review.book.image ? [review.book.image] : [];
+  // book 관계가 빠진 응답에서도 메타데이터 생성이 죽지 않게 한다
+  const description = review.book
+    ? `${review.book.title} - ${review.book.author}`
+    : review.title;
+  const images = review.book?.image ? [review.book.image] : [];
 
   const baseMeta = createPageMetadata({
     title,

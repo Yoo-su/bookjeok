@@ -56,7 +56,7 @@ src/
 │   │   ├── (default)/        # 홈 · lounge · insights · my-page(trades 포함) · order · 약관
 │   │   ├── book/             # search · market · [isbn]/detail · sales · reviews
 │   │   └── share/deck/[handle]/
-│   ├── api/                  # route handlers (upload, revalidate, book-detail, book-list)
+│   ├── api/                  # route handlers (upload, revalidate)
 │   ├── sitemap.ts · robots.ts · manifest.ts · rss.xml/
 │   ├── not-found.tsx · global-error.tsx
 ├── views/                    # 페이지 단위 조립 뷰 ([feature]-view/)
