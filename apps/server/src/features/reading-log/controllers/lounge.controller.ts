@@ -35,6 +35,10 @@ export class LoungeController {
     status: 200,
     description: '라운지 피드 목록을 반환합니다.',
   })
+  @ApiResponse({
+    status: 400,
+    description: '커서 형식이 올바르지 않습니다.',
+  })
   getLoungeFeed(@Query('cursor') cursor?: string): Promise<LoungeFeedResponse> {
     return this.readingLogService.getLoungeFeed(cursor);
   }
@@ -82,6 +86,10 @@ export class LoungeController {
   @ApiResponse({
     status: 200,
     description: '독자 목록을 반환합니다.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '커서 형식이 올바르지 않습니다.',
   })
   getLoungeBookReaders(
     @Param('isbn') isbn: string,

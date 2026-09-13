@@ -14,6 +14,7 @@ import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 
 import {
+  ACTIVE_READER_DAYS,
   LOUNGE_MAX_READERS,
   LOUNGE_PAGE_SIZE,
   LOUNGE_POPULAR_COUNT,
@@ -22,6 +23,43 @@ import {
 import { CreateReadingLogDto } from '../dtos/create-reading-log.dto';
 import { UpdateReadingLogDto } from '../dtos/update-reading-log.dto';
 import { ReadingLog } from '../entities/reading-log.entity';
+import {
+  assertCursorDate,
+  assertCursorUuid,
+  parseCursorNumericId,
+  splitCompositeCursor,
+} from '../utils/cursor.util';
+
+/**
+ * `date` 컬럼의 최댓값을 Date가 아니라 텍스트로 받아 온다.
+ *
+ * pg는 date(OID 1082)를 **로컬 자정** Date로 파싱한다(`postgres-date`의
+ * "Force YYYY-MM-DD dates to be parsed as local time"). 운영 컨테이너는
+ * `TZ=Asia/Seoul`이라 그 Date를 `toISOString()`에 태우면 UTC로 되돌아가며
+ * 하루가 밀린다. 엔티티 경로(TypeORM `mixedDateToDateString`)는 로컬 기준으로
+ * 포맷해 멀쩡하므로, 같은 응답 안에서 raw 값만 어긋나 드러난다.
+ *
+ * 날짜 표시뿐 아니라 커서에도 쓰이는 값이다. 하루 당겨진 커서는 `MAX(rl.date)
+ * < :cursorDate` 비교에서 마지막 날짜를 통째로 건너뛴다. SQL에서 문자열로
+ * 굳혀 Date를 아예 만들지 않는다.
+ */
+const MAX_READING_DATE_AS_TEXT = "TO_CHAR(MAX(rl.date), 'YYYY-MM-DD')";
+
+/**
+ * 오늘로부터 daysAgo일 전의 달력 날짜(`YYYY-MM-DD`). `date` 컬럼 비교용.
+ *
+ * 로컬 파트로 포맷한다. `toISOString()`을 쓰면 운영(`TZ=Asia/Seoul`)에서
+ * 하루 당겨져 엔티티 계층의 날짜 표기와 기준이 어긋난다.
+ */
+function dateStringDaysAgo(daysAgo: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 interface FeedGroupAccumulator {
   isbn: string;
@@ -61,7 +99,7 @@ export class ReadingLogService {
     const subQuery = this.readingLogRepository
       .createQueryBuilder('rl')
       .select('rl.isbn', 'isbn')
-      .addSelect('MAX(rl.date)', 'latestDate')
+      .addSelect(MAX_READING_DATE_AS_TEXT, 'latestDate')
       .innerJoin('rl.user', 'u')
       .where('u.isReadingLogPublic = :isPublic', { isPublic: true })
       .andWhere('u.deletedAt IS NULL')
@@ -70,18 +108,18 @@ export class ReadingLogService {
       .addOrderBy('rl.isbn', 'DESC');
 
     if (cursor) {
-      const [cursorDate, cursorIsbn] = cursor.split('|');
-      if (cursorDate && cursorIsbn) {
-        subQuery.having(
-          '(MAX(rl.date) < :cursorDate OR (MAX(rl.date) = :cursorDate AND rl.isbn < :cursorIsbn))',
-          { cursorDate, cursorIsbn },
-        );
-      }
+      const [cursorDate, cursorIsbn] = splitCompositeCursor(cursor);
+      assertCursorDate(cursorDate);
+
+      subQuery.having(
+        '(MAX(rl.date) < :cursorDate OR (MAX(rl.date) = :cursorDate AND rl.isbn < :cursorIsbn))',
+        { cursorDate, cursorIsbn },
+      );
     }
 
     subQuery.limit(LOUNGE_PAGE_SIZE + 1);
 
-    const bookGroups: { isbn: string; latestDate: string | Date }[] =
+    const bookGroups: { isbn: string; latestDate: string }[] =
       await subQuery.getRawMany();
 
     const hasNextPage = bookGroups.length > LOUNGE_PAGE_SIZE;
@@ -110,17 +148,10 @@ export class ReadingLogService {
     const groupMap = new Map<string, FeedGroupAccumulator>();
 
     for (const group of bookGroups) {
-      const dateStr =
-        group.latestDate instanceof Date
-          ? group.latestDate.toISOString().split('T')[0]
-          : typeof group.latestDate === 'string'
-            ? group.latestDate.split('T')[0]
-            : String(group.latestDate);
-
       groupMap.set(group.isbn, {
         isbn: group.isbn,
         book: null,
-        latestDate: dateStr,
+        latestDate: group.latestDate,
         readersMap: new Map(),
       });
     }
@@ -187,9 +218,7 @@ export class ReadingLogService {
    * @returns 인기 도서 목록
    */
   async getLoungePopular(): Promise<LoungePopularResponse> {
-    const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - LOUNGE_POPULAR_DAYS);
-    const sinceDateStr = sinceDate.toISOString().split('T')[0];
+    const sinceDateStr = dateStringDaysAgo(LOUNGE_POPULAR_DAYS);
 
     // ISBN별 고유 독자 수 집계
     const popularBooks: {
@@ -291,9 +320,7 @@ export class ReadingLogService {
    * @returns 열성 독서가 목록
    */
   async getLoungeActiveReaders(limit = 10): Promise<ActiveReadersResponse> {
-    const sinceDate = new Date();
-    sinceDate.setDate(sinceDate.getDate() - 90);
-    const sinceDateStr = sinceDate.toISOString().split('T')[0];
+    const sinceDateStr = dateStringDaysAgo(ACTIVE_READER_DAYS);
 
     const rawUsers: {
       id: number;
@@ -304,32 +331,26 @@ export class ReadingLogService {
       totalCount: string;
     }[] = await this.userRepository
       .createQueryBuilder('u')
+      .innerJoin(ReadingLog, 'rl', 'rl.userId = u.id')
       .select('u.id', 'id')
       .addSelect('u.nickname', 'nickname')
       .addSelect('u.handle', 'handle')
       .addSelect('u.profileImageUrl', 'profileImageUrl')
       .addSelect(
-        (subQuery) =>
-          subQuery
-            .select('COUNT(rl.id)', 'recentCount')
-            .from(ReadingLog, 'rl')
-            .where('rl.userId = u.id')
-            .andWhere('rl.date >= :sinceDate', { sinceDate: sinceDateStr }),
+        'COUNT(CASE WHEN rl.date >= :sinceDate THEN 1 END)',
         'recentCount',
       )
-      .addSelect(
-        (subQuery) =>
-          subQuery
-            .select('COUNT(rl2.id)', 'totalCount')
-            .from(ReadingLog, 'rl2')
-            .where('rl2.userId = u.id'),
-        'totalCount',
-      )
+      .addSelect('COUNT(rl.id)', 'totalCount')
       .where('u.isReadingLogPublic = :isPublic', { isPublic: true })
       .andWhere('u.deletedAt IS NULL')
+      .groupBy('u.id')
+      .addGroupBy('u.nickname')
+      .addGroupBy('u.handle')
+      .addGroupBy('u.profileImageUrl')
       .orderBy('"recentCount"', 'DESC')
       .addOrderBy('"totalCount"', 'DESC')
       .limit(limit)
+      .setParameter('sinceDate', sinceDateStr)
       .getRawMany();
 
     // 2. 가공하여 최종 결과 반환
@@ -360,6 +381,19 @@ export class ReadingLogService {
     cursor?: string,
   ): Promise<LoungeBookReadersResponse> {
     const PAGE_SIZE = 20;
+
+    // 커서는 DB를 건드리기 전에 판정한다. 아래 도서 조회와 전체 수 집계를
+    // 먼저 돌리면 어차피 버릴 요청에 왕복을 두 번 쓴다.
+    let cursorCondition: { cursorDate: string; cursorUserId: number } | null =
+      null;
+    if (cursor) {
+      const [cursorDate, cursorUserIdStr] = splitCompositeCursor(cursor);
+      assertCursorDate(cursorDate);
+      cursorCondition = {
+        cursorDate,
+        cursorUserId: parseCursorNumericId(cursorUserIdStr),
+      };
+    }
 
     // 도서 정보 조회
     const bookEntity = await this.dataSource
@@ -406,7 +440,7 @@ export class ReadingLogService {
     const userGroupsQuery = this.readingLogRepository
       .createQueryBuilder('rl')
       .select('rl.userId', 'userId')
-      .addSelect('MAX(rl.date)', 'latestDate')
+      .addSelect(MAX_READING_DATE_AS_TEXT, 'latestDate')
       .innerJoin('rl.user', 'u')
       .where('rl.isbn = :isbn', { isbn })
       .andWhere('u.isReadingLogPublic = :isPublic', { isPublic: true })
@@ -415,22 +449,18 @@ export class ReadingLogService {
       .orderBy('"latestDate"', 'DESC')
       .addOrderBy('rl.userId', 'DESC');
 
-    if (cursor) {
-      const [cursorDate, cursorUserIdStr] = cursor.split('|');
-      const cursorUserId = Number(cursorUserIdStr);
-      if (cursorDate && !isNaN(cursorUserId)) {
-        userGroupsQuery.having(
-          '(MAX(rl.date) < :cursorDate OR (MAX(rl.date) = :cursorDate AND rl.userId < :cursorUserId))',
-          { cursorDate, cursorUserId },
-        );
-      }
+    if (cursorCondition) {
+      userGroupsQuery.having(
+        '(MAX(rl.date) < :cursorDate OR (MAX(rl.date) = :cursorDate AND rl.userId < :cursorUserId))',
+        cursorCondition,
+      );
     }
 
     userGroupsQuery.limit(PAGE_SIZE + 1);
 
     const userGroups: {
       userId: number;
-      latestDate: string | Date;
+      latestDate: string;
     }[] = await userGroupsQuery.getRawMany();
 
     const hasNextPage = userGroups.length > PAGE_SIZE;
@@ -462,17 +492,13 @@ export class ReadingLogService {
 
     const items = userGroups.map((ug) => {
       const log = userLatestLogMap.get(ug.userId);
-      const formattedDate =
-        ug.latestDate instanceof Date
-          ? ug.latestDate.toISOString().split('T')[0]
-          : String(ug.latestDate).split('T')[0];
 
       return {
         userId: ug.userId,
         nickname: log?.user?.nickname || '',
         handle: log?.user?.handle || '',
         profileImageUrl: log?.user?.profileImageUrl || null,
-        date: formattedDate,
+        date: ug.latestDate,
         memo: log?.memo || undefined,
       };
     });
@@ -480,11 +506,7 @@ export class ReadingLogService {
     let nextCursor: string | null = null;
     if (hasNextPage) {
       const lastGroup = userGroups[userGroups.length - 1];
-      const lastDateStr =
-        lastGroup.latestDate instanceof Date
-          ? lastGroup.latestDate.toISOString().split('T')[0]
-          : String(lastGroup.latestDate).split('T')[0];
-      nextCursor = `${lastDateStr}|${lastGroup.userId}`;
+      nextCursor = `${lastGroup.latestDate}|${lastGroup.userId}`;
     }
 
     return { book, items, nextCursor, totalCount };
@@ -657,12 +679,18 @@ export class ReadingLogService {
 
     if (cursorId) {
       if (cursorId.includes('|')) {
-        const [cursorDate, cursorIdStr] = cursorId.split('|');
+        const [cursorDate, cursorIdStr] = splitCompositeCursor(cursorId);
+        assertCursorDate(cursorDate);
+        assertCursorUuid(cursorIdStr);
+
         query.andWhere(
           '(log.date < :cursorDate OR (log.date = :cursorDate AND log.id < :cursorIdStr))',
           { cursorDate, cursorIdStr },
         );
       } else {
+        // 복합 커서 이전 클라이언트가 보내던 단일 ID 형태를 아직 받아 준다.
+        assertCursorUuid(cursorId);
+
         const cursorLog = await this.readingLogRepository.findOne({
           where: { id: cursorId },
         });
