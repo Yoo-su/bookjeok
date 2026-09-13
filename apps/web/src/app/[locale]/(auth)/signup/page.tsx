@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { GuestGuard } from "@/features/auth/components/guards/guest-guard";
 import { DefaultLayout } from "@/layouts/default-layout";
@@ -25,7 +25,15 @@ export async function generateMetadata({
   });
 }
 
-export default function SignupPage() {
+// setRequestLocale이 없으면 라우트가 동적으로 떨어져 봇이 칠 때마다 함수가 깨어난다.
+export default async function SignupPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   return (
     <GuestGuard>
       <DefaultLayout>

@@ -64,11 +64,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const title = sale.title;
-    const description = `${sale.book.title} | ${sale.price.toLocaleString()}원 | ${sale.city} ${sale.district}`;
+    // book 관계나 imageUrls가 빠진 응답에서도 메타데이터 생성이 죽지 않게 한다
+    const bookTitle = sale.book?.title ?? "";
+    const imageUrls = Array.isArray(sale.imageUrls) ? sale.imageUrls : [];
+    const description = `${bookTitle} | ${sale.price.toLocaleString()}원 | ${sale.city} ${sale.district}`;
     const images =
-      sale.imageUrls.length > 0
-        ? [sale.imageUrls[0]]
-        : sale.book.image
+      imageUrls.length > 0
+        ? [imageUrls[0]]
+        : sale.book?.image
           ? [sale.book.image]
           : [];
 
