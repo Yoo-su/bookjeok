@@ -194,7 +194,13 @@ export class LocalDbBookCatalogProvider implements BookCatalogProvider {
     return book ? this.toBookInfo(book) : null;
   }
 
-  /** 엔티티를 서비스 표준 형태로 옮긴다. `link`는 자체 DB에 없으므로 비운다. */
+  /**
+   * 엔티티를 서비스 표준 형태로 옮긴다. `link`는 자체 DB에 없으므로 비운다.
+   *
+   * `pubdate`는 계약(`BookInfo`)이 소문자를 쓴다. 네이버·알라딘 API 시절의
+   * 이름이 그대로 남은 것이다. 엔티티는 `pubDate`라서 여기서 맞춰 준다.
+   * 이 매핑이 빠져 있어 위시리스트와 리뷰 상세의 출간일이 계속 비어 있었다.
+   */
   private toBookInfo(book: Book): BookInfo {
     return {
       isbn: book.isbn,
@@ -204,6 +210,7 @@ export class LocalDbBookCatalogProvider implements BookCatalogProvider {
       description: book.description,
       image: book.image,
       discount: book.discount,
+      pubdate: book.pubDate ?? undefined,
     };
   }
 }

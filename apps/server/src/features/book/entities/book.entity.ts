@@ -42,9 +42,14 @@ export class Book {
    * 대신 쓸 수 없습니다).
    *
    * 공급처가 주지 않거나 알라딘에 없는 도서가 있어 nullable입니다.
+   *
+   * 타입이 `Date`가 아니라 `string`인 이유: `date`는 시각도 타임존도 없는
+   * 달력 날짜이고, TypeORM은 이런 컬럼을 `YYYY-MM-DD` 문자열로 돌려줍니다
+   * (`ReadingLog.date`와 같습니다). `Date`로 선언해 두면 `toISOString()`을
+   * 부르고 싶어지는데, 그러면 운영(`TZ=Asia/Seoul`)에서 하루가 밀립니다.
    */
   @Column({ type: 'date', nullable: true })
-  pubDate?: Date | null;
+  pubDate?: string | null;
 
   /**
    * 알라딘 판매지수. 국내 도서 시장의 사실상 표준 인기도 지표입니다.
