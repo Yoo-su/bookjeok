@@ -51,6 +51,20 @@ review/
 | PATCH  | `/reviews/:id`           |  🔒  | 리뷰 수정                                  |
 | DELETE | `/reviews/:id`           |  🔒  | 리뷰 삭제                                  |
 
+### 인기 리뷰 캐시
+
+`GET /reviews/popular`는 `@SmartCache({ prefix: 'reviews-popular', ttl: 180000, keyStrategy: 'global' })`입니다.
+모든 사용자에게 같은 목록이 나가므로 **`ip`가 아니라 `global`이어야 합니다.** `ip`로 두면 방문자·크롤러 IP마다
+별도 캐시가 생겨 히트율이 무너지고, `SmartCacheStore`의 prefix→키 맵에 IP 수만큼 키가 쌓입니다.
+
+`POST`·`PATCH`·`DELETE /reviews`는 모두 `@InvalidateCache('reviews', 'reviews-popular')`로 이 캐시를 날립니다.
+셋 중 하나라도 빠지면 수정·삭제된 리뷰가 최대 3분간 옛 내용 그대로 노출됩니다.
+리액션 토글(`POST /reviews/:id/reactions`)에는 일부러 걸지 않았습니다 — 인기 순위가 리액션 수를 쓰지만,
+토글마다 캐시를 날리면 캐시가 사실상 없는 것과 같아집니다.
+
+> `InvalidateCache`는 인메모리 맵 기반이라 **자기 프로세스의 캐시만** 지웁니다.
+> 서버를 2개 이상으로 늘린다면 무효화를 믿고 TTL을 키우기 전에 이 전제를 다시 보세요.
+
 ---
 
 ## 엔티티
