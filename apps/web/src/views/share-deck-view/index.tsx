@@ -9,6 +9,7 @@ import { BookOpen, User } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { parseCalendarDate } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
 interface ShareDeckViewProps {
@@ -66,11 +67,17 @@ export function ShareDeckView({ handle, year }: ShareDeckViewProps) {
   const displayLogs = profile.readingLogs
     ? (year
         ? profile.readingLogs.filter(
-            (log) => new Date(log.date).getFullYear() === year,
+            // 달력 날짜라 new Date()에 그냥 넣으면 UTC 자정이 된다. UTC보다
+            // 뒤진 타임존에서는 1월 1일 기록이 전년으로 밀려 덱에서 사라진다.
+            (log) => parseCalendarDate(log.date).getFullYear() === year,
           )
         : profile.readingLogs
       )
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .sort(
+          (a, b) =>
+            parseCalendarDate(b.date).getTime() -
+            parseCalendarDate(a.date).getTime(),
+        )
         .slice(0, 50)
     : [];
 

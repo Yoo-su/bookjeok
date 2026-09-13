@@ -221,4 +221,58 @@ describe('LocalDbBookCatalogProvider 검색 규칙', () => {
       expect(qb.getManyAndCount).not.toHaveBeenCalled();
     });
   });
+
+  describe('toBookInfo 매핑', () => {
+    /**
+     * 엔티티는 `pubDate`, 계약(`BookInfo`)은 `pubdate`다. 이 매핑이 빠져 있어
+     * 위시리스트와 리뷰 상세의 출간일이 계속 비어 있었다.
+     */
+    function providerReturning(book: Partial<Book>) {
+      const repo = {
+        findOneBy: jest.fn().mockResolvedValue(book),
+      } as unknown as Repository<Book>;
+
+      return new LocalDbBookCatalogProvider(repo);
+    }
+
+    const baseBook: Partial<Book> = {
+      isbn: '9788901234567',
+      title: '채식주의자',
+      author: '한강',
+      publisher: '창비',
+      description: '',
+      image: 'https://cdn.bookjeok.com/covers/9788901234567.jpg',
+      discount: '15000',
+    };
+
+    it('출간일을 pubdate로 옮긴다', async () => {
+      const provider = providerReturning({
+        ...baseBook,
+        pubDate: '2007-10-30',
+      });
+
+      const result = await provider.findByIsbn('9788901234567');
+
+      // 하루 밀리거나 타임스탬프로 바뀌면 안 된다. 달력 날짜 그대로다.
+      expect(result?.pubdate).toBe('2007-10-30');
+    });
+
+    it('출간일이 없으면 undefined로 둔다', async () => {
+      const provider = providerReturning({ ...baseBook, pubDate: null });
+
+      const result = await provider.findByIsbn('9788901234567');
+
+      expect(result?.pubdate).toBeUndefined();
+    });
+
+    it('없는 ISBN은 null을 돌려준다', async () => {
+      const repo = {
+        findOneBy: jest.fn().mockResolvedValue(null),
+      } as unknown as Repository<Book>;
+
+      const provider = new LocalDbBookCatalogProvider(repo);
+
+      expect(await provider.findByIsbn('0000000000000')).toBeNull();
+    });
+  });
 });

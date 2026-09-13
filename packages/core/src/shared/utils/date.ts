@@ -10,6 +10,14 @@ export const getSimpleDate = (date: Date) => {
 
 /**
  * 타임존이 누락된 날짜 문자열도 항상 UTC로 정확히 해석할 수 있도록 안전하게 파싱합니다.
+ *
+ * **순간(instant) 전용입니다.** `createdAt`·`updatedAt`처럼 타임라인 위의 한 점을
+ * 가리키는 값에만 쓰세요.
+ *
+ * 시각이 없는 달력 날짜(`YYYY-MM-DD`: 독서기록의 `date`, 도서의 `pubdate`)에는
+ * 쓰면 안 됩니다. UTC 자정으로 해석되어 UTC보다 뒤진 타임존에서는 전날로,
+ * 앞선 타임존에서는 그날 오전으로 밀립니다. 달력 날짜는 웹의
+ * `parseCalendarDate`로 로컬 자정으로 읽으세요.
  */
 export const parseSafeISO = (dateString: string): Date => {
   if (!dateString) return new Date();

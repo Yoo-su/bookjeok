@@ -53,6 +53,10 @@ book/
 
 ISBN을 PK로 쓰기 때문에 리뷰·독서 기록·판매글·위시리스트가 모두 자연스럽게 같은 도서를 참조합니다.
 
+> **`pubDate`는 시각이 없는 달력 날짜입니다.** DB 타입이 `date`이고 TypeORM은 이런 컬럼을 `YYYY-MM-DD` **문자열**로 돌려줍니다(엔티티 타입도 `string`으로 선언해 둔 이유). `new Date()`나 `toISOString()`을 태우지 마세요 — 운영 컨테이너가 `TZ=Asia/Seoul`이라 하루가 밀립니다. 웹에서 표시할 때는 `parseCalendarDate`를 거칩니다.
+>
+> 계약(`BookInfo`)의 필드명은 **소문자 `pubdate`** 입니다. 네이버·알라딘 API 시절 이름이 남은 것이고, `toBookInfo`가 엔티티의 `pubDate`를 여기에 옮깁니다. 2026-09-13까지 이 매핑이 빠져 있어 위시리스트·리뷰 상세의 출간일이 계속 비어 있었습니다.
+
 ## 4. 핵심 로직
 
 ### `resolveBook(isbn)` — 도서 조회 보장

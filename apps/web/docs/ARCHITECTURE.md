@@ -132,3 +132,38 @@ views/insights-view/          ← 조립
   ```
 
 - **Translation Keys**: 번역 키는 기능(feature) 단위로 그룹화하여 `messages/*.json`에 정의합니다.
+
+---
+
+## 6. 날짜·시간 다루기 (Dates and Times)
+
+시간 값은 **두 종류**이고, 섞으면 하루가 밀립니다. 2026-09-13에 라운지 날짜가
+하루 어긋나고 오전에는 미래로 표시되던 사고가 여기서 나왔습니다.
+
+### 6.1 두 종류를 먼저 구분하세요
+
+| 종류                          | 예시                            | 성격                                       |
+| ----------------------------- | ------------------------------- | ------------------------------------------ |
+| **순간** (instant)            | `createdAt`, `updatedAt`        | 타임라인 위의 한 점. 오프셋(`Z`)이 붙어 옴 |
+| **달력 날짜** (calendar date) | `date`, `latestDate`, `pubdate` | `YYYY-MM-DD`. **시각도 타임존도 없음**     |
+
+### 6.2 규칙
+
+- **달력 날짜는 `new Date()`에 직접 넣지 마세요.** `@/shared/utils/format-date`의
+  `parseCalendarDate`를 쓰세요. `new Date("2026-01-01")`은 명세상 **UTC 자정**이라,
+  UTC보다 뒤진 타임존에서는 **2025-12-31**이 됩니다. 표시·정렬·연도 필터·월별
+  그룹이 전부 하루씩 어긋납니다.
+- **달력 날짜에 경과 시간을 묻지 마세요.** `formatDistanceToNow`로 세면 "어제"가
+  보는 시각에 따라 23~47시간이 되고 반올림돼 "2일 전"이 됩니다. `formatRelativeTime`이
+  달력 날짜를 알아서 `differenceInCalendarDays`로 셉니다(오늘 / 어제 / N일 전).
+- **순간은 그대로 두세요.** 오프셋이 붙은 ISO 문자열은 `new Date()`가 정확합니다.
+  `parseCalendarDate`도 이런 값은 손대지 않고 통과시킵니다.
+- `@bookjeok/core`의 `parseSafeISO`는 **순간 전용**입니다. 달력 날짜에 쓰면 UTC
+  자정으로 해석됩니다.
+
+### 6.3 서버 쪽 대응
+
+서버는 `date` 컬럼을 애초에 `Date` 객체로 만들지 않습니다. SQL에서
+`TO_CHAR(..., 'YYYY-MM-DD')`로 문자열을 굳혀 내보냅니다. 순간을 달력 날짜로
+바꿀 때는 `AT TIME ZONE 'Asia/Seoul'`처럼 타임존을 이름으로 적습니다. 자세한
+내용은 `apps/server/src/features/reading-log/README.md`를 보세요.

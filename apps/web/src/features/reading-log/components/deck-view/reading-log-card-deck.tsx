@@ -14,6 +14,7 @@ import {
   DraggableCardContainer,
 } from "@/shared/components/aceternityui/draggable-card";
 import { BookOpen, Quote, Share2 } from "@/shared/components/icons/iconsax";
+import { parseCalendarDate } from "@/shared/utils/format-date";
 
 interface ReadingLogCardDeckProps {
   logs?: ReadingLog[];
@@ -97,7 +98,11 @@ export function ReadingLogCardDeck({
 
   // 최신 읽은 순(날짜 내림차순) 정렬 및 최대 50개 제한
   const sortedLogs = [...effectiveLogs]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort(
+      (a, b) =>
+        parseCalendarDate(b.date).getTime() -
+        parseCalendarDate(a.date).getTime(),
+    )
     .slice(0, 50);
 
   // Polaroid photo scattered angles & positions with zIndex (최신 책 index 0이 맨 위에 오도록)
@@ -179,7 +184,7 @@ export function ReadingLogCardDeck({
 
                 {/* PC 전용: 폴라로이드 스탬프 & 독서 완료 일자 */}
                 <div className="hidden sm:flex items-center justify-between pt-2 mt-1 border-t border-stone-100 text-[10px] font-mono text-stone-400 uppercase tracking-widest shrink-0">
-                  <span>{format(new Date(log.date), "yyyy.MM.dd")}</span>
+                  <span>{format(parseCalendarDate(log.date), "yyyy.MM.dd")}</span>
                   <span className="font-semibold text-stone-300">
                     INSTAX • BOOKJEOK
                   </span>
