@@ -100,7 +100,7 @@ export class ReviewController {
   }
 
   @Get('popular')
-  @SmartCache({ prefix: 'reviews-popular', ttl: 180000, keyStrategy: 'ip' })
+  @SmartCache({ prefix: 'reviews-popular', ttl: 180000, keyStrategy: 'global' })
   @ApiOperation({
     summary: '인기 리뷰 조회',
     description: '조회수와 리액션 수를 기준으로 인기 리뷰를 조회합니다.',
@@ -235,6 +235,7 @@ export class ReviewController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
+  @InvalidateCache('reviews', 'reviews-popular')
   @TrackActivity(ActivityType.REVIEW_UPDATE, (req) => ({ id: req.params.id }))
   @ApiOperation({
     summary: '리뷰 수정',
@@ -264,6 +265,7 @@ export class ReviewController {
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
+  @InvalidateCache('reviews', 'reviews-popular')
   @TrackActivity(ActivityType.REVIEW_DELETE, (req) => ({ id: req.params.id }))
   @ApiOperation({
     summary: '리뷰 삭제',
