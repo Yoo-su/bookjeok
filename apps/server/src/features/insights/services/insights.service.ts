@@ -31,6 +31,44 @@ import {
   ReactionStat,
 } from '../dtos/insights-response.dto';
 
+/** KST는 서머타임이 없어 고정 +9시간 환산으로 충분하다. */
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/** timestamptz 컬럼을 KST 달력 날짜 문자열로 바꾸는 SQL 식. */
+function kstDayExpression(column: string): string {
+  return `TO_CHAR(${column} AT TIME ZONE 'Asia/Seoul', 'YYYY-MM-DD')`;
+}
+
+/** 지금 이 순간의 KST 달력 날짜를 {y, m, d}로 돌려준다. */
+function kstToday(): { year: number; month: number; day: number } {
+  const shifted = new Date(Date.now() + KST_OFFSET_MS);
+  return {
+    year: shifted.getUTCFullYear(),
+    month: shifted.getUTCMonth(),
+    day: shifted.getUTCDate(),
+  };
+}
+
+/** 기준일에서 offsetDays만큼 떨어진 KST 자정의 실제 순간(UTC instant). */
+function kstMidnight(
+  today: { year: number; month: number; day: number },
+  offsetDays: number,
+): Date {
+  return new Date(
+    Date.UTC(today.year, today.month, today.day + offsetDays) - KST_OFFSET_MS,
+  );
+}
+
+/** 기준일에서 offsetDays만큼 떨어진 KST 달력 날짜의 YYYY-MM-DD. */
+function kstDayString(
+  today: { year: number; month: number; day: number },
+  offsetDays: number,
+): string {
+  return new Date(Date.UTC(today.year, today.month, today.day + offsetDays))
+    .toISOString()
+    .split('T')[0];
+}
+
 @Injectable()
 export class InsightsService {
   constructor(
@@ -162,28 +200,36 @@ export class InsightsService {
   }
 
   /**
-   * 최근 30일간의 일별 활동 추이를 조회합니다.
+   * 최근 30일간의 일별 활동 추이를 KST 기준으로 조회합니다.
+   *
+   * 날짜 경계를 SQL과 JS 양쪽에서 `Asia/Seoul`로 못박습니다. 어느 한쪽을
+   * 서버 로컬이나 DB 세션 타임존에 맡기면 둘이 어긋나 하루치가 통째로
+   * 0으로 빠집니다.
    */
   private async getActivityTrend(): Promise<ActivityTrendStat[]> {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - ACTIVITY_TREND_DAYS);
+    const salesDayExpr = kstDayExpression('sale.createdAt');
+    const reviewsDayExpr = kstDayExpression('review.createdAt');
+
+    // 가장 오래된 칸의 KST 자정. 30칸을 채우므로 오늘 포함 29일 전이다.
+    const today = kstToday();
+    const startDate = kstMidnight(today, -(ACTIVITY_TREND_DAYS - 1));
 
     // 판매글 일별 집계
     const salesByDate = await this.salesRepository
       .createQueryBuilder('sale')
-      .select("TO_CHAR(sale.createdAt, 'YYYY-MM-DD')", 'date')
+      .select(salesDayExpr, 'date')
       .addSelect('COUNT(*)', 'count')
       .where('sale.createdAt >= :startDate', { startDate })
-      .groupBy("TO_CHAR(sale.createdAt, 'YYYY-MM-DD')")
+      .groupBy(salesDayExpr)
       .getRawMany();
 
     // 리뷰 일별 집계
     const reviewsByDate = await this.reviewsRepository
       .createQueryBuilder('review')
-      .select("TO_CHAR(review.createdAt, 'YYYY-MM-DD')", 'date')
+      .select(reviewsDayExpr, 'date')
       .addSelect('COUNT(*)', 'count')
       .where('review.createdAt >= :startDate', { startDate })
-      .groupBy("TO_CHAR(review.createdAt, 'YYYY-MM-DD')")
+      .groupBy(reviewsDayExpr)
       .getRawMany();
 
     // 날짜별 맵 생성
@@ -194,12 +240,10 @@ export class InsightsService {
       reviewsByDate.map((r) => [r.date, parseInt(r.count, 10)]),
     );
 
-    // 최근 30일 날짜 배열 생성
+    // 최근 30일 날짜 배열 생성 (기록이 없는 날도 0으로 채운다)
     const dates: ActivityTrendStat[] = [];
     for (let i = ACTIVITY_TREND_DAYS - 1; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = kstDayString(today, -i);
       dates.push({
         date: dateStr,
         salesCount: salesMap.get(dateStr) || 0,
