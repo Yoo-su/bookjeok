@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { formatDate, formatRelativeTime } from "../format-date";
+import {
+  formatDate,
+  formatRelativeTime,
+  parseCalendarDate,
+} from "../format-date";
 
 describe("formatDate", () => {
   const testDate = new Date("2026-08-27T15:30:00.000Z");
@@ -90,5 +94,47 @@ describe("달력 날짜(YYYY-MM-DD) 처리", () => {
     // 2026-09-13T20:00Z = KST 9/14 05:00. 로컬 자정으로 바꾸면 안 된다.
     const formatted = formatDate("2026-09-13T20:00:00.000Z", "ko", "dateTime");
     expect(formatted).toMatch(/^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}$/);
+  });
+});
+
+describe("parseCalendarDate", () => {
+  // 달력 날짜는 보는 사람의 타임존과 무관하게 같은 날짜를 가리켜야 한다.
+  // new Date("2026-01-01")은 UTC 자정이라 UTC보다 뒤진 타임존에서는
+  // 2025-12-31이 되고, 연도 필터와 월별 그룹이 통째로 어긋난다.
+  it("연·월·일을 입력 그대로 보존한다", () => {
+    const parsed = parseCalendarDate("2026-01-01");
+
+    expect(parsed.getFullYear()).toBe(2026);
+    expect(parsed.getMonth()).toBe(0);
+    expect(parsed.getDate()).toBe(1);
+    expect(parsed.getHours()).toBe(0);
+  });
+
+  it("알라딘 시절 압축 형식(YYYYMMDD)도 읽는다", () => {
+    // new Date("20000101")은 Invalid Date다.
+    const parsed = parseCalendarDate("20000101");
+
+    expect(parsed.getFullYear()).toBe(2000);
+    expect(parsed.getMonth()).toBe(0);
+    expect(parsed.getDate()).toBe(1);
+  });
+
+  it("오프셋이 붙은 타임스탬프는 손대지 않는다", () => {
+    const iso = "2026-09-13T20:00:00.000Z";
+
+    expect(parseCalendarDate(iso).toISOString()).toBe(iso);
+  });
+
+  it("Date 객체는 그대로 돌려준다", () => {
+    const input = new Date(2026, 0, 1);
+
+    expect(parseCalendarDate(input)).toBe(input);
+  });
+
+  it("달력 날짜 정렬 순서가 뒤집히지 않는다", () => {
+    const earlier = parseCalendarDate("2025-12-31").getTime();
+    const later = parseCalendarDate("2026-01-01").getTime();
+
+    expect(later).toBeGreaterThan(earlier);
   });
 });

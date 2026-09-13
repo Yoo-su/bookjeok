@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ChevronLeft, ChevronRight } from "@/shared/components/icons/iconsax";
 import { Card } from "@/shared/components/shadcn/card";
-import { formatDate } from "@/shared/utils/format-date";
+import { formatDate, parseCalendarDate } from "@/shared/utils/format-date";
 
 interface ReadingTimelineProps {
   logs: ReadingLog[];
@@ -29,7 +29,9 @@ export function ReadingTimeline({ logs }: ReadingTimelineProps) {
     const groups: Record<string, ReadingLog[]> = {};
 
     logs.forEach((log) => {
-      const date = new Date(log.date);
+      // 달력 날짜라 new Date()에 그냥 넣으면 UTC 자정이 된다. UTC보다 뒤진
+      // 타임존에서는 매달 1일 기록이 전월 그룹으로 밀린다.
+      const date = parseCalendarDate(log.date);
       const key = format(date, "yyyy.MM");
 
       if (!groups[key]) {

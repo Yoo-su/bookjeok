@@ -42,29 +42,37 @@ const DATE_FORMATS = {
 /** 사전 정의 포맷 키 타입 */
 export type DateFormatKey = keyof (typeof DATE_FORMATS)["ko"];
 
-/** 시각이 없는 순수 달력 날짜 (독서기록의 `date`, 라운지의 `latestDate`) */
-const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+/**
+ * 시각이 없는 순수 달력 날짜.
+ *
+ * `YYYY-MM-DD`는 독서기록의 `date`·라운지의 `latestDate`·도서의 `pubdate`가
+ * 쓰는 형식이고, `YYYYMMDD`는 알라딘 시절 데이터에 남아 있는 압축 형식입니다.
+ */
+const DATE_ONLY_PATTERN = /^(\d{4})-?(\d{2})-?(\d{2})$/;
 
 /**
- * 날짜 문자열을 Date로 바꿉니다.
+ * 달력 날짜 문자열을 **보는 사람의 타임존과 무관하게** 같은 날짜를 가리키는
+ * Date로 바꿉니다.
  *
- * `new Date("2026-09-13")`은 명세상 **UTC 자정**으로 파싱돼 KST에서는 그날
- * 오전 9시가 됩니다. 그래서 오늘 남긴 기록을 오전 9시 전에 보면 "약 9시간 후"
- * 처럼 미래로 표시됩니다. UTC보다 뒤진 타임존에서 보면 아예 하루 전 날짜로
- * 찍힙니다(이 사이트는 한/영 다국어라 실제로 발생).
+ * `new Date("2026-09-13")`은 명세상 **UTC 자정**으로 파싱됩니다. 그래서
+ * UTC보다 앞선 KST에서는 그날 오전 9시가 되어(오전 중에 보면 미래로 표시됨),
+ * UTC보다 뒤진 타임존에서는 아예 **전날**이 됩니다. 이 사이트는 한/영
+ * 다국어라 후자도 실제로 발생하는 경로입니다.
  *
- * 달력 날짜는 시각이 없는 값이므로 로컬 자정으로 읽어 보는 사람의 타임존과
- * 무관하게 같은 날짜가 나오게 합니다. 오프셋이 붙은 ISO 타임스탬프
- * (`createdAt` 등)는 순간을 가리키는 값이므로 그대로 둡니다.
+ * 달력 날짜에는 시각이 없으므로 로컬 자정으로 읽습니다. 오프셋이 붙은 ISO
+ * 타임스탬프(`createdAt` 등)는 타임라인 위의 한 점을 가리키는 값이므로
+ * 손대지 않습니다.
+ *
+ * **달력 날짜를 `new Date()`에 직접 넣지 말고 항상 이 함수를 거치세요.**
  */
-function parseDateInput(date: Date | string): Date {
+export function parseCalendarDate(date: Date | string): Date {
   if (typeof date !== "string") return date;
 
   const dateOnly = DATE_ONLY_PATTERN.exec(date);
   if (!dateOnly) return new Date(date);
 
-  const [year, month, day] = date.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  const [, year, month, day] = dateOnly;
+  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 /** 로케일별 "오늘"·"어제". `chat-item`의 기존 방식을 따른다. */
@@ -117,7 +125,7 @@ export function formatDate(
   formatKeyOrPattern: DateFormatKey | string,
 ): string {
   if (!date) return "";
-  const dateObj = parseDateInput(date);
+  const dateObj = parseCalendarDate(date);
   if (isNaN(dateObj.getTime())) return "";
 
   const dateLocale = getDateLocale(locale);
@@ -143,7 +151,7 @@ export function formatRelativeTime(
   locale: string,
 ): string {
   if (!date) return "";
-  const dateObj = parseDateInput(date);
+  const dateObj = parseCalendarDate(date);
   if (isNaN(dateObj.getTime())) return "";
 
   // 시각이 없는 달력 날짜는 달력 일수로 센다.
