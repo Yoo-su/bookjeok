@@ -3,6 +3,7 @@ import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
+import koMessages from "@/shared/i18n/messages/ko.json";
 
 import { EmailVerificationAlert } from "../email-verification-alert";
 
@@ -18,6 +19,15 @@ vi.mock("sonner", () => ({
     success: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+// 실제 ko 메시지를 그대로 태워서 카피가 바뀌면 테스트도 같이 깨지게 둔다
+vi.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string) =>
+    [...namespace.split("."), ...key.split(".")].reduce<any>(
+      (node, segment) => node?.[segment],
+      koMessages,
+    ) ?? key,
 }));
 
 describe("EmailVerificationAlert", () => {

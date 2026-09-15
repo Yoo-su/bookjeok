@@ -1,6 +1,7 @@
 "use client";
 
 import { useSendVerificationEmailMutation } from "@bookjeok/react-query";
+import { useTranslations } from "next-intl";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -33,27 +34,31 @@ interface EmailVerificationAlertProps {
  * 이메일 미인증 사용자에게 인증을 유도하는 북적 테마 인라인 알림 배너
  */
 export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({
-  title = "이메일 인증이 필요합니다",
-  description = "안전하고 신뢰할 수 있는 중고거래를 위해 이메일 인증을 완료해주세요.",
+  title,
+  description,
   className = "",
   compact = false,
 }) => {
+  const t = useTranslations("auth.verification.alert");
   const user = useAuthStore((state) => state.user);
   const [isSent, setIsSent] = useState(false);
 
   const { mutate: sendEmail, isPending } = useSendVerificationEmailMutation({
     onSuccess: () => {
       setIsSent(true);
-      toast.success("인증 메일이 발송되었습니다. 받은 편지함을 확인해주세요.");
+      toast.success(t("toast_success"));
     },
     onError: (error) => {
-      toast.error(error.message || "인증 메일 발송 중 오류가 발생했습니다.");
+      toast.error(error.message || t("toast_error"));
     },
   });
 
   if (!user || user.isEmailVerified) {
     return null;
   }
+
+  const alertTitle = title ?? t("title");
+  const alertDescription = description ?? t("description");
 
   if (compact) {
     return (
@@ -62,7 +67,7 @@ export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({
       >
         <div className="flex items-center gap-2 min-w-0">
           <ShieldSecurityIcon className="h-4 w-4 shrink-0 text-stone-700 dark:text-stone-300" />
-          <span className="font-medium truncate">{title}</span>
+          <span className="font-medium truncate">{alertTitle}</span>
         </div>
         <Button
           type="button"
@@ -78,7 +83,7 @@ export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({
           ) : (
             <Mail className="h-3.5 w-3.5 mr-1" />
           )}
-          {isSent ? "발송 완료" : "인증 메일 발송"}
+          {isSent ? t("sent") : t("send")}
         </Button>
       </div>
     );
@@ -95,14 +100,14 @@ export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({
           </div>
           <div className="space-y-1">
             <h4 className="text-sm font-bold tracking-tight text-stone-900 dark:text-stone-100">
-              {title}
+              {alertTitle}
             </h4>
             <p className="text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-              {description}
+              {alertDescription}
             </p>
             {user.email && (
               <p className="text-[11px] text-stone-400 dark:text-stone-500 font-mono pt-0.5">
-                등록된 계정:{" "}
+                {t("account_label")}:{" "}
                 <span className="font-semibold text-stone-700 dark:text-stone-300">
                   {user.email}
                 </span>
@@ -120,17 +125,17 @@ export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({
           {isPending ? (
             <>
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              발송 중...
+              {t("sending")}
             </>
           ) : isSent ? (
             <>
               <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-              발송 완료 (확인 필요)
+              {t("sent_check")}
             </>
           ) : (
             <>
               <Mail className="mr-1.5 h-3.5 w-3.5" />
-              인증 메일 발송
+              {t("send")}
             </>
           )}
         </Button>
@@ -142,6 +147,7 @@ export const EmailVerificationAlert: React.FC<EmailVerificationAlertProps> = ({
 interface EmailVerificationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** 인증이 필요한 기능 이름. 번역된 문자열을 넘긴다 */
   actionName?: string;
 }
 
@@ -151,18 +157,20 @@ interface EmailVerificationModalProps {
 export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
   open,
   onOpenChange,
-  actionName = "해당 기능",
+  actionName,
 }) => {
+  const t = useTranslations("auth.verification.alert");
+  const tActions = useTranslations("common.actions");
   const user = useAuthStore((state) => state.user);
   const [isSent, setIsSent] = useState(false);
 
   const { mutate: sendEmail, isPending } = useSendVerificationEmailMutation({
     onSuccess: () => {
       setIsSent(true);
-      toast.success("인증 메일이 발송되었습니다. 받은 편지함을 확인해주세요.");
+      toast.success(t("toast_success"));
     },
     onError: (error) => {
-      toast.error(error.message || "인증 메일 발송 중 오류가 발생했습니다.");
+      toast.error(error.message || t("toast_error"));
     },
   });
 
@@ -174,23 +182,26 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
             <ShieldSecurityIcon className="h-6 w-6" />
           </div>
           <DialogTitle className="text-lg font-bold text-stone-900 dark:text-stone-100 tracking-tight">
-            이메일 인증이 필요합니다
+            {t("title")}
           </DialogTitle>
           <DialogDescription className="text-xs leading-relaxed text-stone-500 dark:text-stone-400">
-            안전하고 신뢰할 수 있는 중고거래를 위해,{" "}
-            <span className="font-semibold text-stone-800 dark:text-stone-200">
-              {actionName}
-            </span>
-            을(를) 이용하시려면 먼저 이메일 인증을 완료해주세요.
+            {t.rich("modal_desc", {
+              action: actionName ?? t("actions.default"),
+              b: (chunks) => (
+                <span className="font-semibold text-stone-800 dark:text-stone-200">
+                  {chunks}
+                </span>
+              ),
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="my-2 rounded-xl bg-stone-50 dark:bg-stone-800/40 p-3.5 text-xs text-stone-600 dark:text-stone-300 border border-stone-200/70 dark:border-stone-800 space-y-1">
           <p className="font-semibold text-stone-800 dark:text-stone-200">
-            인증 대상 이메일 계정
+            {t("modal_account_title")}
           </p>
           <p className="font-mono text-stone-500 dark:text-stone-400">
-            {user?.email || "등록된 이메일 없음"}
+            {user?.email || t("modal_no_email")}
           </p>
         </div>
 
@@ -201,7 +212,7 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
             onClick={() => onOpenChange(false)}
             className="h-9 rounded-xl border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 text-xs cursor-pointer"
           >
-            닫기
+            {tActions("close")}
           </Button>
           <Button
             type="button"
@@ -212,17 +223,17 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
             {isPending ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                발송 중...
+                {t("sending")}
               </>
             ) : isSent ? (
               <>
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                발송 완료
+                {t("sent")}
               </>
             ) : (
               <>
                 <Mail className="h-3.5 w-3.5" />
-                인증 메일 발송
+                {t("send")}
               </>
             )}
           </Button>

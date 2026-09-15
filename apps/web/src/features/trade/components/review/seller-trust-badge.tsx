@@ -39,7 +39,7 @@ export const SellerTrustBadge = ({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium whitespace-nowrap",
+        "inline-flex max-w-full items-center gap-1.5 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-medium whitespace-nowrap",
         isSmall ? "px-2.5 py-0.5 text-[11px]" : "px-3 py-1 text-xs",
         className,
       )}
@@ -50,7 +50,7 @@ export const SellerTrustBadge = ({
           isSmall ? "h-3 w-3" : "h-3.5 w-3.5",
         )}
       />
-      <span>
+      <span className="truncate">
         {/*
           직거래 완료는 판매자 자기신고, 택배 거래는 에스크로 구매확정을 거친
           기록이라 신뢰도가 다르다. 합산만 보여주면 그 차이가 가려지므로 나눠 쓴다.

@@ -51,6 +51,7 @@ const MapLocationSelector = dynamic(
 
 export const BookSaleForm = () => {
   const t = useTranslations("market.form");
+  const tVerify = useTranslations("auth.verification.alert");
   const user = useAuthStore((state) => state.user);
   const isEmailUnverified = !!user && !user.isEmailVerified;
 
@@ -77,8 +78,8 @@ export const BookSaleForm = () => {
       <CardContent className="px-0 sm:px-6">
         {isEmailUnverified && (
           <EmailVerificationAlert
-            title="이메일 인증 후 판매글 작성이 가능합니다"
-            description="사기 및 허위 매물 방지를 위해 이메일 인증이 완료된 회원만 판매글을 등록할 수 있습니다."
+            title={tVerify("sale_form_title")}
+            description={tVerify("sale_form_desc")}
             className="mb-6"
           />
         )}

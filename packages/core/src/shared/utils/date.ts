@@ -1,5 +1,8 @@
 import { format, formatDistanceToNow } from "date-fns";
-import { ko } from "date-fns/locale";
+import { enUS, ko, Locale } from "date-fns/locale";
+
+/** 지원 로케일 → date-fns Locale. 매핑에 없으면 기본값 ko. */
+const DATE_FNS_LOCALES: Record<string, Locale> = { ko, en: enUS };
 
 export const getSimpleDate = (date: Date) => {
   const y = date.getFullYear();
@@ -39,8 +42,12 @@ export const parseSafeISO = (dateString: string): Date => {
 /**
  * 게시글 시간을 상대 시간 또는 날짜로 포맷하는 함수
  * @param dateString - ISO 8601 형식의 날짜 문자열
+ * @param locale - 상대 시간 표기에 쓸 로케일 ("ko" | "en"). 생략하면 ko
  */
-export const formatPostDate = (dateString: string): string => {
+export const formatPostDate = (
+  dateString: string,
+  locale: string = "ko",
+): string => {
   const date = parseSafeISO(dateString);
   const now = new Date();
 
@@ -53,7 +60,10 @@ export const formatPostDate = (dateString: string): string => {
 
   // 7일 이내의 글은 상대 시간으로 표시 (예: "3일 전")
   if (diffInDays < 7) {
-    return formatDistanceToNow(date, { addSuffix: true, locale: ko });
+    return formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: DATE_FNS_LOCALES[locale] ?? ko,
+    });
   }
 
   // 7일이 지난 글은 'YYYY.MM.DD' 형식으로 표시

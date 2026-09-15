@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/shadcn/dialog";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 
 interface SelectBuyerModalProps {
   open: boolean;
@@ -96,14 +97,11 @@ export const SelectBuyerModal = ({
               <h4 className="font-semibold text-sm truncate text-stone-900 dark:text-stone-100">
                 {bookTitle}
               </h4>
-              <p className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5">
-                <span className="tabular-nums">
-                  {room.usedBookSale.price.toLocaleString()}
-                </span>
-                <span className="text-xs font-medium ml-0.5">
-                  {tCommon("won")}
-                </span>
-              </p>
+              <PriceDisplay
+                value={room.usedBookSale.price}
+                className="text-sm font-bold text-stone-900 dark:text-stone-100 mt-0.5 tabular-nums"
+                unitClassName="text-xs font-medium"
+              />
             </div>
           </div>
 

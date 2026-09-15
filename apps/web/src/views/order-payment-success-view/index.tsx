@@ -4,7 +4,7 @@ import { getErrorMessage } from "@bookjeok/api-client";
 import { Order } from "@bookjeok/core";
 import { useConfirmPaymentMutation } from "@bookjeok/react-query";
 import { useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -36,9 +36,12 @@ import {
 import { Separator } from "@/shared/components/shadcn/separator";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { formatCurrency } from "@/shared/utils/format-currency";
 
 export const OrderPaymentSuccessView = () => {
   const t = useTranslations("order.payment.success");
+  const locale = useLocale();
+  const tCurrency = useTranslations("common");
   const tCommon = useTranslations("order.payment");
   const searchParams = useSearchParams();
 
@@ -266,7 +269,11 @@ export const OrderPaymentSuccessView = () => {
           <div className="flex justify-between">
             <span className="text-stone-500">{t("paid_amount")}</span>
             <span className="font-bold font-mono text-sm text-stone-900 dark:text-stone-100">
-              {parseInt(amountStr, 10).toLocaleString()}원
+              {formatCurrency(
+                parseInt(amountStr, 10),
+                locale,
+                tCurrency("won"),
+              )}
             </span>
           </div>
 

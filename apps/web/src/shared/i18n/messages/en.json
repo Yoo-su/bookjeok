@@ -249,7 +249,32 @@
       "error_desc": "The verification link is invalid or expired. Please request a new verification email on My Page.",
       "btn_mypage": "Go to My Page",
       "btn_home": "Go to Home",
-      "btn_login": "Go to Login"
+      "btn_login": "Go to Login",
+      "alert": {
+        "title": "Email verification required",
+        "description": "Verify your email to buy and sell safely on Bookjeok.",
+        "account_label": "Registered account",
+        "send": "Send verification email",
+        "sending": "Sending...",
+        "sent": "Email sent",
+        "sent_check": "Sent — check your inbox",
+        "toast_success": "Verification email sent. Please check your inbox.",
+        "toast_error": "Failed to send the verification email.",
+        "modal_desc": "To keep trades safe, verify your email before using <b>{action}</b>.",
+        "modal_account_title": "Email account to verify",
+        "modal_no_email": "No email on file",
+        "actions": {
+          "default": "this feature",
+          "used_book_chat": "used-book chat",
+          "direct_trade_complete": "direct trade completion",
+          "select_counterparty": "trade partner selection",
+          "select_buyer": "buyer selection"
+        },
+        "sale_form_title": "Verify your email to post a listing",
+        "sale_form_desc": "To prevent fraud and fake listings, only members with a verified email can post a listing.",
+        "payment_title": "Verify your email to pay",
+        "payment_desc": "For secure escrow payments, only accounts with a verified email can complete a payment."
+      }
     },
     "validation": {
       "email_invalid": "Invalid email format.",
@@ -409,8 +434,8 @@
       "stats": {
         "readers": "readers",
         "wishlisted": "wishlisted",
-        "readers_tooltip": "{count} readers read this book.",
-        "wishlist_tooltip": "{count} readers wishlisted this book."
+        "readers_tooltip": "{count, plural, one {# reader read this book.} other {# readers read this book.}}",
+        "wishlist_tooltip": "{count, plural, one {# reader wishlisted this book.} other {# readers wishlisted this book.}}"
       },
       "ai_summary": {
         "title": "AI Library Assistant",
@@ -495,7 +520,7 @@
     },
     "ai_recommend_slider": {
       "title": "AI Curated Recommendations",
-      "count": "({count} books)",
+      "count": "({count, plural, one {# book} other {# books}})",
       "swipe_hint": "Swipe left/right to browse",
       "recommend_reason": "Why We Recommend"
     },
@@ -726,7 +751,7 @@
       "empty_memo": "There is no one-line review left for this book.",
       "share_title": "{name}'s {year} Reading Deck",
       "share_title_all": "{name}'s Reading Deck",
-      "share_subtitle": "A collection of {count} precious reading record cards completed this year.",
+      "share_subtitle": "A collection of {count, plural, one {# precious reading record card} other {# precious reading record cards}} completed this year.",
       "create_my_deck": "Make My Own Reading Deck",
       "loading_message": "Retrieving reading cards...",
       "error_title": "User not found",
@@ -782,7 +807,7 @@
         "error": "Error loading map.",
         "empty": "No sales registered yet.",
         "top5": "Top 5 Active Regions",
-        "showing": "Showing {count} recent sales"
+        "showing": "Showing {count, plural, one {# recent sale} other {# recent sales}}"
       },
       "activity": {
         "title": "Activity (Last 30 Days)",
@@ -796,14 +821,14 @@
         "desc": "Which category has the most reviews?",
         "empty": "No reviews registered yet.",
         "series": "Reviews",
-        "tooltip": "{count} reviews"
+        "tooltip": "{count, plural, one {# review} other {# reviews}}"
       },
       "price": {
         "title": "Price Distribution",
         "desc": "Which price range is most popular?",
         "empty": "No sales registered yet.",
         "series": "Sales",
-        "tooltip": "{count} items"
+        "tooltip": "{count, plural, one {# item} other {# items}}"
       },
       "reaction": {
         "title": "Reaction Distribution",
@@ -973,10 +998,10 @@
     },
     "title": "My Comments",
     "subtitle": "View and manage all comments you've written on books and reviews.",
-    "count_desc": "You wrote {count} comments",
+    "count_desc": "You wrote {count, plural, one {# comment} other {# comments}}",
     "type_book": "Book Comment",
     "type_review": "Review Comment",
-    "likes_count": "{count} Likes",
+    "likes_count": "{count, plural, one {# Like} other {# Likes}}",
     "no_likes": "0 Likes",
     "view_book": "Go to Book",
     "view_review": "Go to Review",
@@ -1029,7 +1054,8 @@
       "write_review": "Write Review",
       "sold_out": "Sold Out",
       "sale_ended": "Sale Ended",
-      "view_details": "View Details"
+      "view_details": "View Details",
+      "price": "Price:"
     },
     "toast": {
       "add_success": "Added to wishlist.",
@@ -1263,7 +1289,8 @@
         "for_sale": "For Sale",
         "reserved": "Reserved",
         "sold": "Sold"
-      }
+      },
+      "price": "Price:"
     },
     "toast": {
       "create_success": "Sale post registered successfully.",
@@ -1385,20 +1412,20 @@
       "title_suffix": "Currently Reading",
       "desc": "See what other readers have been reading lately.",
       "view_all": "Browse Lounge",
-      "readers_count": "{count} Readers"
+      "readers_count": "{count, plural, one {# Reader} other {# Readers}}"
     },
     "popular": {
       "badge": "TRENDING NOW",
       "title": "Popular Books This Month",
       "subtitle": "The most recorded books by readers in the last 30 days.",
-      "readers_count": "{count} readers"
+      "readers_count": "{count, plural, one {# reader} other {# readers}}"
     },
     "active_readers": {
       "title": "Avid Readers",
       "subtitle": "The most dedicated and consistent readers over the past 3 months.",
       "recent_label": "Last 3 Months",
       "total_label": "Total",
-      "count_unit": "{count} books",
+      "count_unit": "{count, plural, one {# book} other {# books}}",
       "more": "Show More",
       "collapse": "Show Less"
     },
@@ -1409,10 +1436,10 @@
       "error": "Failed to load readers' records.",
       "loading_more": "Loading more logs...",
       "all_loaded": "All logs loaded.",
-      "readers_reading": "{count} readers total",
-      "readers_extra": "and {count} others read this",
-      "readers_count": "{count} readers total",
-      "readers_summary": "{count} reading logs",
+      "readers_reading": "{count, plural, one {# reader total} other {# readers total}}",
+      "readers_extra": "{count, plural, one {and # other read this} other {and # others read this}}",
+      "readers_count": "{count, plural, one {# reader total} other {# readers total}}",
+      "readers_summary": "{count, plural, one {# reading log} other {# reading logs}}",
       "view_details": "View readers",
       "date_read": "{date}",
       "empty": {
@@ -1423,7 +1450,7 @@
       }
     },
     "detail_modal": {
-      "total_readers": "{count} readers total",
+      "total_readers": "{count, plural, one {# reader total} other {# readers total}}",
       "read_on": "{date}",
       "loading": "Loading...",
       "empty": "No other reading logs for this book yet."
@@ -1486,7 +1513,7 @@
       "view_profile": "View {nickname}'s profile",
       "attach_image": "Attach image",
       "scroll_to_latest": "Jump to latest message",
-      "new_messages": "{count} new messages, jump to latest",
+      "new_messages": "{count, plural, one {# new message, jump to latest} other {# new messages, jump to latest}}",
       "retry_message": "Resend message",
       "discard_message": "Delete unsent message"
     },
@@ -1582,7 +1609,10 @@
           "SOLD": "Sold",
           "OTHER_TRADING": "Another trade in progress",
           "BACK_ON_MARKET": "Back on sale"
-        }
+        },
+        "amount_label": "Amount",
+        "tracking_label": "Tracking",
+        "reason_label": "Reason"
       },
       "direct_trade_dialog": {
         "reserve_title": "Pick this buyer as your trading partner?",
@@ -1834,15 +1864,15 @@
       },
       "stats": {
         "title": "Seller Trust Rating",
-        "completed_trades": "{count} Completed Trades",
+        "completed_trades": "{count, plural, one {# Completed Trade} other {# Completed Trades}}",
         "positive_rate": "{rate}% Positive Reviews",
-        "total_reviews": "{count} Total Reviews",
+        "total_reviews": "{count, plural, one {# Total Review} other {# Total Reviews}}",
         "no_reviews": "No trade reviews yet.",
         "tag_summary_title": "Feedback Summary",
-        "badge_trust": "{count} trades · {rate}% positive",
-        "badge_trust_direct": "{count} in-person trades · {rate}% positive",
+        "badge_trust": "{count, plural, one {# trade} other {# trades}} · {rate}% positive",
+        "badge_trust_direct": "{count, plural, one {# in-person trade} other {# in-person trades}} · {rate}% positive",
         "badge_trust_split": "{direct} in-person · {delivery} escrow · {rate}% positive",
-        "badge_trades_only": "{count} completed trades"
+        "badge_trades_only": "{count, plural, one {# completed trade} other {# completed trades}}"
       },
       "list": {
         "title": "Trade Reviews",

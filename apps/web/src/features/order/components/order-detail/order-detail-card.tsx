@@ -47,6 +47,7 @@ import {
 import { Separator } from "@/shared/components/shadcn/separator";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { formatCurrency } from "@/shared/utils/format-currency";
 import { formatDate } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
@@ -60,6 +61,7 @@ interface OrderDetailCardProps {
 
 export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
   const t = useTranslations("order.detail");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const confirm = useConfirm();
   const currentUser = useAuthStore((state) => state.user);
@@ -265,7 +267,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                   <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-dashed border-stone-200 dark:border-stone-800">
                     <span className="text-xs text-stone-500">판매 가격</span>
                     <span className="font-bold text-base text-stone-900 dark:text-stone-100 tabular-nums">
-                      {order.amount.toLocaleString()}원
+                      {formatCurrency(order.amount, locale, tCommon("won"))}
                     </span>
                   </div>
                 </div>
@@ -399,7 +401,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
               <div className="flex justify-between">
                 <span className="text-stone-500">도서 가격</span>
                 <span className="font-semibold text-stone-900 dark:text-stone-100 tabular-nums">
-                  {order.amount.toLocaleString()}원
+                  {formatCurrency(order.amount, locale, tCommon("won"))}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -416,7 +418,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                   총 결제금액
                 </span>
                 <span className="text-lg font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-                  {order.amount.toLocaleString()}원
+                  {formatCurrency(order.amount, locale, tCommon("won"))}
                 </span>
               </div>
 
@@ -531,7 +533,8 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
               >
                 <Link href={PATHS.ORDER_PAYMENT(order.id)}>
                   <CardPosIcon className="h-4 w-4 mr-2" />
-                  {t("action_pay")} ({order.amount.toLocaleString()}원)
+                  {t("action_pay")} (
+                  {formatCurrency(order.amount, locale, tCommon("won"))})
                 </Link>
               </Button>
             )}

@@ -57,6 +57,7 @@ export const TradeStatusBanner = ({
 }: TradeStatusBannerProps) => {
   const t = useTranslations("chat.trade.status_banner");
   const tCancelDialog = useTranslations("chat.trade.cancel_selection_dialog");
+  const tVerify = useTranslations("auth.verification.alert.actions");
   const confirm = useConfirm();
   const authUser = useAuthStore((state) => state.user);
 
@@ -232,7 +233,7 @@ export const TradeStatusBanner = ({
           <EmailVerificationModal
             open={isVerificationModalOpen}
             onOpenChange={setIsVerificationModalOpen}
-            actionName="거래 대상 구매자 선택"
+            actionName={tVerify("select_buyer")}
           />
         </>
       );

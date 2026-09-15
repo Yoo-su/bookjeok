@@ -44,6 +44,7 @@ type PaymentMethodType = "CARD" | "TRANSFER" | "VIRTUAL_ACCOUNT";
 
 export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
   const t = useTranslations("order.payment");
+  const tVerify = useTranslations("auth.verification.alert");
   const locale = useLocale();
   const router = useRouter();
   const currentUser = useAuthStore((state) => state.user);
@@ -417,8 +418,8 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
       {/* 이메일 미인증 안내 배너 */}
       {isEmailUnverified && (
         <EmailVerificationAlert
-          title="이메일 인증 후 결제가 가능합니다"
-          description="안전한 에스크로 결제를 위해 이메일 인증이 완료된 계정만 결제를 진행할 수 있습니다."
+          title={tVerify("payment_title")}
+          description={tVerify("payment_desc")}
           className="mb-2"
         />
       )}

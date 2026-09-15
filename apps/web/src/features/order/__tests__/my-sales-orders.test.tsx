@@ -99,6 +99,7 @@ vi.mock("next-intl", () => ({
   useLocale: () => "ko",
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
+      won: "원",
       "tabs.all": "전체",
       "tabs.awaiting_payment": "결제 대기",
       "tabs.paid": "발송 요청",

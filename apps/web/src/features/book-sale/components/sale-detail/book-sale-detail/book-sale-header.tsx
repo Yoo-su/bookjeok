@@ -1,7 +1,9 @@
 import { formatPostDate, UsedBookSale } from "@bookjeok/core";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Clock, Eye, MapPin } from "@/shared/components/icons/iconsax";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
+import { formatCurrency } from "@/shared/utils/format-currency";
 
 import { SaleStatusBadge } from "../../common/sale-status-badge";
 import { TradeMethodBadge } from "../../common/trade-method-badge";
@@ -14,6 +16,7 @@ interface BookSaleHeaderProps {
 export const BookSaleHeader = ({ sale }: BookSaleHeaderProps) => {
   const t = useTranslations("market.detail");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
 
   const displayDate =
     sale.updatedAt > sale.createdAt ? sale.updatedAt : sale.createdAt;
@@ -42,49 +45,44 @@ export const BookSaleHeader = ({ sale }: BookSaleHeaderProps) => {
           <div className="flex flex-col py-4 gap-2">
             <div className="flex items-end justify-between">
               <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest leading-none">
-                {t("originalPrice", { fallback: "정가" })}
+                {t("originalPrice")}
               </span>
               <span className="text-sm font-medium text-stone-400 line-through decoration-1 leading-none">
-                {originalPrice.toLocaleString()}
-                {tCommon("won")}
+                {formatCurrency(originalPrice, locale, tCommon("won"))}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mt-1">
               <span className="self-end sm:self-auto text-[11px] font-black text-white bg-stone-900 px-2 py-1 tracking-widest leading-none">
-                -{discountRate}% {t("discount", { fallback: "OFF" })}
+                -{discountRate}% {t("discount")}
               </span>
-              <p className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tighter leading-none">
-                {sale.price.toLocaleString()}
-                <span className="text-xl sm:text-2xl font-bold text-stone-800 ml-0.5">
-                  {tCommon("won")}
-                </span>
-              </p>
+              <PriceDisplay
+                value={sale.price}
+                className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tighter leading-none"
+                unitClassName="text-xl sm:text-2xl font-bold text-stone-800"
+              />
             </div>
           </div>
         ) : isPremiumOrNormal ? (
           <div className="flex flex-col py-4 gap-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mt-1">
               <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">
-                {t("originalPrice", { fallback: "정가" })}{" "}
-                {originalPrice.toLocaleString()}
-                {tCommon("won")}
+                {t("originalPrice")}{" "}
+                {formatCurrency(originalPrice, locale, tCommon("won"))}
               </span>
-              <p className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tighter leading-none">
-                {sale.price.toLocaleString()}
-                <span className="text-xl sm:text-2xl font-bold text-stone-800 ml-0.5">
-                  {tCommon("won")}
-                </span>
-              </p>
+              <PriceDisplay
+                value={sale.price}
+                className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tighter leading-none"
+                unitClassName="text-xl sm:text-2xl font-bold text-stone-800"
+              />
             </div>
           </div>
         ) : (
-          <div className="py-4">
-            <p className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tighter leading-none text-right">
-              {sale.price.toLocaleString()}
-              <span className="text-xl sm:text-2xl font-bold text-stone-800 ml-0.5">
-                {tCommon("won")}
-              </span>
-            </p>
+          <div className="py-4 text-right">
+            <PriceDisplay
+              value={sale.price}
+              className="text-4xl sm:text-5xl font-black text-stone-900 tracking-tighter leading-none"
+              unitClassName="text-xl sm:text-2xl font-bold text-stone-800"
+            />
           </div>
         )}
       </div>
@@ -97,7 +95,7 @@ export const BookSaleHeader = ({ sale }: BookSaleHeaderProps) => {
         </span>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-medium">
           <Clock className="w-3 h-3" />
-          {dateLabel} {formatPostDate(displayDate)}
+          {dateLabel} {formatPostDate(displayDate, locale)}
         </span>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-medium">
           <Eye className="w-3 h-3" />

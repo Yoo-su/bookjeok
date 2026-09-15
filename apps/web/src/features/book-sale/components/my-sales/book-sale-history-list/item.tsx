@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/components/shadcn/dropdown-menu";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { Link, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { formatDate } from "@/shared/utils/format-date";
@@ -144,13 +145,12 @@ export const BookSaleHistoryItem = ({ sale }: BookSaleHistoryItemProps) => {
         {/* 하단 바: 금액 + 상태 변경 Select + 액션 메뉴 */}
         <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-stone-100 dark:border-stone-800">
           <div className="flex items-baseline gap-1">
-            <span className="text-xs text-stone-400">판매가격:</span>
-            <span className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-              {sale.price.toLocaleString()}
-            </span>
-            <span className="text-xs font-normal text-stone-500">
-              {tCommon("won")}
-            </span>
+            <span className="text-xs text-stone-400">{t("price")}</span>
+            <PriceDisplay
+              value={sale.price}
+              className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums"
+              unitClassName="text-xs font-normal text-stone-500"
+            />
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">
