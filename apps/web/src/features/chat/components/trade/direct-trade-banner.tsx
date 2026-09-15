@@ -54,6 +54,7 @@ export const DirectTradeBanner = ({
 }: DirectTradeBannerProps) => {
   const t = useTranslations("chat.trade.status_banner");
   const tDialog = useTranslations("chat.trade.direct_trade_dialog");
+  const tVerify = useTranslations("auth.verification.alert.actions");
   const confirm = useConfirm();
   const authUser = useAuthStore((state) => state.user);
   const isChatOpen = useChatStore((state) => state.isChatOpen);
@@ -310,7 +311,7 @@ export const DirectTradeBanner = ({
           <EmailVerificationModal
             open={isVerificationModalOpen}
             onOpenChange={setIsVerificationModalOpen}
-            actionName="직거래 완료 처리"
+            actionName={tVerify("direct_trade_complete")}
           />
         </>
       );
@@ -350,7 +351,7 @@ export const DirectTradeBanner = ({
         <EmailVerificationModal
           open={isVerificationModalOpen}
           onOpenChange={setIsVerificationModalOpen}
-          actionName="거래 상대 지정"
+          actionName={tVerify("select_counterparty")}
         />
       </>
     );

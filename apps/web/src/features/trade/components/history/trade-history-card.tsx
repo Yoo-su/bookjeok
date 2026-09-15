@@ -10,6 +10,7 @@ import { Handshake, Pencil } from "@/shared/components/icons/iconsax";
 import { Badge } from "@/shared/components/shadcn/badge";
 import { Button } from "@/shared/components/shadcn/button";
 import { Card, CardContent } from "@/shared/components/shadcn/card";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { formatDate } from "@/shared/utils/format-date";
@@ -121,12 +122,11 @@ export const TradeHistoryCard = ({ completion }: TradeHistoryCardProps) => {
         <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-stone-100 dark:border-stone-800">
           <div className="flex items-baseline gap-1">
             <span className="text-xs text-stone-400">{t("price")}</span>
-            <span className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-              {sale?.price?.toLocaleString()}
-            </span>
-            <span className="text-xs font-normal text-stone-500">
-              {tCommon("won")}
-            </span>
+            <PriceDisplay
+              value={sale?.price ?? 0}
+              className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums"
+              unitClassName="text-xs font-normal text-stone-500"
+            />
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">

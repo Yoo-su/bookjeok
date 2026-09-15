@@ -24,6 +24,7 @@ import {
   XCircle,
 } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { PATHS } from "@/shared/constants/paths";
 
 interface TradeMessageCardProps {
@@ -234,20 +235,17 @@ export const TradeMessageCard = ({
           <div className="mt-3 pt-2.5 border-t border-stone-100 dark:border-stone-800 space-y-1.5 text-xs text-stone-500 dark:text-stone-400">
             {amount && (
               <div className="flex justify-between items-center">
-                <span>결제 금액</span>
-                <span className="font-bold text-stone-900 dark:text-stone-100 text-sm">
-                  <span className="tabular-nums">
-                    {amount.toLocaleString()}
-                  </span>
-                  <span className="ml-0.5 font-medium text-xs">
-                    {tCommon("won")}
-                  </span>
-                </span>
+                <span>{t("amount_label")}</span>
+                <PriceDisplay
+                  value={amount}
+                  className="font-bold text-stone-900 dark:text-stone-100 text-sm tabular-nums"
+                  unitClassName="font-medium text-xs"
+                />
               </div>
             )}
             {carrier && trackingNumber && (
               <div className="flex justify-between items-center">
-                <span>운송장 정보</span>
+                <span>{t("tracking_label")}</span>
                 <span className="font-mono font-medium text-stone-900 dark:text-stone-100">
                   {carrier} {trackingNumber}
                 </span>
@@ -255,7 +253,7 @@ export const TradeMessageCard = ({
             )}
             {reason && (
               <div className="flex justify-between items-start gap-2">
-                <span className="shrink-0">사유</span>
+                <span className="shrink-0">{t("reason_label")}</span>
                 <span className="text-right text-stone-700 dark:text-stone-300">
                   {reason}
                 </span>

@@ -97,6 +97,7 @@ vi.mock("next-intl", () => ({
   useLocale: () => "ko",
   useTranslations: () => (key: string) => {
     const map: Record<string, string> = {
+      won: "원",
       order_number: "주문번호",
       page_title: "주문 상세 정보",
       status_timeline: "주문 진행 상태",

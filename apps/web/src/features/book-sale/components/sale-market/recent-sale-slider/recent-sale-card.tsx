@@ -2,15 +2,17 @@
 
 import { UsedBookSale } from "@bookjeok/core";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { formatCurrency } from "@/shared/utils/format-currency";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
 import { SaleStatusBadge } from "../../common/sale-status-badge";
@@ -28,6 +30,7 @@ export const RecentSaleCard = ({
   priority = false,
 }: RecentSaleCardProps) => {
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const tMarket = useTranslations("market");
   const displayImage =
     sale.imageUrls[0] || sale.book?.image || "/images/placeholder-image.svg";
@@ -79,16 +82,14 @@ export const RecentSaleCard = ({
 
           {/* 가격 정보 */}
           <div className="flex items-baseline gap-1.5 mt-2">
-            <span className="text-sm font-semibold text-neutral-900">
-              {sale.price.toLocaleString()}
-              <span className="text-xs font-medium ml-0.5">
-                {tCommon("won")}
-              </span>
-            </span>
+            <PriceDisplay
+              value={sale.price}
+              className="text-sm font-semibold text-neutral-900"
+              unitClassName="text-xs font-medium"
+            />
             {isDiscounted && (
               <span className="text-[10px] text-neutral-400 line-through font-light">
-                {originalPrice.toLocaleString()}
-                {tCommon("won")}
+                {formatCurrency(originalPrice, locale, tCommon("won"))}
               </span>
             )}
           </div>

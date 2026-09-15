@@ -31,6 +31,7 @@ import { Button } from "@/shared/components/shadcn/button";
 import { Card, CardContent } from "@/shared/components/shadcn/card";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { formatCurrency } from "@/shared/utils/format-currency";
 import { formatDate } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
@@ -40,6 +41,7 @@ interface PurchaseOrderCardProps {
 
 export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
   const t = useTranslations("order.purchases.card");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const confirm = useConfirm();
   const openChatRoom = useOpenChatRoom();
@@ -224,7 +226,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
           <div className="flex items-baseline gap-1">
             <span className="text-xs text-stone-400">결제금액:</span>
             <span className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-              {order.amount.toLocaleString()}원
+              {formatCurrency(order.amount, locale, tCommon("won"))}
             </span>
           </div>
 

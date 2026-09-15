@@ -30,12 +30,15 @@ vi.mock("sonner", () => ({
 vi.mock("next-intl", () => ({
   useLocale: () => "ko",
   useTranslations: (section?: string) => {
-    return (key: string, options?: Record<string, any>) => {
+    const t = (key: string, options?: Record<string, any>) => {
       if (options?.carrier && options?.trackingNumber) {
         return `${options.carrier} ${options.trackingNumber}`;
       }
       return `${section ? `${section}.` : ""}${key}`;
     };
+    // rich 텍스트도 키 경로만 돌려주면 충분하다
+    t.rich = (key: string) => t(key);
+    return t;
   },
 }));
 

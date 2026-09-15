@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ReactNode } from "react";
 
 import {
@@ -9,7 +9,9 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { cn } from "@/shared/utils/cn";
+import { formatCurrency } from "@/shared/utils/format-currency";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
 import { SaleStatusBadge } from "../sale-status-badge";
@@ -119,6 +121,7 @@ export const Title = ({ className }: { className?: string }) => {
 // 가격 - 선명한 타이포그래피
 export const Price = ({ className }: { className?: string }) => {
   const t = useTranslations("common");
+  const locale = useLocale();
   const { sale } = useBookSaleContext();
 
   const originalPrice = Number(sale.book?.discount);
@@ -126,14 +129,14 @@ export const Price = ({ className }: { className?: string }) => {
 
   return (
     <div className={cn("flex items-baseline gap-1.5", className)}>
-      <p className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight leading-none">
-        {sale.price.toLocaleString()}
-        <span className="text-xs font-medium ml-0.5">{t("won")}</span>
-      </p>
+      <PriceDisplay
+        value={sale.price}
+        className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight leading-none"
+        unitClassName="text-xs font-medium"
+      />
       {isDiscounted && (
         <span className="text-xs text-neutral-400 line-through font-light">
-          {originalPrice.toLocaleString()}
-          {t("won")}
+          {formatCurrency(originalPrice, locale, t("won"))}
         </span>
       )}
     </div>

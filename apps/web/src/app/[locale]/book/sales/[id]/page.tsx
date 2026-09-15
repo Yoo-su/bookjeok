@@ -12,6 +12,7 @@ import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { isNotFoundError } from "@/shared/utils/api-error";
+import { formatCurrency } from "@/shared/utils/format-currency";
 import { BookSaleDetailView } from "@/views/book-sale-detail-view";
 
 // 판매 상태 변경은 /api/revalidate 웹훅이 즉시 걷어낸다.
@@ -52,6 +53,7 @@ const getCachedBookSale = cache(async (id: string) => {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, locale } = await params;
   const t = await getTranslations({ locale, namespace: "market.detail" });
+  const tCommon = await getTranslations({ locale, namespace: "common" });
 
   try {
     const sale = await getCachedBookSale(id);
@@ -67,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // book 관계나 imageUrls가 빠진 응답에서도 메타데이터 생성이 죽지 않게 한다
     const bookTitle = sale.book?.title ?? "";
     const imageUrls = Array.isArray(sale.imageUrls) ? sale.imageUrls : [];
-    const description = `${bookTitle} | ${sale.price.toLocaleString()}원 | ${sale.city} ${sale.district}`;
+    const description = `${bookTitle} | ${formatCurrency(sale.price, locale, tCommon("won"))} | ${sale.city} ${sale.district}`;
     const images =
       imageUrls.length > 0
         ? [imageUrls[0]]

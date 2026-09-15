@@ -249,7 +249,32 @@
       "error_desc": "유효하지 않거나 만료된 인증 링크입니다. 마이페이지에서 인증 메일을 다시 요청해주세요.",
       "btn_mypage": "마이페이지로 이동",
       "btn_home": "홈으로 이동",
-      "btn_login": "로그인하기"
+      "btn_login": "로그인하기",
+      "alert": {
+        "title": "이메일 인증이 필요합니다",
+        "description": "안전하고 신뢰할 수 있는 중고거래를 위해 이메일 인증을 완료해주세요.",
+        "account_label": "등록된 계정",
+        "send": "인증 메일 발송",
+        "sending": "발송 중...",
+        "sent": "발송 완료",
+        "sent_check": "발송 완료 (확인 필요)",
+        "toast_success": "인증 메일이 발송되었습니다. 받은 편지함을 확인해주세요.",
+        "toast_error": "인증 메일 발송 중 오류가 발생했습니다.",
+        "modal_desc": "안전하고 신뢰할 수 있는 중고거래를 위해, <b>{action}</b>을(를) 이용하시려면 먼저 이메일 인증을 완료해주세요.",
+        "modal_account_title": "인증 대상 이메일 계정",
+        "modal_no_email": "등록된 이메일 없음",
+        "actions": {
+          "default": "해당 기능",
+          "used_book_chat": "중고거래 채팅",
+          "direct_trade_complete": "직거래 완료 처리",
+          "select_counterparty": "거래 상대 지정",
+          "select_buyer": "거래 대상 구매자 선택"
+        },
+        "sale_form_title": "이메일 인증 후 판매글 작성이 가능합니다",
+        "sale_form_desc": "사기 및 허위 매물 방지를 위해 이메일 인증이 완료된 회원만 판매글을 등록할 수 있습니다.",
+        "payment_title": "이메일 인증 후 결제가 가능합니다",
+        "payment_desc": "안전한 에스크로 결제를 위해 이메일 인증이 완료된 계정만 결제를 진행할 수 있습니다."
+      }
     },
     "validation": {
       "email_invalid": "올바른 이메일 형식이 아닙니다.",
@@ -1029,7 +1054,8 @@
       "write_review": "서평 작성",
       "sold_out": "판매완료",
       "sale_ended": "판매 종료",
-      "view_details": "상세보기"
+      "view_details": "상세보기",
+      "price": "판매가격:"
     },
     "toast": {
       "add_success": "위시리스트에 추가되었습니다.",
@@ -1263,7 +1289,8 @@
         "for_sale": "판매중",
         "reserved": "예약중",
         "sold": "판매완료"
-      }
+      },
+      "price": "판매가격:"
     },
     "toast": {
       "create_success": "판매글이 성공적으로 등록되었습니다.",
@@ -1582,7 +1609,10 @@
           "SOLD": "판매 완료",
           "OTHER_TRADING": "다른 거래 진행 중",
           "BACK_ON_MARKET": "다시 판매중"
-        }
+        },
+        "amount_label": "결제 금액",
+        "tracking_label": "운송장 정보",
+        "reason_label": "사유"
       },
       "direct_trade_dialog": {
         "reserve_title": "거래 상대로 지정할까요?",
