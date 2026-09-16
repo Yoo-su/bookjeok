@@ -69,8 +69,10 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
           <div className="flex items-center gap-2">
             <ShareButton
               title={review.title}
-              description={`${book?.title} - ${book?.author}`}
-              imageUrl={book?.image}
+              // book 관계가 빠진 응답에서 "undefined - undefined"가 공유 카드에
+              // 그대로 실리던 자리. 없으면 설명을 비워 ShareButton 기본값에 맡긴다.
+              description={book ? `${book.title} - ${book.author}` : undefined}
+              imageUrl={book?.image ?? undefined}
             />
           </div>
         </div>

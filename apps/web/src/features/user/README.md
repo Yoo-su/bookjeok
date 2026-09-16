@@ -27,7 +27,8 @@ user/
 ### 프로필 수정
 
 - **닉네임 중복 확인** — `GET /user/check-nickname`으로 저장 전에 검증합니다.
-- **핸들(`handle`)** — 공개 프로필 URL(`/users/[handle]`)과 공유 덱(`/share/deck/[handle]`)의 식별자입니다. 변경하면 기존 링크가 깨지므로 확인 후 진행합니다.
+- **핸들(`handle`)** — 공개 프로필 URL(`/users/[handle]`)과 공유 덱(`/share/deck/[handle]`)의 식별자입니다. **가입 시 자동 생성되며 수정 수단이 없습니다** (`UpdateUserDto`에 필드가 없습니다). 바꿀 수 있게 만든다면 기존 링크가 깨지는 것과 별개로, 이전 핸들 경로의 ISR 캐시도 함께 비워야 합니다([캐싱 문서](../../../docs/CACHING.md#재검증-범위-규칙)).
+- **공개 프로필은 1시간 ISR입니다.** 닉네임이 `generateMetadata` 타이틀에도 들어가므로, 저장 후 `revalidateUserProfile`로 서버 캐시까지 비웁니다. 쿼리 무효화만으로는 다른 방문자·크롤러에게 닿지 않습니다.
 - **프로필 이미지** — 클라이언트 압축 후 Vercel Blob 업로드. 표시용 URL 정규화는 `shared/utils/profile-image`가 담당합니다.
 
 ### 위시리스트
@@ -39,6 +40,8 @@ user/
 `withdrawal-modal` → `DELETE /user/me`. 서버는 `user.withdrawn` 이벤트를 발행하고 9개 리스너가 각 도메인 데이터를 정리합니다([shared 문서](../../../../server/src/shared/README.md#회원-탈퇴-캐스케이드)). 되돌릴 수 없으므로 모달에서 명시적으로 재확인합니다.
 
 > 진행 중인 거래가 있으면 서버가 탈퇴를 차단합니다.
+
+탈퇴는 소프트 삭제(`deletedAt`)라 `getPublicProfileByHandle`이 곧바로 404를 던지지만, **ISR에는 직전 200 HTML이 남습니다.** 그래서 홈으로 떠나기 전에 `revalidateUserProfile`을 먼저 기다립니다 — `window.location` 이동은 진행 중인 서버 액션을 끊습니다.
 
 ### 통계 대시보드
 

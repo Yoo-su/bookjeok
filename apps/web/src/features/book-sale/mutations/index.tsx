@@ -62,12 +62,13 @@ export const useCreateBookSaleMutation = () => {
   const queryClient = useQueryClient();
 
   const sharedMutation = useSharedCreateBookSaleMutation({
-    onSuccess: async (data: UsedBookSale) => {
+    // 재검증 대상이 없다. 방금 만든 id의 상세는 아직 ISR에 없어 비울 것이 없고,
+    // 마켓·홈은 시간 기반에 위임한다(`shared/actions/revalidate.ts`의 범위 규칙).
+    // 작성자 본인은 쿼리 무효화 + refetchOnMount로 목록에서 바로 확인한다.
+    // 리뷰 생성(`features/review/mutations`)과 같은 규칙이다.
+    onSuccess: () => {
       toast.success(t("create_success"));
       queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
-      await purgeRouteCache(revalidateBookSale({ saleId: data.id }), () =>
-        router.refresh(),
-      );
       router.push(PATHS.MY_PAGE_SALES);
     },
     onError: (error: Error) => {

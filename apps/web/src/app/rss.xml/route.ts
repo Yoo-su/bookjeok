@@ -1,29 +1,61 @@
 import "@/shared/libs/axios";
 
 import { getRecentBookSales, getReviews } from "@bookjeok/api-client";
-import { Review, UsedBookSale } from "@bookjeok/core";
+import { cleanHtmlText, Review, UsedBookSale } from "@bookjeok/core";
 
 // 봇이 칠 때마다 함수를 깨우고 백엔드를 두 번 치던 자리.
-// 내용은 목록 상위 50건이라 6시간 단위로 굳혀도 색인에 영향이 없다.
+// 내용은 목록 상위 60건이라 6시간 단위로 굳혀도 색인에 영향이 없다.
 export const revalidate = 21600; // 6시간
+
+/**
+ * 종류별 발행 건수.
+ *
+ * 네이버 웹마스터도구는 신규 웹문서 수집 소스로 RSS를 쓰는데, 6시간 주기로
+ * 굳히는 피드에 10건씩만 실으면 그 사이 쏟아진 글이 피드에 오르지도 못하고
+ * 밀려난다. 응답은 어차피 6시간에 한 번 만들어지므로 늘려도 비용이 없다.
+ */
+const ITEMS_PER_SOURCE = 30;
+
+/** 구글·네이버 모두 설명은 200자 안쪽에서 자른다. */
+const DESCRIPTION_MAX_LENGTH = 200;
+
+/** CDATA 안에서는 `]]>`만이 유일한 탈출 문자열이다. 만나면 두 섹션으로 쪼갠다. */
+const cdata = (text: string) =>
+  `<![CDATA[${text.replace(/]]>/g, "]]]]><![CDATA[>")}]]>`;
+
+/** 본문 HTML을 스니펫용 한 줄 텍스트로 만든다. */
+const toSnippet = (content?: string | null) => {
+  const text = cleanHtmlText(content).replace(/\s+/g, " ").trim();
+  return text.length > DESCRIPTION_MAX_LENGTH
+    ? `${text.slice(0, DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`
+    : text;
+};
 
 export async function GET() {
   let reviews: Review[] = [];
   let sales: UsedBookSale[] = [];
 
   // 1. 병렬 비동기 조회 및 개별 예외 처리 (API 에러 시 대비)
-  try {
-    const res = await getReviews({ page: 1, limit: 10 });
-    reviews = res.reviews || [];
-  } catch (e) {
-    console.error("Failed to fetch reviews for RSS feed:", e);
+  const [reviewResult, salesResult] = await Promise.allSettled([
+    getReviews({ page: 1, limit: ITEMS_PER_SOURCE }),
+    getRecentBookSales(ITEMS_PER_SOURCE),
+  ]);
+
+  if (reviewResult.status === "fulfilled") {
+    reviews = reviewResult.value.reviews || [];
+  } else {
+    console.error("Failed to fetch reviews for RSS feed:", reviewResult.reason);
   }
 
-  try {
-    const resSales = await getRecentBookSales();
-    sales = Array.isArray(resSales) ? resSales.slice(0, 10) : [];
-  } catch (e) {
-    console.error("Failed to fetch recent sales for RSS feed:", e);
+  if (salesResult.status === "fulfilled") {
+    sales = Array.isArray(salesResult.value)
+      ? salesResult.value.slice(0, ITEMS_PER_SOURCE)
+      : [];
+  } else {
+    console.error(
+      "Failed to fetch recent sales for RSS feed:",
+      salesResult.reason,
+    );
   }
 
   // 2. 피드 규격에 맞는 데이터 정제
@@ -31,13 +63,15 @@ export async function GET() {
     ...reviews.map((r) => ({
       title: `[도서리뷰] ${r.book?.title || "도서"} - ${r.title}`,
       link: `https://bookjeok.com/ko/book/reviews/${r.id}`,
-      description: r.content,
+      description: toSnippet(r.content),
+      category: "도서리뷰",
       pubDate: new Date(r.createdAt),
     })),
     ...sales.map((s) => ({
       title: `[중고도서] ${s.book?.title || "도서"} - ${s.title} (${s.price.toLocaleString()}원)`,
       link: `https://bookjeok.com/ko/book/sales/${s.id}`,
-      description: s.content,
+      description: toSnippet(s.content),
+      category: "중고도서",
       pubDate: new Date(s.createdAt),
     })),
   ];
@@ -46,13 +80,17 @@ export async function GET() {
   feedItems.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
 
   // 4. RSS Item XML 생성
+  //
+  // 제목·본문은 사용자 입력이라 전부 CDATA로 감싼다. 이전에는 리뷰 본문
+  // HTML이 그대로 실려 스니펫에 태그가 보였다.
   const xmlItems = feedItems
     .map(
       (item) => `
     <item>
-      <title><![CDATA[${item.title}]]></title>
+      <title>${cdata(item.title)}</title>
       <link>${item.link}</link>
-      <description><![CDATA[${item.description}]]></description>
+      <description>${cdata(item.description)}</description>
+      <category>${cdata(item.category)}</category>
       <pubDate>${item.pubDate.toUTCString()}</pubDate>
       <guid isPermaLink="true">${item.link}</guid>
     </item>`,
