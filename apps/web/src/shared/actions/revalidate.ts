@@ -19,6 +19,8 @@ import { routing } from "@/shared/config/i18n/routing";
  *   트래픽이 늘수록 적중률이 0에 수렴해 ISR이 사실상 SSR로 퇴화한다.
  *   상호작용 중인 사용자는 쿼리 무효화 + refetchOnMount로 이미 최신을 본다.
  * - 삭제만 예외로 집계까지 비운다. 목록에 남은 링크가 404로 이어지기 때문.
+ * - 생성은 대상이 없다. 방금 만든 id의 상세는 아직 ISR에 없어 비울 것이 없다.
+ * - 200을 404로 바꾸는 쓰기(회원 탈퇴)는 삭제와 같이 취급한다.
  */
 
 /** 모든 로케일에 대해 같은 경로를 재검증 (localePrefix: "always") */
@@ -52,6 +54,10 @@ export async function revalidateBookSale(params: {
  * 프로필 변경 시 재검증 대상
  * - 공개 프로필 페이지. 닉네임이 generateMetadata 타이틀에도 들어간다
  * - 목록·홈에 실린 작성자 이름까지 좇지 않는다 (집계는 시간 기반 재검증에 위임)
+ * - 탈퇴도 여기로 온다. 소프트 삭제라 다음 요청은 404지만 ISR에 남은 200이
+ *   만료 시각까지 탈퇴 회원의 프로필을 계속 내보낸다
+ * - 핸들은 수정 대상이 아니라(UpdateUserDto에 없다) 옛 경로를 좇을 필요가 없다.
+ *   바꿀 수 있게 만든다면 이전 핸들 경로도 함께 비워야 한다
  */
 export async function revalidateUserProfile(params: { handle: string }) {
   const { handle } = params;

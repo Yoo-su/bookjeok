@@ -4,7 +4,7 @@ import { ReadingLog } from "@bookjeok/core";
 import { useReadingLogsQuery } from "@bookjeok/react-query";
 import { format } from "date-fns";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import {
   DraggableCardContainer,
 } from "@/shared/components/aceternityui/draggable-card";
 import { BookOpen, Quote, Share2 } from "@/shared/components/icons/iconsax";
+import { PATHS } from "@/shared/constants/paths";
 import { parseCalendarDate } from "@/shared/utils/format-date";
 
 interface ReadingLogCardDeckProps {
@@ -34,6 +35,7 @@ export function ReadingLogCardDeck({
   isLoading = false,
 }: ReadingLogCardDeckProps) {
   const t = useTranslations("reading_log");
+  const locale = useLocale();
   const user = useAuthStore((state) => state.user);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -63,7 +65,10 @@ export function ReadingLogCardDeck({
       toast.error(t("toast.login_required_share"));
       return;
     }
-    const shareUrl = `${window.location.origin}/share/deck/${encodeURIComponent(userHandle)}?year=${currentDate.getFullYear()}`;
+    // 로케일 접두사를 붙여 만든다. 빠뜨리면 링크를 받은 사람마다 미들웨어의
+    // 301을 한 번씩 더 타고, `PATHS`를 우회한 하드코딩 경로도 남는다.
+    const sharePath = PATHS.SHARE_DECK(encodeURIComponent(String(userHandle)));
+    const shareUrl = `${window.location.origin}/${locale}${sharePath}?year=${currentDate.getFullYear()}`;
     navigator.clipboard.writeText(shareUrl);
     toast.success(t("toast.share_deck_copied"));
   };
@@ -184,7 +189,9 @@ export function ReadingLogCardDeck({
 
                 {/* PC 전용: 폴라로이드 스탬프 & 독서 완료 일자 */}
                 <div className="hidden sm:flex items-center justify-between pt-2 mt-1 border-t border-stone-100 text-[10px] font-mono text-stone-400 uppercase tracking-widest shrink-0">
-                  <span>{format(parseCalendarDate(log.date), "yyyy.MM.dd")}</span>
+                  <span>
+                    {format(parseCalendarDate(log.date), "yyyy.MM.dd")}
+                  </span>
                   <span className="font-semibold text-stone-300">
                     INSTAX • BOOKJEOK
                   </span>
