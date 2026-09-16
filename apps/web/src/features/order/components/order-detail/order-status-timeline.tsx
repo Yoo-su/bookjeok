@@ -34,31 +34,31 @@ export const OrderStatusTimeline = ({ order }: OrderStatusTimelineProps) => {
   const normalSteps: StepInfo[] = [
     {
       status: OrderStatus.AWAITING_PAYMENT,
-      label: "결제 대기",
+      label: t("timeline.awaiting_payment"),
       icon: ClockIcon,
       timestamp: order.createdAt,
     },
     {
       status: OrderStatus.PAID,
-      label: "결제 완료",
+      label: t("timeline.paid"),
       icon: BoxIcon,
       timestamp: order.paidAt,
     },
     {
       status: OrderStatus.SHIPPED,
-      label: "배송 중",
+      label: t("timeline.shipped"),
       icon: TruckFastIcon,
       timestamp: order.shippedAt,
     },
     {
       status: OrderStatus.DELIVERED,
-      label: "배송 완료",
+      label: t("timeline.delivered"),
       icon: BoxIcon,
       timestamp: order.deliveredAt,
     },
     {
       status: OrderStatus.CONFIRMED,
-      label: "구매 확정",
+      label: t("timeline.confirmed"),
       icon: CheckCircle2,
       timestamp: order.confirmedAt,
     },
@@ -98,7 +98,7 @@ export const OrderStatusTimeline = ({ order }: OrderStatusTimelineProps) => {
               className="border-stone-300 dark:border-stone-700 text-stone-600 dark:text-stone-400 gap-1 text-xs"
             >
               <XCircle className="w-3.5 h-3.5" />
-              주문 취소
+              {t("timeline.cancelled")}
             </Badge>
           )}
           {isDisputed && (
@@ -107,7 +107,7 @@ export const OrderStatusTimeline = ({ order }: OrderStatusTimelineProps) => {
               className="border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 gap-1 text-xs"
             >
               <AlertTriangle className="w-3.5 h-3.5 text-stone-600" />
-              구매확정 거부 (분쟁 중)
+              {t("timeline.disputed")}
             </Badge>
           )}
         </div>
@@ -193,7 +193,7 @@ export const OrderStatusTimeline = ({ order }: OrderStatusTimelineProps) => {
                 {t("cancel_reason_title")}
               </div>
               <p className="text-stone-500">
-                {order.cancelReason || "결제 시간 만료 또는 관리자/당사자 취소"}
+                {order.cancelReason || t("timeline.cancel_reason_fallback")}
               </p>
             </div>
           </div>

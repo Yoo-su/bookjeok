@@ -164,7 +164,9 @@
     },
     "delete": "삭제",
     "trade_reserved": "{actorName}님이 거래 상대로 지정했습니다.",
-    "trade_completed": "{actorName}님과의 거래가 완료되었습니다. 후기를 남겨보세요."
+    "trade_completed": "{actorName}님과의 거래가 완료되었습니다. 후기를 남겨보세요.",
+    "fallback_actor": "사용자",
+    "fallback_cancel_reason": "거래 취소"
   },
   "auth": {
     "login": {
@@ -237,7 +239,8 @@
         "email_exists": "이미 사용 중인 이메일입니다.",
         "nickname_exists": "이미 사용 중인 닉네임입니다.",
         "info_exists": "이미 사용 중인 정보입니다.",
-        "unknown": "회원가입 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+        "unknown": "회원가입 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        "server": "오류: {message}"
       }
     },
     "verification": {
@@ -419,7 +422,8 @@
       "metadata": {
         "title": "도서 검색 및 AI 맞춤 책 추천",
         "description": "키워드 검색부터 대화형 AI 도서 큐레이션까지! 마음속 생각이나 독서 취향을 자유롭게 적어 맞춤 책을 추천받고 원하는 도서를 찾아보세요."
-      }
+      },
+      "error": "오류가 발생했습니다: {message}"
     },
     "detail": {
       "domestic_book": "국내도서",
@@ -474,7 +478,8 @@
       "recommending": "추천 도서를 선정하여 소개글을 작성하고 있습니다...",
       "error_temporary": "대화를 처리하는 도중 일시적인 오류가 발생했습니다. 잠시 후 다시 말씀해 주시겠어요?",
       "login_required": "AI 도서 추천 기능은 로그인 후 이용하실 수 있는 회원 전용 서비스입니다.",
-      "error_generic": "대화를 처리하는 도중 오류가 발생했습니다."
+      "error_generic": "대화를 처리하는 도중 오류가 발생했습니다.",
+      "welcome": "안녕하세요! 어떤 책을 찾고 계신가요? 마음속 고민이나 읽고 싶은 분위기, 선호하는 장르를 편안하게 말씀해 주시면 꼭 맞는 책을 찾아드릴게요."
     },
     "search_modal": {
       "title": "책 검색",
@@ -757,7 +762,11 @@
       "error_title": "사용자를 찾을 수 없습니다",
       "error_desc": "요청하신 독서 덱 정보가 유효하지 않거나 비공개 상태일 수 있습니다.",
       "go_home": "북적 홈으로 가기",
-      "footer_brand": "책과 지식의 선순환 플랫폼, 북적"
+      "footer_brand": "책과 지식의 선순환 플랫폼, 북적",
+      "metadata_title": "{nickname}님의 독서 카드 덱",
+      "metadata_description": "{period} 완독한 소중한 책들의 카드 컬렉션을 둘러보세요.",
+      "metadata_period_year": "{year}년",
+      "metadata_period_this_year": "올해"
     },
     "toast": {
       "create_success": "독서 기록이 등록되었습니다.",
@@ -807,7 +816,8 @@
         "error": "지도를 불러오는 중 오류가 발생했습니다.",
         "empty": "아직 등록된 판매글이 없습니다.",
         "top5": "거래 활발 지역 TOP 5",
-        "showing": "최근 판매글 {count}개 표시 중"
+        "showing": "최근 판매글 {count}개 표시 중",
+        "count_unit": "({count}개)"
       },
       "activity": {
         "title": "최근 30일 활동 추이",
@@ -1036,7 +1046,8 @@
     "empty": {
       "title": "위시리스트가 비어있습니다.",
       "desc": "마음에 드는 책이나 판매글을 찜해보세요!",
-      "button": "도서 둘러보기"
+      "button": "도서 둘러보기",
+      "button_sale": "중고장터 둘러보기"
     },
     "empty_tab": {
       "book_title": "찜한 도서가 없습니다.",
@@ -1055,7 +1066,8 @@
       "sold_out": "판매완료",
       "sale_ended": "판매 종료",
       "view_details": "상세보기",
-      "price": "판매가격:"
+      "price": "판매가격:",
+      "discount_price": "할인가:"
     },
     "toast": {
       "add_success": "위시리스트에 추가되었습니다.",
@@ -1065,7 +1077,9 @@
   "user_profile": {
     "metadata": {
       "title": "사용자 프로필",
-      "description": "사용자의 독서 기록과 리뷰를 확인하세요."
+      "description": "사용자의 독서 기록과 리뷰를 확인하세요.",
+      "title_with_nickname": "{nickname}님의 프로필",
+      "description_with_nickname": "{nickname}님의 독서 기록, 최근 작성한 리뷰 및 중고 거래 상품 목록을 만나보세요."
     },
     "not_found": "존재하지 않거나 삭제된 사용자입니다.",
     "joined": "{date} 가입",
@@ -1290,7 +1304,8 @@
         "reserved": "예약중",
         "sold": "판매완료"
       },
-      "price": "판매가격:"
+      "price": "판매가격:",
+      "view_detail": "상세보기"
     },
     "toast": {
       "create_success": "판매글이 성공적으로 등록되었습니다.",
@@ -1324,6 +1339,13 @@
       "confirm": "이 분으로 예약",
       "success": "예약중으로 변경했습니다.",
       "success_with_review": "예약중으로 변경했습니다."
+    },
+    "location": {
+      "unsupported": "이 브라우저에서는 위치 기반 기능을 지원하지 않습니다.",
+      "unavailable": "위치 정보를 가져올 수 없습니다.",
+      "permission_denied": "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.",
+      "position_unavailable": "현재 위치를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.",
+      "timeout": "위치 정보 요청 시간이 초과되었습니다. 다시 시도해주세요."
     }
   },
   "error_pages": {
@@ -1447,7 +1469,9 @@
         "desc": "첫 번째 독서 기록을 남겨보세요!",
         "cta_record": "지금 기록하기",
         "cta_login": "로그인하고 시작하기"
-      }
+      },
+      "reader_logged": "{nickname}님이 기록한 도서입니다.",
+      "recently_logged": "최근 기록된 도서입니다."
     },
     "detail_modal": {
       "total_readers": "총 {count}명이 읽었습니다",
@@ -1528,7 +1552,8 @@
         "confirm": "구매자로 지정하기",
         "cancel": "취소",
         "success": "구매자가 지정되었습니다. 결제를 기다립니다.",
-        "error": "구매자 지정에 실패했습니다: {error}"
+        "error": "구매자 지정에 실패했습니다: {error}",
+        "notice_title": "{nickname}님과의 거래 안내"
       },
       "cancel_selection_dialog": {
         "title": "구매자 지정 취소",
@@ -1637,7 +1662,8 @@
     },
     "read": "읽음",
     "send_failed": "전송에 실패했습니다. 다시 시도해 주세요.",
-    "new_messages": "새 메시지 {count}개"
+    "new_messages": "새 메시지 {count}개",
+    "book_cover_alt": "도서 표지"
   },
   "order": {
     "payment": {
@@ -1699,7 +1725,19 @@
         },
         "escrow_guide": "구매확정 전까지 결제 대금은 에스크로 계좌에 안전하게 보호됩니다.",
         "btn_order_detail": "주문 상세 보기",
-        "btn_go_home": "홈으로 이동"
+        "btn_go_home": "홈으로 이동",
+        "invalid_access_title": "잘못된 접근입니다",
+        "invalid_access_desc": "결제 승인 정보가 올바르지 않습니다.",
+        "invalid_params": "결제 결과 파라미터가 유효하지 않습니다.",
+        "confirm_error": "결제 승인 처리 중 오류가 발생했습니다.",
+        "verifying": "토스페이먼츠 에스크로 보안 검증 중",
+        "fail_title": "결제 승인 실패",
+        "fail_desc": "결제 승인 과정에서 문제가 발생했습니다. 지속될 경우 고객센터로 문의해주세요.",
+        "btn_retry": "승인 재시도",
+        "fallback_buyer": "구매자",
+        "fallback_address": "기본 배송지",
+        "fallback_recipient": "수령인",
+        "fallback_phone": "연락처"
       },
       "fail": {
         "title": "결제에 실패했습니다",
@@ -1708,8 +1746,27 @@
         "error_message": "사유",
         "btn_retry": "다시 결제하기",
         "btn_go_home": "홈으로 이동",
-        "help_text": "문제가 지속될 경우 고객센터 또는 판매자에게 문의해주세요."
-      }
+        "help_text": "문제가 지속될 경우 고객센터 또는 판매자에게 문의해주세요.",
+        "default_message": "결제 진행 중 오류가 발생하였습니다.",
+        "error_info": "오류 정보"
+      },
+      "fallback_book_title": "중고 도서",
+      "fallback_order_name": "북적 주문 {id}",
+      "email_unverified": "이메일 인증을 완료한 후 결제를 진행할 수 있습니다.",
+      "cancelled_toast": "결제가 취소되었습니다.",
+      "not_found_desc": "요청하신 주문을 찾을 수 없거나 접근 권한이 없습니다.",
+      "not_buyer_desc": "지정된 구매자 계정으로 로그인 후 다시 시도해주세요.",
+      "current_status": "현재 주문 상태:",
+      "expired_desc": "24시간 결제 기한이 만료되어 주문이 자동으로 취소되었습니다. 판매자와 다시 채팅을 통해 거래를 진행해주세요.",
+      "btn_order_detail": "주문 상세 보기",
+      "btn_go_home": "홈으로 이동",
+      "btn_back": "이전으로",
+      "method_title": "결제 수단 선택",
+      "method_card": "신용/체크카드",
+      "method_transfer": "실시간 계좌이체",
+      "method_virtual_account": "가상계좌",
+      "agreement": "위 주문 내용을 확인하였으며, 토스페이먼츠 전자금융거래 이용약관 및 개인정보 제공에 동의합니다.",
+      "postcode_modal_desc": "우편번호 및 도로명 주소를 검색하여 배송지를 입력합니다."
     },
     "detail": {
       "page_title": "주문 상세 정보",
@@ -1749,7 +1806,42 @@
       "errors": {
         "not_authorized": "해당 주문을 조회할 권한이 없습니다.",
         "not_found": "주문 정보를 찾을 수 없습니다."
-      }
+      },
+      "sale_price": "판매 가격",
+      "view_sale": "판매글 보기",
+      "shipping_in_progress": "배송 중",
+      "copied": "복사됨",
+      "shipping_pending_desc": "결제 완료 시 구매자의 배송지가 여기에 표시됩니다.",
+      "book_price": "도서 가격",
+      "shipping_fee": "배송비",
+      "shipping_free": "무료배송",
+      "total_amount": "총 결제금액",
+      "paid_at": "결제 일시",
+      "escrow_protecting": "토스페이먼츠 에스크로 안전결제 보호 중",
+      "profile": "프로필",
+      "action_review": "거래 후기 작성",
+      "review_done": "거래 후기 작성 완료",
+      "fallback_book_title": "판매 도서",
+      "fallback_seller": "판매자",
+      "fallback_buyer": "구매자",
+      "alt_book": "도서",
+      "btn_cancel_selection_short": "지정 취소",
+      "toast_confirm_success": "구매가 정상적으로 확정되었습니다.",
+      "toast_confirm_error": "구매확정 처리에 실패했습니다.",
+      "toast_cancel_success": "주문이 정상적으로 취소되었습니다.",
+      "toast_cancel_error": "주문 취소에 실패했습니다.",
+      "toast_cancel_selection_error": "구매자 지정 취소에 실패했습니다.",
+      "timeline": {
+        "awaiting_payment": "결제 대기",
+        "paid": "결제 완료",
+        "shipped": "배송 중",
+        "delivered": "배송 완료",
+        "confirmed": "구매 확정",
+        "cancelled": "주문 취소",
+        "disputed": "구매확정 거부 (분쟁 중)",
+        "cancel_reason_fallback": "결제 시간 만료 또는 관리자/당사자 취소"
+      },
+      "metadata_description": "주문번호 #{orderId} 상세 내역 및 배송 조회"
     },
     "purchases": {
       "title": "내 구매 내역",
@@ -1773,8 +1865,20 @@
         "btn_pay": "결제하기",
         "btn_confirm": "구매확정",
         "btn_review": "거래 후기 작성",
-        "btn_chat": "채팅하기"
-      }
+        "btn_chat": "채팅하기",
+        "status_disputed": "분쟁 중",
+        "status_cancelled": "주문 취소",
+        "price_label": "결제금액:",
+        "alt_book": "도서",
+        "fallback_book_title": "중고 도서",
+        "fallback_seller": "판매자",
+        "confirm_title": "구매확정",
+        "confirm_desc": "물품을 정상적으로 수령하셨다면 구매를 확정해주세요. 구매확정 후에는 취소가 불가합니다.",
+        "toast_confirm_success": "구매가 정상적으로 확정되었습니다.",
+        "toast_confirm_error": "구매확정 처리에 실패했습니다."
+      },
+      "error_title": "주문 목록을 불러오지 못했습니다",
+      "error_desc": "네트워크 연결을 확인한 후 다시 시도해주세요."
     },
     "sales_orders": {
       "title": "판매 주문 관리",
@@ -1797,8 +1901,20 @@
         "view_detail": "주문 상세",
         "btn_ship": "운송장 등록",
         "btn_cancel_selection": "지정 취소",
-        "btn_chat": "채팅하기"
-      }
+        "btn_chat": "채팅하기",
+        "status_disputed": "분쟁 중",
+        "status_cancelled": "취소됨",
+        "price_label": "정산금액:",
+        "alt_book": "도서",
+        "fallback_book_title": "판매 도서",
+        "fallback_buyer": "구매자",
+        "cancel_title": "구매자 지정 취소",
+        "cancel_desc": "구매자 지정을 취소하시겠습니까? 판매글이 다시 판매중 상태로 변경됩니다.",
+        "toast_cancel_success": "구매자 지정이 취소되었습니다.",
+        "toast_cancel_error": "지정 취소에 실패했습니다."
+      },
+      "error_title": "주문 목록을 불러오지 못했습니다",
+      "error_desc": "네트워크 연결을 확인한 후 다시 시도해주세요."
     },
     "shipping_modal": {
       "title": "운송장 번호 등록",
@@ -1813,7 +1929,17 @@
       "errors": {
         "carrier_required": "택배사를 선택해주세요.",
         "tracking_required": "운송장 번호를 입력해주세요.",
-        "invalid_tracking": "운송장 번호는 8자 이상 16자 이하의 숫자여야 합니다."
+        "invalid_tracking": "운송장 번호는 8자 이상 16자 이하의 숫자여야 합니다.",
+        "submit_failed": "운송장 등록에 실패했습니다."
+      },
+      "carriers": {
+        "cj": "CJ대한통운",
+        "post": "우체국택배",
+        "lotte": "롯데택배",
+        "hanjin": "한진택배",
+        "logen": "로젠택배",
+        "cu": "CU 편의점택배",
+        "gs": "GS Postbox 택배"
       }
     },
     "dispute_modal": {
@@ -1827,8 +1953,10 @@
       "success": "구매확정 거부(분쟁)가 접수되었습니다.",
       "errors": {
         "reason_required": "거부 사유를 입력해주세요.",
-        "reason_min_length": "사유를 5자 이상 상세하게 작성해주세요."
-      }
+        "reason_min_length": "사유를 5자 이상 상세하게 작성해주세요.",
+        "submit_failed": "구매확정 거부 처리에 실패했습니다."
+      },
+      "min_length_hint": "최소 5자 이상"
     },
     "trade_review": {
       "modal_title": "거래 후기 작성",
@@ -1860,7 +1988,8 @@
       "success": "거래 후기가 성공적으로 등록되었습니다.",
       "errors": {
         "tag_required": "최소 1개 이상의 태그를 선택해주세요.",
-        "content_max": "후기는 500자 이하로 작성해주세요."
+        "content_max": "후기는 500자 이하로 작성해주세요.",
+        "submit_failed": "거래 후기 처리 중 오류가 발생했습니다."
       },
       "stats": {
         "title": "거래 신뢰도",
@@ -1872,19 +2001,39 @@
         "badge_trust": "안전거래 {count}건 · 만족도 {rate}%",
         "badge_trust_direct": "직거래 {count}건 · 만족도 {rate}%",
         "badge_trust_split": "직거래 {direct}건 · 안전결제 {delivery}건 · 만족도 {rate}%",
-        "badge_trades_only": "거래 완료 {count}건"
+        "badge_trades_only": "거래 완료 {count}건",
+        "completed_label": "거래 완료",
+        "unit_count": "건",
+        "split_detail": "직거래 {direct} · 안전결제 {delivery}",
+        "received_reviews": "받은 후기",
+        "unit_reviews": "개",
+        "satisfaction": "만족도"
       },
       "list": {
         "title": "거래 후기",
         "tab_reading": "독서 활동",
         "tab_trade_reviews": "거래 후기 ({count})",
         "empty_title": "거래 후기가 없습니다",
-        "empty_desc": "아직 작성된 거래 후기가 없습니다."
+        "empty_desc": "아직 작성된 거래 후기가 없습니다.",
+        "error": "거래 후기를 불러오지 못했습니다."
       },
       "modal_title_edit": "거래 후기 수정",
       "modal_desc_edit": "작성한 후기를 고칠 수 있습니다. (거래 완료 후 14일 이내)",
       "submit_edit": "후기 수정하기",
-      "update_success": "후기를 수정했습니다."
+      "update_success": "후기를 수정했습니다.",
+      "modal_desc_with_user": "{nickname}님과의 {desc}",
+      "anonymous_reviewer": "익명의 독자"
+    },
+    "escrow_card": {
+      "title": "북적 안전결제(에스크로) 보호 시스템",
+      "step1_title": "1. 대금 안전 보관",
+      "step1_desc": "결제 금액은 토스페이먼츠 에스크로 금고에 안전하게 보관됩니다.",
+      "step2_title": "2. 안전 택배 발송",
+      "step2_desc": "판매자가 운송장을 등록하고 택배 배송을 시작합니다.",
+      "step3_title": "3. 도서 수령 및 검수",
+      "step3_desc": "책을 안전하게 전달받고 도서 상태를 확인합니다.",
+      "step4_title": "4. 구매확정 및 정산",
+      "step4_desc": "구매확정 시 판매자에게 대금이 최종 정산됩니다."
     }
   },
   "trade": {

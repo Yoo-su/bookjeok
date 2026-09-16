@@ -213,7 +213,7 @@ export const BookSaleHistoryItem = ({ sale }: BookSaleHistoryItemProps) => {
               className="h-8 text-xs px-2.5 text-stone-500 hover:text-stone-900 dark:hover:text-stone-100"
             >
               <Link href={PATHS.BOOK_SALES_DETAIL(String(sale.id))}>
-                상세보기
+                {t("view_detail")}
                 <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
               </Link>
             </Button>

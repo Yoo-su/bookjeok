@@ -164,7 +164,9 @@
     },
     "delete": "Delete",
     "trade_reserved": "{actorName} picked you as the trading partner.",
-    "trade_completed": "Your trade with {actorName} is complete. Leave a review."
+    "trade_completed": "Your trade with {actorName} is complete. Leave a review.",
+    "fallback_actor": "Someone",
+    "fallback_cancel_reason": "Trade cancelled"
   },
   "auth": {
     "login": {
@@ -237,7 +239,8 @@
         "email_exists": "Email already in use.",
         "nickname_exists": "Nickname already in use.",
         "info_exists": "Information already in use.",
-        "unknown": "Unknown error during sign up. Please try again later."
+        "unknown": "Unknown error during sign up. Please try again later.",
+        "server": "Error: {message}"
       }
     },
     "verification": {
@@ -419,7 +422,8 @@
       "metadata": {
         "title": "Book Search & AI Book Curation",
         "description": "Discover your next read with keyword search and conversational AI book curation. Describe your mood or reading preferences to get personalized book recommendations."
-      }
+      },
+      "error": "An error occurred: {message}"
     },
     "detail": {
       "domestic_book": "Domestic Book",
@@ -474,7 +478,8 @@
       "recommending": "Selecting recommended books and preparing introduction...",
       "error_temporary": "A temporary error occurred while processing the conversation. Could you try again in a moment?",
       "login_required": "AI Book Recommendation is a members-only feature available after logging in.",
-      "error_generic": "An error occurred while processing the conversation."
+      "error_generic": "An error occurred while processing the conversation.",
+      "welcome": "Hello! What kind of book are you looking for? Tell me what is on your mind, the mood you want, or a genre you like, and I will find a good match."
     },
     "search_modal": {
       "title": "Search Books",
@@ -757,7 +762,11 @@
       "error_title": "User not found",
       "error_desc": "The requested reading deck is invalid or set to private.",
       "go_home": "Go to Home",
-      "footer_brand": "Bookjeok, a platform for book and knowledge sharing"
+      "footer_brand": "Bookjeok, a platform for book and knowledge sharing",
+      "metadata_title": "{nickname}'s reading card deck",
+      "metadata_description": "Browse the card collection of books finished in {period}.",
+      "metadata_period_year": "{year}",
+      "metadata_period_this_year": "this year"
     },
     "toast": {
       "create_success": "Reading log registered successfully.",
@@ -807,7 +816,8 @@
         "error": "Error loading map.",
         "empty": "No sales registered yet.",
         "top5": "Top 5 Active Regions",
-        "showing": "Showing {count, plural, one {# recent sale} other {# recent sales}}"
+        "showing": "Showing {count, plural, one {# recent sale} other {# recent sales}}",
+        "count_unit": "({count, plural, one {# sale} other {# sales}})"
       },
       "activity": {
         "title": "Activity (Last 30 Days)",
@@ -1036,7 +1046,8 @@
     "empty": {
       "title": "Your wishlist is empty.",
       "desc": "Save books or sales you like!",
-      "button": "Browse Books"
+      "button": "Browse Books",
+      "button_sale": "Browse the marketplace"
     },
     "empty_tab": {
       "book_title": "No saved books.",
@@ -1055,7 +1066,8 @@
       "sold_out": "Sold Out",
       "sale_ended": "Sale Ended",
       "view_details": "View Details",
-      "price": "Price:"
+      "price": "Price:",
+      "discount_price": "Sale price:"
     },
     "toast": {
       "add_success": "Added to wishlist.",
@@ -1065,7 +1077,9 @@
   "user_profile": {
     "metadata": {
       "title": "User Profile",
-      "description": "Check user's reading logs and reviews."
+      "description": "Check user's reading logs and reviews.",
+      "title_with_nickname": "{nickname}'s profile",
+      "description_with_nickname": "Browse {nickname}'s reading log, recent reviews, and used books for sale."
     },
     "not_found": "User not found or deleted.",
     "joined": "Joined {date}",
@@ -1290,7 +1304,8 @@
         "reserved": "Reserved",
         "sold": "Sold"
       },
-      "price": "Price:"
+      "price": "Price:",
+      "view_detail": "View details"
     },
     "toast": {
       "create_success": "Sale post registered successfully.",
@@ -1324,6 +1339,13 @@
       "confirm": "Reserve for this buyer",
       "success": "Marked as reserved.",
       "success_with_review": "Marked as reserved."
+    },
+    "location": {
+      "unsupported": "This browser does not support location features.",
+      "unavailable": "Could not get your location.",
+      "permission_denied": "Location access was denied. Allow it in your browser settings.",
+      "position_unavailable": "Your current location is unavailable. Try again in a moment.",
+      "timeout": "The location request timed out. Please try again."
     }
   },
   "error_pages": {
@@ -1447,7 +1469,9 @@
         "desc": "Be the first to leave a reading log!",
         "cta_record": "Record Now",
         "cta_login": "Login and Start"
-      }
+      },
+      "reader_logged": "Logged by {nickname}.",
+      "recently_logged": "Recently logged by readers."
     },
     "detail_modal": {
       "total_readers": "{count, plural, one {# reader total} other {# readers total}}",
@@ -1528,7 +1552,8 @@
         "confirm": "Select as Buyer",
         "cancel": "Cancel",
         "success": "Buyer selected. Waiting for payment.",
-        "error": "Failed to select buyer: {error}"
+        "error": "Failed to select buyer: {error}",
+        "notice_title": "Trading with {nickname}"
       },
       "cancel_selection_dialog": {
         "title": "Cancel Buyer Selection",
@@ -1637,7 +1662,8 @@
     },
     "read": "Read",
     "send_failed": "Failed to send. Tap to try again.",
-    "new_messages": "{count} new"
+    "new_messages": "{count} new",
+    "book_cover_alt": "Book cover"
   },
   "order": {
     "payment": {
@@ -1699,7 +1725,19 @@
         },
         "escrow_guide": "Payment funds will remain safe in escrow until you confirm the purchase.",
         "btn_order_detail": "View Order Details",
-        "btn_go_home": "Back to Home"
+        "btn_go_home": "Back to Home",
+        "invalid_access_title": "Invalid access",
+        "invalid_access_desc": "The payment approval details are not valid.",
+        "invalid_params": "The payment result parameters are not valid.",
+        "confirm_error": "Something went wrong while approving the payment.",
+        "verifying": "Verifying with Toss Payments escrow",
+        "fail_title": "Payment approval failed",
+        "fail_desc": "The payment could not be approved. If this keeps happening, contact support.",
+        "btn_retry": "Retry approval",
+        "fallback_buyer": "Buyer",
+        "fallback_address": "Default address",
+        "fallback_recipient": "Recipient",
+        "fallback_phone": "Phone"
       },
       "fail": {
         "title": "Payment Failed",
@@ -1708,8 +1746,27 @@
         "error_message": "Reason",
         "btn_retry": "Retry Payment",
         "btn_go_home": "Back to Home",
-        "help_text": "If this problem persists, please contact customer support or the seller."
-      }
+        "help_text": "If this problem persists, please contact customer support or the seller.",
+        "default_message": "Something went wrong during the payment.",
+        "error_info": "Error details"
+      },
+      "fallback_book_title": "Used book",
+      "fallback_order_name": "Bookjeok order {id}",
+      "email_unverified": "Verify your email before continuing to payment.",
+      "cancelled_toast": "Payment was cancelled.",
+      "not_found_desc": "This order does not exist or you do not have access to it.",
+      "not_buyer_desc": "Sign in with the buyer account for this order and try again.",
+      "current_status": "Current order status:",
+      "expired_desc": "The 24-hour payment window expired and the order was cancelled automatically. Start again from the chat with the seller.",
+      "btn_order_detail": "View order details",
+      "btn_go_home": "Go to home",
+      "btn_back": "Back",
+      "method_title": "Select a payment method",
+      "method_card": "Credit or debit card",
+      "method_transfer": "Bank transfer",
+      "method_virtual_account": "Virtual account",
+      "agreement": "I have reviewed this order and agree to the Toss Payments electronic transaction terms and to sharing my personal data.",
+      "postcode_modal_desc": "Search by postal code or street address to fill in the delivery address."
     },
     "detail": {
       "page_title": "Order Details",
@@ -1749,7 +1806,42 @@
       "errors": {
         "not_authorized": "You do not have permission to view this order.",
         "not_found": "Order information not found."
-      }
+      },
+      "sale_price": "Sale price",
+      "view_sale": "View listing",
+      "shipping_in_progress": "In transit",
+      "copied": "Copied",
+      "shipping_pending_desc": "The buyer's delivery address appears here once payment is complete.",
+      "book_price": "Book price",
+      "shipping_fee": "Shipping",
+      "shipping_free": "Free",
+      "total_amount": "Total paid",
+      "paid_at": "Paid at",
+      "escrow_protecting": "Protected by Toss Payments escrow",
+      "profile": "Profile",
+      "action_review": "Write a review",
+      "review_done": "Review submitted",
+      "fallback_book_title": "Listed book",
+      "fallback_seller": "Seller",
+      "fallback_buyer": "Buyer",
+      "alt_book": "Book",
+      "btn_cancel_selection_short": "Cancel selection",
+      "toast_confirm_success": "Your purchase has been confirmed.",
+      "toast_confirm_error": "Could not confirm the purchase.",
+      "toast_cancel_success": "The order has been cancelled.",
+      "toast_cancel_error": "Could not cancel the order.",
+      "toast_cancel_selection_error": "Could not cancel the buyer selection.",
+      "timeline": {
+        "awaiting_payment": "Awaiting payment",
+        "paid": "Paid",
+        "shipped": "In transit",
+        "delivered": "Delivered",
+        "confirmed": "Purchase confirmed",
+        "cancelled": "Order cancelled",
+        "disputed": "Confirmation refused (in dispute)",
+        "cancel_reason_fallback": "Payment window expired, or cancelled by a party or an administrator"
+      },
+      "metadata_description": "Details and delivery tracking for order #{orderId}"
     },
     "purchases": {
       "title": "My Purchases",
@@ -1773,8 +1865,20 @@
         "btn_pay": "Pay Now",
         "btn_confirm": "Confirm Purchase",
         "btn_review": "Write Review",
-        "btn_chat": "Chat"
-      }
+        "btn_chat": "Chat",
+        "status_disputed": "In dispute",
+        "status_cancelled": "Cancelled",
+        "price_label": "Paid:",
+        "alt_book": "Book",
+        "fallback_book_title": "Used book",
+        "fallback_seller": "Seller",
+        "confirm_title": "Confirm purchase",
+        "confirm_desc": "Confirm once you have received the item. A confirmed purchase cannot be cancelled.",
+        "toast_confirm_success": "Your purchase has been confirmed.",
+        "toast_confirm_error": "Could not confirm the purchase."
+      },
+      "error_title": "Could not load your orders",
+      "error_desc": "Check your network connection and try again."
     },
     "sales_orders": {
       "title": "Sales Orders",
@@ -1797,8 +1901,20 @@
         "view_detail": "View Details",
         "btn_ship": "Register Shipping",
         "btn_cancel_selection": "Cancel Selection",
-        "btn_chat": "Chat"
-      }
+        "btn_chat": "Chat",
+        "status_disputed": "In dispute",
+        "status_cancelled": "Cancelled",
+        "price_label": "Payout:",
+        "alt_book": "Book",
+        "fallback_book_title": "Listed book",
+        "fallback_buyer": "Buyer",
+        "cancel_title": "Cancel buyer selection",
+        "cancel_desc": "Cancel the buyer selection? The listing goes back on sale.",
+        "toast_cancel_success": "The buyer selection has been cancelled.",
+        "toast_cancel_error": "Could not cancel the buyer selection."
+      },
+      "error_title": "Could not load your orders",
+      "error_desc": "Check your network connection and try again."
     },
     "shipping_modal": {
       "title": "Register Tracking Number",
@@ -1813,7 +1929,17 @@
       "errors": {
         "carrier_required": "Please select a carrier.",
         "tracking_required": "Please enter a tracking number.",
-        "invalid_tracking": "Tracking number must be between 8 and 16 digits."
+        "invalid_tracking": "Tracking number must be between 8 and 16 digits.",
+        "submit_failed": "Could not register the tracking number."
+      },
+      "carriers": {
+        "cj": "CJ Logistics",
+        "post": "Korea Post",
+        "lotte": "Lotte Global Logistics",
+        "hanjin": "Hanjin Express",
+        "logen": "Logen",
+        "cu": "CU convenience store",
+        "gs": "GS Postbox"
       }
     },
     "dispute_modal": {
@@ -1827,8 +1953,10 @@
       "success": "Dispute submitted successfully.",
       "errors": {
         "reason_required": "Please enter the dispute reason.",
-        "reason_min_length": "Please enter at least 5 characters explaining the reason."
-      }
+        "reason_min_length": "Please enter at least 5 characters explaining the reason.",
+        "submit_failed": "Could not submit the refusal."
+      },
+      "min_length_hint": "At least 5 characters"
     },
     "trade_review": {
       "modal_title": "Write Trade Review",
@@ -1860,7 +1988,8 @@
       "success": "Trade review submitted successfully.",
       "errors": {
         "tag_required": "Please select at least one tag.",
-        "content_max": "Review must be 500 characters or fewer."
+        "content_max": "Review must be 500 characters or fewer.",
+        "submit_failed": "Something went wrong while saving the review."
       },
       "stats": {
         "title": "Seller Trust Rating",
@@ -1872,19 +2001,39 @@
         "badge_trust": "{count, plural, one {# trade} other {# trades}} · {rate}% positive",
         "badge_trust_direct": "{count, plural, one {# in-person trade} other {# in-person trades}} · {rate}% positive",
         "badge_trust_split": "{direct} in-person · {delivery} escrow · {rate}% positive",
-        "badge_trades_only": "{count, plural, one {# completed trade} other {# completed trades}}"
+        "badge_trades_only": "{count, plural, one {# completed trade} other {# completed trades}}",
+        "completed_label": "Completed",
+        "unit_count": "",
+        "split_detail": "{direct} in person · {delivery} escrow",
+        "received_reviews": "Reviews",
+        "unit_reviews": "",
+        "satisfaction": "Positive"
       },
       "list": {
         "title": "Trade Reviews",
         "tab_reading": "Reading Activity",
         "tab_trade_reviews": "Trade Reviews ({count})",
         "empty_title": "No trade reviews yet",
-        "empty_desc": "This user has not received any trade reviews yet."
+        "empty_desc": "This user has not received any trade reviews yet.",
+        "error": "Could not load the reviews."
       },
       "modal_title_edit": "Edit your review",
       "modal_desc_edit": "You can edit your review within 14 days of the trade.",
       "submit_edit": "Save changes",
-      "update_success": "Review updated."
+      "update_success": "Review updated.",
+      "modal_desc_with_user": "Trading with {nickname}. {desc}",
+      "anonymous_reviewer": "Anonymous reader"
+    },
+    "escrow_card": {
+      "title": "Bookjeok escrow protection",
+      "step1_title": "1. Funds held safely",
+      "step1_desc": "Your payment is held securely in Toss Payments escrow.",
+      "step2_title": "2. Shipping",
+      "step2_desc": "The seller registers a tracking number and ships the book.",
+      "step3_title": "3. Delivery and check",
+      "step3_desc": "You receive the book and check its condition.",
+      "step4_title": "4. Confirmation and payout",
+      "step4_desc": "When you confirm the purchase, the funds are released to the seller."
     }
   },
   "trade": {

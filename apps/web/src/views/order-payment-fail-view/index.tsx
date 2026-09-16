@@ -25,8 +25,7 @@ export const OrderPaymentFailView = () => {
   const searchParams = useSearchParams();
 
   const code = searchParams.get("code") || "PAYMENT_FAILED";
-  const message =
-    searchParams.get("message") || "결제 진행 중 오류가 발생하였습니다.";
+  const message = searchParams.get("message") || t("default_message");
   const orderId = searchParams.get("orderId");
 
   return (
@@ -49,7 +48,7 @@ export const OrderPaymentFailView = () => {
         <CardHeader className="pb-3 border-b border-stone-100 dark:border-stone-800">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs font-bold text-stone-700 dark:text-stone-300">
-              오류 정보
+              {t("error_info")}
             </CardTitle>
             <Badge
               variant="outline"

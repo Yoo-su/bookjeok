@@ -10,6 +10,7 @@ import { PATHS } from "@/shared/constants/paths";
 
 export const MyPurchasesView = () => {
   const t = useTranslations("order.purchases");
+  const tMyPage = useTranslations("my_page");
 
   return (
     <div className="w-full space-y-6">
@@ -20,7 +21,7 @@ export const MyPurchasesView = () => {
           className="inline-flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 mb-2 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          마이페이지
+          {tMyPage("title")}
         </Link>
         <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
           {t("title")}

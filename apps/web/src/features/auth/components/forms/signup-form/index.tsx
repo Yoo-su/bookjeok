@@ -72,7 +72,7 @@ export const SignupForm = () => {
       } else if (axios.isAxiosError(error)) {
         const serverMessage = getErrorMessage(error, "");
         if (serverMessage) {
-          toast.error(`오류: ${serverMessage}`);
+          toast.error(t("error.server", { message: serverMessage }));
         } else {
           toast.error(t("error.unknown"));
         }

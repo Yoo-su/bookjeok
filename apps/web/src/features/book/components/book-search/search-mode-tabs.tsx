@@ -20,7 +20,7 @@ export const SearchModeTabs = ({
     <div className="max-w-2xl mx-auto w-full mb-6">
       <div
         role="tablist"
-        aria-label={t("title") || "검색 모드"}
+        aria-label={t("title")}
         className="p-1 bg-stone-100/90 rounded-2xl border border-stone-200/80 grid grid-cols-2 gap-1 shadow-2xs"
       >
         <button

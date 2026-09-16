@@ -156,30 +156,10 @@ vi.mock("@bookjeok/react-query", () => ({
   }),
 }));
 
-vi.mock("next-intl", () => ({
-  useLocale: () => "ko",
-  useTranslations: () => (key: string) => {
-    const map: Record<string, string> = {
-      won: "원",
-      "tabs.all": "전체",
-      "tabs.awaiting_payment": "결제 대기",
-      "tabs.paid": "발송 대기",
-      "tabs.shipped": "배송 중",
-      "tabs.delivered": "배송 완료",
-      "tabs.confirmed": "구매 확정",
-      "tabs.cancelled_disputed": "취소/분쟁",
-      empty_title: "구매한 내역이 없습니다",
-      empty_desc: "북적 북마켓에서 마음에 드는 책을 찾아보세요!",
-      btn_browse_market: "북마켓 둘러보기",
-      seller: "판매자",
-      view_detail: "주문 상세",
-      btn_pay: "결제하기",
-      btn_confirm: "구매확정",
-      btn_chat: "채팅하기",
-    };
-    return map[key] || key;
-  },
-}));
+vi.mock("next-intl", async () => {
+  const { createIntlMock } = await import("@/__tests__/helpers/intl");
+  return createIntlMock();
+});
 
 vi.mock("@/shared/config/i18n/routing", () => ({
   Link: ({ href, children, ...props }: any) => (

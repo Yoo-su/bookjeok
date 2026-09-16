@@ -64,7 +64,7 @@ export const PaymentSummary = ({ order }: PaymentSummaryProps) => {
           <div className="flex flex-col justify-between flex-1 min-w-0">
             <div>
               <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100 line-clamp-2 leading-snug">
-                {sale?.title || "중고 도서"}
+                {sale?.title || t("fallback_book_title")}
               </h4>
               {sale?.book?.author && (
                 <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 truncate">

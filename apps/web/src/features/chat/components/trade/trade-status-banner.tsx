@@ -39,6 +39,7 @@ import {
 } from "@/shared/components/icons/iconsax";
 import { Badge } from "@/shared/components/shadcn/badge";
 import { Button } from "@/shared/components/shadcn/button";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { PATHS } from "@/shared/constants/paths";
 
 import { DirectTradeBanner } from "./direct-trade-banner";
@@ -58,6 +59,7 @@ export const TradeStatusBanner = ({
   const t = useTranslations("chat.trade.status_banner");
   const tCancelDialog = useTranslations("chat.trade.cancel_selection_dialog");
   const tVerify = useTranslations("auth.verification.alert.actions");
+  const tOrder = useTranslations("order.detail");
   const confirm = useConfirm();
   const authUser = useAuthStore((state) => state.user);
 
@@ -122,10 +124,9 @@ export const TradeStatusBanner = ({
   const handleConfirmPurchase = async () => {
     if (!order) return;
     const isConfirmed = await confirm({
-      title: "구매확정",
-      description:
-        "물품을 수령하셨으며 구매를 확정하시겠습니까? 확정 후에는 취소가 불가합니다.",
-      confirmText: "구매확정",
+      title: tOrder("confirm_purchase_title"),
+      description: tOrder("confirm_purchase_desc"),
+      confirmText: tOrder("action_confirm"),
     });
 
     if (isConfirmed) {
@@ -328,10 +329,11 @@ export const TradeStatusBanner = ({
           ) : order.amount ? (
             <span className="text-xs font-medium text-stone-600 dark:text-stone-300 shrink-0">
               ·{" "}
-              <span className="font-bold text-stone-900 dark:text-stone-100 tabular-nums">
-                {order.amount.toLocaleString()}
-              </span>
-              원
+              <PriceDisplay
+                value={order.amount}
+                className="text-xs font-bold text-stone-900 dark:text-stone-100 tabular-nums"
+                unitClassName="font-bold"
+              />
             </span>
           ) : null}
         </div>

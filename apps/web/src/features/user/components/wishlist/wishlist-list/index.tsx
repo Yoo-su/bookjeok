@@ -166,7 +166,9 @@ export const WishlistList = () => {
               }
             >
               <Search className="h-3.5 w-3.5" />
-              {activeTab === "SALE" ? "중고장터 둘러보기" : t("empty.button")}
+              {activeTab === "SALE"
+                ? t("empty.button_sale")
+                : t("empty.button")}
             </Link>
           </Button>
         </div>

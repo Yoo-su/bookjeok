@@ -61,4 +61,20 @@ describe("메시지 카탈로그 구조", () => {
     expect(enKeys.filter((k) => !koKeys.includes(k))).toEqual([]);
     expect(koKeys.filter((k) => !enKeys.includes(k))).toEqual([]);
   });
+
+  it("영문 카탈로그에 한글이 남아 있지 않다", () => {
+    const collectEntries = (node: unknown, prefix = ""): [string, string][] => {
+      if (typeof node === "string") return [[prefix, node]];
+
+      return Object.entries(node as Record<string, unknown>).flatMap(([k, v]) =>
+        collectEntries(v, prefix ? `${prefix}.${k}` : k),
+      );
+    };
+
+    const untranslated = collectEntries(enMessages)
+      .filter(([, value]) => /[가-힣]/.test(value))
+      .map(([key]) => key);
+
+    expect(untranslated).toEqual([]);
+  });
 });

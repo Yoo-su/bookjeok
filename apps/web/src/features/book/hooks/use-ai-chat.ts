@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 
@@ -12,8 +13,15 @@ import {
 import { streamAiChat } from "../utils/sse-chat-client";
 
 export const useAiChat = () => {
+  const t = useTranslations("book.ai_chat");
   const user = useAuthStore((state) => state.user);
   const isLoggedIn = !!user;
+
+  // 첫 인사말만 로케일을 타므로 상수 모양은 두고 문구만 갈아 끼운다
+  const welcomeMessage = useMemo(
+    () => ({ ...INITIAL_WELCOME_MESSAGE, content: t("welcome") }),
+    [t],
+  );
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +55,7 @@ export const useAiChat = () => {
         }
       }
     }
-    return [INITIAL_WELCOME_MESSAGE];
+    return [welcomeMessage];
   });
 
   // RAF 기반 부드러운 토큰 드레인 러너
@@ -144,9 +152,9 @@ export const useAiChat = () => {
           console.error("Failed to parse saved chat history:", e);
         }
       }
-      setMessages([INITIAL_WELCOME_MESSAGE]);
+      setMessages([welcomeMessage]);
     }
-  }, [userStorageKey]);
+  }, [userStorageKey, welcomeMessage]);
 
   // 대화 변경 시 sessionStorage 동기화 (단, 스트리밍 중인 플래그는 제거 후 저장)
   useEffect(() => {
@@ -208,12 +216,12 @@ export const useAiChat = () => {
     isStreamDoneRef.current = false;
     activeAiMessageIdRef.current = null;
 
-    setMessages([INITIAL_WELCOME_MESSAGE]);
+    setMessages([welcomeMessage]);
     setInput("");
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(userStorageKey);
     }
-  }, [userStorageKey]);
+  }, [userStorageKey, welcomeMessage]);
 
   // 메시지 전송 (SSE 스트리밍 + 토큰 페이싱 큐)
   const handleSendMessage = useCallback(
@@ -236,7 +244,7 @@ export const useAiChat = () => {
         role: "assistant",
         content: "",
         isStreaming: true,
-        statusMessage: "대화 내용을 분석하고 있습니다...",
+        statusMessage: t("analyzing"),
       };
 
       // 버퍼 상태 초기화
@@ -294,8 +302,7 @@ export const useAiChat = () => {
                   ? {
                       ...msg,
                       books,
-                      statusMessage:
-                        "추천 도서를 선정하여 소개글을 작성하고 있습니다...",
+                      statusMessage: t("recommending"),
                     }
                   : msg,
               ),
@@ -325,9 +332,7 @@ export const useAiChat = () => {
                   ? {
                       ...msg,
                       isStreaming: false,
-                      content:
-                        errMsg ||
-                        "대화를 처리하는 도중 일시적인 오류가 발생했습니다. 잠시 후 다시 말씀해 주시겠어요?",
+                      content: errMsg || t("error_temporary"),
                       statusMessage: undefined,
                     }
                   : msg,
@@ -355,8 +360,8 @@ export const useAiChat = () => {
             (error as { response?: { status?: number } }).response?.status ===
               401);
         const errorContent = isUnauthorized
-          ? "AI 도서 추천 기능은 로그인 후 이용하실 수 있는 회원 전용 서비스입니다."
-          : "죄송합니다, 대화를 처리하는 중 일시적인 오류가 발생했습니다. 다시 말씀해 주시겠어요?";
+          ? t("login_required")
+          : t("error_temporary");
 
         setMessages((prev) =>
           prev.map((msg) =>

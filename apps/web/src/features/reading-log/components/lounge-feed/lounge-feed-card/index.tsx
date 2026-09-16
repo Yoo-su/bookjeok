@@ -98,8 +98,8 @@ export const LoungeFeedCard = memo(function LoungeFeedCard({
             ) : (
               <p className="text-xs text-stone-400 dark:text-stone-500 line-clamp-1 pt-0.5">
                 {firstReader?.nickname
-                  ? `${firstReader.nickname}님이 기록한 도서입니다.`
-                  : "최근 기록된 도서입니다."}
+                  ? t("reader_logged", { nickname: firstReader.nickname })
+                  : t("recently_logged")}
               </p>
             )}
           </div>

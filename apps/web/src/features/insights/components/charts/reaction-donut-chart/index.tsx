@@ -31,13 +31,14 @@ interface ReactionDonutChartProps {
  */
 export const ReactionDonutChart = ({ data }: ReactionDonutChartProps) => {
   const t = useTranslations("insights.charts.reaction");
+  const tReactions = useTranslations("review.reactions");
   const total = data.reduce((sum, item) => sum + item.count, 0);
   const hasData = total > 0;
 
   // 리액션 타입별 라벨 매핑
   const getReactionLabel = (type: string) => {
     const config = REACTION_CONFIG.find((r) => r.type === type);
-    return config?.label || type;
+    return config ? tReactions(config.labelKey) : type;
   };
 
   const chartOptions = useMemo(

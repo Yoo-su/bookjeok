@@ -17,6 +17,7 @@ interface OrderDetailViewProps {
 
 export const OrderDetailView = ({ orderId }: OrderDetailViewProps) => {
   const t = useTranslations("order.detail");
+  const tPayment = useTranslations("order.payment");
   const router = useRouter();
 
   const { data: order, isLoading, error } = useOrderDetailQuery(orderId);
@@ -58,14 +59,14 @@ export const OrderDetailView = ({ orderId }: OrderDetailViewProps) => {
             className="border-stone-200 dark:border-stone-700"
           >
             <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-            이전으로
+            {tPayment("btn_back")}
           </Button>
           <Button
             asChild
             size="sm"
             className="bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900"
           >
-            <Link href={PATHS.HOME}>홈으로 이동</Link>
+            <Link href={PATHS.HOME}>{tPayment("btn_go_home")}</Link>
           </Button>
         </div>
       </div>

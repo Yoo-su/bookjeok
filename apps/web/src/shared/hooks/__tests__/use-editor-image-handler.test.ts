@@ -10,6 +10,11 @@ vi.mock("@vercel/blob/client", () => ({
   upload: vi.fn(),
 }));
 
+vi.mock("next-intl", async () => {
+  const { createIntlMock } = await import("@/__tests__/helpers/intl");
+  return createIntlMock();
+});
+
 vi.mock("sonner", () => ({
   toast: {
     error: vi.fn(),

@@ -12,7 +12,7 @@ import {
   SortOption,
 } from "@bookjeok/core";
 import { useBookSaleRegionsQuery } from "@bookjeok/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -29,6 +29,7 @@ import {
 } from "@/shared/components/shadcn/select";
 import { Slider } from "@/shared/components/shadcn/slider";
 import { cn } from "@/shared/utils/cn";
+import { formatCurrency } from "@/shared/utils/format-currency";
 
 interface BookSaleFilterProps {
   initialParams: SearchBookSalesParams;
@@ -42,6 +43,8 @@ export const BookSaleFilter = ({
   onReset,
 }: BookSaleFilterProps) => {
   const t = useTranslations("market.filter");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const { data: availableRegions } = useBookSaleRegionsQuery();
 
   // initialParams에서 직접 초기값 계산 (useEffect 대신)
@@ -262,7 +265,7 @@ export const BookSaleFilter = ({
             />
           </div>
           <div className="flex justify-between text-[10px] text-stone-400 font-medium px-1">
-            <span>0{t("money_unit", { default: "원" })}</span>
+            <span>{formatCurrency(0, locale, tCommon("won"))}</span>
             <span>{formatPrice(MAX_MARKET_PRICE)}</span>
           </div>
         </div>

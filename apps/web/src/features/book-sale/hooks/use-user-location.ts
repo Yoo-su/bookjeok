@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 
 /**
@@ -40,6 +41,7 @@ export interface UseUserLocationReturn {
  * - URL에 위치 정보를 노출하지 않음
  */
 export const useUserLocation = (): UseUserLocationReturn => {
+  const t = useTranslations("market.location");
   const [location, setLocation] = useState<UserLocation | null>(null);
   const [status, setStatus] = useState<LocationStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -54,9 +56,7 @@ export const useUserLocation = (): UseUserLocationReturn => {
       // 브라우저 지원 확인
       if (typeof window === "undefined" || !navigator.geolocation) {
         setStatus("error");
-        setErrorMessage(
-          "이 브라우저에서는 위치 기반 기능을 지원하지 않습니다.",
-        );
+        setErrorMessage(t("unsupported"));
         return null;
       }
 
@@ -78,20 +78,17 @@ export const useUserLocation = (): UseUserLocationReturn => {
           // 에러 콜백
           (error) => {
             setStatus("error");
-            let message = "위치 정보를 가져올 수 없습니다.";
+            let message = t("unavailable");
 
             switch (error.code) {
               case error.PERMISSION_DENIED:
-                message =
-                  "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.";
+                message = t("permission_denied");
                 break;
               case error.POSITION_UNAVAILABLE:
-                message =
-                  "현재 위치를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.";
+                message = t("position_unavailable");
                 break;
               case error.TIMEOUT:
-                message =
-                  "위치 정보 요청 시간이 초과되었습니다. 다시 시도해주세요.";
+                message = t("timeout");
                 break;
             }
 
@@ -106,7 +103,7 @@ export const useUserLocation = (): UseUserLocationReturn => {
           },
         );
       });
-    }, [location]);
+    }, [location, t]);
 
   const clearLocation = useCallback(() => {
     setLocation(null);

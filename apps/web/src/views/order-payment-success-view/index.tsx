@@ -63,17 +63,14 @@ export const OrderPaymentSuccessView = () => {
     },
     onError: (error) => {
       console.error("Payment confirmation failed:", error);
-      const msg = getErrorMessage(
-        error,
-        "결제 승인 처리 중 오류가 발생했습니다.",
-      );
+      const msg = getErrorMessage(error, t("confirm_error"));
       setErrorMessage(msg);
     },
   });
 
   const handleConfirm = () => {
     if (!paymentKey || !rawOrderId || !amountStr) {
-      setErrorMessage("결제 결과 파라미터가 유효하지 않습니다.");
+      setErrorMessage(t("invalid_params"));
       return;
     }
 
@@ -85,10 +82,10 @@ export const OrderPaymentSuccessView = () => {
       payload: {
         paymentKey,
         amount: parseInt(amountStr, 10),
-        recipientName: shipping?.recipientName || "구매자",
+        recipientName: shipping?.recipientName || t("fallback_buyer"),
         recipientPhone: shipping?.recipientPhone || "010-0000-0000",
         zipCode: shipping?.zipCode || "00000",
-        address: shipping?.address || "기본 배송지",
+        address: shipping?.address || t("fallback_address"),
         addressDetail: shipping?.addressDetail || undefined,
       },
     });
@@ -110,11 +107,9 @@ export const OrderPaymentSuccessView = () => {
           <AlertCircle className="h-7 w-7" />
         </div>
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
-          잘못된 접근입니다
+          {t("invalid_access_title")}
         </h2>
-        <p className="text-sm text-stone-500">
-          결제 승인 정보가 올바르지 않습니다.
-        </p>
+        <p className="text-sm text-stone-500">{t("invalid_access_desc")}</p>
         <div className="pt-2">
           <Button
             asChild
@@ -143,7 +138,7 @@ export const OrderPaymentSuccessView = () => {
         </div>
         <div className="flex items-center justify-center gap-2 text-xs text-stone-500 bg-stone-50 dark:bg-stone-800/60 py-2.5 px-4 rounded-full w-fit mx-auto border border-stone-200 dark:border-stone-700">
           <Lock className="h-3.5 w-3.5 text-stone-700 dark:text-stone-300" />
-          <span>토스페이먼츠 에스크로 보안 검증 중</span>
+          <span>{t("verifying")}</span>
         </div>
       </div>
     );
@@ -158,22 +153,19 @@ export const OrderPaymentSuccessView = () => {
         </div>
         <div className="space-y-1.5">
           <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
-            결제 승인 실패
+            {t("fail_title")}
           </h2>
           <p className="text-sm text-stone-600 dark:text-stone-300">
             {errorMessage}
           </p>
         </div>
-        <p className="text-xs text-stone-400">
-          결제 승인 과정에서 문제가 발생했습니다. 지속될 경우 고객센터로
-          문의해주세요.
-        </p>
+        <p className="text-xs text-stone-400">{t("fail_desc")}</p>
         <div className="pt-2 flex justify-center gap-3">
           <Button
             onClick={handleConfirm}
             className="bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900"
           >
-            승인 재시도
+            {t("btn_retry")}
           </Button>
           <Button
             asChild
@@ -286,8 +278,8 @@ export const OrderPaymentSuccessView = () => {
             </span>
             <div className="rounded-xl bg-stone-50 dark:bg-stone-800/40 p-3 text-xs space-y-1 border border-stone-200/60 dark:border-stone-800">
               <div className="font-semibold text-stone-900 dark:text-stone-100">
-                {displayOrder?.recipientName || "수령인"} (
-                {displayOrder?.recipientPhone || "연락처"})
+                {displayOrder?.recipientName || t("fallback_recipient")} (
+                {displayOrder?.recipientPhone || t("fallback_phone")})
               </div>
               <div className="text-stone-500 dark:text-stone-400">
                 [{displayOrder?.zipCode || ""}] {displayOrder?.address || ""}{" "}
