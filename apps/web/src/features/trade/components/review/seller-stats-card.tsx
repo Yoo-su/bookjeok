@@ -51,39 +51,45 @@ export const SellerStatsCard = ({ stats }: SellerStatsCardProps) => {
         <div className="grid grid-cols-3 gap-3 divide-x divide-stone-100 dark:divide-stone-800 text-center">
           <div className="px-2">
             <span className="text-[11px] text-stone-400 block font-medium">
-              거래 완료
+              {t("stats.completed_label")}
             </span>
             <div className="mt-1 flex items-baseline justify-center gap-1">
               <span className="font-mono text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100">
                 {stats.totalCompletedSales}
               </span>
-              <span className="text-xs text-stone-400">건</span>
+              <span className="text-xs text-stone-400">
+                {t("stats.unit_count")}
+              </span>
             </div>
             {/*
               직거래 완료는 판매자 자기신고, 안전결제는 에스크로 구매확정을
               거친 기록이라 신뢰도가 다르다. 합계 아래에 내역을 함께 보여준다.
             */}
             <span className="mt-0.5 block text-[10px] text-stone-400">
-              직거래 {stats.directCompletedSales} · 안전결제{" "}
-              {stats.deliveryCompletedSales}
+              {t("stats.split_detail", {
+                direct: stats.directCompletedSales,
+                delivery: stats.deliveryCompletedSales,
+              })}
             </span>
           </div>
 
           <div className="px-2">
             <span className="text-[11px] text-stone-400 block font-medium">
-              받은 후기
+              {t("stats.received_reviews")}
             </span>
             <div className="mt-1 flex items-baseline justify-center gap-1">
               <span className="font-mono text-xl sm:text-2xl font-bold text-stone-900 dark:text-stone-100">
                 {stats.totalReviews}
               </span>
-              <span className="text-xs text-stone-400">개</span>
+              <span className="text-xs text-stone-400">
+                {t("stats.unit_reviews")}
+              </span>
             </div>
           </div>
 
           <div className="px-2">
             <span className="text-[11px] text-stone-400 block font-medium">
-              만족도
+              {t("stats.satisfaction")}
             </span>
             <div className="mt-1 flex items-baseline justify-center gap-1">
               <span className="font-mono text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">

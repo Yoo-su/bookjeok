@@ -4,9 +4,10 @@ import { PATHS } from "@/shared/constants/paths";
 
 export const getNotificationMessageParams = (
   notification: Notification,
+  fallbacks: { actor: string; cancelReason: string },
 ): { key: string; params: Record<string, string> } => {
   const { type, actor, metadata } = notification;
-  const actorName = actor?.nickname ?? "사용자";
+  const actorName = actor?.nickname ?? fallbacks.actor;
 
   switch (type) {
     case NotificationType.REVIEW_REACTION:
@@ -92,7 +93,7 @@ export const getNotificationMessageParams = (
       return {
         key: "order_cancelled",
         params: {
-          reason: (metadata.reason as string) || "거래 취소",
+          reason: (metadata.reason as string) || fallbacks.cancelReason,
         },
       };
     case NotificationType.SHIPPING_DEADLINE_IMMINENT:

@@ -43,6 +43,7 @@ interface SalesOrderCardProps {
 export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
   const t = useTranslations("order.sales_orders.card");
   const tCommon = useTranslations("common");
+  const tTabs = useTranslations("order.sales_orders.tabs");
   const locale = useLocale();
   const confirm = useConfirm();
   const openChatRoom = useOpenChatRoom();
@@ -51,10 +52,10 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
 
   const cancelSelectionMutation = useCancelSelectionMutation({
     onSuccess: () => {
-      toast.success("구매자 지정이 취소되었습니다.");
+      toast.success(t("toast_cancel_success"));
     },
     onError: (err) => {
-      toast.error(err.message || "지정 취소에 실패했습니다.");
+      toast.error(err.message || t("toast_cancel_error"));
     },
   });
 
@@ -63,10 +64,9 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
     e.stopPropagation();
 
     const isConfirmed = await confirm({
-      title: "구매자 지정 취소",
-      description:
-        "구매자 지정을 취소하시겠습니까? 판매글이 다시 판매중 상태로 변경됩니다.",
-      confirmText: "지정 취소",
+      title: t("cancel_title"),
+      description: t("cancel_desc"),
+      confirmText: t("btn_cancel_selection"),
       variant: "destructive",
     });
 
@@ -81,28 +81,28 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
         return (
           <Badge className="bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 gap-1 text-[11px] font-medium">
             <ClockIcon className="h-3 w-3" />
-            결제 대기
+            {tTabs("awaiting_payment")}
           </Badge>
         );
       case OrderStatus.PAID:
         return (
           <Badge className="bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 gap-1 text-[11px] font-medium">
             <BoxIcon className="h-3 w-3" />
-            발송 요청
+            {tTabs("paid")}
           </Badge>
         );
       case OrderStatus.SHIPPED:
         return (
           <Badge className="bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 gap-1 text-[11px] font-medium">
             <TruckFastIcon className="h-3 w-3" />
-            배송 중
+            {tTabs("shipped")}
           </Badge>
         );
       case OrderStatus.DELIVERED:
         return (
           <Badge className="bg-emerald-600 text-white gap-1 text-[11px] font-medium">
             <CheckCircle2 className="h-3 w-3" />
-            배송 완료
+            {tTabs("delivered")}
           </Badge>
         );
       case OrderStatus.CONFIRMED:
@@ -112,7 +112,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
             className="border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 gap-1 text-[11px] font-medium"
           >
             <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-            거래 완료
+            {tTabs("confirmed")}
           </Badge>
         );
       case OrderStatus.DISPUTED:
@@ -122,7 +122,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
             className="border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 gap-1 text-[11px] font-medium"
           >
             <AlertCircle className="h-3 w-3 text-stone-500" />
-            분쟁 중
+            {t("status_disputed")}
           </Badge>
         );
       case OrderStatus.CANCELLED:
@@ -133,7 +133,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
             className="gap-1 text-[11px] text-stone-400 bg-stone-100 dark:bg-stone-800 font-medium"
           >
             <XCircle className="h-3 w-3" />
-            취소됨
+            {t("status_cancelled")}
           </Badge>
         );
     }
@@ -168,7 +168,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
               {bookCover ? (
                 <Image
                   src={bookCover}
-                  alt={order.sale?.title || "도서"}
+                  alt={order.sale?.title || t("alt_book")}
                   fill
                   className="object-cover transition-transform group-hover:scale-105"
                   unoptimized
@@ -186,7 +186,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
                 href={PATHS.ORDER_DETAIL(order.id)}
                 className="block font-bold text-stone-900 dark:text-stone-100 hover:text-stone-700 transition-colors text-sm line-clamp-1"
               >
-                {order.sale?.title || "판매 도서"}
+                {order.sale?.title || t("fallback_book_title")}
               </Link>
 
               {order.sale?.book && (
@@ -201,7 +201,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
                   {buyerProfileImg ? (
                     <Image
                       src={buyerProfileImg}
-                      alt="구매자"
+                      alt={t("fallback_buyer")}
                       fill
                       className="object-cover"
                       unoptimized
@@ -211,7 +211,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
                   )}
                 </div>
                 <span className="truncate">
-                  {t("buyer")}: {order.buyer?.nickname || "구매자"}
+                  {t("buyer")}: {order.buyer?.nickname || t("fallback_buyer")}
                 </span>
               </div>
 
@@ -238,7 +238,7 @@ export const SalesOrderCard = ({ order }: SalesOrderCardProps) => {
           {/* 하단 바: 정산 예정 금액 + 액션 버튼 */}
           <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-stone-100 dark:border-stone-800">
             <div className="flex items-baseline gap-1">
-              <span className="text-xs text-stone-400">정산금액:</span>
+              <span className="text-xs text-stone-400">{t("price_label")}</span>
               <span className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums">
                 {formatCurrency(order.amount, locale, tCommon("won"))}
               </span>

@@ -41,9 +41,7 @@ interface CreateSaleVariables {
 /**
  * 이미지 업로드 전 만료된 AccessToken을 미리 Refresh하는 헬퍼 함수
  */
-const ensureFreshAuthToken = async (
-  loginRequiredMsg = "로그인이 필요한 서비스입니다.",
-) => {
+const ensureFreshAuthToken = async (loginRequiredMsg: string) => {
   await privateApiClient.get(API_PATHS.user.profile);
   const authState = useAuthStore.getState();
   if (!authState.user || !authState.accessToken) {
@@ -84,7 +82,9 @@ export const useCreateBookSaleMutation = () => {
     onProgressState,
   }: CreateSaleVariables) => {
     onProgressState?.("compressing", 10);
-    const { user, accessToken } = await ensureFreshAuthToken();
+    const { user, accessToken } = await ensureFreshAuthToken(
+      t("login_required"),
+    );
 
     onProgressState?.("uploading", 25);
     const imageUrls = await uploadSaleImages(
@@ -186,7 +186,9 @@ export const useUpdateBookSaleMutation = () => {
     onProgressState,
   }: UpdateSaleVariables) => {
     onProgressState?.("compressing", 15);
-    const { user, accessToken } = await ensureFreshAuthToken();
+    const { user, accessToken } = await ensureFreshAuthToken(
+      t("login_required"),
+    );
 
     if (deletedImageUrls.length > 0) {
       await deleteImages(deletedImageUrls);

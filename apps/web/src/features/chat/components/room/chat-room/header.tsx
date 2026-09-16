@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/components/shadcn/tooltip";
+import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { useSocketContext } from "@/shared/providers/socket-provider";
@@ -147,7 +148,7 @@ export const ChatRoomHeader = ({
           {bookImage ? (
             <Image
               src={bookImage}
-              alt={bookTitle || "도서 표지"}
+              alt={bookTitle || t("book_cover_alt")}
               fill
               unoptimized
               className="object-cover"
@@ -244,12 +245,11 @@ export const ChatRoomHeader = ({
                       <span className="mx-1 text-stone-300 dark:text-stone-600">
                         ·
                       </span>
-                      <span className="font-medium text-stone-700 dark:text-stone-300">
-                        <span className="tabular-nums">
-                          {bookPrice.toLocaleString()}
-                        </span>
-                        원
-                      </span>
+                      <PriceDisplay
+                        value={bookPrice}
+                        className="text-xs font-medium text-stone-700 dark:text-stone-300 tabular-nums"
+                        unitClassName="font-medium"
+                      />
                     </>
                   )}
                 </motion.p>

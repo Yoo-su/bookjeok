@@ -1,4 +1,5 @@
 import { upload } from "@vercel/blob/client";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -17,12 +18,17 @@ export const useEditorImageHandler = ({
   uploadPath,
   initialContent = "",
 }: UseEditorImageHandlerOptions) => {
+  const t = useTranslations("common");
   const [isUploading, setIsUploading] = useState(false);
   const imageMapRef = useRef<Map<string, File>>(new Map());
 
   const handleImageAdd = (file: File) => {
     // 이미지 용량 검증 (10MB 제한)
-    const validationError = validateImageForUpload(file);
+    const validationError = validateImageForUpload(file, {
+      onlyImage: t("image.only_image_allowed"),
+      sizeLimitExceeded: (sizeMB, maxSizeMB) =>
+        t("image.size_limit_exceeded", { size: sizeMB, maxSize: maxSizeMB }),
+    });
     if (validationError) {
       toast.error(validationError);
       return null;

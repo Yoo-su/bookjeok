@@ -16,7 +16,10 @@ export const useNotificationActions = () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys._def });
 
       // 2. UI 피드백 (Toast)
-      const { key, params } = getNotificationMessageParams(notification);
+      const { key, params } = getNotificationMessageParams(notification, {
+        actor: t("fallback_actor"),
+        cancelReason: t("fallback_cancel_reason"),
+      });
       const message = t(key, params);
 
       toast.info(message);

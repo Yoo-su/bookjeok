@@ -12,6 +12,7 @@ import { PATHS } from "@/shared/constants/paths";
  */
 export const MyCommentsView = () => {
   const t = useTranslations("my_comments");
+  const tMyPage = useTranslations("my_page");
 
   return (
     <div className="w-full space-y-6">
@@ -22,7 +23,7 @@ export const MyCommentsView = () => {
           className="inline-flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 mb-2 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          마이페이지
+          {tMyPage("title")}
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>

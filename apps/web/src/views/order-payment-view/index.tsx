@@ -142,7 +142,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
     if (!order) return;
 
     if (isEmailUnverified) {
-      toast.error("이메일 인증을 완료한 후 결제를 진행할 수 있습니다.");
+      toast.error(t("email_unverified"));
       return;
     }
 
@@ -188,7 +188,8 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
             value: order.amount,
           },
           orderId: order.id,
-          orderName: order.sale?.title || `북적 주문 ${order.id}`,
+          orderName:
+            order.sale?.title || t("fallback_order_name", { id: order.id }),
           successUrl,
           failUrl,
           customerName: addressValues.recipientName.trim(),
@@ -208,7 +209,8 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
             value: order.amount,
           },
           orderId: order.id,
-          orderName: order.sale?.title || `북적 주문 ${order.id}`,
+          orderName:
+            order.sale?.title || t("fallback_order_name", { id: order.id }),
           successUrl,
           failUrl,
           customerName: addressValues.recipientName.trim(),
@@ -228,7 +230,8 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
             value: order.amount,
           },
           orderId: order.id,
-          orderName: order.sale?.title || `북적 주문 ${order.id}`,
+          orderName:
+            order.sale?.title || t("fallback_order_name", { id: order.id }),
           successUrl,
           failUrl,
           customerName: addressValues.recipientName.trim(),
@@ -245,7 +248,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
     } catch (err: any) {
       console.error("Toss Payments request error:", err);
       if (err?.code === "USER_CANCEL" || err?.name === "UserCancelError") {
-        toast.info("결제가 취소되었습니다.");
+        toast.info(t("cancelled_toast"));
       } else {
         toast.error(err?.message || t("errors.toss_load_failed"));
       }
@@ -282,16 +285,14 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
           {t("errors.order_not_found")}
         </h2>
-        <p className="text-sm text-stone-500">
-          요청하신 주문을 찾을 수 없거나 접근 권한이 없습니다.
-        </p>
+        <p className="text-sm text-stone-500">{t("not_found_desc")}</p>
         <div className="pt-2">
           <Button
             asChild
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.HOME}>홈으로 이동</Link>
+            <Link href={PATHS.HOME}>{t("btn_go_home")}</Link>
           </Button>
         </div>
       </div>
@@ -309,16 +310,14 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
           {t("not_buyer_notice")}
         </h2>
-        <p className="text-sm text-stone-500">
-          지정된 구매자 계정으로 로그인 후 다시 시도해주세요.
-        </p>
+        <p className="text-sm text-stone-500">{t("not_buyer_desc")}</p>
         <div className="pt-2">
           <Button
             asChild
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.HOME}>홈으로 이동</Link>
+            <Link href={PATHS.HOME}>{t("btn_go_home")}</Link>
           </Button>
         </div>
       </div>
@@ -336,7 +335,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
           {t("invalid_status_notice")}
         </h2>
         <p className="text-sm text-stone-500">
-          현재 주문 상태:{" "}
+          {t("current_status")}{" "}
           <Badge variant="secondary" className="bg-stone-200 dark:bg-stone-800">
             {order.status}
           </Badge>
@@ -347,14 +346,16 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.ORDER_DETAIL(order.id)}>주문 상세 보기</Link>
+            <Link href={PATHS.ORDER_DETAIL(order.id)}>
+              {t("btn_order_detail")}
+            </Link>
           </Button>
           <Button
             asChild
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.HOME}>홈으로 이동</Link>
+            <Link href={PATHS.HOME}>{t("btn_go_home")}</Link>
           </Button>
         </div>
       </div>
@@ -371,17 +372,14 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
           {t("expired_notice")}
         </h2>
-        <p className="text-sm text-stone-500">
-          24시간 결제 기한이 만료되어 주문이 자동으로 취소되었습니다. 판매자와
-          다시 채팅을 통해 거래를 진행해주세요.
-        </p>
+        <p className="text-sm text-stone-500">{t("expired_desc")}</p>
         <div className="pt-2">
           <Button
             asChild
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.HOME}>홈으로 이동</Link>
+            <Link href={PATHS.HOME}>{t("btn_go_home")}</Link>
           </Button>
         </div>
       </div>
@@ -398,7 +396,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
             className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 mb-1 transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            이전으로
+            {t("btn_back")}
           </button>
           <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100 tracking-tight">
             {t("checkout_title")}
@@ -450,7 +448,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
             <CardHeader className="bg-stone-50/60 dark:bg-stone-800/40 pb-3 border-b border-stone-100 dark:border-stone-800">
               <CardTitle className="text-sm font-bold flex items-center gap-2 text-stone-900 dark:text-stone-100">
                 <CardPosIcon className="h-4 w-4 text-stone-700 dark:text-stone-300" />
-                결제 수단 선택
+                {t("method_title")}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -466,7 +464,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
                   }`}
                 >
                   <CardPosIcon className="h-5 w-5" />
-                  <span>신용/체크카드</span>
+                  <span>{t("method_card")}</span>
                 </button>
                 <button
                   type="button"
@@ -479,7 +477,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
                   }`}
                 >
                   <RefreshCw className="h-5 w-5" />
-                  <span>실시간 계좌이체</span>
+                  <span>{t("method_transfer")}</span>
                 </button>
                 <button
                   type="button"
@@ -492,7 +490,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
                   }`}
                 >
                   <Wallet className="h-5 w-5" />
-                  <span>가상계좌</span>
+                  <span>{t("method_virtual_account")}</span>
                 </button>
               </div>
             </CardContent>
@@ -527,8 +525,7 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
           </Button>
 
           <p className="text-[11px] text-center text-stone-400 leading-relaxed px-2">
-            위 주문 내용을 확인하였으며, 토스페이먼츠 전자금융거래 이용약관 및
-            개인정보 제공에 동의합니다.
+            {t("agreement")}
           </p>
         </div>
       </div>

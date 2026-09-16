@@ -134,7 +134,8 @@ export async function streamAiChat(
           onDone();
           break;
         case "error":
-          onError(data.message || "대화를 처리하는 도중 오류가 발생했습니다.");
+          // 문구는 훅에서 로케일에 맞춰 붙인다
+          onError(data.message ?? "");
           break;
       }
     } catch (e) {

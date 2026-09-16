@@ -24,7 +24,7 @@ export const TradeReviewCard = ({ review }: TradeReviewCardProps) => {
   const locale = useLocale();
 
   const reviewerAvatar = getProfileImageUrl(review.reviewer?.profileImageUrl);
-  const reviewerNickname = review.reviewer?.nickname || "익명의 독자";
+  const reviewerNickname = review.reviewer?.nickname || t("anonymous_reviewer");
   const bookTitle =
     review.completion?.sale?.title || review.completion?.sale?.book?.title;
 

@@ -26,14 +26,15 @@ import {
   SelectValue,
 } from "@/shared/components/shadcn/select";
 
+// id는 서버에 그대로 저장되는 값이라 로케일과 무관하게 고정한다. 표시 이름만 번역한다
 export const CARRIERS = [
-  { id: "CJ대한통운", name: "CJ대한통운" },
-  { id: "우체국택배", name: "우체국택배" },
-  { id: "롯데택배", name: "롯데택배" },
-  { id: "한진택배", name: "한진택배" },
-  { id: "로젠택배", name: "로젠택배" },
-  { id: "CU 편의점택배", name: "CU 편의점택배" },
-  { id: "GS Postbox", name: "GS Postbox 택배" },
+  { id: "CJ대한통운", key: "cj" },
+  { id: "우체국택배", key: "post" },
+  { id: "롯데택배", key: "lotte" },
+  { id: "한진택배", key: "hanjin" },
+  { id: "로젠택배", key: "logen" },
+  { id: "CU 편의점택배", key: "cu" },
+  { id: "GS Postbox", key: "gs" },
 ] as const;
 
 interface ShippingFormModalProps {
@@ -52,6 +53,7 @@ export const ShippingFormModal = ({
   onSuccess,
 }: ShippingFormModalProps) => {
   const t = useTranslations("order.shipping_modal");
+  const tCommon = useTranslations("common.actions");
 
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -80,7 +82,7 @@ export const ShippingFormModal = ({
       onSuccess?.();
     },
     onError: (error) => {
-      toast.error(error.message || "운송장 등록에 실패했습니다.");
+      toast.error(error.message || t("errors.submit_failed"));
     },
   });
 
@@ -155,7 +157,7 @@ export const ShippingFormModal = ({
               <SelectContent>
                 {CARRIERS.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name}
+                    {t(`carriers.${c.key}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -200,7 +202,7 @@ export const ShippingFormModal = ({
               disabled={registerShippingMutation.isPending}
               className="sm:flex-1 border-stone-200 dark:border-stone-700"
             >
-              취소
+              {tCommon("cancel")}
             </Button>
             <Button
               type="submit"

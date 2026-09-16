@@ -2,7 +2,7 @@
 
 import { getLocationSales } from "@bookjeok/api-client";
 import { LocationSales, LocationStat } from "@bookjeok/core";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomOverlayMap, Map, useKakaoLoader } from "react-kakao-maps-sdk";
 
@@ -13,6 +13,7 @@ import {
 import { COLORS } from "@/features/insights/constants/ui";
 import { Loader2, MapPin, Navigation } from "@/shared/components/icons/iconsax";
 import { config } from "@/shared/config/env";
+import { formatCurrency } from "@/shared/utils/format-currency";
 
 // 서울 기본 좌표
 const DEFAULT_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -27,6 +28,8 @@ interface LocationHeatmapProps {
  */
 export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
   const t = useTranslations("insights.charts.location");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
   const mapRef = useRef<kakao.maps.Map | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<LocationStat | null>(
     null,
@@ -85,10 +88,8 @@ export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
     }
   }, [hasData, top5Locations, selectedLocation, loading, handleLocationClick]);
 
-  // 가격 포맷
-  const formatPrice = (price: number) => {
-    return price.toLocaleString() + "원";
-  };
+  const formatPrice = (price: number) =>
+    formatCurrency(price, locale, tCommon("won"));
 
   if (loading) {
     return (
@@ -171,7 +172,9 @@ export const LocationHeatmap = ({ data }: LocationHeatmapProps) => {
                     <span className="font-medium">
                       {location.city} {location.district}
                     </span>
-                    <span style={{ opacity: 0.7 }}>({location.count}개)</span>
+                    <span style={{ opacity: 0.7 }}>
+                      {t("count_unit", { count: location.count })}
+                    </span>
                   </button>
                 );
               })}

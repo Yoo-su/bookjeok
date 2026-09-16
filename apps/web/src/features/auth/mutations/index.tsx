@@ -2,32 +2,37 @@ import {
   useEmailLoginMutation as useBaseEmailLoginMutation,
   useEmailSignupMutation as useBaseEmailSignupMutation,
 } from "@bookjeok/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 /**
  * 이메일 로그인 뮤테이션
  */
-export const useEmailLoginMutation = () =>
-  useBaseEmailLoginMutation({
+export const useEmailLoginMutation = () => {
+  const t = useTranslations("auth.login");
+
+  return useBaseEmailLoginMutation({
     onSuccess: () => {
-      toast.success("성공적으로 로그인되었습니다.");
+      toast.success(t("success"));
     },
     onError: () => {
-      toast.error(
-        "로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.",
-      );
+      toast.error(t("error.invalid_credentials"));
     },
   });
+};
 
 /**
  * 이메일 회원가입 뮤테이션
  */
-export const useEmailSignupMutation = () =>
-  useBaseEmailSignupMutation({
+export const useEmailSignupMutation = () => {
+  const t = useTranslations("auth.signup");
+
+  return useBaseEmailSignupMutation({
     onSuccess: () => {
-      toast.success("회원가입이 완료되었습니다! 로그인해 주세요.");
+      toast.success(t("success"));
     },
     onError: () => {
-      toast.error("회원가입에 실패했습니다. 이미 가입된 이메일일 수 있습니다.");
+      toast.error(t("error.email_exists"));
     },
   });
+};

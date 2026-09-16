@@ -3,6 +3,7 @@
 import { ReviewReactionType } from "@bookjeok/core";
 import { useMyReviewReactionQuery } from "@bookjeok/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
@@ -24,6 +25,7 @@ export function ReviewDetailActions({
   reviewId,
   reactionCounts,
 }: ReviewDetailActionsProps) {
+  const tReactions = useTranslations("review.reactions");
   const router = useRouter();
   const pathname = usePathname();
   const userState = useAuthStore((state) => state.user);
@@ -57,7 +59,7 @@ export function ReviewDetailActions({
       {/* Reaction Buttons */}
       <div className="flex justify-center gap-4">
         {REACTION_CONFIG.map(
-          ({ type, icon: Icon, label, color, bgColor, ringColor }) => {
+          ({ type, icon: Icon, labelKey, color, bgColor, ringColor }) => {
             const isActive = myReaction === type;
             const count = reactionCounts?.[type] || 0;
 
@@ -99,7 +101,7 @@ export function ReviewDetailActions({
                       isActive ? "text-stone-900" : "text-stone-500",
                     )}
                   >
-                    {label}
+                    {tReactions(labelKey)}
                   </span>
                   <AnimatePresence mode="wait">
                     <motion.span

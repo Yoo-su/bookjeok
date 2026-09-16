@@ -262,7 +262,7 @@ export const AddressInput = ({
               {t("postcode_modal_title")}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              우편번호 및 도로명 주소를 검색하여 배송지를 입력합니다.
+              {t("postcode_modal_desc")}
             </DialogDescription>
           </DialogHeader>
           <div className="w-full h-[450px]">

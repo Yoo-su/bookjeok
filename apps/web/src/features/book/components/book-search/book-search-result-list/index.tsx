@@ -61,7 +61,7 @@ export const BookSearchResultList = ({
   if (status === "error") {
     return (
       <div className="text-center text-red-500">
-        에러가 발생했습니다: {error.message}
+        {t("error", { message: error.message })}
       </div>
     );
   }

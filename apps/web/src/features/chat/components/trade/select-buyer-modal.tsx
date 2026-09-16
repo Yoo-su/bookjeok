@@ -109,7 +109,7 @@ export const SelectBuyerModal = ({
           <div className="space-y-1.5 text-xs text-stone-600 dark:text-stone-400 bg-stone-50 dark:bg-stone-900 p-3.5 rounded-xl border border-stone-200 dark:border-stone-800">
             <div className="flex items-center gap-1.5 font-semibold text-stone-800 dark:text-stone-200">
               <AlertCircle className="w-4 h-4 text-stone-500 shrink-0" />
-              <span>{buyer.nickname}님과의 거래 안내</span>
+              <span>{t("notice_title", { nickname: buyer.nickname })}</span>
             </div>
             <p className="leading-relaxed pl-5.5 text-stone-600 dark:text-stone-400">
               {t("notice")}

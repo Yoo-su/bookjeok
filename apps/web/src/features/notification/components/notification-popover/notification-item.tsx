@@ -38,7 +38,10 @@ export const NotificationItem = ({
   const { mutate: deleteNotification } = useDeleteNotification();
 
   const link = getNotificationLink(notification);
-  const { key, params } = getNotificationMessageParams(notification);
+  const { key, params } = getNotificationMessageParams(notification, {
+    actor: t("fallback_actor"),
+    cancelReason: t("fallback_cancel_reason"),
+  });
   const message = t(key, params);
 
   const handleLinkClick = () => {
@@ -119,7 +122,7 @@ export const NotificationItem = ({
         size="icon"
         className="h-6 w-6 text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 -mr-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
         onClick={handleDelete}
-        aria-label={t("delete") || "삭제"}
+        aria-label={t("delete")}
       >
         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>

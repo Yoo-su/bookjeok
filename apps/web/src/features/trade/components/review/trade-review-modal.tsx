@@ -64,6 +64,7 @@ export const TradeReviewModal = ({
   onSuccess,
 }: TradeReviewModalProps) => {
   const t = useTranslations("order.trade_review");
+  const tCommon = useTranslations("common.actions");
 
   // 직거래에 배송·포장 태그를, 구매자에게 "책 상태" 태그를 보여주면
   // 고를 수 없거나 뜻이 통하지 않는 항목이 된다. 거래 방식과 상대 역할에
@@ -104,7 +105,7 @@ export const TradeReviewModal = ({
   };
 
   const handleMutationError = (err: Error) => {
-    toast.error(err.message || "거래 후기 처리 중 오류가 발생했습니다.");
+    toast.error(err.message || t("errors.submit_failed"));
   };
 
   const createReviewMutation = useCreateTradeReviewMutation({
@@ -191,7 +192,10 @@ export const TradeReviewModal = ({
             {isEditMode
               ? t("modal_desc_edit")
               : targetUserNickname
-                ? `${targetUserNickname}님과의 ${t("modal_desc")}`
+                ? t("modal_desc_with_user", {
+                    nickname: targetUserNickname,
+                    desc: t("modal_desc"),
+                  })
                 : t("modal_desc")}
           </DialogDescription>
         </DialogHeader>
@@ -294,7 +298,7 @@ export const TradeReviewModal = ({
               disabled={activeMutation.isPending}
               className="border-stone-200 dark:border-stone-700"
             >
-              취소
+              {tCommon("cancel")}
             </Button>
             <Button
               type="submit"

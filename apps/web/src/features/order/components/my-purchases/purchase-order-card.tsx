@@ -42,6 +42,7 @@ interface PurchaseOrderCardProps {
 export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
   const t = useTranslations("order.purchases.card");
   const tCommon = useTranslations("common");
+  const tTabs = useTranslations("order.purchases.tabs");
   const locale = useLocale();
   const confirm = useConfirm();
   const openChatRoom = useOpenChatRoom();
@@ -49,11 +50,11 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
 
   const confirmPurchaseMutation = useConfirmPurchaseMutation({
     onSuccess: () => {
-      toast.success("구매가 정상적으로 확정되었습니다.");
+      toast.success(t("toast_confirm_success"));
       setIsReviewModalOpen(true);
     },
     onError: (err) => {
-      toast.error(err.message || "구매확정 처리에 실패했습니다.");
+      toast.error(err.message || t("toast_confirm_error"));
     },
   });
 
@@ -62,10 +63,9 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
     e.stopPropagation();
 
     const isConfirmed = await confirm({
-      title: "구매확정",
-      description:
-        "물품을 정상적으로 수령하셨다면 구매를 확정해주세요. 구매확정 후에는 취소가 불가합니다.",
-      confirmText: "구매확정",
+      title: t("confirm_title"),
+      description: t("confirm_desc"),
+      confirmText: t("btn_confirm"),
     });
 
     if (isConfirmed) {
@@ -79,28 +79,28 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
         return (
           <Badge className="bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 gap-1 text-[11px] font-medium">
             <ClockIcon className="h-3 w-3" />
-            결제 대기
+            {tTabs("awaiting_payment")}
           </Badge>
         );
       case OrderStatus.PAID:
         return (
           <Badge className="bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 gap-1 text-[11px] font-medium">
             <BoxIcon className="h-3 w-3" />
-            발송 대기
+            {tTabs("paid")}
           </Badge>
         );
       case OrderStatus.SHIPPED:
         return (
           <Badge className="bg-stone-800 text-white dark:bg-stone-200 dark:text-stone-900 gap-1 text-[11px] font-medium">
             <TruckFastIcon className="h-3 w-3" />
-            배송 중
+            {tTabs("shipped")}
           </Badge>
         );
       case OrderStatus.DELIVERED:
         return (
           <Badge className="bg-emerald-600 text-white gap-1 text-[11px] font-medium">
             <CheckCircle2 className="h-3 w-3" />
-            배송 완료
+            {tTabs("delivered")}
           </Badge>
         );
       case OrderStatus.CONFIRMED:
@@ -110,7 +110,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
             className="border-stone-300 dark:border-stone-700 text-stone-800 dark:text-stone-200 gap-1 text-[11px] font-medium"
           >
             <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-            구매 확정
+            {tTabs("confirmed")}
           </Badge>
         );
       case OrderStatus.DISPUTED:
@@ -120,7 +120,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
             className="border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 gap-1 text-[11px] font-medium"
           >
             <AlertCircle className="h-3 w-3 text-stone-500" />
-            분쟁 중
+            {t("status_disputed")}
           </Badge>
         );
       case OrderStatus.CANCELLED:
@@ -131,7 +131,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
             className="gap-1 text-[11px] text-stone-400 bg-stone-100 dark:bg-stone-800 font-medium"
           >
             <XCircle className="h-3 w-3" />
-            주문 취소
+            {t("status_cancelled")}
           </Badge>
         );
     }
@@ -165,7 +165,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
             {bookCover ? (
               <Image
                 src={bookCover}
-                alt={order.sale?.title || "도서"}
+                alt={order.sale?.title || t("alt_book")}
                 fill
                 className="object-cover transition-transform group-hover:scale-105"
                 unoptimized
@@ -183,7 +183,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
               href={PATHS.ORDER_DETAIL(order.id)}
               className="block font-bold text-stone-900 dark:text-stone-100 hover:text-stone-700 transition-colors text-sm line-clamp-1"
             >
-              {order.sale?.title || "중고 도서"}
+              {order.sale?.title || t("fallback_book_title")}
             </Link>
 
             {order.sale?.book && (
@@ -198,7 +198,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
                 {sellerProfileImg ? (
                   <Image
                     src={sellerProfileImg}
-                    alt="판매자"
+                    alt={t("fallback_seller")}
                     fill
                     className="object-cover"
                     unoptimized
@@ -208,7 +208,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
                 )}
               </div>
               <span className="truncate">
-                {t("seller")}: {order.seller?.nickname || "판매자"}
+                {t("seller")}: {order.seller?.nickname || t("fallback_seller")}
               </span>
             </div>
 
@@ -224,7 +224,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
         {/* 하단 바: 금액 + 액션 버튼 */}
         <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-stone-100 dark:border-stone-800">
           <div className="flex items-baseline gap-1">
-            <span className="text-xs text-stone-400">결제금액:</span>
+            <span className="text-xs text-stone-400">{t("price_label")}</span>
             <span className="text-base font-bold text-stone-900 dark:text-stone-100 tabular-nums">
               {formatCurrency(order.amount, locale, tCommon("won"))}
             </span>
@@ -270,7 +270,7 @@ export const PurchaseOrderCard = ({ order }: PurchaseOrderCardProps) => {
                 }}
               >
                 <QuoteUpCircleIcon className="h-3.5 w-3.5" />
-                {t("btn_review", { fallback: "후기 작성" })}
+                {t("btn_review")}
               </Button>
             )}
 

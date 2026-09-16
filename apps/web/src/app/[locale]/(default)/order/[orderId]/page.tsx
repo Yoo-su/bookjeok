@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return createPageMetadata({
     title: t("page_title"),
-    description: `주문번호 #${orderId} 상세 내역 및 배송 조회`,
+    description: t("metadata_description", { orderId }),
     locale,
     path: `/order/${orderId}`,
     noIndex: true,

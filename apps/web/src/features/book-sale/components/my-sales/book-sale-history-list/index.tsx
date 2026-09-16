@@ -18,6 +18,7 @@ type FilterTabKey = "ALL" | SaleStatus;
 
 export const BookSaleHistoryList = () => {
   const t = useTranslations("market.history");
+  const tCommon = useTranslations("common.actions");
   const [activeTab, setActiveTab] = useState<FilterTabKey>("ALL");
   const { data: sales, isLoading, isError, refetch } = useMyBookSalesQuery();
 
@@ -74,7 +75,7 @@ export const BookSaleHistoryList = () => {
           size="sm"
           className="mt-2 border-stone-200 dark:border-stone-700"
         >
-          다시 시도
+          {tCommon("retry")}
         </Button>
       </div>
     );

@@ -106,7 +106,9 @@ export const WishlistItem = ({ item }: WishlistItemProps) => {
               !isNaN(Number(book.discount)) &&
               Number(book.discount) > 0 ? (
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xs text-stone-400">할인가:</span>
+                  <span className="text-xs text-stone-400">
+                    {t("discount_price")}
+                  </span>
                   <PriceDisplay
                     value={Number(book.discount)}
                     className="text-sm font-bold text-stone-900 dark:text-stone-100"

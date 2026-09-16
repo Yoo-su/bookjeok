@@ -25,6 +25,7 @@ interface UserTradeReviewsListProps {
 
 export const UserTradeReviewsList = ({ handle }: UserTradeReviewsListProps) => {
   const t = useTranslations("order.trade_review");
+  const tCommon = useTranslations("common.actions");
   const [page, setPage] = useState<number>(1);
   const limit = 10;
 
@@ -90,16 +91,14 @@ export const UserTradeReviewsList = ({ handle }: UserTradeReviewsListProps) => {
       {isError && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50/60 dark:bg-stone-900/60 p-8 text-center space-y-3">
           <ShieldAlert className="h-9 w-9 text-stone-400" />
-          <p className="text-xs text-stone-500">
-            거래 후기를 불러오지 못했습니다.
-          </p>
+          <p className="text-xs text-stone-500">{t("list.error")}</p>
           <Button
             onClick={() => refetch()}
             variant="outline"
             size="sm"
             className="border-stone-200 dark:border-stone-700"
           >
-            다시 시도
+            {tCommon("retry")}
           </Button>
         </div>
       )}

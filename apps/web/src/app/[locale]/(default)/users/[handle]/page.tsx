@@ -61,8 +61,10 @@ export async function generateMetadata({
 
   // 검색 결과 향상을 위해 유저의 실제 닉네임을 타이틀에 동적으로 활용
   return createPageMetadata({
-    title: `${profile.nickname}님의 프로필`,
-    description: `${profile.nickname}님의 독서 기록, 최근 작성한 리뷰 및 중고 거래 상품 목록을 만나보세요.`,
+    title: t("title_with_nickname", { nickname: profile.nickname }),
+    description: t("description_with_nickname", {
+      nickname: profile.nickname,
+    }),
     imageUrl: profile.profileImageUrl || null,
     locale,
     path: `/users/${handle}`,

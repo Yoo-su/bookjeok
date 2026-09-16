@@ -115,26 +115,26 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
       toast.success(t("cancel_selection_desc"));
     },
     onError: (err) => {
-      toast.error(err.message || "구매자 지정 취소에 실패했습니다.");
+      toast.error(err.message || t("toast_cancel_selection_error"));
     },
   });
 
   const confirmPurchaseMutation = useConfirmPurchaseMutation({
     onSuccess: () => {
-      toast.success("구매가 정상적으로 확정되었습니다.");
+      toast.success(t("toast_confirm_success"));
       setIsReviewModalOpen(true);
     },
     onError: (err) => {
-      toast.error(err.message || "구매확정 처리에 실패했습니다.");
+      toast.error(err.message || t("toast_confirm_error"));
     },
   });
 
   const cancelOrderMutation = useCancelOrderMutation({
     onSuccess: () => {
-      toast.success("주문이 정상적으로 취소되었습니다.");
+      toast.success(t("toast_cancel_success"));
     },
     onError: (err) => {
-      toast.error(err.message || "주문 취소에 실패했습니다.");
+      toast.error(err.message || t("toast_cancel_error"));
     },
   });
 
@@ -142,7 +142,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
     const isConfirmed = await confirm({
       title: t("cancel_selection_title"),
       description: t("cancel_selection_desc"),
-      confirmText: "지정 취소",
+      confirmText: t("btn_cancel_selection_short"),
       variant: "destructive",
     });
     if (isConfirmed) {
@@ -154,7 +154,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
     const isConfirmed = await confirm({
       title: t("confirm_purchase_title"),
       description: t("confirm_purchase_desc"),
-      confirmText: "구매확정",
+      confirmText: t("action_confirm"),
     });
     if (isConfirmed) {
       confirmPurchaseMutation.mutate(order.id);
@@ -165,7 +165,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
     const isConfirmed = await confirm({
       title: t("cancel_order_title"),
       description: t("cancel_order_desc"),
-      confirmText: "주문 취소",
+      confirmText: t("action_cancel"),
       variant: "destructive",
     });
     if (isConfirmed) {
@@ -239,7 +239,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                         order.sale?.book?.image ||
                         ""
                       }
-                      alt={order.sale?.title || "도서"}
+                      alt={order.sale?.title || t("alt_book")}
                       fill
                       className="object-cover"
                       unoptimized
@@ -255,7 +255,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                 <div className="flex flex-col justify-between min-w-0 flex-1">
                   <div>
                     <h3 className="font-bold text-stone-900 dark:text-stone-100 line-clamp-2 text-sm sm:text-base leading-snug">
-                      {order.sale?.title || "판매 도서"}
+                      {order.sale?.title || t("fallback_book_title")}
                     </h3>
                     {order.sale?.book && (
                       <p className="text-xs text-stone-500 mt-1">
@@ -265,7 +265,9 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                   </div>
 
                   <div className="mt-3 flex items-baseline justify-between pt-2 border-t border-dashed border-stone-200 dark:border-stone-800">
-                    <span className="text-xs text-stone-500">판매 가격</span>
+                    <span className="text-xs text-stone-500">
+                      {t("sale_price")}
+                    </span>
                     <span className="font-bold text-base text-stone-900 dark:text-stone-100 tabular-nums">
                       {formatCurrency(order.amount, locale, tCommon("won"))}
                     </span>
@@ -282,7 +284,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                     className="text-xs h-7 gap-1 text-stone-600 dark:text-stone-400 hover:text-stone-900"
                   >
                     <Link href={PATHS.BOOK_SALES_DETAIL(String(order.saleId))}>
-                      판매글 보기
+                      {t("view_sale")}
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                   </Button>
@@ -311,7 +313,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                       variant="outline"
                       className="border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 text-[10px]"
                     >
-                      배송 중
+                      {t("shipping_in_progress")}
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -328,7 +330,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                         {hasCopiedTracking ? (
                           <>
                             <CopySuccessIcon className="h-3.5 w-3.5 text-emerald-600" />
-                            <span>복사됨</span>
+                            <span>{t("copied")}</span>
                           </>
                         ) : (
                           <>
@@ -350,7 +352,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <span>배송조회</span>
+                          <span>{t("tracking_track_btn")}</span>
                           <ExternalLink className="h-3 w-3 text-stone-400" />
                         </a>
                       </Button>
@@ -380,7 +382,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                 </div>
               ) : (
                 <p className="text-xs text-stone-400">
-                  결제 완료 시 구매자의 배송지가 여기에 표시됩니다.
+                  {t("shipping_pending_desc")}
                 </p>
               )}
             </CardContent>
@@ -399,15 +401,15 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
             </CardHeader>
             <CardContent className="p-4 sm:p-5 space-y-3 text-xs">
               <div className="flex justify-between">
-                <span className="text-stone-500">도서 가격</span>
+                <span className="text-stone-500">{t("book_price")}</span>
                 <span className="font-semibold text-stone-900 dark:text-stone-100 tabular-nums">
                   {formatCurrency(order.amount, locale, tCommon("won"))}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-stone-500">배송비</span>
+                <span className="text-stone-500">{t("shipping_fee")}</span>
                 <span className="text-stone-900 dark:text-stone-100 font-medium">
-                  무료배송
+                  {t("shipping_free")}
                 </span>
               </div>
 
@@ -415,7 +417,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
 
               <div className="flex justify-between items-baseline pt-1">
                 <span className="text-sm font-bold text-stone-900 dark:text-stone-100">
-                  총 결제금액
+                  {t("total_amount")}
                 </span>
                 <span className="text-lg font-bold text-stone-900 dark:text-stone-100 tabular-nums">
                   {formatCurrency(order.amount, locale, tCommon("won"))}
@@ -424,7 +426,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
 
               {order.paidAt && (
                 <div className="flex justify-between text-[11px] text-stone-400 pt-1">
-                  <span>결제 일시</span>
+                  <span>{t("paid_at")}</span>
                   <span>{formatDate(order.paidAt, locale, "dateTime")}</span>
                 </div>
               )}
@@ -432,7 +434,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
               {/* 에스크로 보호 뱃지 */}
               <div className="mt-3 flex items-center gap-2 rounded-xl bg-stone-50 dark:bg-stone-800/40 p-2.5 border border-stone-200/80 dark:border-stone-800 text-[11px] text-stone-600 dark:text-stone-300">
                 <ShieldSecurityIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span>토스페이먼츠 에스크로 안전결제 보호 중</span>
+                <span>{t("escrow_protecting")}</span>
               </div>
             </CardContent>
           </Card>
@@ -447,7 +449,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                     {sellerProfileImg ? (
                       <Image
                         src={sellerProfileImg}
-                        alt="판매자"
+                        alt={t("fallback_seller")}
                         fill
                         className="object-cover"
                         unoptimized
@@ -461,7 +463,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                       {t("seller_info")}
                     </span>
                     <span className="font-semibold text-stone-900 dark:text-stone-100">
-                      {order.seller?.nickname || "판매자"}
+                      {order.seller?.nickname || t("fallback_seller")}
                     </span>
                   </div>
                 </div>
@@ -473,7 +475,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                     className="h-6 text-[11px] px-2 text-stone-600 hover:text-stone-900"
                   >
                     <Link href={PATHS.USER_PROFILE(order.seller.handle)}>
-                      프로필
+                      {t("profile")}
                     </Link>
                   </Button>
                 )}
@@ -488,7 +490,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                     {buyerProfileImg ? (
                       <Image
                         src={buyerProfileImg}
-                        alt="구매자"
+                        alt={t("fallback_buyer")}
                         fill
                         className="object-cover"
                         unoptimized
@@ -502,7 +504,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                       {t("buyer_info")}
                     </span>
                     <span className="font-semibold text-stone-900 dark:text-stone-100">
-                      {order.buyer?.nickname || "구매자"}
+                      {order.buyer?.nickname || t("fallback_buyer")}
                     </span>
                   </div>
                 </div>
@@ -514,7 +516,7 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                     className="h-6 text-[11px] px-2 text-stone-600 hover:text-stone-900"
                   >
                     <Link href={PATHS.USER_PROFILE(order.buyer.handle)}>
-                      프로필
+                      {t("profile")}
                     </Link>
                   </Button>
                 )}
@@ -599,12 +601,12 @@ export const OrderDetailCard = ({ order }: OrderDetailCardProps) => {
                   onClick={() => setIsReviewModalOpen(true)}
                 >
                   <QuoteUpCircleIcon className="h-4 w-4 mr-2" />
-                  {t("action_review", { fallback: "거래 후기 작성" })}
+                  {t("action_review")}
                 </Button>
               ) : (
                 <div className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>거래 후기 작성 완료</span>
+                  <span>{t("review_done")}</span>
                 </div>
               ))}
 

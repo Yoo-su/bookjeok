@@ -29,6 +29,7 @@ type FilterTabKey =
 
 export const MyPurchasesList = () => {
   const t = useTranslations("order.purchases");
+  const tCommon = useTranslations("common.actions");
   const [activeTab, setActiveTab] = useState<FilterTabKey>("ALL");
   const [page, setPage] = useState<number>(1);
   const limit = 10;
@@ -94,18 +95,16 @@ export const MyPurchasesList = () => {
         <div className="flex flex-col items-center justify-center rounded-2xl border border-stone-200 dark:border-stone-800 bg-stone-50/60 dark:bg-stone-900/60 p-10 text-center space-y-3">
           <AlertTriangle className="h-9 w-9 text-stone-400" />
           <h3 className="font-bold text-stone-900 dark:text-stone-100">
-            주문 목록을 불러오지 못했습니다
+            {t("error_title")}
           </h3>
-          <p className="text-xs text-stone-500">
-            네트워크 연결을 확인한 후 다시 시도해주세요.
-          </p>
+          <p className="text-xs text-stone-500">{t("error_desc")}</p>
           <Button
             onClick={() => refetch()}
             variant="outline"
             size="sm"
             className="mt-2 border-stone-200 dark:border-stone-700"
           >
-            다시 시도
+            {tCommon("retry")}
           </Button>
         </div>
       )}

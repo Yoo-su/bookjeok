@@ -2,11 +2,12 @@ import { ReviewReactionType } from "@bookjeok/core";
 
 import { Heart, Lightbulb, Sparkles } from "@/shared/components/icons/iconsax";
 
+// 라벨은 `review.reactions` 메시지 키로만 들고 있고, 문구는 사용하는 쪽에서 번역한다
 export const REACTION_CONFIG = [
   {
     type: ReviewReactionType.LIKE,
     icon: Heart,
-    label: "좋아요",
+    labelKey: "like",
     color: "text-rose-500",
     bgColor: "bg-rose-50",
     ringColor: "ring-rose-200",
@@ -14,7 +15,7 @@ export const REACTION_CONFIG = [
   {
     type: ReviewReactionType.INSIGHTFUL,
     icon: Lightbulb,
-    label: "유익해요",
+    labelKey: "insightful",
     color: "text-amber-500",
     bgColor: "bg-amber-50",
     ringColor: "ring-amber-200",
@@ -22,7 +23,7 @@ export const REACTION_CONFIG = [
   {
     type: ReviewReactionType.SUPPORT,
     icon: Sparkles,
-    label: "응원해요",
+    labelKey: "support",
     color: "text-sky-500",
     bgColor: "bg-sky-50",
     ringColor: "ring-sky-200",

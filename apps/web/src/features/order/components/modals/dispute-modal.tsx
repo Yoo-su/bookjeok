@@ -35,6 +35,7 @@ export const DisputeModal = ({
   onSuccess,
 }: DisputeModalProps) => {
   const t = useTranslations("order.dispute_modal");
+  const tCommon = useTranslations("common.actions");
 
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -59,7 +60,7 @@ export const DisputeModal = ({
       onSuccess?.();
     },
     onError: (err) => {
-      toast.error(err.message || "구매확정 거부 처리에 실패했습니다.");
+      toast.error(err.message || t("errors.submit_failed"));
     },
   });
 
@@ -136,7 +137,7 @@ export const DisputeModal = ({
               {error ? (
                 <span className="text-destructive">{error}</span>
               ) : (
-                <span>최소 5자 이상</span>
+                <span>{t("min_length_hint")}</span>
               )}
               <span>{disputeReason.length}/500</span>
             </div>
@@ -150,7 +151,7 @@ export const DisputeModal = ({
               disabled={disputeOrderMutation.isPending}
               className="sm:flex-1 border-stone-200 dark:border-stone-700"
             >
-              취소
+              {tCommon("cancel")}
             </Button>
             <Button
               type="submit"
