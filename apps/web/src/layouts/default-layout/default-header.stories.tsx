@@ -37,3 +37,23 @@ export const ScrollToExpand: Story = {
     </div>
   ),
 };
+
+/**
+ * 1024~1279px에서는 데스크톱 내비게이션과 우측 액션이 함께 노출된다.
+ * 이 구간의 BGM 진입점은 아이콘만 남아 메뉴와 붙지 않아야 한다.
+ */
+export const TightDesktop: Story = {
+  ...ScrollToExpand,
+  parameters: {
+    ...meta.parameters,
+    viewport: {
+      viewports: {
+        tightDesktop: {
+          name: "Tight desktop",
+          styles: { width: "1062px", height: "800px" },
+        },
+      },
+      defaultViewport: "tightDesktop",
+    },
+  },
+};
