@@ -54,8 +54,11 @@ export default async function Page({
       queryFn: () => getPopularBooks(),
     },
     {
-      queryKey: reviewKeys.list({ page: 1, limit: 5 }).queryKey,
-      queryFn: () => getReviews({ page: 1, limit: 5 }),
+      // 최신 리뷰 티커가 순환시킬 풀. 화면에는 5건만 보인다.
+      // `features/review/components/recent-review-list`의 TICKER_POOL_SIZE와
+      // 같아야 한다 — 어긋나면 키가 달라져 이 시드가 버려진다
+      queryKey: reviewKeys.list({ page: 1, limit: 20 }).queryKey,
+      queryFn: () => getReviews({ page: 1, limit: 20 }),
     },
     {
       queryKey: bookKeys.list({

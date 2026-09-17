@@ -17,6 +17,7 @@ import {
 } from "@/shared/components/shadcn/dropdown-menu";
 import { Link, usePathname } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { useScrolledPast } from "@/shared/hooks/use-scrolled-past";
 import { cn } from "@/shared/utils/cn";
 import { consumeSessionToast } from "@/shared/utils/session";
 
@@ -56,11 +57,29 @@ const HandDrawnUnderline = () => (
   </svg>
 );
 
+/**
+ * 헤더 알약이 넓어지기 시작하는 스크롤 위치(px).
+ *
+ * 첫 화면에서는 본문 폭(max-w-5xl)에 맞춰 떠 있다가, 사용자가 읽기 시작하면
+ * 넓어지며 배경에서 분리됩니다. 너무 이르면 스크롤 몇 px에 헤더가 들썩입니다.
+ */
+const HEADER_EXPAND_SCROLL_Y = 300;
+
+/**
+ * 드롭다운이 트리거에서 떨어지는 거리(px).
+ *
+ * 기본값(4px)은 헤더가 전체 폭 바였을 때의 값이다. 알약이 된 뒤로는 트리거가
+ * 알약 **안쪽**에 있어, 4px로 열면 패널이 알약 아래 테두리를 파고든다.
+ * 알약 하단까지의 여백을 넘겨서 패널이 알약 바깥에 온전히 떨어지게 한다.
+ */
+const DROPDOWN_SIDE_OFFSET = 22;
+
 export const DefaultHeader = () => {
   const t = useTranslations("header");
   const user = useAuthStore((state) => state.user);
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const isExpanded = useScrolledPast(HEADER_EXPAND_SCROLL_Y);
 
   useEffect(() => {
     setMounted(true);
@@ -95,10 +114,28 @@ export const DefaultHeader = () => {
     "flex items-center justify-between w-full text-xs font-medium text-stone-700 group-hover/item:text-stone-900";
 
   return (
-    <header className="sticky top-0 left-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-stone-100">
-      <div className="flex items-center justify-between max-w-5xl w-full px-4 py-3.5 mx-auto">
+    // 바깥 래퍼는 배경이 없다. 흐름 안에 남는 sticky라 레이아웃이 밀리지 않으면서,
+    // 알약 위아래 여백으로 본문이 지나가는 것이 비쳐 떠 있는 것처럼 보인다.
+    <header className="sticky top-0 z-50 w-full px-3 py-2.5 sm:px-4 sm:py-3">
+      <div
+        className={cn(
+          "mx-auto flex w-full items-center justify-between rounded-full border border-stone-200/70 bg-white/80 px-4 py-2.5 backdrop-blur-xl sm:px-6",
+          // 폭·그림자만 전환한다. 메뉴 구성이 스크롤에 따라 바뀌면 누르려던 것이
+          // 움직이므로 건드리지 않는다.
+          "transition-[max-width,box-shadow,background-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          isExpanded
+            ? "max-w-7xl bg-white/90 shadow-[0_10px_40px_-12px_rgba(28,25,23,0.22)]"
+            : "max-w-5xl shadow-[0_4px_20px_-10px_rgba(28,25,23,0.16)]",
+        )}
+      >
         {/* 좌측: 모바일 메뉴 + 로고 */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+        {/*
+          lg부터 좌우 그룹이 `flex-1`(basis 0)로 남은 공간을 정확히 반씩 나눈다.
+          그래서 알약이 넓어질 때 로고와 우측 메뉴만 바깥으로 밀려나고 가운데
+          내비게이션은 화면 정중앙에 붙박인다. lg 미만에서는 내비게이션이 없으므로
+          기존 `justify-between` 배치를 그대로 쓴다.
+        */}
+        <div className="flex shrink-0 items-center gap-3 sm:gap-4 lg:flex-1">
           {/* 모바일 햄버거 메뉴 */}
           <MobileNavSheet />
 
@@ -162,6 +199,7 @@ export const DefaultHeader = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="center"
+              sideOffset={DROPDOWN_SIDE_OFFSET}
               className={dropdownContentClass}
             >
               <DropdownMenuGroup>
@@ -231,6 +269,7 @@ export const DefaultHeader = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="center"
+              sideOffset={DROPDOWN_SIDE_OFFSET}
               className={dropdownContentClass}
             >
               <DropdownMenuGroup>
@@ -287,8 +326,15 @@ export const DefaultHeader = () => {
         </nav>
 
         {/* 우측: 사용자 메뉴 & BGM */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <HeaderMusicButton />
+        <div className="flex shrink-0 items-center justify-end gap-2.5 sm:gap-3 lg:flex-1">
+          {/*
+            폰에서는 숨긴다. 로그인 상태의 우측 그룹(BGM 84 + 알림 44 + 아바타 40)에
+            좌측 로고까지 더하면 360px 기기에서 알약 안쪽 폭을 넘긴다.
+            진입점은 모바일 내비게이션 시트가 대신 갖는다.
+          */}
+          <div className="hidden sm:flex">
+            <HeaderMusicButton />
+          </div>
           <LanguageSwitcher className="hidden lg:flex shrink-0" />
           {!mounted ? (
             <div className="flex items-center gap-3">

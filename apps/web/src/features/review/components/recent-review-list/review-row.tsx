@@ -38,6 +38,9 @@ export const ReviewRow = ({ review }: ReviewRowProps) => {
   return (
     <Link
       href={PATHS.REVIEW_DETAIL(review.id)}
+      // 티커가 20건을 차례로 뷰포트에 밀어 넣으므로 기본 prefetch를 두면
+      // 클릭 없이 리뷰 상세 20개가 ISR에 구워진다
+      prefetch={false}
       className="group flex items-center gap-4 sm:gap-6 py-5 border-b border-stone-100 hover:bg-stone-50/50 px-2 sm:px-4 -mx-2 sm:-mx-4 rounded-xl transition-all duration-300 ease-out"
     >
       {/* 1. 도서 미니 표지 */}

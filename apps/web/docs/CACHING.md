@@ -42,7 +42,7 @@ refetchOnWindowFocus: false,
 | -------------------------------- | --------------------- | ------- | -------------------------------- |
 | `bookSale.recentSales(25)`       | `/`                   | 1시간   | 전역 (마켓 히어로만 60초 + 폴링) |
 | `book.popularBooks`              | `/`                   | 1시간   | 전역                             |
-| `review.list({page:1,limit:5})`  | `/`                   | 1시간   | 전역                             |
+| `review.list({page:1,limit:20})` | `/`                   | 1시간   | 전역                             |
 | `book.list(출판사, 18)`          | `/`                   | 1시간   | 5분                              |
 | `readingLog.loungePopular`       | `/` · `/lounge`       | 1시간   | 5분                              |
 | `readingLog.loungeActiveReaders` | `/lounge`             | 1시간   | 5분                              |
@@ -57,6 +57,8 @@ refetchOnWindowFocus: false,
 | `book.summary(isbn)`             | `/book/[isbn]/detail` | 30일    | Infinity (불변)                  |
 | `review.detail(id)`              | `/book/reviews/[id]`  | 24시간  | 전역                             |
 | `bookSale.saleDetail(id)`        | `/book/sales/[id]`    | 1시간   | 전역                             |
+
+홈의 `review.list`는 **화면에 5건만 보이지만 20건을 시드합니다.** 최신 리뷰 티커가 순환시킬 풀이라 그렇습니다. 개수는 `features/review/components/recent-review-list`의 `TICKER_POOL_SIZE`와 홈 페이지의 `queryFn`이 함께 가지며, 어긋나면 키가 달라져 시드가 통째로 버려집니다.
 
 `readingLog.loungePopular`는 두 라우트가 각각 독립된 시각에 굽습니다. 방문 순서에 따라 더 최신 스냅샷이 이깁니다 (`hydrate()`는 `dataUpdatedAt`이 더 클 때만 덮어씀).
 
@@ -89,16 +91,17 @@ refetchOnWindowFocus: false,
 
 > **한 화면에 여러 개가 동시에 깔리는 링크는 `prefetch={false}`.**
 
-| 컴포넌트                                               | 노출당 링크                      |
-| ------------------------------------------------------ | -------------------------------- |
-| `book/components/common/book-card`                     | 검색 결과 20 · 연관 도서 5~10    |
-| `book/components/book-slider/main-book-slider`         | 홈 출판사 서가 18                |
-| `book/components/book-slider/popular-book-slider`      | 홈 인기책 목록 2벌 + 히어로      |
-| `book/components/book-search/ai-book-recommend-slider` | AI 추천 N                        |
-| `book/components/recent-books/recent-books-drawer`     | 최근 본 책 N                     |
-| `book-sale/components/common/book-sale-item/root`      | 마켓 무한목록 · 홈 최근 판매     |
-| `review/components/common/review-card/root`            | 리뷰 목록 · 홈 리뷰 섹션         |
-| `book-sale/.../market-hero/live-listing-feed`          | 실시간 피드 (60초 폴링마다 갱신) |
+| 컴포넌트                                               | 노출당 링크                       |
+| ------------------------------------------------------ | --------------------------------- |
+| `book/components/common/book-card`                     | 검색 결과 20 · 연관 도서 5~10     |
+| `book/components/book-slider/main-book-slider`         | 홈 출판사 서가 18                 |
+| `book/components/book-slider/popular-book-slider`      | 홈 인기책 목록 2벌 + 히어로       |
+| `book/components/book-search/ai-book-recommend-slider` | AI 추천 N                         |
+| `book/components/recent-books/recent-books-drawer`     | 최근 본 책 N                      |
+| `book-sale/components/common/book-sale-item/root`      | 마켓 무한목록 · 홈 최근 판매      |
+| `review/components/common/review-card/root`            | 리뷰 목록 · 홈 리뷰 섹션          |
+| `review/components/recent-review-list/review-row`      | 홈 리뷰 티커 (20건이 차례로 통과) |
+| `book-sale/.../market-hero/live-listing-feed`          | 실시간 피드 (60초 폴링마다 갱신)  |
 
 `popular-book-slider`의 히어로는 링크가 하나지만 `hoveredBook`으로 href가 바뀌므로, 순위 목록을 훑는 동작만으로 새 경로를 계속 굽습니다. 그래서 여기도 차단합니다.
 
