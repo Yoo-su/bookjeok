@@ -31,7 +31,7 @@ review/
     │   ├── popular-review-list/ (+ item)
     │   ├── my-review-list/
     │   └── review-home-filters/      # 카테고리·정렬 필터
-    ├── recent-review-list/           # 홈 위젯 (index · review-row · skeleton)
+    ├── recent-review-list/           # 홈 티커 (index · review-ticker · review-row · skeleton)
     ├── review-home-hero/ (+ hero-images.ts)
     └── common/
         ├── review-card/              # 합성 컴포넌트 (root/parts/context/skeleton/stories)
@@ -54,6 +54,15 @@ review-viewer ◀── sanitize-review-content ◀── 저장된 HTML
 렌더링 시 `shared/utils/sanitize-review-content`(내부적으로 `sanitize-html`)로 반드시 정제합니다. **`dangerouslySetInnerHTML`을 정제 없이 직접 호출하지 마세요.**
 
 이미지는 `use-editor-image-handler`(shared hook)가 압축 후 Vercel Blob에 업로드하고, 본문에서 제거된 이미지는 서버의 `ReviewImageHelper`가 정리합니다.
+
+### 홈 최신 리뷰 티커 (`recent-review-list`)
+
+20건을 받아 5건만 보여주고 4초마다 맨 위 한 줄을 밀어 올립니다. 구현은 `review-ticker`에 있습니다.
+
+- **뷰포트 높이를 5줄로 잠급니다.** 행을 흐름에서 빼면 컨테이너가 한 줄만큼 줄었다 늘며 아래 광고·푸터까지 들썩입니다. 그래서 한 줄 더 그려 두고 목록 전체를 올린 뒤, 전환이 끝나면 시작 위치를 옮기고 이동량을 0으로 되돌립니다.
+- 행 높이는 표지 썸네일이 정하고 `sm`에서 한 번 바뀌므로 실측합니다. 실측 전에는 잘라내기 없이 상위 5건을 그리므로 서버가 구운 HTML과 첫 클라이언트 렌더가 일치합니다.
+- **호버·포커스에 멈춥니다.** 포커스까지 보는 것은 키보드로 들어간 사용자가 그 줄과 함께 포커스를 잃기 때문입니다. `prefers-reduced-motion`에서는 회전 자체를 끕니다.
+- `review-row`의 링크는 `prefetch={false}`입니다. 20건이 차례로 뷰포트를 통과하므로 기본값이면 클릭 없이 리뷰 상세 20개가 ISR에 구워집니다([캐싱 문서](../../../docs/CACHING.md#목록-링크의-prefetch)).
 
 ### 합성 컴포넌트 (`review-card`)
 

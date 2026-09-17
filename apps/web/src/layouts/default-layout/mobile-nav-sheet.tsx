@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { HeaderMusicButton } from "@/features/music";
 import { Menu } from "@/shared/components/icons/iconsax";
 import {
   Sheet,
@@ -35,6 +36,7 @@ interface NavSection {
 export const MobileNavSheet = () => {
   const t = useTranslations("header.nav");
   const tSheet = useTranslations("sheet.sections");
+  const tMusic = useTranslations("music");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -153,6 +155,17 @@ export const MobileNavSheet = () => {
         </SheetHeader>
 
         <nav className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100vh-80px)] custom-scrollbar">
+          {/*
+            배경음악 진입점. 폰 헤더에서는 알약 폭이 모자라 버튼을 숨기므로
+            여기가 유일한 진입점이 된다 (재생 중에는 FloatingMusicPill도 뜬다).
+          */}
+          <div className="flex items-center justify-between rounded-md bg-stone-50/80 px-3 py-2.5">
+            <span className="font-mono text-[11px] font-bold tracking-widest text-stone-400 uppercase">
+              {tMusic("title")}
+            </span>
+            <HeaderMusicButton />
+          </div>
+
           {navSections.map((section) => (
             <div key={section.title} className="space-y-2">
               <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 font-mono">

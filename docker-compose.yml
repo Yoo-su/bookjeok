@@ -2,7 +2,10 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:16-alpine
+    # 공식 postgres 이미지가 아니라 pgvector 빌드를 쓴다.
+    # books.embedding이 vector(768)이고 로컬은 synchronize가 켜져 있어,
+    # 확장이 없으면 부팅이 `type "vector" does not exist`로 죽는다.
+    image: pgvector/pgvector:pg16
     container_name: bookjeok-postgres
     restart: always
     environment:
@@ -13,6 +16,9 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # 데이터 디렉터리가 비어 있을 때만 실행된다. 이미 만들어진 볼륨에는
+      # 적용되지 않으므로, 확장을 새로 넣으려면 볼륨을 지우고 다시 올려야 한다.
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
