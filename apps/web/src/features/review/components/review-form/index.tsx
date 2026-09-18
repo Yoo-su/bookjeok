@@ -43,6 +43,8 @@ import { Switch } from "@/shared/components/shadcn/switch";
 import { StarRating } from "@/shared/components/ui/star-rating";
 import { useEditorImageHandler } from "@/shared/hooks/use-editor-image-handler";
 
+import { ReviewPreview } from "./review-preview";
+
 // Tiptap 에디터는 무거운 라이브러리이므로 지연 로딩
 const TiptapEditor = dynamic(
   () =>
@@ -442,7 +444,10 @@ export const ReviewForm = ({
             name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("fields.content")}</FormLabel>
+                <div className="flex items-center justify-between gap-3">
+                  <FormLabel>{t("fields.content")}</FormLabel>
+                  <ReviewPreview content={field.value} />
+                </div>
                 <FormControl>
                   <TiptapEditor
                     content={field.value}

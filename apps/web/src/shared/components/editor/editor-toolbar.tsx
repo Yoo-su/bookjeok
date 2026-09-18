@@ -2,7 +2,7 @@
 
 import { type Editor } from "@tiptap/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 import {
   AlignCenter,
@@ -10,20 +10,20 @@ import {
   AlignRight,
   Bold,
   Code,
-  Heading1,
-  Heading2,
-  Heading3,
   Highlighter,
   ImageIcon,
   Italic,
-  Link as LinkIcon,
   List,
   ListOrdered,
   Minus,
+  MoreVertical,
   Palette,
   Quote,
+  RefreshCw,
+  RotateCcw,
   Strikethrough,
   Underline,
+  X,
 } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
 import {
@@ -31,469 +31,347 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/shared/components/shadcn/popover";
-import { Separator } from "@/shared/components/shadcn/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/components/shadcn/tooltip";
+import {
+  READING_TOOLBAR_GAP,
+  StickyReadingSurface,
+} from "@/shared/components/ui/sticky-reading-surface";
+import { useSiteHeaderHeight } from "@/shared/hooks/use-site-header-height";
 import { cn } from "@/shared/utils/cn";
 
-interface EditorToolbarProps {
+import { EditorLinkControl } from "./editor-link-control";
+
+const colors = [
+  "#1c1917",
+  "#57534e",
+  "#b91c1c",
+  "#c2410c",
+  "#a16207",
+  "#15803d",
+  "#0e7490",
+  "#1d4ed8",
+  "#7e22ce",
+  "#be185d",
+];
+const highlights = [
+  "#fef3c7",
+  "#ffedd5",
+  "#fee2e2",
+  "#fce7f3",
+  "#f3e8ff",
+  "#dbeafe",
+  "#cffafe",
+  "#dcfce7",
+  "#e7e5e4",
+  "#ffffff",
+];
+
+export function EditorToolbar({
+  editor,
+  onImageAdd,
+}: {
   editor: Editor;
   onImageAdd?: () => void;
-}
-
-export const EditorToolbar = ({ editor, onImageAdd }: EditorToolbarProps) => {
-  // 에디터 상태 변경 시 리렌더링 강제
-  const [, forceUpdate] = useState({});
-
+}) {
+  const t = useTranslations("common.editor");
+  const height = useSiteHeaderHeight();
+  const [more, setMore] = useState(false);
+  const [modifier, setModifier] = useState("Ctrl");
+  const [, update] = useReducer((value) => value + 1, 0);
   useEffect(() => {
-    if (!editor) return;
-
-    const handleUpdate = () => forceUpdate({});
-
-    editor.on("transaction", handleUpdate);
-    editor.on("selectionUpdate", handleUpdate);
-    editor.on("update", handleUpdate);
-
+    setModifier(/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl");
+    editor.on("transaction", update);
     return () => {
-      editor.off("transaction", handleUpdate);
-      editor.off("selectionUpdate", handleUpdate);
-      editor.off("update", handleUpdate);
+      editor.off("transaction", update);
     };
   }, [editor]);
-
-  if (!editor) {
-    return null;
-  }
-
-  const textStyleButtons = [
-    {
-      label: "Bold",
-      icon: Bold,
-      isActive: editor.isActive("bold"),
-      action: () => editor.chain().focus().toggleBold().run(),
-    },
-    {
-      label: "Italic",
-      icon: Italic,
-      isActive: editor.isActive("italic"),
-      action: () => editor.chain().focus().toggleItalic().run(),
-    },
-    {
-      label: "Underline",
-      icon: Underline,
-      isActive: editor.isActive("underline"),
-      action: () => editor.chain().focus().toggleUnderline().run(),
-    },
-    {
-      label: "Strikethrough",
-      icon: Strikethrough,
-      isActive: editor.isActive("strike"),
-      action: () => editor.chain().focus().toggleStrike().run(),
-    },
-  ];
-
-  const headingButtons = [
-    {
-      label: "Heading 1",
-      icon: Heading1,
-      isActive: editor.isActive("heading", { level: 1 }),
-      action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
-    },
-    {
-      label: "Heading 2",
-      icon: Heading2,
-      isActive: editor.isActive("heading", { level: 2 }),
-      action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-    },
-    {
-      label: "Heading 3",
-      icon: Heading3,
-      isActive: editor.isActive("heading", { level: 3 }),
-      action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-    },
-  ];
-
-  const alignButtons = [
-    {
-      label: "Align Left",
-      icon: AlignLeft,
-      isActive: editor.isActive({ textAlign: "left" }),
-      action: () => editor.chain().focus().setTextAlign("left").run(),
-    },
-    {
-      label: "Align Center",
-      icon: AlignCenter,
-      isActive: editor.isActive({ textAlign: "center" }),
-      action: () => editor.chain().focus().setTextAlign("center").run(),
-    },
-    {
-      label: "Align Right",
-      icon: AlignRight,
-      isActive: editor.isActive({ textAlign: "right" }),
-      action: () => editor.chain().focus().setTextAlign("right").run(),
-    },
-  ];
-
-  const listButtons = [
-    {
-      label: "Bullet List",
-      icon: List,
-      isActive: editor.isActive("bulletList"),
-      action: () => editor.chain().focus().toggleBulletList().run(),
-    },
-    {
-      label: "Ordered List",
-      icon: ListOrdered,
-      isActive: editor.isActive("orderedList"),
-      action: () => editor.chain().focus().toggleOrderedList().run(),
-    },
-    {
-      label: "Blockquote",
-      icon: Quote,
-      isActive: editor.isActive("blockquote"),
-      action: () => editor.chain().focus().toggleBlockquote().run(),
-    },
-    {
-      label: "Code Block",
-      icon: Code,
-      isActive: editor.isActive("codeBlock"),
-      action: () => editor.chain().focus().toggleCodeBlock().run(),
-    },
-  ];
-
-  const colors = [
-    "#000000",
-    "#495057",
-    "#868E96",
-    "#ADB5BD",
-    "#FF0000",
-    "#C92A2A",
-    "#E64980",
-    "#A61E4D",
-    "#BE4BDB",
-    "#862E9C",
-    "#7950F2",
-    "#5F3DC4",
-    "#4C6EF5",
-    "#364FC7",
-    "#228BE6",
-    "#1864AB",
-    "#15AABF",
-    "#0B7285",
-    "#12B886",
-    "#087F5B",
-    "#40C057",
-    "#2B8A3E",
-    "#82C91E",
-    "#FAB005",
-    "#FD7E14",
-  ];
-
-  const highlightColors = [
-    "#F8F9FA",
-    "#E9ECEF",
-    "#DEE2E6",
-    "#CED4DA",
-    "#FFF5F5",
-    "#FFE3E3",
-    "#FFF0F6",
-    "#FFDEEB",
-    "#F8F0FC",
-    "#F3D9FA",
-    "#F3F0FF",
-    "#E5DBFF",
-    "#EDF2FF",
-    "#DBE4FF",
-    "#E7F5FF",
-    "#D0EBFF",
-    "#E3FAFC",
-    "#C5F6FA",
-    "#E6FCF5",
-    "#C3FAE8",
-    "#EBFBEE",
-    "#D3F9D8",
-    "#F4FCE3",
-    "#FFF9DB",
-    "#FFF4E6",
-  ];
-
-  const t = useTranslations("common.editor");
-
-  const setLink = () => {
-    const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt(t("prompt_url"), previousUrl);
-
-    if (url === null) return;
-
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  };
-
-  return (
-    <div className="border-b bg-muted/40 p-2 flex flex-wrap gap-1 sticky top-0 z-10 items-center">
-      {/* 텍스트 스타일 */}
-      <div className="flex items-center gap-1">
-        {textStyleButtons.map((btn) => (
-          <Tooltip key={btn.label}>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={btn.action}
-                className={cn(
-                  "h-8 w-8 p-0",
-                  btn.isActive && "bg-muted text-primary",
-                )}
-                aria-label={btn.label}
-              >
-                <btn.icon className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{btn.label}</TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* 헤딩 */}
-      <div className="flex items-center gap-1">
-        {headingButtons.map((btn) => (
-          <Tooltip key={btn.label}>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={btn.action}
-                className={cn(
-                  "h-8 w-8 p-0",
-                  btn.isActive && "bg-muted text-primary",
-                )}
-                aria-label={btn.label}
-              >
-                <btn.icon className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{btn.label}</TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* 정렬 */}
-      <div className="flex items-center gap-1">
-        {alignButtons.map((btn) => (
-          <Tooltip key={btn.label}>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={btn.action}
-                className={cn(
-                  "h-8 w-8 p-0",
-                  btn.isActive && "bg-muted text-primary",
-                )}
-                aria-label={btn.label}
-              >
-                <btn.icon className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{btn.label}</TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* 리스트 & 블록 */}
-      <div className="flex items-center gap-1">
-        {listButtons.map((btn) => (
-          <Tooltip key={btn.label}>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={btn.action}
-                className={cn(
-                  "h-8 w-8 p-0",
-                  btn.isActive && "bg-muted text-primary",
-                )}
-                aria-label={btn.label}
-              >
-                <btn.icon className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{btn.label}</TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* 색상 */}
-      <div className="flex items-center gap-1">
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-8 w-8 p-0",
-                    editor.isActive("textStyle") && "bg-muted",
-                  )}
-                >
-                  <Palette className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>Text Color</TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-auto p-2">
-            <div className="flex gap-1 flex-wrap max-w-[150px]">
-              {colors.map((color) => (
-                <button
-                  type="button"
-                  key={color}
-                  onClick={() => editor.chain().focus().setColor(color).run()}
-                  className="w-6 h-6 rounded-md border"
-                  style={{ backgroundColor: color }}
-                  title={color}
-                />
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full mt-2 text-xs h-7"
-                onClick={() => editor.chain().focus().unsetColor().run()}
-              >
-                Reset
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-8 w-8 p-0",
-                    editor.isActive("highlight") && "bg-muted",
-                  )}
-                >
-                  <Highlighter className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>Highlight Color</TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-auto p-2">
-            <div className="flex gap-1 flex-wrap max-w-[150px]">
-              {highlightColors.map((color) => (
-                <button
-                  type="button"
-                  key={color}
-                  onClick={() =>
-                    editor.chain().focus().toggleHighlight({ color }).run()
-                  }
-                  className="w-6 h-6 rounded-md border"
-                  style={{ backgroundColor: color }}
-                  title={color}
-                />
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full mt-2 text-xs h-7"
-                onClick={() => editor.chain().focus().unsetHighlight().run()}
-              >
-                Reset
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* 삽입 */}
-      <div className="flex items-center gap-1">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              className="h-8 w-8 p-0"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Horizontal Rule</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={setLink}
-              className={cn(
-                "h-8 w-8 p-0",
-                editor.isActive("link") && "bg-muted text-primary",
-              )}
-            >
-              <LinkIcon className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Link</TooltipContent>
-        </Tooltip>
-      </div>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* 이미지 */}
-      {onImageAdd && (
-        <div className="flex items-center gap-1">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onImageAdd}
-                className="h-8 w-8 p-0"
-              >
-                <ImageIcon className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Add Image</TooltipContent>
-          </Tooltip>
-        </div>
-      )}
-    </div>
+  const tool = (
+    label: string,
+    Icon: typeof Bold,
+    action: () => void,
+    active?: boolean,
+    disabled = false,
+    shortcut?: string,
+  ) => (
+    <Tooltip key={label} delayDuration={500}>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={label}
+          aria-pressed={active}
+          disabled={disabled}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={action}
+          className={cn(
+            "h-10 w-10 shrink-0 p-0 sm:h-8 sm:w-8",
+            active && "bg-muted text-primary",
+          )}
+        >
+          <Icon className="size-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        {label}
+        {shortcut && (
+          <span className="ml-2 opacity-70">
+            {modifier}+{shortcut}
+          </span>
+        )}
+      </TooltipContent>
+    </Tooltip>
   );
-};
+  const palette = (highlight: boolean) => {
+    const label = t(highlight ? "highlight" : "color");
+    const Icon = highlight ? Highlighter : Palette;
+    const current = highlight
+      ? editor.getAttributes("highlight").color
+      : editor.getAttributes("textStyle").color;
+    return (
+      <Popover>
+        <Tooltip delayDuration={500}>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label={label}
+                className="h-10 w-10 p-0 sm:h-8 sm:w-8"
+              >
+                <Icon className="size-4" />
+              </Button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>{label}</TooltipContent>
+        </Tooltip>
+        <PopoverContent
+          className="w-56 p-3"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            editor.commands.focus();
+          }}
+        >
+          <p className="mb-2 text-sm font-medium">{label}</p>
+          <div className="grid grid-cols-5 gap-2">
+            {(highlight ? highlights : colors).map((color) => (
+              <button
+                type="button"
+                key={color}
+                aria-label={`${label} ${color}`}
+                aria-pressed={current === color}
+                className="size-8 rounded border focus-visible:outline-2 focus-visible:outline-offset-2"
+                style={{
+                  backgroundColor: color,
+                  outline:
+                    current === color ? "2px solid currentColor" : undefined,
+                }}
+                onClick={() =>
+                  highlight
+                    ? editor.chain().focus().setHighlight({ color }).run()
+                    : editor.chain().focus().setColor(color).run()
+                }
+              />
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="mt-2 w-full"
+            onClick={() =>
+              highlight
+                ? editor.chain().focus().unsetHighlight().run()
+                : editor.chain().focus().unsetColor().run()
+            }
+          >
+            {t("reset")}
+          </Button>
+        </PopoverContent>
+      </Popover>
+    );
+  };
+  const heading = [1, 2, 3, 4, 5, 6].find((level) =>
+    editor.isActive("heading", { level }),
+  );
+  return (
+    <StickyReadingSurface
+      className="z-20 rounded-t-md border-b bg-background/95 p-2 backdrop-blur"
+      top={height + READING_TOOLBAR_GAP}
+    >
+      <div
+        className="flex flex-wrap items-center gap-1"
+        role="group"
+        aria-label={t("toolbar")}
+      >
+        <select
+          aria-label={t("block_type")}
+          value={heading ?? 0}
+          onChange={(event) => {
+            const level = Number(event.target.value);
+            if (level === 0) editor.chain().focus().setParagraph().run();
+            else if (level === 2 || level === 3)
+              editor.chain().focus().setHeading({ level }).run();
+          }}
+          className="h-10 max-w-36 rounded border bg-background px-2 text-sm sm:h-8"
+        >
+          <option value={0}>{t("paragraph")}</option>
+          {heading && ![2, 3].includes(heading) && (
+            <option value={heading}>
+              {t("legacy_heading", { level: heading })}
+            </option>
+          )}
+          <option value={2}>{t("heading2")}</option>
+          <option value={3}>{t("heading3")}</option>
+        </select>
+        {tool(
+          t("bold"),
+          Bold,
+          () => {
+            editor.chain().focus().toggleBold().run();
+          },
+          editor.isActive("bold"),
+          false,
+          "B",
+        )}
+        {tool(
+          t("italic"),
+          Italic,
+          () => {
+            editor.chain().focus().toggleItalic().run();
+          },
+          editor.isActive("italic"),
+          false,
+          "I",
+        )}
+        {palette(true)}
+        <EditorLinkControl editor={editor} />
+        {tool(
+          t("quote"),
+          Quote,
+          () => {
+            editor.chain().focus().toggleBlockquote().run();
+          },
+          editor.isActive("blockquote"),
+        )}
+        {onImageAdd && tool(t("image"), ImageIcon, onImageAdd)}
+        {tool(
+          t("undo"),
+          RotateCcw,
+          () => {
+            editor.chain().focus().undo().run();
+          },
+          undefined,
+          !editor.can().undo(),
+          "Z",
+        )}
+        {tool(
+          t("redo"),
+          RefreshCw,
+          () => {
+            editor.chain().focus().redo().run();
+          },
+          undefined,
+          !editor.can().redo(),
+          "Shift+Z",
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-10 gap-1 sm:hidden"
+          aria-expanded={more}
+          onClick={() => setMore(!more)}
+        >
+          <MoreVertical className="size-4" />
+          {t("more")}
+        </Button>
+        <div
+          className={cn(
+            "w-full flex-wrap items-center gap-1 border-t pt-1 sm:flex sm:w-auto sm:border-0 sm:pt-0",
+            more ? "flex" : "hidden",
+          )}
+        >
+          {tool(
+            t("underline"),
+            Underline,
+            () => {
+              editor.chain().focus().toggleUnderline().run();
+            },
+            editor.isActive("underline"),
+            false,
+            "U",
+          )}
+          {tool(
+            t("strike"),
+            Strikethrough,
+            () => {
+              editor.chain().focus().toggleStrike().run();
+            },
+            editor.isActive("strike"),
+          )}
+          {tool(
+            t("bullet_list"),
+            List,
+            () => {
+              editor.chain().focus().toggleBulletList().run();
+            },
+            editor.isActive("bulletList"),
+          )}
+          {tool(
+            t("ordered_list"),
+            ListOrdered,
+            () => {
+              editor.chain().focus().toggleOrderedList().run();
+            },
+            editor.isActive("orderedList"),
+          )}
+          {tool(
+            t("align_left"),
+            AlignLeft,
+            () => {
+              editor.chain().focus().setTextAlign("left").run();
+            },
+            editor.isActive({ textAlign: "left" }),
+          )}
+          {tool(
+            t("align_center"),
+            AlignCenter,
+            () => {
+              editor.chain().focus().setTextAlign("center").run();
+            },
+            editor.isActive({ textAlign: "center" }),
+          )}
+          {tool(
+            t("align_right"),
+            AlignRight,
+            () => {
+              editor.chain().focus().setTextAlign("right").run();
+            },
+            editor.isActive({ textAlign: "right" }),
+          )}
+          {palette(false)}
+          {tool(
+            t("code"),
+            Code,
+            () => {
+              editor.chain().focus().toggleCodeBlock().run();
+            },
+            editor.isActive("codeBlock"),
+          )}
+          {tool(t("divider"), Minus, () => {
+            editor.chain().focus().setHorizontalRule().run();
+          })}
+          {tool(t("clear_format"), X, () => {
+            editor.chain().focus().unsetAllMarks().run();
+          })}
+        </div>
+      </div>
+    </StickyReadingSurface>
+  );
+}
