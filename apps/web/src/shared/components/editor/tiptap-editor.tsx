@@ -1,6 +1,5 @@
 "use client";
 
-import BubbleMenuExtension from "@tiptap/extension-bubble-menu";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
@@ -8,18 +7,25 @@ import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
-import { Editor, EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
-import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import ImageResize from "tiptap-extension-resize-image";
 
-import { Bold, Heading2, Italic } from "@/shared/components/icons/iconsax";
+import { Bold, Highlighter, Italic } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/components/shadcn/tooltip";
 import { cn } from "@/shared/utils/cn";
 
+import { EditorLinkControl } from "./editor-link-control";
 import { EditorToolbar } from "./editor-toolbar";
+import { keepEditorCaretVisible } from "./keep-editor-caret-visible";
 
 interface TiptapEditorProps {
   content: string;
@@ -36,39 +42,12 @@ export const TiptapEditor = ({
 }: TiptapEditorProps) => {
   const t = useTranslations("common.editor");
   const effectivePlaceholder = placeholder ?? t("placeholder");
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(
-    null,
-  );
-
-  const updateMenuPosition = useCallback((editor: Editor) => {
-    const { view, state } = editor;
-    const { from, to } = state.selection;
-    const selectedText = state.doc.textBetween(from, to, " ");
-
-    if (from === to || !selectedText.trim()) {
-      setMenuPos(null);
-      return;
-    }
-
-    const start = view.coordsAtPos(from);
-    const end = view.coordsAtPos(to);
-
-    const editorRect = view.dom.getBoundingClientRect();
-    const padding = 75; // 퀵 툴바 절반 너비만큼의 세이프 마진
-    const rawLeft = (start.left + end.left) / 2 - editorRect.left;
-    const left = Math.max(
-      padding,
-      Math.min(editorRect.width - padding, rawLeft),
-    );
-    const top = start.top - editorRect.top - 55; // 기존 -45에서 -55로 벌려 텍스트와의 미세 간격 확보
-
-    setMenuPos({ top, left });
-  }, []);
-
+  const caretFrame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(caretFrame.current), []);
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ link: false, underline: false }),
       Link.configure({
         openOnClick: false,
         autolink: true,
@@ -77,7 +56,6 @@ export const TiptapEditor = ({
         placeholder: effectivePlaceholder,
       }),
       ImageResize,
-      BubbleMenuExtension,
       TextStyle,
       Color,
       Highlight.configure({
@@ -90,6 +68,23 @@ export const TiptapEditor = ({
     ],
     content,
     editorProps: {
+      handleScrollToSelection: keepEditorCaretVisible,
+      handleDOMEvents: {
+        input: (view) => {
+          cancelAnimationFrame(caretFrame.current);
+          caretFrame.current = requestAnimationFrame(() =>
+            keepEditorCaretVisible(view),
+          );
+          return false;
+        },
+        compositionend: (view) => {
+          cancelAnimationFrame(caretFrame.current);
+          caretFrame.current = requestAnimationFrame(() =>
+            keepEditorCaretVisible(view),
+          );
+          return false;
+        },
+      },
       attributes: {
         class:
           "prose mx-auto focus:outline-none min-h-[300px] p-4 max-w-none font-[family-name:var(--font-pretendard)] prose-p:text-[15px] prose-p:leading-6 prose-p:my-2 prose-h1:text-[32px] prose-h1:font-bold prose-h1:mt-8 prose-h1:mb-4 prose-h2:text-[30px] prose-h2:font-semibold prose-h2:mt-6 prose-h2:mb-3 prose-blockquote:text-[19px] prose-blockquote:leading-8 prose-blockquote:not-italic prose-blockquote:border-l-4 prose-blockquote:pl-4 prose-blockquote:my-4",
@@ -124,17 +119,6 @@ export const TiptapEditor = ({
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
-      updateMenuPosition(editor);
-    },
-    onSelectionUpdate: ({ editor }) => {
-      updateMenuPosition(editor);
-    },
-    onBlur: ({ editor }) => {
-      setTimeout(() => {
-        if (!editor.isFocused) {
-          setMenuPos(null);
-        }
-      }, 150);
     },
   });
 
@@ -146,6 +130,14 @@ export const TiptapEditor = ({
   }, [content, editor]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selection = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      bold: editor?.isActive("bold") ?? false,
+      italic: editor?.isActive("italic") ?? false,
+      highlight: editor?.isActive("highlight") ?? false,
+    }),
+  });
 
   const handleImageClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -186,7 +178,10 @@ export const TiptapEditor = ({
   }
 
   return (
-    <div className="border rounded-md relative bg-background">
+    <div
+      data-review-editor
+      className="border rounded-md relative bg-background"
+    >
       <input
         type="file"
         ref={fileInputRef}
@@ -197,67 +192,64 @@ export const TiptapEditor = ({
 
       <EditorToolbar editor={editor} onImageAdd={handleImageClick} />
 
-      <AnimatePresence>
-        {editor && menuPos && (
-          <motion.div
-            animate={{ x: menuPos.left, y: menuPos.top, scale: 1, opacity: 1 }}
-            initial={{
-              x: menuPos.left,
-              y: menuPos.top,
-              scale: 0.85,
-              opacity: 0,
-            }}
-            exit={{ scale: 0.85, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 450, damping: 30 }}
-            onMouseDown={(e) => e.preventDefault()}
-            onTouchStart={(e) => e.preventDefault()}
-            className="absolute z-50 flex bg-background border rounded-md shadow-md p-1 gap-1 -translate-x-1/2"
-            style={{ transformOrigin: "bottom center" }}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              className={cn(
-                "h-8 w-8 p-0",
-                editor.isActive("bold") && "bg-muted text-primary",
-              )}
-            >
-              <Bold className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              className={cn(
-                "h-8 w-8 p-0",
-                editor.isActive("italic") && "bg-muted text-primary",
-              )}
-            >
-              <Italic className="w-4 h-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 2 }).run()
-              }
-              className={cn(
-                "h-8 w-8 p-0",
-                editor.isActive("heading", { level: 2 }) &&
-                  "bg-muted text-primary",
-              )}
-            >
-              <Heading2 className="w-4 h-4" />
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <BubbleMenu
+        editor={editor}
+        options={{ placement: "top", offset: 8 }}
+        className="z-30 flex items-center gap-1 rounded-md border bg-background p-1 shadow-md"
+      >
+        {[
+          {
+            label: t("bold"),
+            icon: Bold,
+            active: selection?.bold,
+            action: () => editor.chain().focus().toggleBold().run(),
+          },
+          {
+            label: t("italic"),
+            icon: Italic,
+            active: selection?.italic,
+            action: () => editor.chain().focus().toggleItalic().run(),
+          },
+          {
+            label: t("highlight"),
+            icon: Highlighter,
+            active: selection?.highlight,
+            action: () =>
+              editor
+                .chain()
+                .focus()
+                .toggleHighlight({ color: "#fef3c7" })
+                .run(),
+          },
+        ].map(({ label, icon: Icon, active, action }) => (
+          <Tooltip key={label} delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label={label}
+                aria-pressed={active}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={action}
+                className={cn(
+                  "size-10 p-0 sm:size-8",
+                  active && "bg-muted text-primary",
+                )}
+              >
+                <Icon className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+          </Tooltip>
+        ))}
+        <EditorLinkControl editor={editor} />
+      </BubbleMenu>
 
       <EditorContent editor={editor} />
+      <p className="border-t px-4 py-3 text-xs text-muted-foreground">
+        {t("heading_hint")}
+      </p>
     </div>
   );
 };

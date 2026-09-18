@@ -116,7 +116,10 @@ export const DefaultHeader = () => {
   return (
     // 바깥 래퍼는 배경이 없다. 흐름 안에 남는 sticky라 레이아웃이 밀리지 않으면서,
     // 알약 위아래 여백으로 본문이 지나가는 것이 비쳐 떠 있는 것처럼 보인다.
-    <header className="sticky top-0 z-50 w-full px-3 py-2.5 sm:px-4 sm:py-3">
+    <header
+      data-site-header
+      className="sticky top-0 z-50 w-full px-3 py-2.5 sm:px-4 sm:py-3"
+    >
       <div
         className={cn(
           "mx-auto flex w-full items-center justify-between rounded-full border border-stone-200/70 bg-white/80 px-4 py-2.5 backdrop-blur-xl sm:px-6",

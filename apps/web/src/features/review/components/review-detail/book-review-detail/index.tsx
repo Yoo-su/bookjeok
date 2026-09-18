@@ -5,7 +5,6 @@ import { CommentSection } from "@/features/comment/components/common/comment-sec
 import { useReviewWithAuth } from "@/features/review/hooks/use-review-with-auth";
 import { AdBanner } from "@/shared/components/ads/ad-banner";
 import { Edit } from "@/shared/components/icons/iconsax";
-import { ScrollProgress } from "@/shared/components/magicui/scroll-progress";
 import { Button } from "@/shared/components/shadcn/button";
 import { NotFoundRedirect } from "@/shared/components/ui/not-found-redirect";
 import { ScrollTopButton } from "@/shared/components/ui/scroll-top-button";
@@ -43,9 +42,6 @@ export const ReviewDetail = ({ id }: ReviewDetailProps) => {
 
   return (
     <article className="min-h-screen bg-white pb-20">
-      {/* 최상단 스크롤 진행률 표시줄 (Magic UI ScrollProgress) */}
-      <ScrollProgress />
-
       <ReviewDetailHeader review={review} book={book} />
 
       <div className="container mx-auto px-4 w-full py-12">

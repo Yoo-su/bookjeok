@@ -56,13 +56,28 @@ const SAFE_LENGTH = /^\d+(?:\.\d+)?(?:px|em|rem|%)$/;
 const SAFE_COLOR =
   /^(#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(?:rgb|hsl)a?\([^()]*\)|[a-z]+)$/i;
 
-export const sanitizeReviewContent = (content: string): string =>
-  sanitizeHtml(content, {
+export interface ReviewHeading {
+  id: string;
+  text: string;
+  level: number;
+}
+
+const sanitizeContent = (
+  content: string,
+  headings?: ReviewHeading[],
+  preview = false,
+): string => {
+  let headingIndex = 0;
+  return sanitizeHtml(content, {
     allowedTags: ALLOWED_TAGS,
     allowedAttributes: {
       "*": ["class", "style", "data-*"],
       a: ["href", "title", "target", "rel"],
       img: IMAGE_ATTRIBUTES,
+      ...(headings &&
+        Object.fromEntries(
+          [1, 2, 3, 4, 5, 6].map((level) => [`h${level}`, ["id", "tabindex"]]),
+        )),
     },
     allowedStyles: {
       "*": {
@@ -75,9 +90,24 @@ export const sanitizeReviewContent = (content: string): string =>
     },
     // dompurify 기본 정책과 동일하게 data:/javascript: URL 차단
     allowedSchemes: ["http", "https", "mailto"],
+    // Only the local draft preview may display not-yet-uploaded object URLs.
+    ...(preview && { allowedSchemesByTag: { img: ["http", "https", "blob"] } }),
     allowedSchemesAppliedToAttributes: ["href", "src"],
     // 새 탭으로 열리는 링크는 opener 차단
     transformTags: {
+      "*": (tagName, attribs) => {
+        if (headings && /^h[1-6]$/.test(tagName)) {
+          return {
+            tagName,
+            attribs: {
+              ...attribs,
+              id: `review-section-${++headingIndex}`,
+              tabindex: "-1",
+            },
+          };
+        }
+        return { tagName, attribs };
+      },
       a: (tagName, attribs) =>
         attribs.target === "_blank"
           ? {
@@ -86,4 +116,27 @@ export const sanitizeReviewContent = (content: string): string =>
             }
           : { tagName, attribs },
     },
+    exclusiveFilter: (frame) => {
+      if (headings && /^h[1-6]$/.test(frame.tag)) {
+        const text = frame.text.replace(/\s+/g, " ").trim();
+        if (text)
+          headings.push({
+            id: frame.attribs.id,
+            text,
+            level: Number(frame.tag[1]),
+          });
+      }
+      return false;
+    },
   });
+};
+
+export const sanitizeReviewContent = (content: string): string =>
+  sanitizeContent(content);
+
+// Build both outputs in the same DOM-free pass, including during SSR.
+export function prepareReviewContent(content: string, preview = false) {
+  const headings: ReviewHeading[] = [];
+  const html = sanitizeContent(content, headings, preview);
+  return { html, headings };
+}
