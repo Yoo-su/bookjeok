@@ -14,7 +14,7 @@ export const getJsonLd = (
         url: siteUrl,
         potentialAction: {
           "@type": "SearchAction",
-          target: `https://bookjeok.com/${locale}/book/search?keyword={search_term_string}`,
+          target: `https://bookjeok.com/${locale}/book/search?q={search_term_string}`,
           "query-input": "required name=search_term_string",
         },
       },

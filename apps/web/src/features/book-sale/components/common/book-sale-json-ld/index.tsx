@@ -1,4 +1,4 @@
-import { UsedBookSale } from "@bookjeok/core";
+import { SaleStatus, UsedBookSale } from "@bookjeok/core";
 
 import { JsonLd } from "@/shared/components/json-ld";
 
@@ -15,14 +15,14 @@ export function BookSaleJsonLd({ sale, locale = "ko" }: BookSaleJsonLdProps) {
   // 판매 상태에 따른 availability 매핑
   const getAvailability = (status: string) => {
     switch (status) {
-      case "AVAILABLE":
+      case SaleStatus.FOR_SALE:
         return "https://schema.org/InStock";
-      case "RESERVED":
+      case SaleStatus.RESERVED:
         return "https://schema.org/LimitedAvailability";
-      case "SOLD_OUT":
+      case SaleStatus.SOLD:
         return "https://schema.org/SoldOut";
       default:
-        return "https://schema.org/InStock";
+        return "https://schema.org/OutOfStock";
     }
   };
 
@@ -43,18 +43,11 @@ export function BookSaleJsonLd({ sale, locale = "ko" }: BookSaleJsonLdProps) {
     image: imageUrls.length > 0 ? imageUrls : fallbackImages,
     ...(book?.isbn && { gtin13: book.isbn }), // Google 쇼핑 연동을 위한 ISBN-13 바인딩
     url: `https://bookjeok.com/${locale}/book/sales/${sale.id}`, // Canonical URL 연동
-    brand: {
-      "@type": "Organization",
-      name: "bookjeok",
-    },
     offers: {
       "@type": "Offer",
       price: sale.price,
       priceCurrency: "KRW",
       availability: getAvailability(sale.status),
-      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0], // 현재로부터 1년 후
       seller: {
         "@type": "Person",
         name: sale.user?.nickname || "bookjeok",

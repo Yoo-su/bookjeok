@@ -29,6 +29,11 @@ export async function generateMetadata({
 
 export const revalidate = 3600;
 
+// API 서버에 의존하는 목록은 첫 방문에 생성한 뒤 ISR로 유지한다.
+export function generateStaticParams() {
+  return [];
+}
+
 export default async function Page({
   params,
 }: {
@@ -45,7 +50,11 @@ export default async function Page({
 
   const queries = [
     { queryKey: reviewKeys.popular.queryKey, queryFn: getPopularReviews },
-    { queryKey: reviewKeys.feeds().queryKey, queryFn: getReviewFeeds },
+    {
+      required: true,
+      queryKey: reviewKeys.feeds().queryKey,
+      queryFn: getReviewFeeds,
+    },
   ];
 
   return (

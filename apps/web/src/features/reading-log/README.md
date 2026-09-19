@@ -72,9 +72,17 @@ Framer Motion으로 완독 기록을 카드 덱처럼 넘겨보는 뷰입니다.
 - `lounge-book-detail-modal` — 피드에서 도서 상세를 페이지 이동 없이 확인
 - `lounge-home-widget` — 홈에서 라운지를 미리 보여주는 축약본
 
-라운지 페이지는 ISR로 정적 서빙되며, `use-reading-log-prefetch`가 RSC 단계에서 React Query 캐시를 채웁니다.
+라운지 페이지는 ISR로 정적 서빙되며, 라우트의 `ServerQueryBoundary`가 RSC 단계에서 공개 쿼리 캐시를 채웁니다.
 
 ## 4. 관련
 
 - 서버: [`features/reading-log`](../../../../server/src/features/reading-log/README.md) (`reading-log.controller` + `lounge.controller`)
 - 뷰: `reading-log-view`, `lounge-view`, `share-deck-view`
+
+### 라운지 검색 노출 (2026-09-19)
+
+- 라운지 페이지 RSC가 인기 도서·활성 독자와 함께 `readingLog.loungeFeed`의 첫 페이지를 시딩합니다. 최신 피드는 필수 쿼리로 지정해 장애 시 빈 HTML이 ISR에 저장되지 않게 합니다.
+- 페이지 제목(h1)·설명과 카드 도서명 링크를 제공합니다. 제목 링크는 도서 상세로 이동하고 나머지 카드 클릭은 기존 독자 모달을 엽니다. 다수 링크의 RSC 선요청은 끕니다.
+- 한국어·영어 전용 정적 OG 카드를 사용합니다.
+
+- 공개 목록 페이지는 빌드 시 사전 생성을 생략하고 첫 요청부터 ISR을 생성합니다. API 없는 CI에서도 빌드할 수 있고, 운영 조회 실패는 정상 캐시를 빈 목록으로 덮어쓰지 않습니다.

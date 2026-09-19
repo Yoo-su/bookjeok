@@ -10,6 +10,7 @@ export const generateGlobalMetadata = (
   // 없어 이미 색인된 페이지가 그대로 남는다. 수집은 허용하고 noindex로
   // 걷어내게 한다.
   const isSearchExcludedLocale = locale !== "ko";
+  const homeImage = `/og/${locale === "en" ? "en" : "ko"}-home.png`;
   return {
     metadataBase: new URL("https://bookjeok.com"),
     title: {
@@ -48,7 +49,7 @@ export const generateGlobalMetadata = (
       siteName: "Bookjeok",
       images: [
         {
-          url: "/logo-og-sketch.png",
+          url: homeImage,
           width: 1200,
           height: 630,
           alt: t("meta.default_title"),
@@ -60,7 +61,7 @@ export const generateGlobalMetadata = (
       card: "summary_large_image",
       title: t("meta.twitter.title"),
       description: t("meta.twitter.description"),
-      images: ["/logo-og-sketch.png"],
+      images: [homeImage],
     },
     robots:
       process.env.VERCEL_ENV === "preview" || isSearchExcludedLocale
@@ -104,7 +105,23 @@ export const createPageMetadata = ({
   noIndex = false,
   absoluteTitle = false,
 }: CreatePageMetadataProps): Metadata => {
-  const images = imageUrl ? [imageUrl] : ["/logo-og-sketch.png"];
+  const pageImage = (
+    {
+      "": "home",
+      "/": "home",
+      "/book/market": "market",
+      "/book/reviews": "reviews",
+      "/lounge": "lounge",
+    } as Record<string, string>
+  )[path ?? "__default"];
+  const image =
+    imageUrl ||
+    (pageImage
+      ? `/og/${locale === "en" ? "en" : "ko"}-${pageImage}.png`
+      : "/logo-og-sketch.png");
+  const images = [
+    { url: image, alt: title, ...(!imageUrl && { width: 1200, height: 630 }) },
+  ];
   const currentLocale = locale || "ko";
   const cleanPath = path ? (path.startsWith("/") ? path : `/${path}`) : "";
   const fullPath = `/${currentLocale}${cleanPath}`;
@@ -132,7 +149,10 @@ export const createPageMetadata = ({
       url: path !== undefined ? `https://bookjeok.com${fullPath}` : undefined,
     },
     twitter: {
-      card: imageUrl ? "summary_large_image" : "summary",
+      // 세로 도서 표지는 작은 카드, 가로 브랜드 카드·실물 사진은 큰 카드.
+      card: image.includes("cdn.bookjeok.com/covers/")
+        ? "summary"
+        : "summary_large_image",
       title: formattedOgTitle,
       description,
       images,

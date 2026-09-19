@@ -1,8 +1,55 @@
 import { describe, expect, it } from "vitest";
 
-import { createPageMetadata } from "../metadata";
+import { createPageMetadata, generateGlobalMetadata } from "../metadata";
 
 describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () => {
+  it.each([
+    ["", "home"],
+    ["/book/market", "market"],
+    ["/book/reviews", "reviews"],
+    ["/lounge", "lounge"],
+  ])("%s는 전용 가로 공유 카드를 사용한다", (path, image) => {
+    const metadata = createPageMetadata({
+      title: "제목",
+      description: "설명",
+      path,
+    });
+    expect(metadata.openGraph?.images).toEqual([
+      { url: `/og/ko-${image}.png`, alt: "제목", width: 1200, height: 630 },
+    ]);
+    expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+  });
+
+  it.each(["ko", "en"])("%s 홈과 전역 OG·Twitter 카드가 일치한다", (locale) => {
+    const home = createPageMetadata({
+      title: "북적",
+      description: "설명",
+      locale,
+      path: "",
+    });
+    const global = generateGlobalMetadata((key) => key, locale);
+    const url = `/og/${locale}-home.png`;
+    expect(home.openGraph?.images).toEqual([
+      { url, alt: "북적", width: 1200, height: 630 },
+    ]);
+    expect(home.twitter?.images).toEqual(home.openGraph?.images);
+    expect(global.openGraph?.images).toEqual([
+      { url, alt: "meta.default_title", width: 1200, height: 630 },
+    ]);
+    expect(global.twitter?.images).toEqual([url]);
+  });
+
+  it("세로 도서 표지는 작은 카드로 전달한다", () => {
+    const metadata = createPageMetadata({
+      title: "책",
+      description: "설명",
+      imageUrl: "https://cdn.bookjeok.com/covers/123.webp",
+    });
+    expect(metadata.twitter).toMatchObject({ card: "summary" });
+    expect(metadata.openGraph?.images).toEqual([
+      { url: "https://cdn.bookjeok.com/covers/123.webp", alt: "책" },
+    ]);
+  });
   it("기본 metadataBase와 오픈 그래프 속성들이 올바르게 반환되어야 한다", () => {
     const meta = createPageMetadata({
       title: "테스트 제목",
@@ -19,7 +66,14 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
     expect(meta.openGraph).toBeDefined();
     expect(meta.openGraph?.title).toBe("테스트 제목 | 북적");
     expect(meta.openGraph?.description).toBe("테스트 설명");
-    expect(meta.openGraph?.images).toEqual(["/logo-og-sketch.png"]);
+    expect(meta.openGraph?.images).toEqual([
+      {
+        url: "/logo-og-sketch.png",
+        alt: "테스트 제목",
+        width: 1200,
+        height: 630,
+      },
+    ]);
     expect(meta.openGraph?.siteName).toBe("Bookjeok");
     expect(meta.openGraph?.url).toBe("https://bookjeok.com/ko/test-path");
 
@@ -42,7 +96,9 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
       path: "test-path",
     });
 
-    expect(meta.openGraph?.images).toEqual(["https://example.com/custom.png"]);
+    expect(meta.openGraph?.images).toEqual([
+      { url: "https://example.com/custom.png", alt: "테스트 제목" },
+    ]);
     expect(meta.openGraph?.title).toBe("테스트 제목 | Bookjeok");
     expect(meta.openGraph?.url).toBe("https://bookjeok.com/en/test-path");
   });

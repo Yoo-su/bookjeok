@@ -1,6 +1,7 @@
 "use client";
 
 import type { LoungeBookCard } from "@bookjeok/core";
+import { useTranslations } from "next-intl";
 
 import { LoungeActiveReaders } from "@/features/reading-log/components/lounge-feed/lounge-active-readers";
 import { LoungeBookDetailModal } from "@/features/reading-log/components/lounge-feed/lounge-book-detail-modal";
@@ -11,6 +12,7 @@ import { CrowdCanvas } from "@/shared/components/skiperui/canvas-crowd";
 import { useOverlay } from "@/shared/hooks/use-overlay";
 
 export function LoungeView() {
+  const t = useTranslations("lounge.metadata");
   const overlay = useOverlay();
 
   const handleOpenModal = (
@@ -42,6 +44,12 @@ export function LoungeView() {
       </div>
 
       <div className="w-full mx-auto px-4">
+        <header className="mb-12">
+          <h1 className="font-serif text-3xl sm:text-4xl font-medium">
+            {t("title")}
+          </h1>
+          <p className="mt-3 text-stone-500">{t("description")}</p>
+        </header>
         {/* 콘텐츠 영역 */}
         <div className="space-y-16 md:space-y-24">
           {/* 열성 독서가 명예의 전당 */}

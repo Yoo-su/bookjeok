@@ -258,7 +258,7 @@ KOPIS(공연예술통합전산망) 공공 API를 프록시하여 공연·전시 
 - **댓글** — 리뷰 댓글, 댓글 좋아요, 내가 쓴 댓글 모아보기
 - **배경음악 플레이어** — Zustand 전역 스토어 기반 플로팅 뮤직 플레이어(재생목록·반복 모드)
 - **다국어(ko/en)** — `next-intl` 기반 `[locale]` 라우팅
-- **SEO** — 동적 `sitemap.ts`, `robots.ts`, `manifest.ts`, RSS 피드(`/rss.xml`), JSON-LD 구조화 데이터, canonical/hreflang
+- **SEO** — 공개 리뷰·판매글 전체 및 연결 도서의 `sitemap.ts`, `robots.ts`, `manifest.ts`, RSS 피드(`/rss.xml`), JSON-LD 구조화 데이터, canonical/hreflang, 마켓·리뷰·라운지 전용 정적 공유 카드
 - **분석·광고** — Vercel Analytics/Speed Insights, Google Analytics, Microsoft Clarity, Google AdSense
 
 ---
@@ -468,6 +468,7 @@ bookjeok/
 │   ├── used-book-pay-implementation.md
 │   ├── book-data-migration-plan.md
 │   ├── manual-ddl-log.md
+│   ├── seo-audit-2026-09-19.md
 │   └── ddl/                      # 운영에 적용한 DDL 원본
 ├── .agents/rules/                # 코드베이스 컨벤션 (개발자 & AI 에이전트 공용)
 ├── .github/workflows/            # CI, Azure Container Apps 배포
@@ -628,6 +629,8 @@ pnpm test
 - **웹 공통 UX** — [intro](apps/web/src/features/intro/README.md) (홈 히어로) · [music](apps/web/src/features/music/README.md) (배경음악) · [confirm](apps/web/src/features/confirm/README.md) (전역 확인 다이얼로그)
 
 ### 설계 · 운영
+
+SEO·SNS 공유 점검 결과: [2026-09-19 SEO 감사](docs/seo-audit-2026-09-19.md) — 주요 페이지 운영 응답, 구조화 데이터 결함, 검색 발견성과 공유 개선 사항.
 
 | 문서                                                                         | 내용                                                                                                                                                                                                                                 |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

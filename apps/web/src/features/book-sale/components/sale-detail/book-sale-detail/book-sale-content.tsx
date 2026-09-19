@@ -1,8 +1,8 @@
 import { UsedBookSale } from "@bookjeok/core";
 import { useLocale, useTranslations } from "next-intl";
 
+import { getBookSaleShareData } from "@/features/book-sale/utils/share";
 import { ShareButton } from "@/shared/components/ui/share-button";
-import { formatCurrency } from "@/shared/utils/format-currency";
 
 interface BookSaleContentProps {
   sale: UsedBookSale;
@@ -12,6 +12,7 @@ interface BookSaleContentProps {
 export const BookSaleContent = ({ sale }: BookSaleContentProps) => {
   const t = useTranslations("common");
   const locale = useLocale();
+  const tStatus = useTranslations("market.sale_status");
 
   return (
     <>
@@ -22,9 +23,12 @@ export const BookSaleContent = ({ sale }: BookSaleContentProps) => {
       {/* 공유 버튼 */}
       <div className="flex justify-end pt-4">
         <ShareButton
-          title={sale.title}
-          description={`${sale.book.title} | ${formatCurrency(sale.price, locale, t("won"))}`}
-          imageUrl={sale.imageUrls[0] || sale.book.image}
+          {...getBookSaleShareData(
+            sale,
+            locale,
+            t("won"),
+            tStatus(sale.status),
+          )}
           showLabel
         />
       </div>
