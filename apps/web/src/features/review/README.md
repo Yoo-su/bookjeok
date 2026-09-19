@@ -105,3 +105,11 @@ ReviewDetailContent ◀── prepareReviewContent ◀── 저장된 HTML
 - 서버: [`features/review`](../../../../server/src/features/review/README.md), [`features/comment`](../../../../server/src/features/comment/README.md)
 - 뷰: `review-home-view`, `review-detail-view`, `review-write-view`, `review-edit-view`, `my-reviews-view`
 - 댓글 UI는 [`comment`](../comment/README.md) 기능에 있습니다.
+
+### 검색·공유 (2026-09-19)
+
+- 미선택 별점 0은 JSON-LD에서 생략하고, 평가 척도는 0.5~5로 선언합니다. reviewBody는 공용 HTML 정제 유틸로 텍스트화합니다.
+- `utils/share.ts`의 설명 생성기를 OG와 카카오 공유 버튼이 함께 사용합니다. 작성자가 비공개 원문을 조회한 상태에서도 감상 발췌를 공유하지 않습니다.
+- 리뷰 피드는 핵심 SSR 쿼리로 지정해 조회 실패 시 빈 HTML을 ISR에 저장하지 않습니다. sitemap은 공개 리뷰 전체를 커서로 순회합니다. 앞자리 0이 있는 상세 URL은 정규 URL로 308 이동합니다.
+
+- 공개 목록 페이지는 빌드 시 사전 생성을 생략하고 첫 요청부터 ISR을 생성합니다. API 없는 CI에서도 빌드할 수 있고, 운영 조회 실패는 정상 캐시를 빈 목록으로 덮어쓰지 않습니다.

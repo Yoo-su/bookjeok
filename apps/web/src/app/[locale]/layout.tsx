@@ -56,7 +56,9 @@ export async function generateMetadata({
 }
 
 export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }));
+  // 언어별 페이지를 빌드 시 생성하면 공개 목록 조회에 API 서버가 필요하다.
+  // 첫 요청에 생성하고 각 페이지의 revalidate 설정으로 ISR을 유지한다.
+  return [];
 }
 
 export default async function Layout({

@@ -7,12 +7,12 @@ import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 
 import { BookSaleJsonLd } from "@/features/book-sale/components/common/book-sale-json-ld";
+import { getBookSaleShareData } from "@/features/book-sale/utils/share";
 import { BreadcrumbJsonLd } from "@/shared/components/breadcrumb-json-ld";
 import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { isNotFoundError } from "@/shared/utils/api-error";
-import { formatCurrency } from "@/shared/utils/format-currency";
 import { BookSaleDetailView } from "@/views/book-sale-detail-view";
 
 // 판매 상태 변경은 /api/revalidate 웹훅이 즉시 걷어낸다.
@@ -53,6 +53,10 @@ const getCachedBookSale = cache(async (id: string) => {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id, locale } = await params;
   const t = await getTranslations({ locale, namespace: "market.detail" });
+  const tStatus = await getTranslations({
+    locale,
+    namespace: "market.sale_status",
+  });
   const tCommon = await getTranslations({ locale, namespace: "common" });
 
   try {
@@ -65,22 +69,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
-    const title = sale.title;
-    // book 관계나 imageUrls가 빠진 응답에서도 메타데이터 생성이 죽지 않게 한다
-    const bookTitle = sale.book?.title ?? "";
-    const imageUrls = Array.isArray(sale.imageUrls) ? sale.imageUrls : [];
-    const description = `${bookTitle} | ${formatCurrency(sale.price, locale, tCommon("won"))} | ${sale.city} ${sale.district}`;
-    const images =
-      imageUrls.length > 0
-        ? [imageUrls[0]]
-        : sale.book?.image
-          ? [sale.book.image]
-          : [];
+    const share = getBookSaleShareData(
+      sale,
+      locale,
+      tCommon("won"),
+      tStatus(sale.status),
+    );
 
     const baseMeta = createPageMetadata({
-      title,
-      description,
-      imageUrl: images[0],
+      ...share,
       locale,
       path: `/book/sales/${id}`,
     });

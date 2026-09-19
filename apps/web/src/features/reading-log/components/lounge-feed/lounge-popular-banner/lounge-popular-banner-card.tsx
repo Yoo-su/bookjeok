@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { AvatarCircles } from "@/shared/components/magicui/avatar-circles";
+import { Link } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
 
 interface LoungePopularBannerCardProps {
   item: LoungePopularBook;
@@ -50,7 +52,13 @@ export function LoungePopularBannerCard({
 
       {/* 도서 정보 */}
       <h3 className="text-sm font-semibold text-stone-900 line-clamp-2 leading-snug mb-1.5 group-hover:text-stone-600 transition-colors">
-        {item.book.title}
+        <Link
+          href={PATHS.BOOK_DETAIL(item.isbn)}
+          prefetch={false}
+          onClick={(event) => event.stopPropagation()}
+        >
+          {item.book.title}
+        </Link>
       </h3>
       <p className="text-xs text-stone-400 font-light mb-3 line-clamp-1">
         {item.book.author}

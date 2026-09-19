@@ -1,11 +1,12 @@
 import { getReview } from "@bookjeok/api-client";
-import { cleanHtmlText, reviewKeys } from "@bookjeok/core";
+import { reviewKeys } from "@bookjeok/core";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cache } from "react";
 
 import { ReviewJsonLd } from "@/features/review/components/common/review-json-ld";
+import { getReviewShareDescription } from "@/features/review/utils/share";
 import { BreadcrumbJsonLd } from "@/shared/components/breadcrumb-json-ld";
 import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
@@ -27,12 +28,6 @@ export function generateStaticParams() {
 interface Props {
   params: Promise<{ locale: string; id: string }>;
 }
-
-/** 구글은 약 160자에서 스니펫을 자른다. 그 앞에서 우리가 문장 단위로 끊는다. */
-const DESCRIPTION_MAX_LENGTH = 160;
-
-const truncate = (text: string, max: number) =>
-  text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 
 // React.cache를 사용하여 API 요청 중복 제거 (Request Memoization)
 // 부재(404)만 null 반환, 일시적 API 장애는 재던짐 (장애로 만든 404가 1시간 캐시되는 것 방지)
@@ -75,19 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = review.title;
   const images = review.book?.image ? [review.book.image] : [];
 
-  // 검색 스니펫과 공유 미리보기에 감상 첫 문장을 싣는다. "도서명 - 저자"만으로는
-  // 같은 책의 리뷰가 전부 같은 설명을 갖게 되고, 클릭할 이유도 남지 않는다.
-  // 서지 정보를 앞에 두는 것은 책 이름으로 들어오는 질의의 매칭을 유지하기 위해서다.
-  //
-  // 비공개 리뷰는 서버가 content를 빈 문자열로 마스킹해 내려주므로 자동으로
-  // 서지 정보만 남는다. book 관계가 빠진 응답에서도 죽지 않게 한다.
-  const bookLabel = review.book
-    ? `${review.book.title} - ${review.book.author}`
-    : review.title;
-  const excerpt = cleanHtmlText(review.content).replace(/\s+/g, " ").trim();
-  const description = excerpt
-    ? truncate(`${bookLabel} | ${excerpt}`, DESCRIPTION_MAX_LENGTH)
-    : bookLabel;
+  const description = getReviewShareDescription(review);
 
   const baseMeta = createPageMetadata({
     title,

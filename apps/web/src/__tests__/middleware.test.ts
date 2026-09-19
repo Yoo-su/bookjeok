@@ -48,6 +48,29 @@ describe("middleware 크롤러 게이트", () => {
 });
 
 describe("middleware 경로 게이트", () => {
+  it("앞자리 0은 쿼리를 보존해 정규 URL로 영구 이동한다", async () => {
+    const response = await call("/ko/book/reviews/0078?from=share");
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe(
+      "https://bookjeok.com/ko/book/reviews/78?from=share",
+    );
+    expect((await call("/book/sales/00020")).headers.get("location")).toBe(
+      "https://bookjeok.com/ko/book/sales/20",
+    );
+  });
+
+  it.each(["0", "78e0", "0x4e", "-1", "9007199254740992", "abc"])(
+    "비정규 ID %s는 렌더 전에 404",
+    async (id) => {
+      expect(await statusOf(`/ko/book/reviews/${id}`)).toBe(404);
+      expect(await statusOf(`/ko/book/sales/${id}`)).toBe(404);
+    },
+  );
+
+  it("글 작성 경로는 숫자 검사에서 제외한다", async () => {
+    expect(await statusOf("/ko/book/reviews/write")).toBe(200);
+    expect(await statusOf("/ko/book/sales/register")).toBe(200);
+  });
   // `[locale]`이 `.env`를 로케일 파라미터로 받아 249KB를 렌더하고 ISR 엔트리로 남기던 자리
   it("로케일 없는 파일형 경로는 렌더 없이 404", async () => {
     expect(await statusOf("/.env")).toBe(404);

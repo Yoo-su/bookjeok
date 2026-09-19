@@ -10,6 +10,8 @@ import { ChevronRight } from "@/shared/components/icons/iconsax";
 import { AvatarCircles } from "@/shared/components/magicui/avatar-circles";
 import { Badge } from "@/shared/components/shadcn/badge";
 import { Card, CardContent } from "@/shared/components/shadcn/card";
+import { Link } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
 import { cn } from "@/shared/utils/cn";
 import { formatRelativeTime } from "@/shared/utils/format-date";
 
@@ -76,7 +78,13 @@ export const LoungeFeedCard = memo(function LoungeFeedCard({
           {/* 도서 텍스트 & 최근 감상 */}
           <div className="flex-1 min-w-0 space-y-1">
             <h3 className="font-serif font-bold text-stone-900 dark:text-stone-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors text-base line-clamp-1">
-              {item.book.title}
+              <Link
+                href={PATHS.BOOK_DETAIL(item.isbn)}
+                prefetch={false}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {item.book.title}
+              </Link>
             </h3>
 
             <p className="text-xs text-stone-500 line-clamp-1">

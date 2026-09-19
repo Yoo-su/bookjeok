@@ -114,3 +114,11 @@ upload-progress-modal 로 진행률 표시, 실패 시 개별 재시도
 - 서버 도메인: [`features/used-book-sale`](../../../../server/src/features/used-book-sale/README.md), [`features/trade`](../../../../server/src/features/trade/README.md), [`features/order`](../../../../server/src/features/order/README.md)
 - 웹 도메인: [`features/trade`](../trade/README.md), [`features/order`](../order/README.md), [`features/chat`](../chat/README.md)
 - 뷰: `book-market-view`, `book-sale-detail-view`, `book-sale-form-view`, `book-sale-edit-view`, `book-sale-history-view`
+
+## 검색·공유 (2026-09-19)
+
+- Product availability는 공용 `SaleStatus`로 매핑합니다. `SOLD`는 `SoldOut`, 알 수 없는 상태는 `OutOfStock`입니다. 근거 없는 브랜드·가격 유효기간은 출력하지 않습니다.
+- `utils/share.ts`를 OG·카카오 공유가 함께 사용해 도서명·가격·판매 상태·지역·첫 실물 사진(없으면 표지)을 일치시킵니다.
+- 마켓 기본 목록은 필수 서버 쿼리입니다. 실패하면 ISR 재생성도 실패시켜 기존 정상 페이지를 보존합니다. sitemap은 공개 판매글 전체를 커서로 순회하며, 마켓 OG는 정적 전용 카드를 사용합니다.
+
+- 공개 목록 페이지는 빌드 시 사전 생성을 생략하고 첫 요청부터 ISR을 생성합니다. API 없는 CI에서도 빌드할 수 있고, 운영 조회 실패는 정상 캐시를 빈 목록으로 덮어쓰지 않습니다.

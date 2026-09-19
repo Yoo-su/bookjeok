@@ -1,4 +1,8 @@
-import { getLoungeActiveReaders, getLoungePopular } from "@bookjeok/api-client";
+import {
+  getLoungeActiveReaders,
+  getLoungeFeed,
+  getLoungePopular,
+} from "@bookjeok/api-client";
 import { readingLogKeys } from "@bookjeok/core";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
@@ -8,6 +12,11 @@ import { createPageMetadata } from "@/shared/config/metadata";
 import { LoungeView } from "@/views/lounge-view";
 
 export const revalidate = 3600;
+
+// API 서버에 의존하는 목록은 첫 방문에 생성한 뒤 ISR로 유지한다.
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({
   params,
@@ -39,6 +48,14 @@ export default async function LoungePage({
   ];
 
   const queries = [
+    {
+      type: "infinite" as const,
+      required: true,
+      queryKey: readingLogKeys.loungeFeed.queryKey,
+      queryFn: ({ pageParam }: { pageParam?: string | null }) =>
+        getLoungeFeed(pageParam ?? null),
+      initialPageParam: null,
+    },
     {
       queryKey: readingLogKeys.loungePopular.queryKey,
       queryFn: getLoungePopular,

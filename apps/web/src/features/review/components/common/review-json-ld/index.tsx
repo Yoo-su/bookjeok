@@ -1,4 +1,4 @@
-import { Review } from "@bookjeok/core";
+import { cleanHtmlText, Review } from "@bookjeok/core";
 
 import { JsonLd } from "@/shared/components/json-ld";
 
@@ -21,7 +21,10 @@ export function ReviewJsonLd({ review, locale = "ko" }: ReviewJsonLdProps) {
     "@type": "Review",
     url: `https://bookjeok.com/${locale}/book/reviews/${review.id}`,
     name: review.title,
-    reviewBody: (review.content ?? "").replace(/<[^>]*>/g, "").slice(0, 500), // HTML 태그 제거 및 500자 제한
+    reviewBody: cleanHtmlText(review.content ?? "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500), // HTML 태그 제거 및 500자 제한
     datePublished: review.createdAt,
     dateModified: review.updatedAt,
     author: {
@@ -35,7 +38,7 @@ export function ReviewJsonLd({ review, locale = "ko" }: ReviewJsonLdProps) {
         "@type": "Rating",
         ratingValue: review.rating,
         bestRating: 5,
-        worstRating: 1,
+        worstRating: 0.5,
       },
     }),
     // 리뷰 대상 책 정보

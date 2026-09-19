@@ -76,6 +76,30 @@ export default function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
+  // 숫자 상세 경로의 표기를 하나로 고정해 동일 콘텐츠의 ISR 엔트리가 늘지 않게 한다.
+  if (
+    withoutLocale.length === 3 &&
+    withoutLocale[0] === "book" &&
+    ["reviews", "sales"].includes(withoutLocale[1]) &&
+    !["write", "register"].includes(withoutLocale[2])
+  ) {
+    const id = withoutLocale[2];
+    if (
+      !/^\d+$/.test(id) ||
+      !Number.isSafeInteger(Number(id)) ||
+      Number(id) <= 0
+    ) {
+      return new NextResponse(null, { status: 404 });
+    }
+    const normalizedId = String(Number(id));
+    if (id !== normalizedId) {
+      const url = request.nextUrl.clone();
+      const locale = hasLocale ? segments[0] : routing.defaultLocale;
+      url.pathname = `/${locale}/book/${withoutLocale[1]}/${normalizedId}`;
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   // SNS 공유 시 리다이렉션 지연 및 수집 실패를 예방하기 위해, 스크래퍼 봇은 내부 rewrite 처리(200 OK 즉시 서빙)합니다.
   const isSnsBot = isSnsScraper(userAgent);
 

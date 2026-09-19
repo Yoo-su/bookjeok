@@ -14,6 +14,11 @@ import { BookMarketView } from "@/views/book-market-view";
 
 export const revalidate = 3600;
 
+// API 서버에 의존하는 목록은 첫 방문에 생성한 뒤 ISR로 유지한다.
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -69,6 +74,7 @@ export default async function Page({
     },
     {
       type: "infinite" as const,
+      required: true,
       queryKey: bookSaleKeys.marketSales({}).queryKey,
       queryFn: ({ pageParam }: { pageParam?: string }) =>
         getBookSales({
