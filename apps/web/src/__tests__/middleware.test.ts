@@ -48,6 +48,33 @@ describe("middleware 크롤러 게이트", () => {
 });
 
 describe("middleware 경로 게이트", () => {
+  it.each([
+    "/ko/book/not-a-route",
+    "/book/not-a-route",
+    "/en/book/market/extra",
+    "/ko/users/someone/extra",
+    "/ko/my-page/unknown",
+    "/ko/share/deck/someone/extra",
+  ])("없는 하위 경로 %s는 빈 404로 종료한다", async (path) => {
+    const response = await call(path);
+    expect(response.status).toBe(404);
+    expect(response.headers.get("x-middleware-next")).toBeNull();
+    expect(await response.text()).toBe("");
+  });
+
+  it.each([
+    "/ko/book/reviews/77/edit",
+    "/ko/my-page/sales/12/edit",
+    "/ko/my-page/sales-orders",
+    "/ko/order/payment/12",
+    "/ko/order/payment/success",
+    "/ko/order/payment/fail",
+    "/ko/order/12",
+    "/en/users/some.one",
+  ])("실제 중첩 라우트 %s는 유지한다", async (path) => {
+    expect(await statusOf(path)).toBe(200);
+  });
+
   it("앞자리 0은 쿼리를 보존해 정규 URL로 영구 이동한다", async () => {
     const response = await call("/ko/book/reviews/0078?from=share");
     expect(response.status).toBe(308);

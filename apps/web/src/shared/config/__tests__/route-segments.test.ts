@@ -2,39 +2,34 @@ import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
 
-import { isKnownLocaleSegment, LOCALE_ROOT_SEGMENTS } from "../route-segments";
+import { isKnownLocalePath } from "../route-segments";
 
 const LOCALE_DIR = path.resolve(__dirname, "../../../app/[locale]");
 
-/** 라우트 그룹 `(auth)`는 URL에 안 나타나므로 그 안쪽을 펼친다. */
-function collectRouteSegments(dir: string): string[] {
-  return fs
-    .readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .flatMap((entry) => {
-      if (entry.name.startsWith("(") && entry.name.endsWith(")")) {
-        return collectRouteSegments(path.join(dir, entry.name));
-      }
-      // 동적·캐치올 세그먼트는 첫 세그먼트 허용 목록의 대상이 아니다.
-      if (entry.name.startsWith("[")) return [];
-      return [entry.name];
-    });
+/** 전체 page.tsx 경로를 순회하여 허용 목록 누락을 배포 전에 잡는다. */
+function collectPagePaths(dir: string, segments: string[] = []): string[][] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isFile()) return entry.name === "page.tsx" ? [segments] : [];
+    if (!entry.isDirectory() || entry.name.includes("...")) return [];
+    const group = entry.name.startsWith("(");
+    const segment = entry.name.startsWith("[") ? "123" : entry.name;
+    return collectPagePaths(
+      path.join(dir, entry.name),
+      group ? segments : [...segments, segment],
+    );
+  });
 }
 
-describe("LOCALE_ROOT_SEGMENTS", () => {
-  // PATHS에 등록하지 않고 라우트만 추가하면 미들웨어가 그 경로를 404로 끊는다.
-  // 그 사고를 배포 전에 잡는 것이 이 테스트의 존재 이유다.
-  it("app/[locale] 아래 실제 라우트를 모두 포함한다", () => {
-    const actual = collectRouteSegments(LOCALE_DIR);
-    const missing = actual.filter(
-      (segment) => !LOCALE_ROOT_SEGMENTS.has(segment),
+describe("전체 라우트 허용 목록", () => {
+  it("app/[locale]의 정적·동적·중첩 페이지를 모두 통과시킨다", () => {
+    const missing = collectPagePaths(LOCALE_DIR).filter(
+      (segments) => !isKnownLocalePath(segments),
     );
-
     expect(missing).toEqual([]);
   });
 
   it("로케일 루트는 세그먼트 없이 통과한다", () => {
-    expect(isKnownLocaleSegment(undefined)).toBe(true);
+    expect(isKnownLocalePath([])).toBe(true);
   });
 
   // 미들웨어 matcher가 제외하지 않는 확장자는 미들웨어의 파일형 경로 규칙에 걸려 404가 된다.
@@ -64,14 +59,9 @@ describe("LOCALE_ROOT_SEGMENTS", () => {
     expect(missing).toEqual([]);
   });
 
-  it("알 수 없는 세그먼트는 막는다", () => {
-    expect(isKnownLocaleSegment("wp-admin")).toBe(false);
-    expect(isKnownLocaleSegment("xmlrpc.php")).toBe(false);
-  });
-
-  it("알려진 세그먼트는 통과한다", () => {
-    expect(isKnownLocaleSegment("book")).toBe(true);
-    expect(isKnownLocaleSegment("users")).toBe(true);
-    expect(isKnownLocaleSegment("lounge")).toBe(true);
+  it("유효 루트 아래 존재하지 않는 페이지도 막는다", () => {
+    expect(isKnownLocalePath(["book", "unknown"])).toBe(false);
+    expect(isKnownLocalePath(["book", "market", "extra"])).toBe(false);
+    expect(isKnownLocalePath(["users", "someone", "extra"])).toBe(false);
   });
 });

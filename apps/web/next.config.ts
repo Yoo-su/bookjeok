@@ -92,6 +92,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/sitemap.xml",
+        headers: [
+          {
+            // connection()으로 빌드 API 호출을 피하면서 XML 응답도 캐시한다.
+            // 브라우저용 Cache-Control과 분리해 Vercel CDN에만 적용한다.
+            key: "Vercel-CDN-Cache-Control",
+            value:
+              process.env.VERCEL_ENV === "preview"
+                ? "no-store"
+                : "public, s-maxage=21600, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
         source: "/videos/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
       },

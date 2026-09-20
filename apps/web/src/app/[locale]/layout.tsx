@@ -7,11 +7,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { notFound } from "next/navigation";
 import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
-import {
-  getMessages,
-  getTranslations,
-  setRequestLocale,
-} from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ChatProvider } from "@/features/chat/providers/chat-provider";
 import { ConfirmHost } from "@/features/confirm";
@@ -31,6 +27,7 @@ import { Locale, routing } from "@/shared/config/i18n/routing";
 import { getJsonLd } from "@/shared/config/json-ld";
 import { generateGlobalMetadata } from "@/shared/config/metadata";
 import { OverlayProvider } from "@/shared/hooks/use-overlay";
+import { IntlMessagesProvider } from "@/shared/providers/intl-messages-provider";
 import { QueryProvider } from "@/shared/providers/query-provider";
 import { SocketProvider } from "@/shared/providers/socket-provider";
 import UserProvider from "@/shared/providers/user-provider";
@@ -78,8 +75,6 @@ export default async function Layout({
   // 정적 렌더링(SSG) 활성화
   setRequestLocale(locale);
 
-  // 다국어 메시지 로드
-  const messages = await getMessages();
   const t = await getTranslations({ locale });
   const jsonLdData = getJsonLd(t, locale);
 
@@ -95,51 +90,53 @@ export default async function Layout({
         >
           {t("common.aria.skip_to_content")}
         </a>
-        <NextIntlClientProvider messages={messages}>
-          <NavigationProgress />
-          <QueryProvider>
-            <UserProvider>
-              {/* 알림 시스템 */}
-              <SocketProvider namespace="/notification">
-                <NotificationProvider />
-              </SocketProvider>
+        <NextIntlClientProvider messages={null}>
+          <IntlMessagesProvider>
+            <NavigationProgress />
+            <QueryProvider>
+              <UserProvider>
+                {/* 알림 시스템 */}
+                <SocketProvider namespace="/notification">
+                  <NotificationProvider />
+                </SocketProvider>
 
-              {/* 채팅 시스템 (중첩 또는 병렬 - 리스너가 각 제공자 내부에 있으므로 형제 관계도 작동함) */}
-              <SocketProvider namespace="/chat">
-                <ChatProvider>
-                  <OverlayProvider>
-                    <div
-                      id="main-content"
-                      tabIndex={-1}
-                      className="outline-none"
-                    >
-                      {children}
-                    </div>
-                  </OverlayProvider>
-                </ChatProvider>
-              </SocketProvider>
-            </UserProvider>
+                {/* 채팅 시스템 (중첩 또는 병렬 - 리스너가 각 제공자 내부에 있으므로 형제 관계도 작동함) */}
+                <SocketProvider namespace="/chat">
+                  <ChatProvider>
+                    <OverlayProvider>
+                      <div
+                        id="main-content"
+                        tabIndex={-1}
+                        className="outline-none"
+                      >
+                        {children}
+                      </div>
+                    </OverlayProvider>
+                  </ChatProvider>
+                </SocketProvider>
+              </UserProvider>
 
-            <Analytics />
-            <SpeedInsights />
-            <GoogleAnalytics />
-            <MicrosoftClarity />
-          </QueryProvider>
-          <ConfirmHost />
-          <GlobalMusicHost />
-          <MusicPlayerModal />
-          <FloatingMusicPill />
-          <Toaster position="bottom-center" />
-          <JsonLd data={jsonLdData} />
-          {config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID && (
-            <Script
-              id="adsense-init"
-              async
-              src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
-              crossOrigin="anonymous"
-              strategy="afterInteractive"
-            />
-          )}
+              <Analytics />
+              <SpeedInsights />
+              <GoogleAnalytics />
+              <MicrosoftClarity />
+            </QueryProvider>
+            <ConfirmHost />
+            <GlobalMusicHost />
+            <MusicPlayerModal />
+            <FloatingMusicPill />
+            <Toaster position="bottom-center" />
+            <JsonLd data={jsonLdData} />
+            {config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID && (
+              <Script
+                id="adsense-init"
+                async
+                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
+                crossOrigin="anonymous"
+                strategy="afterInteractive"
+              />
+            )}
+          </IntlMessagesProvider>
         </NextIntlClientProvider>
       </body>
     </html>

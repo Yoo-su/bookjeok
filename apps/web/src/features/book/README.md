@@ -86,7 +86,7 @@ sse-chat-client ──▶ POST /search/ai/stream (fetch + ReadableStream)
 
 ## 3. SEO
 
-`book-json-ld`가 도서 상세에 `Book` 구조화 데이터를 삽입합니다. 메타데이터는 `app/[locale]/book/[isbn]/detail` 라우트에서 생성합니다.
+`book-json-ld`가 도서 상세에 `Book` 구조화 데이터를 삽입합니다. 메타데이터는 `app/[locale]/book/[isbn]/detail` 라우트에서 생성합니다. 상세는 첫 요청에 생성한 뒤 30일 ISR을 사용합니다. 전체 번역 사전은 공통 정적 JS에서 제공하여 ISBN별 HTML/RSC에 반복 포함하지 않습니다. 없는 하위 경로는 미들웨어가 빈 404로 종료하고, 정상 ISBN의 존재 여부는 기존 상세 조회에서 판별합니다.
 
 ## 4. 관련
 

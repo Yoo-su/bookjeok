@@ -85,7 +85,7 @@ refetchOnWindowFocus: false,
 
 `<Link>`의 기본 prefetch는 **뷰포트 진입만으로** 대상 라우트의 RSC 페이로드를 당겨옵니다. 대상이 ISR 라우트면 그 요청이 캐시 MISS가 되어 **재생성 → ISR 쓰기**로 이어집니다. 사용자가 클릭하지 않으면 그렇게 구운 엔트리는 한 번도 읽히지 않습니다.
 
-2026-09-10 Vercel ISR 지표에서 `/book/[isbn]/detail`이 **쓰기 890건 / 고유 경로 466개 / 읽기 160회**였습니다. TTL이 24시간이라 경로당 쓰기는 1회가 상한인데 평균 1.9회였고, 읽기는 경로 수의 3분의 1이었습니다. 목록·슬라이더의 prefetch 팬아웃이 만든 숫자입니다.
+2026-09-10에는 `/book/[isbn]/detail`의 쓰기 890 / 고유 경로 466 / 읽기 160을 근거로 prefetch 팬아웃을 지적했습니다. **2026-09-20 정정:** ISR Reads/Writes가 8KB 단위인지 실행 횟수인지 구분하지 않고 이 비율만으로 재생성 횟수나 원인을 단정할 수 없습니다. 배포별 캐시와 HTML/RSC 표현도 구분해야 합니다. 목록 prefetch 차단은 클릭하지 않은 목적지의 요청 자체를 줄이는 정책으로 유지합니다.
 
 그래서 규칙은 이렇습니다:
 
@@ -131,16 +131,14 @@ prefetch를 끄면 클릭 시점에 페이로드를 받아오므로 수백 ms의
 
 ## 크롤 표면
 
-**ISR read는 캐시 HIT에도 과금됩니다.** 그래서 적중률을 올리는 것으로는 read가 줄지 않습니다.
-줄이는 길은 둘뿐입니다 — 요청이 ISR 라우트에 닿기 전에 끊거나, 그 라우트를 ISR이 아니게 하거나.
+**CDN HIT와 durable ISR 저장소 읽기는 다릅니다.** CDN 계층 읽기·쓰기는 무료이고, durable ISR 접근은 8KB 단위로 계량됩니다. `x-vercel-cache: HIT`만으로 청구 단위를 계산하지 마세요. [Vercel ISR 과금](https://vercel.com/docs/incremental-static-regeneration/limits-and-pricing)을 기준으로 경로별 단위와 실행 횟수를 구분합니다.
 
-**미들웨어는 ISR 캐시 조회와 렌더보다 먼저 돕니다.** 여기서 끊은 요청은 ISR 단위도
-Fluid 실행 시간도 만들지 않습니다. 그래서 경로 공간과 봇을 닫는 장치를 전부 미들웨어에 둡니다.
+**미들웨어는 ISR 캐시 조회와 페이지 렌더보다 먼저 돕니다.** 여기서 끊으면 후속 페이지 렌더와 ISR 접근을 피하지만 미들웨어 자체의 실행 비용은 남습니다. 전체 경로 형태를 `PATHS`에서 파생해 검사하므로 `/ko/book/not-a-route`처럼 알려진 루트 아래의 잘못된 경로도 빈 404로 종료합니다. 실제 `page.tsx` 전체와 허용 목록의 일치는 회귀 테스트로 확인합니다.
 
 | 장치                              | 위치                                  | 막는 것                                       |
 | --------------------------------- | ------------------------------------- | --------------------------------------------- |
 | `isBlockedCrawler`                | `middleware.ts`                       | 검색 유입 없는 크롤러. 렌더 없이 403          |
-| 로케일 세그먼트 허용 목록         | `middleware.ts`                       | `/ko/wp-admin` 류. `[...not_found]` 렌더 차단 |
+| 전체 라우트 형태 허용 목록         | `middleware.ts`                       | `/ko/wp-admin` 류. `[...not_found]` 렌더 차단 |
 | 파일형 루트 경로 차단             | `middleware.ts`                       | `/index.php`·`/.env` 류. `[locale]` 렌더 차단 |
 | `isValidIsbn` (미들웨어 + 라우트) | `middleware.ts`, 도서 상세 `page.tsx` | 형식이 틀린 ISBN. 렌더 없이 404               |
 | 숫자 id 가드                      | 리뷰·판매 상세 `page.tsx`             | `/reviews/abc` 류. 400이 500으로 새는 것 방지 |
@@ -238,4 +236,11 @@ next-intl은 `setRequestLocale`이 없으면 헤더에서 로케일을 읽고, �
 
 `ServerQueryBoundary`는 실패를 reject하는 `fetchQuery`/`fetchInfiniteQuery`를 병렬 실행하고 실패를 기록합니다. 마켓 기본 목록·리뷰 카테고리 피드·라운지 최신 피드는 `required: true`입니다. 이 쿼리가 실패하면 렌더 실패를 전파해 기존 정상 ISR을 유지하며, 최초 생성이라면 실패로 처리합니다. `[locale]/layout.tsx`의 `generateStaticParams: []`로 언어별 페이지의 빌드 시 사전 생성을 생략합니다. 마켓·리뷰 홈·라운지를 포함한 정적 페이지는 첫 방문에 생성하고 각 페이지의 `revalidate`를 유지하므로, 빌드 환경에 API 서버가 없어도 됩니다. 기존 동적 페이지의 요청별 렌더링은 유지됩니다. 배포 후 캐시가 없는 첫 요청은 생성 시간만큼 느릴 수 있습니다. 부가 쿼리는 성공한 나머지 데이터와 함께 폴백합니다.
 
-라운지는 `readingLog.loungeFeed`의 첫 페이지를 `initialPageParam: null`로 시딩합니다(ISR 1시간, 클라이언트 staleTime 1분). sitemap은 `connection()`으로 빌드 시 API 조회를 생략합니다. 첫 요청부터 공개 리뷰·판매글을 50개씩 커서 순회하고 완성된 목록을 `unstable_cache`로 6시간 보관합니다. XML은 요청 시 직렬화하며, 정상 캐시가 있으면 재검증 실패 시에도 기존 목록을 제공합니다. 최초 조회가 실패하면 오류를 반환합니다. 중간 API 실패·반복 커서는 부분 결과를 저장하지 않고 전파합니다. 단일 sitemap 5만 URL 한도를 넘기기 전에 분할해야 하며, 무한 순회 방지를 위해 글 수 약 2.5만에서 가드를 둡니다.
+라운지는 `readingLog.loungeFeed`의 첫 페이지를 `initialPageParam: null`로 시딩합니다(ISR 1시간, 클라이언트 staleTime 1분). sitemap은 `connection()`으로 빌드 시 API 조회를 생략합니다. 첫 요청부터 공개 리뷰·판매글을 50개씩 커서 순회하고 완성된 목록을 `unstable_cache`로 6시간 보관합니다. `next.config.ts`의 `/sitemap.xml` 전용 `Vercel-CDN-Cache-Control`로 XML 응답도 6시간 캐시합니다(만료 뒤 stale-while-revalidate 24시간). 이 헤더는 Vercel CDN 전용이고 preview는 no-store입니다. CDN MISS에서만 함수가 데이터 캐시를 읽어 XML을 직렬화합니다. 데이터·응답 캐시의 만료 시각이 다르므로 목록의 실제 신선도가 정확히 6시간 이내라는 보장은 하지 않습니다. 정상 데이터 캐시가 있으면 재검증 실패 시에도 기존 목록을 제공합니다. 최초 조회가 실패하면 오류를 반환합니다. 중간 API 실패·반복 커서는 부분 결과를 저장하지 않고 전파합니다. 단일 sitemap 5만 URL 한도를 넘기기 전에 분할해야 하며, 무한 순회 방지를 위해 글 수 약 2.5만에서 가드를 둡니다.
+
+
+## 번역 사전 전송 (2026-09-20)
+
+`[locale]/layout.tsx`의 서버 `NextIntlClientProvider`는 `messages={null}`로 locale·시간 설정만 전달합니다. 내부 `IntlMessagesProvider`가 한·영 사전을 정적 import하여 SSR과 브라우저에서 같은 번역을 제공합니다. 79KB의 한국어 사전이 ISBN마다 HTML/RSC에 반복 포함되던 것을 공통 정적 JS로 옮겼습니다. 두 언어 사전이 클라이언트 번들에 포함되는 대신 브라우저·CDN이 페이지 간 재사용합니다. 서버 `getTranslations`는 기존 request config를 그대로 사용합니다.
+
+배포마다 새 ISR 캐시가 만들어지는 플랫폼 동작은 그대로입니다. 30일 TTL이 배포 간 페이지 재사용을 보장하지 않으며, 인기 페이지 사전 생성은 빌드 API 접근 조건을 갖춘 뒤 별도로 결정합니다.
