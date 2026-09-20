@@ -4,7 +4,7 @@ import createMiddleware from "next-intl/middleware";
 
 import { isBlockedCrawler, isSnsScraper } from "./shared/config/crawlers";
 import { routing } from "./shared/config/i18n/routing";
-import { isKnownLocaleSegment } from "./shared/config/route-segments";
+import { isKnownLocalePath } from "./shared/config/route-segments";
 
 /** 확장자가 없는데 점이 있는 경로. 스캐너가 던지는 `/index.php`, `/.env` 류다. */
 const looksLikeFile = (segment: string | undefined) =>
@@ -40,7 +40,8 @@ export default function middleware(request: NextRequest) {
   // 2. 검색 유입 없는 크롤러 차단
   //
   // robots.txt는 부탁이라 무시하는 쪽이 비용을 만든다. 미들웨어는 ISR 캐시 조회와
-  // 렌더보다 먼저 돌아, 여기서 끊으면 ISR 단위도 Fluid 실행 시간도 발생하지 않는다.
+  // 렌더보다 먼저 돌아, 여기서 끊으면 후속 페이지 렌더와 ISR 접근을 피한다.
+  // 미들웨어 자체의 실행 비용은 남는다.
   if (isBlockedCrawler(userAgent)) {
     return new NextResponse(null, { status: 403 });
   }
@@ -59,12 +60,12 @@ export default function middleware(request: NextRequest) {
     return new NextResponse(null, { status: 404 });
   }
 
-  // 4. 첫 세그먼트가 실제 라우트가 아니면 렌더 없이 404
+  // 4. 전체 경로가 실제 라우트 형태가 아니면 렌더 없이 404
   //
   // `[...not_found]`는 동적이라 캐시에 남지 않고, 매 요청 133KB 셸을 다시 그린다.
   // 로케일이 없는 경우에도 먼저 본다. 아래 301을 태우면 `/admin` 하나가
   // 리다이렉트 + 404 렌더로 두 번 청구된다.
-  if (!isExcluded && !isKnownLocaleSegment(withoutLocale[0])) {
+  if (!isExcluded && !isKnownLocalePath(withoutLocale)) {
     return new NextResponse(null, { status: 404 });
   }
 
