@@ -1,3 +1,4 @@
+import { REVIEW_TAG_MAX_COUNT } from "@bookjeok/core";
 import { z } from "zod";
 
 export const createReviewSchema = (t: (key: string) => string) =>
@@ -6,7 +7,10 @@ export const createReviewSchema = (t: (key: string) => string) =>
     content: z.string().min(1, t("content_required")),
     isbn: z.string().min(1, t("book_required")),
     category: z.string().min(1, t("category_required")),
-    tags: z.array(z.string()).min(1, t("tags_min")).max(5, t("tags_max")),
+    tags: z
+      .array(z.string())
+      .min(1, t("tags_min"))
+      .max(REVIEW_TAG_MAX_COUNT, t("tags_max")),
     rating: z.number().min(0).max(5),
     isPublic: z.boolean(),
   });

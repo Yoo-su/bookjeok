@@ -73,6 +73,7 @@
       "unlike": "좋아요 취소",
       "tag_remove": "{tag} 태그 삭제",
       "tag_filter": "{tag} 태그가 달린 리뷰 보기",
+      "tag_suggestions": "태그 제안",
       "tag_filter_clear": "{tag} 태그 필터 해제",
       "book_filter_clear": "{book} 도서 필터 해제",
       "select_book": "{title} 선택",

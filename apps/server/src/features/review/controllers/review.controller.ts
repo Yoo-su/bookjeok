@@ -30,10 +30,12 @@ import { IdempotencyInterceptor } from '@/shared/interceptors/idempotency.interc
 
 import { CreateReviewDto } from '../dtos/create-review.dto';
 import { GetReviewsQueryDto } from '../dtos/get-reviews-query.dto';
+import { GetTagSuggestionsQueryDto } from '../dtos/get-tag-suggestions-query.dto';
 import {
   GetReviewsResponseDto,
   ReviewFeedDto,
   ReviewResponseDto,
+  TagSuggestionDto,
 } from '../dtos/review-response.dto';
 import { UpdateReviewDto } from '../dtos/update-review.dto';
 import { ViewCountInterceptor } from '../interceptors/view-count.interceptor';
@@ -47,7 +49,7 @@ export class ReviewController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(IdempotencyInterceptor)
-  @InvalidateCache('reviews', 'reviews-popular')
+  @InvalidateCache('reviews', 'reviews-popular', 'review-tags')
   @TrackActivity(ActivityType.REVIEW_CREATE, (req) => ({ isbn: req.body.isbn }))
   @ApiOperation({
     summary: '리뷰 작성',
@@ -112,6 +114,26 @@ export class ReviewController {
   })
   async findPopular(): Promise<ReviewResponseDto[]> {
     return await this.reviewService.findPopular();
+  }
+
+  @Get('tags')
+  // 입력 한 글자마다 들어온다. 키는 경로+쿼리라 검색어별로 따로 캐시된다.
+  @SmartCache({ prefix: 'review-tags', ttl: 300000, keyStrategy: 'global' })
+  @ApiOperation({
+    summary: '태그 자동완성 후보 조회',
+    description:
+      '입력 중인 문자열로 기존 태그를 찾아 사용 빈도순으로 반환합니다. ' +
+      '문자열이 없으면 상위 태그를 반환합니다.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: '태그 후보 목록을 반환합니다.',
+    type: [TagSuggestionDto],
+  })
+  async getTagSuggestions(
+    @Query() query: GetTagSuggestionsQueryDto,
+  ): Promise<TagSuggestionDto[]> {
+    return await this.reviewService.getTagSuggestions(query);
   }
 
   @Get(':id/edit')
@@ -235,7 +257,7 @@ export class ReviewController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
-  @InvalidateCache('reviews', 'reviews-popular')
+  @InvalidateCache('reviews', 'reviews-popular', 'review-tags')
   @TrackActivity(ActivityType.REVIEW_UPDATE, (req) => ({ id: req.params.id }))
   @ApiOperation({
     summary: '리뷰 수정',
@@ -265,7 +287,7 @@ export class ReviewController {
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  @InvalidateCache('reviews', 'reviews-popular')
+  @InvalidateCache('reviews', 'reviews-popular', 'review-tags')
   @TrackActivity(ActivityType.REVIEW_DELETE, (req) => ({ id: req.params.id }))
   @ApiOperation({
     summary: '리뷰 삭제',

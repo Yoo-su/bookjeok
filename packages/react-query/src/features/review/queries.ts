@@ -7,6 +7,7 @@ import {
   getReviewFeeds,
   getReviewForEdit,
   getReviews,
+  getTagSuggestions,
 } from "@bookjeok/api-client";
 import {
   CACHE_TIME,
@@ -14,6 +15,7 @@ import {
   GetReviewsResponse,
   Review,
   reviewKeys,
+  TagSuggestion,
 } from "@bookjeok/core";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
@@ -61,6 +63,21 @@ export const useReviewFeedsQuery = (enabled: boolean = true) => {
     queryKey: reviewKeys.feeds().queryKey,
     queryFn: () => getReviewFeeds(),
     enabled,
+  });
+};
+
+/**
+ * 태그 자동완성 후보 조회
+ *
+ * 입력 한 글자마다 요청이 나가지 않도록 호출부에서 디바운스한 값을 넘깁니다.
+ * 같은 문자열은 쿼리 키가 같아 캐시에서 바로 나옵니다.
+ */
+export const useTagSuggestionsQuery = (q: string, enabled: boolean = true) => {
+  return useQuery<TagSuggestion[]>({
+    queryKey: reviewKeys.tagSuggestions(q).queryKey,
+    queryFn: () => getTagSuggestions({ q }),
+    enabled,
+    staleTime: CACHE_TIME.FIVE_MINUTES,
   });
 };
 

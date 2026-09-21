@@ -2,10 +2,12 @@ import {
   API_PATHS,
   GetReviewsParams,
   GetReviewsResponse,
+  GetTagSuggestionsParams,
   Review,
   ReviewFeed,
   ReviewFormValues,
   ReviewReactionType,
+  TagSuggestion,
 } from "@bookjeok/core";
 
 import { privateApiClient, publicApiClient } from "../../client";
@@ -79,6 +81,24 @@ export const getReviews = async ({
 
   const { data } = await publicApiClient.get<GetReviewsResponse>(
     `${API_PATHS.review.base}?${params.toString()}`,
+  );
+  return data;
+};
+
+/**
+ * 태그 자동완성 후보를 조회합니다.
+ */
+export const getTagSuggestions = async ({
+  q,
+  limit,
+}: GetTagSuggestionsParams = {}) => {
+  const params = new URLSearchParams();
+  if (q) params.append("q", q);
+  if (limit) params.append("limit", limit.toString());
+
+  const query = params.toString();
+  const { data } = await publicApiClient.get<TagSuggestion[]>(
+    query ? `${API_PATHS.review.tags}?${query}` : API_PATHS.review.tags,
   );
   return data;
 };
