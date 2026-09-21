@@ -87,7 +87,7 @@ export const TiptapEditor = ({
       },
       attributes: {
         class:
-          "prose mx-auto focus:outline-none min-h-[300px] p-4 max-w-none font-[family-name:var(--font-pretendard)] prose-p:text-[15px] prose-p:leading-6 prose-p:my-2 prose-h1:text-[32px] prose-h1:font-bold prose-h1:mt-8 prose-h1:mb-4 prose-h2:text-[30px] prose-h2:font-semibold prose-h2:mt-6 prose-h2:mb-3 prose-blockquote:text-[19px] prose-blockquote:leading-8 prose-blockquote:not-italic prose-blockquote:border-l-4 prose-blockquote:pl-4 prose-blockquote:my-4",
+          "prose mx-auto focus:outline-none min-h-[300px] p-4 max-w-none font-[family-name:var(--font-pretendard)] prose-p:text-base md:prose-p:text-[15px] prose-p:leading-6 prose-p:my-2 prose-h1:text-[32px] prose-h1:font-bold prose-h1:mt-8 prose-h1:mb-4 prose-h2:text-[30px] prose-h2:font-semibold prose-h2:mt-6 prose-h2:mb-3 prose-blockquote:text-[19px] prose-blockquote:leading-8 prose-blockquote:not-italic prose-blockquote:border-l-4 prose-blockquote:pl-4 prose-blockquote:my-4",
       },
       handleDrop: (view, event, slice, moved) => {
         if (

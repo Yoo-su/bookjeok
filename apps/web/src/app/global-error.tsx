@@ -25,7 +25,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-stone-50/50 text-stone-900 antialiased flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      <body className="min-h-dvh bg-stone-50/50 text-stone-900 antialiased flex flex-col items-center justify-center p-4 relative overflow-hidden">
         {/* 배경 장식 요소 — error.tsx 패턴과 동일 */}
         <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-red-100/30 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-orange-100/30 rounded-full blur-3xl -z-10" />

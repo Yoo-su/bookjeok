@@ -278,7 +278,7 @@ export const TradeReviewModal = ({
               placeholder={t("content_placeholder")}
               rows={3}
               maxLength={500}
-              className="text-xs resize-none border-stone-200 dark:border-stone-700"
+              className="text-base md:text-xs resize-none border-stone-200 dark:border-stone-700"
             />
           </div>
 

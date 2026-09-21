@@ -208,7 +208,7 @@ export const CommentItem = ({
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               maxLength={MAX_COMMENT_LENGTH}
-              className="min-h-[80px] resize-none text-[14px] bg-stone-50 border-stone-200 focus-visible:ring-stone-900 rounded-[16px] px-4 py-3"
+              className="min-h-[80px] resize-none text-base md:text-[14px] bg-stone-50 border-stone-200 focus-visible:ring-stone-900 rounded-[16px] px-4 py-3"
             />
             <div className="flex gap-2 justify-end">
               <Button

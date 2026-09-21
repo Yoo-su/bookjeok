@@ -216,11 +216,11 @@ export function DayDetailsDialog({
                           </p>
                         </div>
                         {!readOnly && (
-                          <div className="flex items-center -mt-1 -mr-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center -mt-1 -mr-1 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
+                              className="h-9 w-9 pointer-fine:h-8 pointer-fine:w-8 text-stone-400 hover:text-stone-700 hover:bg-stone-50 transition-colors"
                               onClick={() => handleEditClick(log)}
                             >
                               <Pencil className="w-4 h-4" />
@@ -228,7 +228,7 @@ export function DayDetailsDialog({
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-stone-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              className="h-9 w-9 pointer-fine:h-8 pointer-fine:w-8 text-stone-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
                               onClick={() => handleRemoveLog(log)}
                             >
                               <Trash2 className="w-4 h-4" />

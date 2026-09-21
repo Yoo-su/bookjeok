@@ -120,7 +120,7 @@ export const NotificationItem = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 -mr-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+        className="h-9 w-9 pointer-fine:h-6 pointer-fine:w-6 text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 -mr-1 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
         onClick={handleDelete}
         aria-label={t("delete")}
       >

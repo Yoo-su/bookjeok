@@ -97,13 +97,13 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
       {/* 월간 통계 */}
       <div className="flex flex-col items-center justify-center text-center space-y-4 group">
         <div className="space-y-1">
-          <p className="text-[10px] font-bold tracking-[0.2em] text-stone-400 uppercase">
+          <p className="text-[11px] font-bold tracking-[0.2em] text-stone-400 uppercase">
             {t("monthly_title", { month })}
           </p>
           <div className="flex items-baseline justify-center gap-1">
             <span
               className={cn(
-                "text-6xl md:text-7xl font-serif font-light tracking-tight transition-colors duration-500",
+                "text-5xl md:text-7xl font-serif font-light tracking-tight transition-colors duration-500",
                 theme.activeText, // 숫자에 테마 색상 적용
               )}
             >
@@ -128,11 +128,11 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
       {/* 연간 통계 */}
       <div className="flex flex-col items-center justify-center text-center space-y-4 group">
         <div className="space-y-1">
-          <p className="text-[10px] font-bold tracking-[0.2em] text-stone-400 uppercase">
+          <p className="text-[11px] font-bold tracking-[0.2em] text-stone-400 uppercase">
             {t("yearly_title", { year })}
           </p>
           <div className="flex items-baseline justify-center gap-1">
-            <span className="text-6xl md:text-7xl font-serif font-light tracking-tight text-stone-800 transition-colors duration-500 group-hover:text-stone-600">
+            <span className="text-5xl md:text-7xl font-serif font-light tracking-tight text-stone-800 transition-colors duration-500 group-hover:text-stone-600">
               <AnimatedNumber value={stats.yearlyCount} />
             </span>
             <span className="text-xs text-stone-400 font-medium self-end mb-2">

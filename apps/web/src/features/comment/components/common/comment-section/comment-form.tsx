@@ -133,7 +133,7 @@ export const CommentForm = ({ targetType, targetId }: CommentFormProps) => {
             maxLength={MAX_COMMENT_LENGTH}
             className={cn(
               "min-h-[50px] resize-none bg-transparent border-0 focus-visible:ring-0 p-0",
-              "text-[14px] leading-[1.7] text-stone-900 font-light",
+              "text-base leading-[1.7] md:text-[14px] text-stone-900 font-light",
               "placeholder:text-stone-300",
             )}
           />

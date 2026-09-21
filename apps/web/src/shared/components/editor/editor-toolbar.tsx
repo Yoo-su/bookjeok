@@ -218,7 +218,7 @@ export function EditorToolbar({
             else if (level === 2 || level === 3)
               editor.chain().focus().setHeading({ level }).run();
           }}
-          className="h-10 max-w-36 rounded border bg-background px-2 text-sm sm:h-8"
+          className="h-10 max-w-36 rounded border bg-background px-2 text-base sm:h-8 sm:text-sm"
         >
           <option value={0}>{t("paragraph")}</option>
           {heading && ![2, 3].includes(heading) && (

@@ -130,7 +130,7 @@ export const DisputeModal = ({
               }}
               rows={4}
               maxLength={500}
-              className="resize-none text-xs leading-relaxed border-stone-200 dark:border-stone-700"
+              className="resize-none text-base md:text-xs leading-relaxed border-stone-200 dark:border-stone-700"
               disabled={disputeOrderMutation.isPending}
             />
             <div className="flex justify-between items-center text-[11px] text-stone-400">

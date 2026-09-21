@@ -44,7 +44,7 @@ export default function BookSearchView() {
     !inView && !!entry && entry.boundingClientRect.top < 80;
 
   return (
-    <div className="w-full min-h-screen py-4">
+    <div className="w-full min-h-dvh py-4">
       {/* 스크롤 시 나타나는 Sticky 검색바 (키워드 검색 모드 전용) */}
       {searchMode === "KEYWORD" && (
         <StickyBookSearchBar isVisible={isStickyVisible} />

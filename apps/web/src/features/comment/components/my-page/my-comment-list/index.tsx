@@ -143,7 +143,7 @@ export const MyCommentList = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer transition-colors"
+                    className="h-9 w-9 pointer-fine:h-7 pointer-fine:w-7 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg cursor-pointer transition-colors"
                     disabled={isDeleting}
                     onClick={() => handleDeleteClick(comment.id)}
                     title={t("delete_modal.title")}

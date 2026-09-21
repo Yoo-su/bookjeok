@@ -23,7 +23,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
   const t = useTranslations("error_pages.general_error");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50/50 px-4 relative overflow-hidden">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-stone-50/50 px-4 relative overflow-hidden">
       {/* 배경 장식 요소 */}
       <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-red-100/30 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-orange-100/30 rounded-full blur-3xl -z-10" />

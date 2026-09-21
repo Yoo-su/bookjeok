@@ -166,7 +166,7 @@ export const AddressInput = ({
             value={values.zipCode}
             readOnly
             placeholder={t("zip_code")}
-            className="w-32 bg-stone-50 dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-sm tabular-nums"
+            className="w-32 bg-stone-50 dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-base tabular-nums md:text-sm"
             disabled={disabled}
           />
           <Button
@@ -186,7 +186,7 @@ export const AddressInput = ({
           value={values.address}
           readOnly
           placeholder={t("address_placeholder")}
-          className={`mt-1 bg-stone-50 dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-sm ${
+          className={`mt-1 bg-stone-50 dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-base md:text-sm ${
             errors.address
               ? "border-destructive focus-visible:ring-destructive"
               : ""
