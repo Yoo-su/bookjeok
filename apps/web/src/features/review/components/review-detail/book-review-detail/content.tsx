@@ -204,7 +204,7 @@ export function ReviewDetailContent({
       )}
       <div
         ref={bodyRef}
-        className="prose prose-stone prose-lg md:prose-xl max-w-none break-words prose-headings:font-serif prose-headings:font-bold prose-p:leading-relaxed prose-img:rounded-xl prose-img:shadow-sm prose-blockquote:border-l-4 prose-blockquote:border-stone-200 prose-blockquote:bg-stone-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg [&_pre]:max-w-full [&_pre]:overflow-x-auto"
+        className="prose prose-stone prose-base sm:prose-lg md:prose-xl max-w-none break-words prose-headings:font-serif prose-headings:font-bold prose-p:leading-relaxed prose-img:rounded-xl prose-img:shadow-sm prose-blockquote:border-l-4 prose-blockquote:border-stone-200 prose-blockquote:bg-stone-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg [&_pre]:max-w-full [&_pre]:overflow-x-auto"
         dangerouslySetInnerHTML={markup}
       />
     </div>

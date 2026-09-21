@@ -425,7 +425,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder={t("nickname_placeholder")}
                 maxLength={20}
-                className={`h-10 bg-stone-50 border-stone-200 focus:bg-white text-sm ${
+                className={`h-10 bg-stone-50 border-stone-200 focus:bg-white text-base md:text-sm ${
                   nicknameError
                     ? "border-red-500 focus-visible:ring-red-200"
                     : nicknameAvailable
@@ -468,7 +468,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
               onChange={(e) => setName(e.target.value)}
               placeholder={t("name_placeholder")}
               maxLength={50}
-              className="h-10 bg-stone-50 border-stone-200 focus:bg-white text-sm"
+              className="h-10 bg-stone-50 border-stone-200 focus:bg-white text-base md:text-sm"
             />
           </div>
 
@@ -495,7 +495,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={!isEmailEditable}
               placeholder={t("email_placeholder")}
-              className={`h-10 text-sm ${
+              className={`h-10 text-base md:text-sm ${
                 !isEmailEditable
                   ? "bg-stone-100 text-stone-500 cursor-not-allowed border-stone-200"
                   : "bg-stone-50 border-stone-200 focus:bg-white"

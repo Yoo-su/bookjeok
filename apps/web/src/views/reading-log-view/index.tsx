@@ -9,7 +9,7 @@ export function ReadingLogView() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   return (
-    <div className="relative min-h-screen pb-20">
+    <div className="relative min-h-dvh pb-20">
       <ReadingLogHero currentDate={currentDate} />
 
       <div className="relative z-10 w-full">

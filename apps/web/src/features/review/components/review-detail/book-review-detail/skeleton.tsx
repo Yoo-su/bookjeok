@@ -8,7 +8,7 @@ import { Skeleton } from "@/shared/components/shadcn/skeleton";
  */
 export const ReviewDetailSkeleton = () => {
   return (
-    <article className="min-h-screen bg-white pb-20">
+    <article className="min-h-dvh bg-white pb-20">
       {/* Header 스켈레톤 - 실제 ReviewDetailHeader와 1:1 레이아웃 일치 */}
       <header className="relative bg-white pt-20 pb-12">
         <div className="container mx-auto px-4 w-full">

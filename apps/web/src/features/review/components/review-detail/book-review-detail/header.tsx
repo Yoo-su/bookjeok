@@ -49,7 +49,7 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
         </div>
 
         {/* 메인 타이틀 */}
-        <h1 className="text-4xl md:text-6xl font-serif font-bold text-stone-900 mb-8 leading-tight text-left break-keep">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-serif font-bold text-stone-900 mb-8 leading-tight text-left break-keep">
           {review.title}
         </h1>
 

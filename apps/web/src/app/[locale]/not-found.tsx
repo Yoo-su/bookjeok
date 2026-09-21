@@ -10,7 +10,7 @@ export default function NotFound() {
   const t = useTranslations("error_pages.not_found");
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-stone-50/50 px-4 relative overflow-hidden">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-stone-50/50 px-4 relative overflow-hidden">
       {/* 배경 장식 요소 */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-100/30 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-100/30 rounded-full blur-3xl -z-10" />

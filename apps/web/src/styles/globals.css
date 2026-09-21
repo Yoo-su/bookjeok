@@ -264,3 +264,17 @@ html::-webkit-scrollbar {
 .stable-scroll {
   scrollbar-gutter: stable;
 }
+
+/* iOS Safari는 폼 컨트롤의 글자가 16px 미만이면 포커스 시 화면을 확대한다.
+   개별 화면에서 text-sm/text-xs로 덮어써도 확대되지 않도록 터치 기기에서만 하한을 건다.
+   @layer 밖에 두는 것이 중요하다. base 레이어에 넣으면 utilities 레이어의 .text-sm에 진다. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+      [type="file"]
+    ),
+  textarea,
+  select,
+  [contenteditable]:not([contenteditable="false"]) {
+    font-size: max(16px, 1em);
+  }
+}

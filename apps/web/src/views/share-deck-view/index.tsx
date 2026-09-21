@@ -23,7 +23,7 @@ export function ShareDeckView({ handle, year }: ShareDeckViewProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-dvh bg-stone-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
         {/* 배경 데코레이션 요소 */}
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-stone-900/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-stone-850/10 rounded-full blur-3xl" />
@@ -40,7 +40,7 @@ export function ShareDeckView({ handle, year }: ShareDeckViewProps) {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-stone-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-dvh bg-stone-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
         <div className="flex flex-col items-center gap-6 relative z-10 max-w-sm text-center">
           <div className="w-16 h-16 bg-stone-900 rounded-full flex items-center justify-center border border-stone-800 text-stone-400">
             <BookOpen className="w-8 h-8" />
@@ -82,7 +82,7 @@ export function ShareDeckView({ handle, year }: ShareDeckViewProps) {
     : [];
 
   return (
-    <div className="min-h-screen bg-stone-950 text-white flex flex-col justify-between py-12 px-6 relative overflow-hidden">
+    <div className="min-h-dvh bg-stone-950 text-white flex flex-col justify-between py-12 px-6 relative overflow-hidden">
       {/* 세련된 우주/어두운 톤 배경 데코 */}
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-stone-900/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-stone-900/10 rounded-full blur-3xl pointer-events-none" />

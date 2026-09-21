@@ -8,7 +8,7 @@ export const PrivacyView = () => {
   const locale = useLocale();
 
   return (
-    <div className="min-h-screen bg-stone-50 py-16 sm:py-24">
+    <div className="min-h-dvh bg-stone-50 py-16 sm:py-24">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <header className="mb-12">
           <h1 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">

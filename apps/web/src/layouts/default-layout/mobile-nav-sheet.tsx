@@ -154,7 +154,7 @@ export const MobileNavSheet = () => {
           <LanguageSwitcher className="mr-8" />
         </SheetHeader>
 
-        <nav className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100vh-80px)] custom-scrollbar">
+        <nav className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100dvh-80px)] custom-scrollbar">
           {/*
             배경음악 진입점. 폰 헤더에서는 알약 폭이 모자라 버튼을 숨기므로
             여기가 유일한 진입점이 된다 (재생 중에는 FloatingMusicPill도 뜬다).

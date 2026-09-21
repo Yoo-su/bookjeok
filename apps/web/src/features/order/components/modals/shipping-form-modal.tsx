@@ -186,7 +186,7 @@ export const ShippingFormModal = ({
                   setErrors((prev) => ({ ...prev, tracking: undefined }));
               }}
               maxLength={20}
-              className="font-mono text-sm border-stone-200 dark:border-stone-700"
+              className="font-mono text-base md:text-sm border-stone-200 dark:border-stone-700"
               disabled={registerShippingMutation.isPending}
             />
             {errors.tracking && (

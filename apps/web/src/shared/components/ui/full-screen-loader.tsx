@@ -145,7 +145,7 @@ export const FullScreenLoader = () => {
   }, [emitFromLogo]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen bg-linear-to-b from-stone-50 via-white to-stone-50 fixed inset-0 z-999 overflow-hidden">
+    <div className="flex flex-col items-center justify-center h-dvh w-screen bg-linear-to-b from-stone-50 via-white to-stone-50 fixed inset-0 z-999 overflow-hidden">
       <div className="relative flex flex-col items-center justify-center gap-10">
         {/* 로고 + 파티클 영역 */}
         <div className="relative flex items-center justify-center w-56 h-56">

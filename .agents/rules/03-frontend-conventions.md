@@ -64,6 +64,13 @@ const user = useAuthStore((state) => state.user);
 - **피드백**: 브라우저 기본 `alert()` 사용 금지. 반드시 `sonner`의 `toast.success()`, `toast.error()` 사용.
 - **이미지 최적화**: `next/image`의 `<Image />` 사용 (`<img>` 직접 사용 지양).
 
+### 4-1. 모바일 대응 (필수)
+
+- **폼 확대 방지**: iOS는 폼 컨트롤 글자가 16px 미만이면 포커스 시 화면을 확대한다. `input`/`textarea`/`select`/`contenteditable`은 모바일에서 16px 이상이어야 한다. `text-base md:text-sm` 패턴을 쓰고 `text-sm`·`text-xs`를 단독으로 두지 말 것. `globals.css`의 `@media (pointer: coarse)` 블록이 전역 안전망이지만 의도는 클래스에 남긴다.
+- **호버 전용 컨트롤 금지**: `opacity-0 group-hover:opacity-100`은 터치 기기에서 영구히 숨겨진다. 숨김은 `pointer-fine:` 변형으로 감쌀 것 (`pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100`).
+- **터치 타깃**: 아이콘 버튼은 모바일 최소 36px(`h-9 w-9`). 마우스 환경에서만 `pointer-fine:h-8 pointer-fine:w-8` 식으로 줄인다.
+- **뷰포트 높이**: `h-screen`·`100vh` 사용 금지. 모바일 브라우저 크롬 때문에 높이가 어긋난다. `h-dvh`·`100dvh`를 쓴다.
+
 ---
 
 ## 5. 인증 및 토큰 갱신 플로우

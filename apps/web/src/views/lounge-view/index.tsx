@@ -32,7 +32,7 @@ export function LoungeView() {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-dvh relative">
       {/* Skiper UI CrowdCanvas 히어로 영역 */}
       <div className="relative w-full h-[60vh] min-h-[400px] mb-12 md:mb-16">
         <CrowdCanvas

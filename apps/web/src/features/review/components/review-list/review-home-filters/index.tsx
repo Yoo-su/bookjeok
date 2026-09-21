@@ -52,7 +52,7 @@ export function ReviewHomeFilters({
             placeholder={t("placeholder")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full h-11 pl-4 pr-10 text-sm text-stone-700 bg-transparent border-b border-stone-200 focus:border-stone-500 focus:outline-none transition-colors duration-300 placeholder:text-stone-300 font-light"
+            className="w-full h-11 pl-4 pr-10 text-base text-stone-700 md:text-sm bg-transparent border-b border-stone-200 focus:border-stone-500 focus:outline-none transition-colors duration-300 placeholder:text-stone-300 font-light"
           />
           <button
             type="submit"

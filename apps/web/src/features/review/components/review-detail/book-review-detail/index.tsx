@@ -41,7 +41,7 @@ export const ReviewDetail = ({ id }: ReviewDetailProps) => {
   const book = review.book;
 
   return (
-    <article className="min-h-screen bg-white pb-20">
+    <article className="min-h-dvh bg-white pb-20">
       <ReviewDetailHeader review={review} book={book} />
 
       <div className="container mx-auto px-4 w-full py-12">

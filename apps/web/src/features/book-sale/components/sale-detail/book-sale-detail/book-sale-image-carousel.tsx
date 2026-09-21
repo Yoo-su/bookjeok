@@ -75,7 +75,7 @@ export const BookSaleImageCarousel = ({
       {/* 네비게이션 버튼 (호버 및 모바일에서 노출) */}
       {images.length > 1 && (
         <>
-          <div className="absolute inset-y-0 left-0 flex items-center pl-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
             <Button
               variant="secondary"
               size="icon"
@@ -85,7 +85,7 @@ export const BookSaleImageCarousel = ({
               <ChevronLeft className="h-4 w-4" />
             </Button>
           </div>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
             <Button
               variant="secondary"
               size="icon"
