@@ -64,14 +64,16 @@ export async function GET() {
       title: `[도서리뷰] ${r.book?.title || "도서"} - ${r.title}`,
       link: `https://bookjeok.com/ko/book/reviews/${r.id}`,
       description: toSnippet(r.content),
-      category: "도서리뷰",
+      // 태그를 카테고리로 함께 싣는다. 네이버가 RSS를 신규 웹문서 수집
+      // 소스로 쓰는데, 고정값 하나만 실으면 글마다 주제 구분이 없다.
+      categories: ["도서리뷰", ...(r.tags ?? [])],
       pubDate: new Date(r.createdAt),
     })),
     ...sales.map((s) => ({
       title: `[중고도서] ${s.book?.title || "도서"} - ${s.title} (${s.price.toLocaleString()}원)`,
       link: `https://bookjeok.com/ko/book/sales/${s.id}`,
       description: toSnippet(s.content),
-      category: "중고도서",
+      categories: ["중고도서"],
       pubDate: new Date(s.createdAt),
     })),
   ];
@@ -90,7 +92,7 @@ export async function GET() {
       <title>${cdata(item.title)}</title>
       <link>${item.link}</link>
       <description>${cdata(item.description)}</description>
-      <category>${cdata(item.category)}</category>
+      ${item.categories.map((category) => `<category>${cdata(category)}</category>`).join("")}
       <pubDate>${item.pubDate.toUTCString()}</pubDate>
       <guid isPermaLink="true">${item.link}</guid>
     </item>`,

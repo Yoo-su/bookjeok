@@ -25,6 +25,8 @@ export function ReviewJsonLd({ review, locale = "ko" }: ReviewJsonLdProps) {
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 500), // HTML 태그 제거 및 500자 제한
+    // 작성자가 붙인 태그. 리뷰의 주제를 본문 발췌보다 압축해 전달한다.
+    ...(review.tags?.length && { keywords: review.tags.join(", ") }),
     datePublished: review.createdAt,
     dateModified: review.updatedAt,
     author: {

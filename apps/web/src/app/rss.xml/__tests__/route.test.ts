@@ -72,6 +72,34 @@ describe("GET /rss.xml", () => {
     );
   });
 
+  it("리뷰의 태그를 카테고리로 함께 싣는다", async () => {
+    // 네이버가 RSS를 신규 웹문서 수집 소스로 쓴다. 고정값 하나만 실으면
+    // 글마다 주제 구분이 없다.
+    vi.mocked(apis.getReviews).mockResolvedValue({
+      reviews: [{ ...review, tags: ["카뮈", "부조리"] }],
+    } as never);
+
+    const { doc } = await readFeed();
+
+    const categories = [
+      ...(findItemBy(doc, "/book/reviews/1")?.querySelectorAll("category") ??
+        []),
+    ].map((node) => node.textContent);
+
+    expect(categories).toEqual(["도서리뷰", "카뮈", "부조리"]);
+  });
+
+  it("태그가 없는 리뷰도 기본 카테고리는 유지한다", async () => {
+    const { doc } = await readFeed();
+
+    const categories = [
+      ...(findItemBy(doc, "/book/reviews/1")?.querySelectorAll("category") ??
+        []),
+    ].map((node) => node.textContent);
+
+    expect(categories).toEqual(["도서리뷰"]);
+  });
+
   it("본문에 CDATA 종료 문자열이 있어도 XML이 깨지지 않는다", async () => {
     vi.mocked(apis.getReviews).mockResolvedValue({
       reviews: [{ ...review, content: "탈출 시도 ]]> 뒤 문장" }],
