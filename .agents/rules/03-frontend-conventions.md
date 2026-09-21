@@ -68,7 +68,9 @@ const user = useAuthStore((state) => state.user);
 
 - **폼 확대 방지**: iOS는 폼 컨트롤 글자가 16px 미만이면 포커스 시 화면을 확대한다. `input`/`textarea`/`select`/`contenteditable`은 모바일에서 16px 이상이어야 한다. `text-base md:text-sm` 패턴을 쓰고 `text-sm`·`text-xs`를 단독으로 두지 말 것. `globals.css`의 `@media (pointer: coarse)` 블록이 전역 안전망이지만 의도는 클래스에 남긴다.
 - **호버 전용 컨트롤 금지**: `opacity-0 group-hover:opacity-100`은 터치 기기에서 영구히 숨겨진다. 숨김은 `pointer-fine:` 변형으로 감쌀 것 (`pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100`).
-- **터치 타깃**: 아이콘 버튼은 모바일 최소 36px(`h-9 w-9`). 마우스 환경에서만 `pointer-fine:h-8 pointer-fine:w-8` 식으로 줄인다.
+- **터치 타깃**: 아이콘 버튼은 모바일 최소 36px(`h-9 w-9`). 마우스 환경에서만 `pointer-fine:h-8 pointer-fine:w-8` 식으로 줄인다. 텍스트 링크도 마찬가지다. `<Link>`를 맨몸으로 두면 글자 높이(16~20px)가 그대로 탭 영역이 되므로 `inline-block py-1.5`를 붙이고, 주변 레이아웃을 건드리면 안 되는 자리에서는 `py-2 -my-2`로 히트 영역만 넓힌다.
+- **한글 줄바꿈**: 브라우저 기본값은 한글을 음절 단위로 끊어 단어 중간에 줄이 바뀐다. `globals.css`의 base 레이어가 `word-break: keep-all`과 `overflow-wrap: break-word`를 전역으로 건다. 개별 요소에서 `break-all`이 필요하면 유틸리티로 덮어쓸 수 있다.
+- **좁은 기기(320px)**: 콘텐츠 폭은 레이아웃 `p-4`를 빼면 288px뿐이다. 고정 너비는 288px를 넘기지 말고, 단일 행 `input`의 placeholder는 16px 기준으로 잘리지 않게 짧게 쓴다(한글 15자 내외).
 - **뷰포트 높이**: `h-screen`·`100vh` 사용 금지. 모바일 브라우저 크롬 때문에 높이가 어긋난다. `h-dvh`·`100dvh`를 쓴다.
 
 ---

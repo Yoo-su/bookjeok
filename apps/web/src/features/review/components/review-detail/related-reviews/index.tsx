@@ -84,7 +84,7 @@ export const RelatedReviews = ({ isbn }: RelatedReviewsProps) => {
           {reviews.map((review, index) => (
             <SwiperSlide
               key={review.id}
-              className="w-[320px]! sm:w-[380px]! select-none"
+              className="w-[280px]! sm:w-[380px]! select-none"
             >
               <ReviewCard.Root review={review} priority={index < 2}>
                 <ReviewCard.Image />

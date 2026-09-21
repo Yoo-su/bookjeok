@@ -139,7 +139,7 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
                 key={tag}
                 href={PATHS.REVIEWS_BY_TAG(tag)}
                 aria-label={tAria("tag_filter", { tag })}
-                className="text-sm text-stone-500 hover:text-stone-900 hover:underline italic px-1"
+                className="text-sm text-stone-500 hover:text-stone-900 hover:underline italic inline-block px-1 py-2"
               >
                 #{tag}
               </Link>

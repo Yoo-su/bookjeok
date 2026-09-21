@@ -83,7 +83,7 @@
     "map": {
       "location_title": "Preferred Deal Location",
       "find_current_location": "Find Current Location",
-      "search_placeholder": "Search place (e.g. Gangnam Station) - Use arrows/Enter",
+      "search_placeholder": "Search a place",
       "loading": "Loading map...",
       "error": "An error occurred while loading the map.",
       "address_loading": "Loading address...",
@@ -444,7 +444,7 @@
       "tab_keyword": "Keyword Search",
       "tab_ai": "AI Recommendation",
       "placeholder": "What book are you looking for?",
-      "ai_placeholder": "Describe what kind of book you want (e.g. comforting fiction for quiet evenings)",
+      "ai_placeholder": "Describe a mood or theme",
       "sticky_placeholder": "Enter search keywords...",
       "button_label": "Search",
       "no_results": "No results found for ''{query}''.",
@@ -524,7 +524,7 @@
     "search_modal": {
       "title": "Search Books",
       "trigger": "Search Books",
-      "placeholder": "Search by book title, author, or publisher",
+      "placeholder": "Title, author, or publisher",
       "aria_label": "Search Books",
       "loading": "Searching for books...",
       "error_title": "An error occurred while searching.",
@@ -586,7 +586,7 @@
       "description": "Check honest reviews from various readers."
     },
     "filters": {
-      "placeholder": "Search title, content, tag, or book title...",
+      "placeholder": "Search title, content, tag",
       "reset": "Reset Filters",
       "categories": {
         "all": "All",
@@ -644,7 +644,7 @@
         "title": "Title",
         "title_placeholder": "Enter review title",
         "tags": "Tags (Optional, Max 5)",
-        "tags_placeholder": "Enter tag and press Enter",
+        "tags_placeholder": "Type a tag, press Enter",
         "tags_add": "Add",
         "tags_error_limit": "You can add up to 5 tags.",
         "public_label": "Visibility Settings",
@@ -1231,7 +1231,7 @@
         "location_title": "Preferred Trade Location",
         "location_desc": "Select a safe place on the map to meet the buyer.",
         "location_name": "Location Name (Editable)",
-        "location_name_placeholder": "e.g., Gangnam Station Exit 10 (Auto-filled via map)",
+        "location_name_placeholder": "e.g., Gangnam Station Exit 10",
         "images": "Book Condition Images",
         "content": "Description",
         "content_placeholder": "Describe the book condition, trade method, etc."
@@ -1726,9 +1726,9 @@
       "address": "Base Address",
       "address_placeholder": "Auto-filled from address search",
       "address_detail": "Detailed Address",
-      "address_detail_placeholder": "Unit number, building name, etc.",
+      "address_detail_placeholder": "Unit, building, etc.",
       "delivery_memo": "Delivery Note (Optional)",
-      "delivery_memo_placeholder": "E.g. Please leave at front door",
+      "delivery_memo_placeholder": "Delivery note (optional)",
       "postcode_modal_title": "Search Address",
       "payment_summary": "Payment Summary",
       "book_price": "Book Price",

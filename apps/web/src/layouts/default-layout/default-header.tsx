@@ -362,7 +362,11 @@ export const DefaultHeader = () => {
               <UserPopover />
             </>
           ) : (
-            <Link href={PATHS.LOGIN} onClick={() => saveReturnUrl(pathname)}>
+            <Link
+              href={PATHS.LOGIN}
+              onClick={() => saveReturnUrl(pathname)}
+              className="-mr-2 inline-flex items-center px-3 py-2"
+            >
               <span className="text-sm font-medium font-[family-name:var(--font-gowun-batang)] text-stone-500 hover:text-stone-900 transition-colors tracking-wide">
                 {t("nav.menu_login")}
               </span>

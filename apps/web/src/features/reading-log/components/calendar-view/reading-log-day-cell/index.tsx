@@ -53,7 +53,7 @@ export function ReadingLogDayCell({
         }
       }}
       className={cn(
-        "relative p-2 h-full flex flex-col transition-all duration-300 group hover:z-10 outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:z-20",
+        "relative p-1 h-full sm:p-2 flex flex-col transition-all duration-300 group hover:z-10 outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:z-20",
         isFuture ? "cursor-default" : "cursor-pointer",
         !isFuture && theme.hoverBg,
         !isCurrentMonth && "opacity-30 pointer-events-none bg-stone-50/50",
@@ -61,10 +61,10 @@ export function ReadingLogDayCell({
       )}
     >
       {/* 날짜 표시 */}
-      <div className="flex justify-between items-start mb-1 h-6 shrink-0">
+      <div className="flex justify-between items-start mb-1 h-5 shrink-0 sm:h-6">
         <span
           className={cn(
-            "text-xs w-6 h-6 flex items-center justify-center rounded-full transition-all duration-300 font-serif z-10",
+            "text-[11px] w-5 h-5 flex sm:text-xs sm:w-6 sm:h-6 items-center justify-center rounded-full transition-all duration-300 font-serif z-10",
             isToday
               ? cn(
                   "shadow-md ring-2 ring-offset-1 font-bold scale-110",

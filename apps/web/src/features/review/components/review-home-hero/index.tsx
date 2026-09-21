@@ -69,7 +69,7 @@ export function ReviewHomeHero({ imageSrc }: ReviewHomeHeroProps) {
           {/* CTA 링크 - 미니멀 밑줄 스타일 */}
           <Link
             href={PATHS.REVIEW_WRITE}
-            className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors duration-300 group/cta"
+            className="-my-2 inline-flex items-center gap-2 py-2 text-white/80 hover:text-white transition-colors duration-300 group/cta"
           >
             <span className="text-sm font-medium border-b border-white/30 pb-0.5 group-hover/cta:border-white/70 transition-colors duration-300">
               {t("button_write")}
