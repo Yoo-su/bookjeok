@@ -21,6 +21,8 @@ import { ReviewGridListSkeleton } from "./skeleton";
 interface ReviewGridListProps {
   searchQuery: string;
   category: string | null;
+  tag?: string | null;
+  isbn?: string | null;
   clearFilters: () => void;
   onDeleteReview?: (id: number) => void;
   onEditReview?: (id: number) => void;
@@ -30,6 +32,8 @@ interface ReviewGridListProps {
 export function ReviewGridList({
   searchQuery,
   category,
+  tag,
+  isbn,
   clearFilters,
   onDeleteReview,
   onEditReview,
@@ -46,6 +50,8 @@ export function ReviewGridList({
   } = useReviewsInfiniteQuery({
     limit: 12,
     category,
+    tag,
+    isbn: isbn ?? undefined,
     search: searchQuery,
     userId,
   });
@@ -98,6 +104,8 @@ export function ReviewGridList({
 
   // 결과 없음
   if (reviews.length === 0) {
+    const hasFilter = !!(searchQuery || category || tag || isbn);
+
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 dark:border-stone-800 bg-stone-50/40 dark:bg-stone-900/40 p-12 text-center space-y-3">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 text-stone-400">
@@ -105,17 +113,13 @@ export function ReviewGridList({
         </div>
         <div className="space-y-1">
           <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
-            {searchQuery || category
-              ? t("empty_search_title")
-              : t("empty_list_title")}
+            {hasFilter ? t("empty_search_title") : t("empty_list_title")}
           </h3>
           <p className="text-xs text-stone-400 max-w-sm">
-            {searchQuery || category
-              ? t("empty_search_desc")
-              : t("empty_list_desc")}
+            {hasFilter ? t("empty_search_desc") : t("empty_list_desc")}
           </p>
         </div>
-        {searchQuery || category ? (
+        {hasFilter ? (
           <Button
             variant="outline"
             size="sm"

@@ -45,7 +45,7 @@ export const RelatedReviews = ({ isbn }: RelatedReviewsProps) => {
         </h2>
 
         {totalCount > 4 && (
-          <Link href={`${PATHS.REVIEWS}?isbn=${isbn}`}>
+          <Link href={PATHS.REVIEWS_BY_ISBN(isbn)}>
             <Button variant="ghost" size="sm" className="text-stone-500">
               {t("more", { count: totalCount })}
             </Button>

@@ -13,6 +13,10 @@ export const PATHS = {
   MY_PAGE_TRADES: "/my-page/trades",
   MY_PAGE_SALES_EDIT: (id: string | number) => `/my-page/sales/${id}/edit`,
   REVIEWS: "/book/reviews",
+  REVIEWS_BY_TAG: (tag: string) =>
+    `/book/reviews?tag=${encodeURIComponent(tag)}`,
+  REVIEWS_BY_ISBN: (isbn: string) =>
+    `/book/reviews?isbn=${encodeURIComponent(isbn)}`,
   REVIEW_WRITE: "/book/reviews/write",
   REVIEW_DETAIL: (id: string | number) => `/book/reviews/${id}`,
   REVIEW_EDIT: (id: string | number) => `/book/reviews/${id}/edit`,

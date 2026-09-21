@@ -30,7 +30,7 @@ review/
     │   ├── review-grid-list/         # 그리드형
     │   ├── popular-review-list/ (+ item)
     │   ├── my-review-list/
-    │   └── review-home-filters/      # 카테고리·정렬 필터
+    │   └── review-home-filters/      # 카테고리 필터 + 활성 태그 칩
     ├── recent-review-list/           # 홈 티커 (index · review-ticker · review-row · skeleton)
     ├── review-home-hero/ (+ hero-images.ts)
     └── common/
@@ -79,6 +79,31 @@ ReviewDetailContent ◀── prepareReviewContent ◀── 저장된 HTML
 - 행 높이는 표지 썸네일이 정하고 `sm`에서 한 번 바뀌므로 실측합니다. 실측 전에는 잘라내기 없이 상위 5건을 그리므로 서버가 구운 HTML과 첫 클라이언트 렌더가 일치합니다.
 - **호버·포커스에 멈춥니다.** 포커스까지 보는 것은 키보드로 들어간 사용자가 그 줄과 함께 포커스를 잃기 때문입니다. `prefers-reduced-motion`에서는 회전 자체를 끕니다.
 - `review-row`의 링크는 `prefetch={false}`입니다. 20건이 차례로 뷰포트를 통과하므로 기본값이면 클릭 없이 리뷰 상세 20개가 ISR에 구워집니다([캐싱 문서](../../../docs/CACHING.md#목록-링크의-prefetch)).
+
+### 목록 필터 링크 — 태그·도서 (2026-09-21)
+
+리뷰 홈은 `category`·`search` 외에 **`tag`와 `isbn`**을 URL에서 읽습니다. 서버는
+`GET /reviews?tag=`(쉼표로 다중)와 `?isbn=`을 처음부터 지원했는데 웹에 호출처가
+없어 두 필터 모두 닿지 않는 상태였습니다. 태그는 어디서나 클릭되지 않는 `<span>`
+이었고, 도서 상세의 "리뷰 더보기"는 `?isbn=`을 달고도 필터 없는 목록으로 갔습니다.
+
+- 링크는 `PATHS.REVIEWS_BY_TAG(tag)` / `PATHS.REVIEWS_BY_ISBN(isbn)`으로만
+  만듭니다. 값에 `&`·공백이 들어와도 파라미터가 쪼개지지 않도록
+  `encodeURIComponent`를 여기서 한 번만 겁니다.
+- 파라미터는 `review-home-view/with-params`가 읽어 `ReviewGridList`까지
+  내려갑니다. 필터가 걸린 빈 목록은 "첫 리뷰 작성"이 아니라 "전체 목록 보기"를
+  보여줍니다.
+- 활성 필터는 `review-home-filters`의 칩으로 보이고, 칩을 누르면 **그 파라미터만**
+  빠지고 나머지는 남습니다(`clearParam`). 전체 해제는 기존 "필터 초기화"입니다.
+- 도서 칩은 ISBN 13자리 대신 제목을 보여주려고 `useBookDetailQuery`를 씁니다.
+  도서 상세에서 넘어온 경로가 대부분이라 같은 쿼리 키가 이미 캐시에 있습니다.
+- **태그를 링크로 만드는 곳은 리뷰 상세(`book-review-detail/header`)와 인사이트의
+  인기 태그뿐입니다.** 카드·티커의 태그는 카드 전체가 이미 `<Link>`라 앵커를
+  중첩할 수 없어 `<span>`으로 둡니다. 링크가 필요하면 카드 링크 구조부터
+  바꿔야 합니다.
+- 리뷰 홈의 canonical은 `/ko/book/reviews`이므로 `?tag=`·`?isbn=` URL은 색인되지
+  않고 크롤 경로로만 쓰입니다. 태그 전용 색인 페이지는 별도 작업입니다.
+- 계약은 `src/__tests__/review-filter-links.test.tsx`가 고정합니다.
 
 ### 합성 컴포넌트 (`review-card`)
 

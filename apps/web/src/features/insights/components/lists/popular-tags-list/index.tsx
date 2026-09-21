@@ -9,6 +9,8 @@ import {
 } from "@/features/insights/components/common/insight-card";
 import { COLORS } from "@/features/insights/constants/ui";
 import { Tag } from "@/shared/components/icons/iconsax";
+import { Link } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
 
 interface PopularTagsListProps {
   data: PopularTagStat[];
@@ -20,6 +22,7 @@ interface PopularTagsListProps {
  */
 export const PopularTagsList = ({ data }: PopularTagsListProps) => {
   const t = useTranslations("insights.charts.tags");
+  const tAria = useTranslations("common.aria");
   const hasData = data.length > 0;
 
   const maxCount = Math.max(...data.map((t) => t.count), 1);
@@ -47,9 +50,11 @@ export const PopularTagsList = ({ data }: PopularTagsListProps) => {
             const hoverColor = COLORS.stone[200];
 
             return (
-              <span
+              <Link
                 key={tag.name}
-                className={`inline-flex items-center gap-1.5 rounded-full border border-stone-200 text-stone-600 transition-all duration-300 hover:scale-105 hover:border-stone-400 hover:text-stone-900 hover:shadow-sm cursor-default ${getBadgeSize(tag.count)}`}
+                href={PATHS.REVIEWS_BY_TAG(tag.name)}
+                aria-label={tAria("tag_filter", { tag: tag.name })}
+                className={`inline-flex items-center gap-1.5 rounded-full border border-stone-200 text-stone-600 transition-all duration-300 hover:scale-105 hover:border-stone-400 hover:text-stone-900 hover:shadow-sm ${getBadgeSize(tag.count)}`}
                 style={{ backgroundColor: bgColor }}
               >
                 <span className="font-serif italic text-stone-400">#</span>
@@ -57,7 +62,7 @@ export const PopularTagsList = ({ data }: PopularTagsListProps) => {
                 <span className="text-[0.7em] text-stone-400 font-light ml-0.5">
                   {tag.count}
                 </span>
-              </span>
+              </Link>
             );
           })}
         </div>

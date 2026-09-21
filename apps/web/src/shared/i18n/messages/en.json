@@ -72,6 +72,9 @@
       "like": "Like",
       "unlike": "Unlike",
       "tag_remove": "Remove tag {tag}",
+      "tag_filter": "View reviews tagged {tag}",
+      "tag_filter_clear": "Clear {tag} tag filter",
+      "book_filter_clear": "Clear {book} book filter",
       "select_book": "Select {title}",
       "prev_image": "Previous image",
       "next_image": "Next image"

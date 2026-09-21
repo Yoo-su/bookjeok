@@ -18,7 +18,7 @@ insights/
     │   ├── reaction-donut-chart/     # 리액션 비율
     │   └── activity-trend-chart/     # 활동 추이
     └── lists/
-        └── popular-tags-list/        # 인기 태그 순위
+        └── popular-tags-list/        # 인기 태그 순위 (리뷰 목록 `?tag=`로 링크)
 ```
 
 ## 2. 데이터
