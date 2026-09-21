@@ -92,6 +92,19 @@ describe("검색봇에 전달하는 실제 JSON-LD", () => {
     expect(data.reviewBody).toBe("첫 문장 & 감상");
   });
 
+  it("작성자가 붙인 태그를 keywords로 전달한다", () => {
+    const data = jsonLd(
+      <ReviewJsonLd review={{ ...review, tags: ["카뮈", "부조리"] }} />,
+    );
+    expect(data.keywords).toBe("카뮈, 부조리");
+  });
+
+  it("태그가 없으면 keywords를 만들지 않는다", () => {
+    expect(jsonLd(<ReviewJsonLd review={review} />)).not.toHaveProperty(
+      "keywords",
+    );
+  });
+
   it("미선택 별점 0에는 평점 마크업을 만들지 않는다", () => {
     expect(
       jsonLd(<ReviewJsonLd review={{ ...review, rating: 0 }} />),
