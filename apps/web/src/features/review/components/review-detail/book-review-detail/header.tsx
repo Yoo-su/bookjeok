@@ -28,6 +28,7 @@ interface ReviewDetailHeaderProps {
 
 export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
   const t = useTranslations("review.detail");
+  const tAria = useTranslations("common.aria");
   const locale = useLocale();
 
   return (
@@ -130,16 +131,18 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
           </div>
         )}
 
-        {/* 태그 리스트 - 하단 배치 */}
+        {/* 태그 리스트 - 하단 배치. 같은 태그가 달린 리뷰 목록으로 보낸다. */}
         {review.tags && review.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {review.tags.map((tag: string) => (
-              <span
+              <Link
                 key={tag}
-                className="text-sm text-stone-500 hover:text-stone-900 hover:underline cursor-pointer italic px-1"
+                href={PATHS.REVIEWS_BY_TAG(tag)}
+                aria-label={tAria("tag_filter", { tag })}
+                className="text-sm text-stone-500 hover:text-stone-900 hover:underline italic px-1"
               >
                 #{tag}
-              </span>
+              </Link>
             ))}
           </div>
         )}

@@ -15,6 +15,8 @@ export const ReviewHomeViewWithParams = () => {
   return (
     <ReviewHomeView
       category={searchParams.get("category")}
+      tag={searchParams.get("tag")}
+      isbn={searchParams.get("isbn")}
       searchQuery={searchParams.get("search") || ""}
       searchParamsString={searchParams.toString()}
     />

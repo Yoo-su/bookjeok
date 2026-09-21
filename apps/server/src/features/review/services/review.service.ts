@@ -1,4 +1,9 @@
-import { BOOK_DOMAINS } from '@bookjeok/core';
+import {
+  BOOK_DOMAINS,
+  normalizeTagName,
+  normalizeTagNames,
+  TAG_SUGGESTION_LIMIT,
+} from '@bookjeok/core';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,13 +22,23 @@ import { BusinessException } from '@/shared/exceptions';
 import { POPULAR_REVIEW_MONTHS } from '../constants';
 import { CreateReviewDto } from '../dtos/create-review.dto';
 import { GetReviewsQueryDto } from '../dtos/get-reviews-query.dto';
+import { GetTagSuggestionsQueryDto } from '../dtos/get-tag-suggestions-query.dto';
 import {
   GetReviewsResponseDto,
   ReviewFeedDto,
   ReviewResponseDto,
+  TagSuggestionDto,
 } from '../dtos/review-response.dto';
 import { UpdateReviewDto } from '../dtos/update-review.dto';
 import { ReviewImageHelper } from '../helpers/review-image.helper';
+
+/**
+ * LIKE 패턴의 메타문자를 막습니다. `local-db-book-catalog.provider`에도 같은
+ * 규칙의 쌍둥이가 있습니다. SQL 표준이라 갈라질 일이 없어 각자 둡니다.
+ */
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
 
 @Injectable()
 export class ReviewService {
@@ -82,10 +97,12 @@ export class ReviewService {
     manager: EntityManager,
     tagNames: string[],
   ): Promise<Tag[]> {
-    if (tagNames.length === 0) return [];
-
-    // 1. 중복 제거 (유니크 위반 방지)
-    const uniqueTagNames = [...new Set(tagNames)];
+    // 1. 표기 정규화 + 중복·빈 값 제거 (유니크 위반 방지)
+    //
+    // 정규화를 저장 직전에 한 번만 건다. 여기를 지나지 않고 tags 행이 생기는
+    // 경로가 없어야 `#카뮈`와 `카뮈`가 갈라지지 않는다.
+    const uniqueTagNames = normalizeTagNames(tagNames);
+    if (uniqueTagNames.length === 0) return [];
 
     // 2. 중복 무시하고 일괄 INSERT (ON CONFLICT DO NOTHING)
     await manager
@@ -100,6 +117,54 @@ export class ReviewService {
     return await manager.find(Tag, {
       where: { name: In(uniqueTagNames) },
     });
+  }
+
+  /**
+   * 태그 자동완성 후보를 사용 빈도순으로 조회합니다.
+   *
+   * 운영 태그 117개 중 99개가 1회성입니다. 사람들이 같은 뜻의 태그를 매번 새로
+   * 지어내기 때문인데(`카뮈`/`알베르카뮈`, `쿤데라`/`밀란쿤데라`), 문자열
+   * 정규화로는 잡히지 않습니다. 입력 시점에 기존 태그를 보여주는 것이 유일한
+   * 수단이라 이 엔드포인트를 둡니다.
+   */
+  async getTagSuggestions(
+    query: GetTagSuggestionsQueryDto,
+  ): Promise<TagSuggestionDto[]> {
+    const { q, limit = TAG_SUGGESTION_LIMIT } = query;
+    // 입력값에도 저장과 같은 정규화를 건다. `#카` 를 쳐도 `카뮈`가 걸린다.
+    const keyword = normalizeTagName(q ?? '');
+
+    // 조인 테이블(`review_tags`)을 문자열로 쓰지 않고 선언된 ManyToMany 관계로만
+    // 짠다. 카멜케이스 컬럼(`reviewId`)을 직접 적으면 Postgres가 따옴표 없는
+    // 식별자를 소문자로 접어 깨질 여지가 있고, 관계로 두면 TypeORM이 조인 SQL을
+    // escape까지 해서 만든다.
+    const qb = this.reviewsRepository
+      .createQueryBuilder('review')
+      .innerJoin('review.tagEntities', 'tag')
+      .select('tag.name', 'name')
+      .addSelect('COUNT(review.id)', 'count')
+      // 비공개 리뷰까지 세면 제안에 표시한 건수가 목록에서 보이는 건수와
+      // 어긋난다. 목록(findAll)도 공개 리뷰만 센다.
+      .where('review.isPublic = :isPublic', { isPublic: true })
+      .groupBy('tag.id')
+      .addGroupBy('tag.name')
+      .orderBy('count', 'DESC')
+      .addOrderBy('tag.name', 'ASC')
+      .limit(limit);
+
+    if (keyword) {
+      // ILIKE여야 `sf`를 쳤을 때 기존 `SF`가 걸린다. 정규화가 대소문자를
+      // 보존하므로 대소문자 흔들림은 여기서 흡수한다.
+      qb.andWhere('tag.name ILIKE :keyword', {
+        keyword: `%${escapeLikePattern(keyword)}%`,
+      });
+    }
+
+    const rows = await qb.getRawMany<{ name: string; count: string }>();
+    return rows.map((row) => ({
+      name: row.name,
+      count: parseInt(row.count, 10),
+    }));
   }
 
   /**

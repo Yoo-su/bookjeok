@@ -12,7 +12,6 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { BookSearchModal } from "@/features/book/components/common/book-search-modal";
@@ -21,7 +20,6 @@ import {
   ReviewSchemaValues,
 } from "@/features/review/schemas";
 import { BookOpen, Info, Loader2 } from "@/shared/components/icons/iconsax";
-import { Badge } from "@/shared/components/shadcn/badge";
 import { Button } from "@/shared/components/shadcn/button";
 import {
   Form,
@@ -44,6 +42,7 @@ import { StarRating } from "@/shared/components/ui/star-rating";
 import { useEditorImageHandler } from "@/shared/hooks/use-editor-image-handler";
 
 import { ReviewPreview } from "./review-preview";
+import { TagInput } from "./tag-input";
 
 // Tiptap 에디터는 무거운 라이브러리이므로 지연 로딩
 const TiptapEditor = dynamic(
@@ -93,12 +92,10 @@ export const ReviewForm = ({
   const t = useTranslations("review.form");
   const tFilters = useTranslations("review.filters");
   const tValidation = useTranslations("review.validation");
-  const tAria = useTranslations("common.aria");
 
   const [selectedBook, setSelectedBook] = useState<BookInfo | null>(
     initialData?.book || null,
   );
-  const [tagInput, setTagInput] = useState("");
   const user = useAuthStore((state) => state.user);
 
   const { handleImageAdd, uploadImages, isUploading } = useEditorImageHandler({
@@ -129,35 +126,6 @@ export const ReviewForm = ({
   const handleBookSelect = (book: BookInfo) => {
     setSelectedBook(book);
     form.setValue("isbn", book.isbn, { shouldValidate: true });
-  };
-
-  const handleAddTag = () => {
-    if (!tagInput.trim()) return;
-    const currentTags = form.getValues("tags");
-    if (currentTags.length >= 5) {
-      toast.error(t("fields.tags_error_limit"));
-      return;
-    }
-    if (!currentTags.includes(tagInput.trim())) {
-      form.setValue("tags", [...currentTags, tagInput.trim()]);
-    }
-    setTagInput("");
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    const currentTags = form.getValues("tags");
-    form.setValue(
-      "tags",
-      currentTags.filter((tag) => tag !== tagToRemove),
-    );
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.nativeEvent.isComposing) return;
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
   };
 
   const handleSubmit = async (data: ReviewSchemaValues) => {
@@ -354,45 +322,13 @@ export const ReviewForm = ({
               <FormItem>
                 <FormLabel>{t("fields.tags")}</FormLabel>
                 <FormControl>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={t("fields.tags_placeholder")}
-                        disabled={isProcessing || field.value.length >= 5}
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddTag}
-                        disabled={isProcessing || field.value.length >= 5}
-                      >
-                        {t("fields.tags_add")}
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {field.value.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          role="button"
-                          tabIndex={0}
-                          aria-label={tAria("tag_remove", { tag })}
-                          className="px-3 py-1 text-sm cursor-pointer hover:bg-gray-200 outline-none focus-visible:ring-2 focus-visible:ring-stone-400"
-                          onClick={() => handleRemoveTag(tag)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              handleRemoveTag(tag);
-                            }
-                          }}
-                        >
-                          #{tag} ✕
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                  <TagInput
+                    value={field.value}
+                    onChange={(tags) =>
+                      form.setValue("tags", tags, { shouldValidate: true })
+                    }
+                    disabled={isProcessing}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

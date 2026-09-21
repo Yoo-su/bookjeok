@@ -73,7 +73,13 @@ export default async function Page({
       */}
       <Suspense
         fallback={
-          <ReviewHomeView category={null} searchQuery="" showAdBanner={false} />
+          <ReviewHomeView
+            category={null}
+            tag={null}
+            isbn={null}
+            searchQuery=""
+            showAdBanner={false}
+          />
         }
       >
         <ReviewHomeViewWithParams />

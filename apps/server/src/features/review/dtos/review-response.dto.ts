@@ -27,6 +27,14 @@ export class ReviewResponseDto extends Review {
   isPublic: boolean;
 }
 
+export class TagSuggestionDto {
+  @ApiProperty({ description: '태그 이름', example: '카뮈' })
+  name: string;
+
+  @ApiProperty({ description: '공개 리뷰 기준 사용 횟수', example: 5 })
+  count: number;
+}
+
 export class GetReviewsResponseDto {
   @ApiProperty({ type: [ReviewResponseDto] })
   reviews: ReviewResponseDto[];

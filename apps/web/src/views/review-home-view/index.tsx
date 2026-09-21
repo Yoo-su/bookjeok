@@ -13,6 +13,10 @@ import { PATHS } from "@/shared/constants/paths";
 interface ReviewHomeViewProps {
   /** URL의 category 파라미터. 필터가 걸리지 않았으면 null */
   category: string | null;
+  /** URL의 tag 파라미터. 필터가 걸리지 않았으면 null */
+  tag: string | null;
+  /** URL의 isbn 파라미터. 도서 상세에서 넘어온 경우가 아니면 null */
+  isbn: string | null;
   /** URL의 search 파라미터. 없으면 빈 문자열 */
   searchQuery: string;
   /** URL 쿼리스트링 원본. 필터를 갱신할 때 기존 파라미터를 보존하기 위해 사용 */
@@ -33,6 +37,8 @@ interface ReviewHomeViewProps {
  */
 export const ReviewHomeView = ({
   category,
+  tag,
+  isbn,
   searchQuery,
   searchParamsString = "",
   showAdBanner = true,
@@ -45,7 +51,7 @@ export const ReviewHomeView = ({
     setSearchInput(searchQuery);
   }, [searchQuery]);
 
-  const isFiltered = !!(category || searchQuery);
+  const isFiltered = !!(category || tag || isbn || searchQuery);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -70,6 +76,14 @@ export const ReviewHomeView = ({
     router.push(`${PATHS.REVIEWS}?${params.toString()}`);
   };
 
+  /** 하나의 필터만 걷어내고 나머지 파라미터는 보존한다. */
+  const clearParam = (key: string) => {
+    const params = new URLSearchParams(searchParamsString);
+    params.delete(key);
+    const query = params.toString();
+    router.push(query ? `${PATHS.REVIEWS}?${query}` : PATHS.REVIEWS);
+  };
+
   const clearFilters = () => {
     setSearchInput("");
     router.push(PATHS.REVIEWS);
@@ -85,6 +99,10 @@ export const ReviewHomeView = ({
         clearFilters={clearFilters}
         selectedCategory={category}
         handleCategoryClick={handleCategoryClick}
+        selectedTag={tag}
+        clearTag={() => clearParam("tag")}
+        selectedIsbn={isbn}
+        clearIsbn={() => clearParam("isbn")}
       />
 
       <section className="mb-20 container mx-auto">
@@ -106,6 +124,8 @@ export const ReviewHomeView = ({
           <ReviewGridList
             searchQuery={searchQuery}
             category={category}
+            tag={tag}
+            isbn={isbn}
             clearFilters={clearFilters}
           />
         )}

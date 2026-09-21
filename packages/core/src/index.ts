@@ -35,6 +35,7 @@ export * from "./features/review/constants";
 export { reviewMutationKeys } from "./features/review/mutation-keys";
 export { reviewKeys } from "./features/review/query-keys";
 export * from "./features/review/types";
+export * from "./features/review/utils";
 export { tradeKeys, tradeReviewKeys } from "./features/trade/query-keys";
 export * from "./features/trade/review-tags";
 export * from "./features/trade/types";

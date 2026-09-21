@@ -86,6 +86,7 @@ export const API_PATHS = {
     recordView: (id: number | string) => `/reviews/${id}/view`,
     edit: (id: number | string) => `/reviews/${id}/edit`,
     feeds: "/reviews/feeds",
+    tags: "/reviews/tags",
     popular: "/reviews/popular",
     recommend: (id: number | string) => `/reviews/${id}/recommend`,
     myReaction: (id: number | string) => `/reviews/${id}/reaction`,

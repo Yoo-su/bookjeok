@@ -42,6 +42,18 @@ export interface ReviewFeed {
   reviews: Review[];
 }
 
+/** 태그 자동완성 항목. count는 공개 리뷰 기준 사용 횟수다. */
+export interface TagSuggestion {
+  name: string;
+  count: number;
+}
+
+export interface GetTagSuggestionsParams {
+  /** 입력 중인 문자열. 비우면 사용 빈도 상위를 돌려준다. */
+  q?: string;
+  limit?: number;
+}
+
 export interface GetReviewsParams {
   page?: number;
   limit?: number;

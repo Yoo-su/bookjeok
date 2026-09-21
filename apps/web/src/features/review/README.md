@@ -30,7 +30,7 @@ review/
     │   ├── review-grid-list/         # 그리드형
     │   ├── popular-review-list/ (+ item)
     │   ├── my-review-list/
-    │   └── review-home-filters/      # 카테고리·정렬 필터
+    │   └── review-home-filters/      # 카테고리 필터 + 활성 태그 칩
     ├── recent-review-list/           # 홈 티커 (index · review-ticker · review-row · skeleton)
     ├── review-home-hero/ (+ hero-images.ts)
     └── common/
@@ -79,6 +79,56 @@ ReviewDetailContent ◀── prepareReviewContent ◀── 저장된 HTML
 - 행 높이는 표지 썸네일이 정하고 `sm`에서 한 번 바뀌므로 실측합니다. 실측 전에는 잘라내기 없이 상위 5건을 그리므로 서버가 구운 HTML과 첫 클라이언트 렌더가 일치합니다.
 - **호버·포커스에 멈춥니다.** 포커스까지 보는 것은 키보드로 들어간 사용자가 그 줄과 함께 포커스를 잃기 때문입니다. `prefers-reduced-motion`에서는 회전 자체를 끕니다.
 - `review-row`의 링크는 `prefetch={false}`입니다. 20건이 차례로 뷰포트를 통과하므로 기본값이면 클릭 없이 리뷰 상세 20개가 ISR에 구워집니다([캐싱 문서](../../../docs/CACHING.md#목록-링크의-prefetch)).
+
+### 목록 필터 링크 — 태그·도서 (2026-09-21)
+
+리뷰 홈은 `category`·`search` 외에 **`tag`와 `isbn`**을 URL에서 읽습니다. 서버는
+`GET /reviews?tag=`(쉼표로 다중)와 `?isbn=`을 처음부터 지원했는데 웹에 호출처가
+없어 두 필터 모두 닿지 않는 상태였습니다. 태그는 어디서나 클릭되지 않는 `<span>`
+이었고, 도서 상세의 "리뷰 더보기"는 `?isbn=`을 달고도 필터 없는 목록으로 갔습니다.
+
+- 링크는 `PATHS.REVIEWS_BY_TAG(tag)` / `PATHS.REVIEWS_BY_ISBN(isbn)`으로만
+  만듭니다. 값에 `&`·공백이 들어와도 파라미터가 쪼개지지 않도록
+  `encodeURIComponent`를 여기서 한 번만 겁니다.
+- 파라미터는 `review-home-view/with-params`가 읽어 `ReviewGridList`까지
+  내려갑니다. 필터가 걸린 빈 목록은 "첫 리뷰 작성"이 아니라 "전체 목록 보기"를
+  보여줍니다.
+- 활성 필터는 `review-home-filters`의 칩으로 보이고, 칩을 누르면 **그 파라미터만**
+  빠지고 나머지는 남습니다(`clearParam`). 전체 해제는 기존 "필터 초기화"입니다.
+- 도서 칩은 ISBN 13자리 대신 제목을 보여주려고 `useBookDetailQuery`를 씁니다.
+  도서 상세에서 넘어온 경로가 대부분이라 같은 쿼리 키가 이미 캐시에 있습니다.
+- **태그를 링크로 만드는 곳은 리뷰 상세(`book-review-detail/header`)와 인사이트의
+  인기 태그뿐입니다.** 카드·티커의 태그는 카드 전체가 이미 `<Link>`라 앵커를
+  중첩할 수 없어 `<span>`으로 둡니다. 링크가 필요하면 카드 링크 구조부터
+  바꿔야 합니다.
+- 리뷰 홈의 canonical은 `/ko/book/reviews`이므로 `?tag=`·`?isbn=` URL은 색인되지
+  않고 크롤 경로로만 쓰입니다. 태그 전용 색인 페이지는 별도 작업입니다.
+- 계약은 `src/__tests__/review-filter-links.test.tsx`가 고정합니다.
+
+### 태그 입력 자동완성 (2026-09-21)
+
+`review-form/tag-input.tsx`가 태그 입력과 기존 태그 제안을 함께 담당합니다. 폼 본체에서
+분리한 이유는 디바운스·키보드 탐색·조합 입력 처리가 폼 로직과 섞이면 읽기 어려워서입니다.
+
+**제안은 태그를 합치는 장치가 아니라 새로 지어내는 것을 막는 장치입니다.** 2026-09-21
+실측에서 고유 태그 117개 중 99개(85%)가 1회성이었는데, 원인은 표기 흔들림이 아니라
+`카뮈`/`알베르카뮈`처럼 뜻이 같은 태그를 매번 새로 만드는 것이었습니다. 이미 저장된 태그는
+그대로 둡니다. 합치려면 별칭 테이블과 사람의 판단이 필요하고, 그건 지금 규모에서 할 일이
+아닙니다.
+
+- 입력이 멎고 250ms 뒤에 조회합니다. 같은 문자열은 쿼리 키가 같아 캐시에서 바로 나옵니다.
+- 추가할 때 `normalizeTagName()`을 겁니다. **서버와 같은 함수**라 중복 판정이 어긋나지
+  않습니다.
+- 조합 중(`isComposing`)의 Enter는 조합 확정이지 태그 추가가 아닙니다. 한글 입력에서
+  이 분기가 없으면 첫 글자만 태그로 들어갑니다.
+- 제안 클릭은 `onMouseDown`입니다. `onClick`이면 input의 blur가 먼저 일어나 목록이 닫힙니다.
+- 상한은 `REVIEW_TAG_MAX_COUNT`(core) 하나를 폼·zod 스키마·서버 DTO가 함께 봅니다.
+
+**정규화가 소문자화와 내부 공백 제거를 하지 않는 이유**는 표시가 망가지기 때문입니다.
+소문자로 내리면 `SF`가 `sf`로 저장되고, 공백을 지우면 `의식의 흐름`·`가즈오 이시구로`가
+붙어버립니다. 대소문자 흔들림은 `ILIKE` 제안이 기존 `SF`를 띄워 흡수합니다.
+
+계약은 `__tests__/tag-input.test.tsx`(웹)와 core의 `tag-normalize.test.ts`가 고정합니다.
 
 ### 합성 컴포넌트 (`review-card`)
 
