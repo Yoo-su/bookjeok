@@ -76,10 +76,11 @@ export function parseCalendarDate(date: Date | string): Date {
 }
 
 /** 로케일별 "오늘"·"어제". `chat-item`의 기존 방식을 따른다. */
-const CALENDAR_DAY_TEXT: Record<string, { today: string; yesterday: string }> = {
-  ko: { today: "오늘", yesterday: "어제" },
-  en: { today: "Today", yesterday: "Yesterday" },
-};
+const CALENDAR_DAY_TEXT: Record<string, { today: string; yesterday: string }> =
+  {
+    ko: { today: "오늘", yesterday: "어제" },
+    en: { today: "Today", yesterday: "Yesterday" },
+  };
 
 /** 로케일별 "N일 전". */
 function daysAgoText(days: number, locale: string): string {
