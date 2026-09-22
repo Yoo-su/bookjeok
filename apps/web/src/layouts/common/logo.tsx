@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   BookjeokTextLogo,
@@ -13,10 +13,12 @@ interface LogoProps {
   variant?: LogoVariant;
 }
 
-export const Logo = ({ size = "md", variant = "ko" }: LogoProps) => {
+export const Logo = ({ size = "md", variant }: LogoProps) => {
   const t = useTranslations("common.aria");
+  const locale = useLocale();
+  const logoVariant = variant ?? (locale === "en" ? "en" : "ko");
   const isSmall = size === "sm";
-  const isKorean = variant.startsWith("ko");
+  const isKorean = logoVariant.startsWith("ko");
 
   return (
     <Link href={PATHS.HOME} className="inline-block" aria-label={t("go_home")}>
@@ -31,7 +33,7 @@ export const Logo = ({ size = "md", variant = "ko" }: LogoProps) => {
         />
         <div className="relative flex items-center translate-y-[0.5px]">
           <BookjeokTextLogo
-            variant={variant}
+            variant={logoVariant}
             className={`${
               isKorean
                 ? isSmall
