@@ -15,6 +15,12 @@ const SEARCH_CRAWLERS = [
   "DuckDuckBot",
 ];
 
+/**
+ * 광고 게재용 크롤러. 검색 색인과는 무관하지만 막으면 문맥 타게팅이 죽어
+ * 광고 단가가 떨어진다. AdSense를 붙여둔 동안은 통과시킨다.
+ */
+const AD_CRAWLERS = ["Mediapartners-Google"];
+
 /** SNS 공유 카드 수집기. 링크 미리보기가 깨지므로 막지 않는다. */
 export const SNS_SCRAPERS = [
   "facebookexternalhit",
@@ -69,7 +75,6 @@ export const ZERO_VALUE_CRAWLERS = [
   "SeekportBot",
   // 실측(2026-09-12~13 activity_logs)에서 상위를 차지한 비검색 크롤러
   "Applebot", // Siri·Spotlight용. 국내 유입 없음
-  "Mediapartners-Google", // AdSense 전용. 검색 색인과 무관
   "Baiduspider", // 중국 검색. CN 트래픽은 이미 403
   "GoogleOther", // 색인용이 아닌 범용 수집
 ];
@@ -81,7 +86,11 @@ const toPattern = (tokens: string[]) =>
   );
 
 // 미들웨어는 모든 요청에서 돈다. 정규식은 모듈 로드 때 한 번만 만든다.
-const ALLOWED_PATTERN = toPattern([...SEARCH_CRAWLERS, ...SNS_SCRAPERS]);
+const ALLOWED_PATTERN = toPattern([
+  ...SEARCH_CRAWLERS,
+  ...AD_CRAWLERS,
+  ...SNS_SCRAPERS,
+]);
 const BLOCKED_PATTERN = toPattern(ZERO_VALUE_CRAWLERS);
 const SNS_PATTERN = toPattern(SNS_SCRAPERS);
 
