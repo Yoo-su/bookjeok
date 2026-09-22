@@ -75,10 +75,12 @@ export const useToggleCommentLikeMutation = (
   targetType: CommentTargetType,
   targetId: string,
   page: number,
+  viewerId?: number,
 ) => {
   const t = useTranslations("comment.toast");
 
   return useSharedToggleCommentLikeMutation(targetType, targetId, page, {
+    viewerId,
     onError: () => {
       toast.error(t("like_error"));
     },

@@ -12,9 +12,10 @@ export const useCommentsQuery = (
   page: number = 1,
   limit: number = 10,
   enabled: boolean = true,
+  viewerId?: number,
 ) => {
   return useQuery({
-    queryKey: commentKeys.list(targetType, targetId, page).queryKey,
+    queryKey: commentKeys.list(targetType, targetId, page, viewerId).queryKey,
     queryFn: () =>
       getComments({
         targetType,

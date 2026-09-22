@@ -132,6 +132,64 @@ describe('CommentService', () => {
     service = module.get<CommentService>(CommentService);
   });
 
+  describe('getComments', () => {
+    const comment = {
+      id: 1,
+      content: '댓글',
+      targetType: CommentTargetType.REVIEW,
+      targetId: '42',
+      userId: 2,
+      likeCount: 1,
+    } as Comment;
+
+    const setCommentsResult = () => {
+      const mockQb = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[comment], 1]),
+      };
+      (commentRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        mockQb,
+      );
+    };
+
+    it('로그인 사용자가 좋아요한 댓글에는 isLiked를 true로 반환한다', async () => {
+      setCommentsResult();
+      (commentLikeRepository.find as jest.Mock).mockResolvedValue([
+        { commentId: comment.id },
+      ]);
+
+      const result = await service.getComments(
+        {
+          targetType: CommentTargetType.REVIEW,
+          targetId: '42',
+          page: 1,
+          limit: 10,
+        },
+        10,
+      );
+
+      expect(result.data[0].isLiked).toBe(true);
+    });
+
+    it('익명 사용자의 댓글 목록에는 isLiked를 false로 반환한다', async () => {
+      setCommentsResult();
+
+      const result = await service.getComments({
+        targetType: CommentTargetType.REVIEW,
+        targetId: '42',
+        page: 1,
+        limit: 10,
+      });
+
+      expect(result.data[0].isLiked).toBe(false);
+    });
+  });
+
   describe('getMyComments', () => {
     it('should batch query reviews and books to avoid N+1 queries', async () => {
       const mockComments = [

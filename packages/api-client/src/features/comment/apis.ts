@@ -8,7 +8,7 @@ import {
   UpdateCommentParams,
 } from "@bookjeok/core";
 
-import { privateApiClient, publicApiClient } from "../../client";
+import { privateApiClient } from "../../client";
 
 /**
  * 댓글 목록을 조회합니다.
@@ -16,7 +16,7 @@ import { privateApiClient, publicApiClient } from "../../client";
 export const getComments = async (
   params: GetCommentsParams,
 ): Promise<GetCommentsResponse> => {
-  const { data } = await publicApiClient.get<GetCommentsResponse>(
+  const { data } = await privateApiClient.get<GetCommentsResponse>(
     API_PATHS.comment.base,
     { params },
   );

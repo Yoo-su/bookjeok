@@ -270,6 +270,37 @@ html::-webkit-scrollbar {
   scrollbar-gutter: stable;
 }
 
+/* 형광펜 자국. 활성 내비게이션 항목을 배경 박스나 좌측 바 대신 글자에 그은
+   자국으로 표시한다. 글자 높이의 아래 52%만 덮어야 '칠한 배경'이 아니라
+   '그은 자국'으로 읽힌다. 100%를 덮으면 그냥 형광색 알약이 된다. */
+.highlighter-mark {
+  --highlighter-color: rgb(253 230 138 / 0.8);
+  background-image: linear-gradient(
+    to top,
+    var(--highlighter-color) 0 52%,
+    transparent 52%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  /* 줄바꿈되면 조각마다 자국을 따로 그린다 */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: highlighter-sweep 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 드로어는 열릴 때마다 다시 마운트되므로 펜을 긋는 동작이 매번 보인다. */
+@keyframes highlighter-sweep {
+  from {
+    background-size: 0 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlighter-mark {
+    animation: none;
+  }
+}
+
 /* iOS Safari는 폼 컨트롤의 글자가 16px 미만이면 포커스 시 화면을 확대한다.
    개별 화면에서 text-sm/text-xs로 덮어써도 확대되지 않도록 터치 기기에서만 하한을 건다.
    @layer 밖에 두는 것이 중요하다. base 레이어에 넣으면 utilities 레이어의 .text-sm에 진다. */
