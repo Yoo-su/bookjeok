@@ -115,10 +115,18 @@ export const useToggleCommentLikeMutation = (
   targetType: CommentTargetType,
   targetId: string,
   page: number,
-  options?: { onError?: (error: unknown) => void },
+  options?: {
+    viewerId?: number;
+    onError?: (error: unknown) => void;
+  },
 ) => {
   const queryClient = useQueryClient();
-  const queryKey = commentKeys.list(targetType, targetId, page).queryKey;
+  const queryKey = commentKeys.list(
+    targetType,
+    targetId,
+    page,
+    options?.viewerId,
+  ).queryKey;
 
   return useMutation({
     mutationFn: (id: number) => toggleCommentLike(id),
@@ -148,6 +156,26 @@ export const useToggleCommentLikeMutation = (
       );
 
       return { previousData };
+    },
+    onSuccess: (updatedComment) => {
+      queryClient.setQueryData(
+        queryKey,
+        (old: { data: Comment[]; meta: unknown } | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            data: old.data.map((comment) =>
+              comment.id === updatedComment.id
+                ? {
+                    ...comment,
+                    isLiked: updatedComment.isLiked,
+                    likeCount: updatedComment.likeCount,
+                  }
+                : comment,
+            ),
+          };
+        },
+      );
     },
     onError: (err, commentId, context) => {
       if (context?.previousData) {

@@ -70,7 +70,7 @@ export const CommentItem = ({
   const isOwner = currentUser?.id === comment.userId;
 
   const { mutate: toggleLike, isPending: isLikePending } =
-    useToggleCommentLikeMutation(targetType, targetId, page);
+    useToggleCommentLikeMutation(targetType, targetId, page, user?.id);
   const { mutate: updateComment, isPending: isUpdatePending } =
     useUpdateCommentMutation(targetType, targetId);
   const { mutate: deleteComment, isPending: isDeletePending } =

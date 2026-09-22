@@ -4,6 +4,7 @@ import { CommentTargetType } from "@bookjeok/core";
 import { useCommentsQuery } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
 
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { Pagination } from "@/shared/components/ui/pagination";
 
@@ -27,12 +28,14 @@ export const CommentList = ({
   onPageChange,
   enabled = true,
 }: CommentListProps) => {
+  const viewerId = useAuthStore((state) => state.user?.id);
   const { data, isLoading, isError } = useCommentsQuery(
     targetType,
     targetId,
     page,
     10,
     enabled,
+    viewerId,
   );
   const t = useTranslations("comment.list");
 
