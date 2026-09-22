@@ -196,6 +196,11 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    /* 기본값은 한글을 음절 단위로 끊어 좁은 화면에서 단어 중간에 줄바꿈이 생긴다.
+       overflow-wrap을 같이 주지 않으면 긴 URL·ISBN이 끊기지 않아 넘친다.
+       base 레이어에 둬 break-all 같은 개별 유틸리티가 이기게 한다. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 }
 

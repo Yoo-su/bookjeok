@@ -12,8 +12,7 @@ interface BookSliderSkeletonProps {
 
 // 화면 너비별 반응형 치수 계산 헬퍼 함수
 const getSliderDimensions = (width?: number) => {
-  const w =
-    width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
+  const w = width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
   if (w > 1024) {
     return { radius: 580, cardWidth: 180, cardHeight: 270 };
   } else if (w > 768) {

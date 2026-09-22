@@ -10,7 +10,7 @@ export const RelatedReviewsSkeleton = () => {
   return (
     <Swiper spaceBetween={16} slidesPerView="auto" className="w-full">
       {[...Array(4)].map((_, i) => (
-        <SwiperSlide key={i} className="w-[320px]! sm:w-[380px]! select-none">
+        <SwiperSlide key={i} className="w-[280px]! sm:w-[380px]! select-none">
           <ReviewCardSkeleton />
         </SwiperSlide>
       ))}

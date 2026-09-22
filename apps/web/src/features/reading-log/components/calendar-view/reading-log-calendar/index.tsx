@@ -152,7 +152,7 @@ export function ReadingLogCalendar({
                 <div
                   key={dayKey}
                   className={cn(
-                    "py-4 text-center text-sm font-semibold tracking-wide transition-colors duration-500",
+                    "py-2.5 text-center text-xs font-semibold sm:py-4 sm:text-sm tracking-wide transition-colors duration-500",
                     i === 0
                       ? theme.primary // 일요일 (Primary Color)
                       : i === 6

@@ -73,17 +73,17 @@ export const DefaultFooter = () => {
             </div>
 
             {/* 우측 섹션: 링크 모음 */}
-            <div className="grid grid-cols-2 gap-10 sm:gap-0">
+            <div className="grid grid-cols-2 gap-6 sm:gap-0">
               {/* Service Links */}
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-stone-900">
                   {t("service")}
                 </h3>
-                <ul className="space-y-2.5 text-sm text-stone-500">
+                <ul className="space-y-1 text-sm text-stone-500">
                   <li>
                     <Link
                       href={PATHS.BOOK_SEARCH}
-                      className="hover:text-stone-800 transition-colors"
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
                       {tNav("menu_search")}
                     </Link>
@@ -91,7 +91,7 @@ export const DefaultFooter = () => {
                   <li>
                     <Link
                       href={PATHS.LOUNGE}
-                      className="hover:text-stone-800 transition-colors"
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
                       {tNav("menu_lounge")}
                     </Link>
@@ -99,7 +99,7 @@ export const DefaultFooter = () => {
                   <li>
                     <Link
                       href={PATHS.BOOK_MARKET}
-                      className="hover:text-stone-800 transition-colors"
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
                       {tNav("menu_market")}
                     </Link>
@@ -107,7 +107,7 @@ export const DefaultFooter = () => {
                   <li>
                     <Link
                       href={PATHS.REVIEWS}
-                      className="hover:text-stone-800 transition-colors"
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
                       {tNav("menu_reviews")}
                     </Link>
@@ -115,7 +115,7 @@ export const DefaultFooter = () => {
                   <li>
                     <Link
                       href={PATHS.INSIGHTS}
-                      className="hover:text-stone-800 transition-colors"
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
                       {tNav("menu_insights")}
                     </Link>
@@ -128,7 +128,7 @@ export const DefaultFooter = () => {
                 <h3 className="text-sm font-semibold text-stone-900">
                   {t("contact")}
                 </h3>
-                <ul className="space-y-2.5 text-sm text-stone-500">
+                <ul className="space-y-1 text-sm text-stone-500">
                   <li>rhan0871@naver.com</li>
                   <li>Seoul, Republic of Korea</li>
                 </ul>
@@ -145,13 +145,13 @@ export const DefaultFooter = () => {
             <div className="flex gap-6">
               <Link
                 href={PATHS.TERMS}
-                className="hover:text-stone-600 transition-colors"
+                className="inline-block py-1.5 hover:text-stone-600 transition-colors"
               >
                 {t("terms")}
               </Link>
               <Link
                 href={PATHS.PRIVACY}
-                className="hover:text-stone-600 transition-colors"
+                className="inline-block py-1.5 hover:text-stone-600 transition-colors"
               >
                 {t("privacy")}
               </Link>

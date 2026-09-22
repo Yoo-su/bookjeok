@@ -207,8 +207,7 @@ ActiveBookInfo.displayName = "ActiveBookInfo";
 
 // 화면 너비별 반응형 치수 계산 헬퍼 함수
 const getSliderDimensions = (width?: number) => {
-  const w =
-    width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
+  const w = width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
   if (w > 1024) {
     return { radius: 580, cardWidth: 180, cardHeight: 270 };
   } else if (w > 768) {
@@ -466,7 +465,7 @@ export const MainBookSlider = () => {
             <button
               key={publisher}
               onClick={() => setActivePublisher(publisher)}
-              className={`relative px-3.5 md:px-7 py-1.5 md:py-2.5 rounded-full text-xs md:text-base transition-all duration-500 whitespace-nowrap ${
+              className={`relative px-4 md:px-7 py-2.5 rounded-full text-xs md:text-base transition-all duration-500 whitespace-nowrap ${
                 activePublisher === publisher
                   ? "text-stone-900 font-semibold shadow-sm"
                   : "text-stone-400 hover:text-stone-700 font-medium"

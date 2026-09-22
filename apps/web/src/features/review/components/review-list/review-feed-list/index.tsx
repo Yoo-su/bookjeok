@@ -58,7 +58,7 @@ export function ReviewFeedList() {
             {feed.reviews.length >= 4 && (
               <Link
                 href={`${PATHS.REVIEWS}?category=${feed.category}`}
-                className="group flex items-center gap-1 text-stone-400 hover:text-stone-700 transition-colors duration-200"
+                className="group -my-2 flex items-center gap-1 py-2 text-stone-400 hover:text-stone-700 transition-colors duration-200"
               >
                 <span className="text-xs font-light relative pb-0.5 border-b border-stone-200 group-hover:border-stone-500 transition-colors duration-200">
                   {t("more")}
