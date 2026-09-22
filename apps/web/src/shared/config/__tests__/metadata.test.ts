@@ -118,6 +118,19 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
     );
   });
 
+  // 자기 참조가 없는 클러스터는 무효이고, noindex URL은 대체 언어판이 될 수 없다.
+  it("ko 외 로케일에는 hreflang 클러스터를 붙이지 않는다", () => {
+    const meta = createPageMetadata({
+      title: "테스트 제목",
+      description: "테스트 설명",
+      locale: "en",
+      path: "/test-path",
+    });
+
+    expect(meta.alternates?.canonical).toBe("/en/test-path");
+    expect(meta.alternates?.languages).toBeUndefined();
+  });
+
   it("noIndex 옵션이 true일 경우 robots 설정에 index: false가 적용되어야 한다", () => {
     const meta = createPageMetadata({
       title: "비공개 페이지",
@@ -126,6 +139,23 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
     });
 
     expect(meta.robots).toEqual({
+      index: false,
+      follow: true,
+    });
+  });
+});
+
+describe("generateGlobalMetadata (전역 메타데이터)", () => {
+  it("ko는 색인을 허용한다", () => {
+    expect(generateGlobalMetadata((key) => key, "ko").robots).toMatchObject({
+      index: true,
+      follow: true,
+    });
+  });
+
+  // nofollow를 걸면 크롤러가 /en 안을 돌지 못해 하위 페이지의 noindex를 읽지 못한다.
+  it("ko 외 로케일은 noindex이되 링크는 따라가게 둔다", () => {
+    expect(generateGlobalMetadata((key) => key, "en").robots).toEqual({
       index: false,
       follow: true,
     });

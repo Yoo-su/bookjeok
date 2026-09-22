@@ -34,8 +34,12 @@ describe("isBlockedCrawler", () => {
 
   it("실측 상위 비검색 크롤러를 막는다", () => {
     expect(isBlockedCrawler(APPLEBOT)).toBe(true);
-    expect(isBlockedCrawler(MEDIAPARTNERS)).toBe(true);
     expect(isBlockedCrawler(BAIDU)).toBe(true);
+  });
+
+  // 막으면 문맥 타게팅이 죽는다. 검색 색인과는 무관한 별개의 이유다.
+  it("AdSense 크롤러는 통과시킨다", () => {
+    expect(isBlockedCrawler(MEDIAPARTNERS)).toBe(false);
   });
 
   it("AI 학습·SEO 도구 크롤러를 막는다", () => {
@@ -50,11 +54,11 @@ describe("isBlockedCrawler", () => {
 
   // 허용 목록이 먼저 걸리지 않으면 Googlebot이 차단 패턴에 삼켜진다.
   // 그 사고는 색인 전체를 날린다.
-  it("Google 계열 중 검색 크롤러만 통과하고 나머지는 막힌다", () => {
+  it("Google 계열 중 검색·광고 크롤러만 통과하고 나머지는 막힌다", () => {
     expect(isBlockedCrawler(GOOGLEBOT)).toBe(false);
+    expect(isBlockedCrawler(MEDIAPARTNERS)).toBe(false);
     expect(isBlockedCrawler("Google-Extended")).toBe(true);
     expect(isBlockedCrawler("GoogleOther")).toBe(true);
-    expect(isBlockedCrawler(MEDIAPARTNERS)).toBe(true);
   });
 });
 

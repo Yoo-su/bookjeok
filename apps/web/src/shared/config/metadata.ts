@@ -9,6 +9,9 @@ export const generateGlobalMetadata = (
   // robots.txt로 막지 않는 이유: 수집을 차단하면 크롤러가 이 noindex를 읽을 수
   // 없어 이미 색인된 페이지가 그대로 남는다. 수집은 허용하고 noindex로
   // 걷어내게 한다.
+  //
+  // 같은 이유로 follow는 남긴다. nofollow를 걸면 크롤러가 /en 안을 돌지 못해
+  // 하위 페이지의 noindex에 도달할 경로가 사라진다.
   const isSearchExcludedLocale = locale !== "ko";
   const homeImage = `/og/${locale === "en" ? "en" : "ko"}-home.png`;
   return {
@@ -64,19 +67,21 @@ export const generateGlobalMetadata = (
       images: [homeImage],
     },
     robots:
-      process.env.VERCEL_ENV === "preview" || isSearchExcludedLocale
+      process.env.VERCEL_ENV === "preview"
         ? { index: false, follow: false }
-        : {
-            index: true,
-            follow: true,
-            googleBot: {
+        : isSearchExcludedLocale
+          ? { index: false, follow: true }
+          : {
               index: true,
               follow: true,
-              "max-video-preview": -1,
-              "max-image-preview": "large",
-              "max-snippet": -1,
+              googleBot: {
+                index: true,
+                follow: true,
+                "max-video-preview": -1,
+                "max-image-preview": "large",
+                "max-snippet": -1,
+              },
             },
-          },
     verification: {
       google: "04FIlPfM3tjBU80tzoVObOuhIYffXxg0AzUK8ZuL41s",
       other: {
@@ -166,15 +171,18 @@ export const createPageMetadata = ({
   };
 
   if (path !== undefined) {
-    // /en은 레이아웃에서 noindex 처리하므로 hreflang alternate에서 제외
-    // (색인 제외 URL을 대체 언어판으로 제시하면 모순된 신호)
-    metadata.alternates = {
-      canonical: fullPath,
-      languages: {
+    metadata.alternates = { canonical: fullPath };
+
+    // hreflang은 ko 페이지에만 붙인다.
+    //
+    // /en은 레이아웃에서 noindex 처리하므로 대체 언어판이 될 수 없고, ko만 담은
+    // 클러스터는 자기 참조가 없어 어차피 무효다.
+    if (currentLocale === "ko") {
+      metadata.alternates.languages = {
         ko: `/ko${cleanPath}`,
         "x-default": `/ko${cleanPath}`,
-      },
-    };
+      };
+    }
   }
 
   return metadata;
