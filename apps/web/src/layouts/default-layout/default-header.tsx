@@ -98,9 +98,11 @@ export const DefaultHeader = () => {
       isActive(path) ? "text-stone-900" : "text-stone-500 hover:text-stone-900",
     );
 
+  // 챕터 인덱스는 값이 바뀌지 않는 정적 레이블이라 mono가 할 일이 없다.
+  // 알약은 Pretendard를 물려받으므로 명조체를 명시해 드롭다운·드로어와 맞춘다.
   const getIndexNumClass = (path: string) =>
     cn(
-      "font-mono text-[10px] tabular-nums tracking-wider select-none transition-colors duration-200 shrink-0",
+      "font-[family-name:var(--font-gowun-batang)] text-[11px] tabular-nums select-none transition-colors duration-200 shrink-0",
       isActive(path)
         ? "text-stone-900 font-semibold"
         : "text-stone-400/90 group-hover:text-stone-700",
@@ -209,7 +211,7 @@ export const DefaultHeader = () => {
                 <DropdownMenuItem asChild className={dropdownItemClass}>
                   <Link href={PATHS.BOOK_MARKET} className={dropdownLinkClass}>
                     <span>{t("nav.market_home")}</span>
-                    <span className="font-mono text-[9.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
                       04.1
                     </span>
                   </Link>
@@ -225,7 +227,7 @@ export const DefaultHeader = () => {
                     className={dropdownLinkClass}
                   >
                     <span>{t("nav.write_sales")}</span>
-                    <span className="font-mono text-[9.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
                       04.2
                     </span>
                   </Link>
@@ -241,7 +243,7 @@ export const DefaultHeader = () => {
                     className={dropdownLinkClass}
                   >
                     <span>{t("nav.my_sales")}</span>
-                    <span className="font-mono text-[9.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
                       04.3
                     </span>
                   </Link>
@@ -279,7 +281,7 @@ export const DefaultHeader = () => {
                 <DropdownMenuItem asChild className={dropdownItemClass}>
                   <Link href={PATHS.REVIEWS} className={dropdownLinkClass}>
                     <span>{t("nav.review_feed")}</span>
-                    <span className="font-mono text-[9.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
                       05.1
                     </span>
                   </Link>
@@ -295,7 +297,7 @@ export const DefaultHeader = () => {
                     className={dropdownLinkClass}
                   >
                     <span>{t("nav.write_review")}</span>
-                    <span className="font-mono text-[9.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
                       05.2
                     </span>
                   </Link>
@@ -311,7 +313,7 @@ export const DefaultHeader = () => {
                     className={dropdownLinkClass}
                   >
                     <span>{t("nav.my_reviews")}</span>
-                    <span className="font-mono text-[9.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
                       05.3
                     </span>
                   </Link>

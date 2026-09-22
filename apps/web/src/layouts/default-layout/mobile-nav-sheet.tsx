@@ -160,7 +160,7 @@ export const MobileNavSheet = () => {
             여기가 유일한 진입점이 된다 (재생 중에는 FloatingMusicPill도 뜬다).
           */}
           <div className="flex items-center justify-between rounded-md bg-stone-50/80 px-3 py-2.5">
-            <span className="font-mono text-[11px] font-bold tracking-widest text-stone-400 uppercase">
+            <span className="font-[family-name:var(--font-nanum-gothic)] text-xs font-bold tracking-[0.04em] text-stone-500 select-none">
               {tMusic("title")}
             </span>
             <HeaderMusicButton />
@@ -168,7 +168,13 @@ export const MobileNavSheet = () => {
 
           {navSections.map((section) => (
             <div key={section.title} className="space-y-2">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-stone-400 font-mono">
+              {/*
+                섹션 레이블은 한글이다. font-mono 스택에는 한글 글리프가 없어
+                기기마다 다른 폰트로 대체되고, uppercase는 무효, Latin 소형
+                대문자용인 tracking-widest는 한글을 성기게 벌려 놓는다.
+                등록된 한글 폰트(나눔고딕)로 고정한다.
+              */}
+              <h3 className="font-[family-name:var(--font-nanum-gothic)] text-xs font-bold tracking-[0.04em] text-stone-500">
                 {section.title}
               </h3>
               <div className="flex flex-col gap-1">
@@ -180,18 +186,29 @@ export const MobileNavSheet = () => {
                       href={item.href}
                       onClick={() => handleLinkClick(item.href)}
                       className={cn(
-                        "flex items-center justify-between py-2 px-3 text-sm transition-all duration-200 rounded-md",
+                        "flex items-center justify-between py-2 px-3 text-sm transition-colors duration-200 rounded-md",
                         active
-                          ? "bg-stone-100/80 font-bold text-stone-900 border-l-2 border-stone-900 pl-2.5"
+                          ? "font-bold text-stone-900"
                           : "text-stone-600 font-medium hover:bg-stone-50 hover:text-stone-900",
                       )}
                     >
-                      <span>{item.label}</span>
+                      {/* 활성 표시는 행 배경이 아니라 글자에 그은 형광펜 자국이다.
+                          자국이 글자보다 살짝 넓어야 손으로 그은 것처럼 보인다. */}
+                      <span
+                        className={cn(active && "highlighter-mark -mx-1 px-1")}
+                      >
+                        {item.label}
+                      </span>
+                      {/*
+                        챕터 인덱스는 값이 바뀌지도, 사람이 받아적지도 않는
+                        정적 레이블이다. mono가 할 일이 없고 "코드" 톤만
+                        끌고 오므로 드로어의 명조체를 그대로 물려받는다.
+                      */}
                       <span
                         className={cn(
-                          "font-mono text-[10.5px] tabular-nums tracking-wider select-none",
+                          "text-[11px] tabular-nums select-none",
                           active
-                            ? "text-stone-900 font-semibold"
+                            ? "text-stone-900 font-bold"
                             : "text-stone-400",
                         )}
                       >
