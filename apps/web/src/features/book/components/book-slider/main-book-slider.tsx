@@ -465,7 +465,7 @@ export const MainBookSlider = () => {
             <button
               key={publisher}
               onClick={() => setActivePublisher(publisher)}
-              className={`relative px-3.5 md:px-7 py-1.5 md:py-2.5 rounded-full text-xs md:text-base transition-all duration-500 whitespace-nowrap ${
+              className={`relative px-4 md:px-7 py-2.5 rounded-full text-xs md:text-base transition-all duration-500 whitespace-nowrap ${
                 activePublisher === publisher
                   ? "text-stone-900 font-semibold shadow-sm"
                   : "text-stone-400 hover:text-stone-700 font-medium"
