@@ -37,7 +37,6 @@ import {
   do_hyeon,
   gowun_batang,
   nanum_gothic,
-  pretendard,
   song_myung,
 } from "@/styles/fonts";
 
@@ -81,7 +80,7 @@ export default async function Layout({
   return (
     <html
       lang={locale}
-      className={`${pretendard.variable} ${nanum_gothic.variable} ${bitcount.variable} ${gowun_batang.variable} ${song_myung.variable} ${do_hyeon.variable} ${diphylleia.variable}`}
+      className={`${nanum_gothic.variable} ${bitcount.variable} ${gowun_batang.variable} ${song_myung.variable} ${do_hyeon.variable} ${diphylleia.variable}`}
     >
       <body style={{ fontFamily: "var(--font-pretendard)" }}>
         <a

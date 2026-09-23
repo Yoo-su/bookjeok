@@ -106,6 +106,16 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // 버전 폴더 단위로 교체하므로 immutable 사용
+        source: "/fonts/pretendard/:version/:file*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source: "/videos/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
       },
