@@ -5,14 +5,15 @@ import { parseArgs } from "node:util";
 
 import { DATA_DIR, describeDatabase, loadEnv, requireEnv } from "./config";
 import { openJournal } from "./journal";
-import { KAKAO_MAX_PAGE } from "./kakao";
-import {
-  EXCLUDE_REASON_LABEL,
-  type ExcludeReason,
-  localToday,
-} from "./normalize";
+import { localToday } from "./normalize";
 import { createIngestDeps, createScanDeps, openDb } from "./runtime";
 import { createIngestServer } from "./server";
+import {
+  createSources,
+  describeSources,
+  imageOrigins,
+  SOURCES,
+} from "./sources";
 import { runApply, runScan, summarizeScan } from "./workflow";
 
 const USAGE = `사용법: pnpm --filter @bookjeok/book-ingest ingest <명령> [옵션]
@@ -20,7 +21,8 @@ const USAGE = `사용법: pnpm --filter @bookjeok/book-ingest ingest <명령> [�
   serve                          로컬 화면(127.0.0.1)을 띄웁니다
       --port <n>                 기본 4700
   scan  --publishers 민음사,창비  DB에 없는 신간을 찾기만 합니다(쓰기 없음)
-      --max-pages <n>            출판사당 최대 페이지(1~20, 기본 20)
+      --source <id>              공급처: ${SOURCES.map((s) => s.id).join(" | ")} (기본 ${SOURCES[0].id})
+      --max-pages <n>            출판사당 최대 페이지(기본은 공급처 상한)
   apply --publishers 민음사 --yes 찾은 신간 전부를 적재합니다
       --isbn a,b                 이 ISBN만 적재
   publishers [--limit 50]        DB 보유 수 상위 출판사`;
@@ -33,6 +35,7 @@ async function main() {
     allowPositionals: true,
     options: {
       publishers: { type: "string" },
+      source: { type: "string" },
       "max-pages": { type: "string" },
       isbn: { type: "string" },
       yes: { type: "boolean", default: false },
@@ -47,31 +50,34 @@ async function main() {
   const db = openDb();
   console.log(`DB: ${describeDatabase(requireEnv("INGEST_DATABASE_URL"))}`);
   const today = localToday();
-  const maxPages = values["max-pages"]
-    ? Number(values["max-pages"])
-    : KAKAO_MAX_PAGE;
+  const sources = createSources();
 
   if (command === "serve") {
     const port = Number(values.port ?? 4700);
     const token = randomBytes(24).toString("hex");
-    const scanDeps = createScanDeps(db);
     const server = createIngestServer({
       port,
       token,
+      imageOrigins: imageOrigins(),
       services: {
         target: describeDatabase(requireEnv("INGEST_DATABASE_URL")),
+        sources: describeSources(),
         publisherStats: (limit) => db.publisherStats(limit),
-        scan: (publishers, pages, onPage) =>
-          runScan(publishers, scanDeps, openJournal("scan"), {
-            maxPages: pages,
-            today,
-            onPage,
-          }),
+        scan(sourceId, publishers, pages, onPage) {
+          const source = sources.get(sourceId);
+          if (!source) throw new Error(`공급처 ${sourceId}의 키가 없습니다`);
+          return runScan(
+            publishers,
+            createScanDeps(db, source),
+            openJournal("scan"),
+            { maxPages: pages, today, onPage },
+          );
+        },
         async apply(books, onBook) {
           const journal = openJournal("apply");
           const summary = await runApply(
             books,
-            createIngestDeps(db),
+            createIngestDeps(db, sources),
             journal,
             onBook,
           );
@@ -108,15 +114,29 @@ async function main() {
       throw new Error("--publishers가 필요합니다\n\n" + USAGE);
 
     if (command === "scan" || command === "apply") {
+      const sourceId = values.source ?? SOURCES[0].id;
+      const definition = SOURCES.find((s) => s.id === sourceId);
+      if (!definition) throw new Error(`알 수 없는 공급처: ${sourceId}`);
+      requireEnv(definition.envKey);
+      const source = sources.get(sourceId)!;
+      console.log(`공급처: ${source.label}`);
+
       const scanJournal = openJournal("scan");
-      const scans = await runScan(publishers, createScanDeps(db), scanJournal, {
-        maxPages,
-        today,
-        onPage: (p) =>
-          process.stdout.write(
-            `\r${p.publisher} ${p.page}페이지 — 신규 ${p.fresh} · 보유 ${p.known} · 제외 ${p.excluded}      `,
-          ),
-      });
+      const scans = await runScan(
+        publishers,
+        createScanDeps(db, source),
+        scanJournal,
+        {
+          maxPages: values["max-pages"]
+            ? Number(values["max-pages"])
+            : source.maxPages,
+          today,
+          onPage: (p) =>
+            process.stdout.write(
+              `\r${p.publisher} ${p.page}페이지 — 신규 ${p.fresh} · 보유 ${p.known} · 제외 ${p.excluded}      `,
+            ),
+        },
+      );
       process.stdout.write("\n");
       for (const scan of scans) printSummary(summarizeScan(scan));
       console.log(`조회 기록: ${scanJournal.path}`);
@@ -139,7 +159,7 @@ async function main() {
       const journal = openJournal("apply");
       const summary = await runApply(
         books,
-        createIngestDeps(db),
+        createIngestDeps(db, sources),
         journal,
         (o, i) => {
           const tail =
@@ -168,12 +188,10 @@ async function main() {
 
 function printSummary(s: ReturnType<typeof summarizeScan>) {
   const reasons = Object.entries(s.excludedByReason)
-    .map(
-      ([reason, n]) => `${EXCLUDE_REASON_LABEL[reason as ExcludeReason]} ${n}`,
-    )
+    .map(([label, n]) => `${label} ${n}`)
     .join(", ");
   console.log(
-    `${s.publisher}: 카카오 ${s.totalCount}권 중 ${s.pages}페이지 — 신규 ${s.fresh} (예약 ${s.preorder}, 저자 없음 ${s.emptyAuthor}) · 보유 ${s.known} · 제외 ${s.excluded}${reasons ? ` (${reasons})` : ""}`,
+    `${s.publisher}: ${s.totalCount}권 중 ${s.pages}페이지 — 신규 ${s.fresh} (예약 ${s.preorder}, 저자 없음 ${s.emptyAuthor}) · 보유 ${s.known} · 제외 ${s.excluded}${reasons ? ` (${reasons})` : ""}`,
   );
 }
 

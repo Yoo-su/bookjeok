@@ -9,6 +9,8 @@ export interface BookRow {
   pubDate: string | null;
   description: string;
   image: string;
+  /** 공급처가 판매지수를 주지 않으면 NULL. */
+  salesPoint: number | null;
 }
 
 export interface PublisherStat {
@@ -27,8 +29,8 @@ export interface BookDb {
 /**
  * `books`에는 SELECT와 INSERT만 합니다. UPDATE·DELETE·DDL은 하지 않습니다.
  *
- * `salesPoint`·`embedding`은 넣지 않아 NULL이 됩니다. `salesPoint`의 0은 "판매 실적
- * 없음"이라는 다른 뜻이고, 임베딩은 상시 생성하지 않는 것이 의도된 상태입니다.
+ * `salesPoint`는 공급처가 준 값만 넣고, 없으면 NULL입니다(0은 "판매 실적 없음"이라는
+ * 다른 뜻). `embedding`은 넣지 않습니다. 상시 생성하지 않는 것이 의도된 상태입니다.
  * `viewCount`·`createdAt`·`updatedAt`은 컬럼 기본값을 씁니다.
  */
 export function createBookDb(url: string): BookDb {
@@ -65,8 +67,8 @@ export function createBookDb(url: string): BookDb {
 
     async insertBook(row) {
       const { rowCount } = await pool.query(
-        `INSERT INTO books (isbn, title, author, publisher, discount, "pubDate", description, image)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO books (isbn, title, author, publisher, discount, "pubDate", description, image, "salesPoint")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          ON CONFLICT (isbn) DO NOTHING`,
         [
           row.isbn,
@@ -77,6 +79,7 @@ export function createBookDb(url: string): BookDb {
           row.pubDate,
           row.description,
           row.image,
+          row.salesPoint,
         ],
       );
       return rowCount === 1;

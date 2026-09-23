@@ -1,158 +1,166 @@
 import { cleanHtmlText } from "@bookjeok/core";
 
-import type { KakaoBook } from "./kakao";
+/** 적재하지 않는 이유. 공급처 고유 사유는 각 공급처 파일에서 같은 모양으로 만듭니다. */
+export interface Exclusion {
+  reason: string;
+  label: string;
+}
 
 /**
- * 적재하지 않는 이유. 결정 근거는 `docs/book-data-migration-plan.md` 6-d.
+ * 공급처와 무관하게 적용하는 제외 규칙. 결정 근거는 `docs/book-data-migration-plan.md` 6-d.
  * - periodical: 977로 시작하는 ISSN 바코드. 잡지는 **호가 달라도 같은 값**을 써서 PK가 충돌합니다.
- * - no_price / no_status: 정가 0 이하·판매 상태 없음. 코멘터리북·굿즈 KIT 같은 비도서가 여기 걸립니다.
+ * - non_isbn: 978·979가 아닌 13자리. `209…` 같은 유통사 내부 바코드로, 달력·굿즈·사은품입니다.
+ * - no_price: 정가 0 이하. 코멘터리북 같은 비도서가 여기 걸립니다.
  * - set: 세트 상품. 출판사 검색 상위를 점유하던 전례가 있습니다(8-d).
- * - no_cover: 원본 표지 URL(`fname`)이 없는 경우. 120px 썸네일로 대신하지 않습니다.
+ * - no_cover: 쓸 만한 원본 표지 주소가 없는 경우. 썸네일로 대신하지 않습니다.
  */
-export type ExcludeReason =
-  | "publisher_mismatch"
-  | "no_title"
-  | "no_isbn13"
-  | "periodical"
-  | "set"
-  | "no_price"
-  | "no_status"
-  | "no_cover";
+export const COMMON_EXCLUSIONS = {
+  publisher_mismatch: { reason: "publisher_mismatch", label: "다른 출판사" },
+  no_title: { reason: "no_title", label: "제목 없음" },
+  no_isbn13: { reason: "no_isbn13", label: "ISBN-13 없음" },
+  periodical: { reason: "periodical", label: "잡지(ISSN)" },
+  non_isbn: { reason: "non_isbn", label: "ISBN 아닌 바코드" },
+  set: { reason: "set", label: "세트" },
+  no_price: { reason: "no_price", label: "정가 0 이하" },
+  no_cover: { reason: "no_cover", label: "원본 표지 없음" },
+} satisfies Record<string, Exclusion>;
 
-export const EXCLUDE_REASON_LABEL: Record<ExcludeReason, string> = {
-  publisher_mismatch: "다른 출판사",
-  no_title: "제목 없음",
-  no_isbn13: "ISBN-13 없음",
-  periodical: "잡지(ISSN)",
-  set: "세트",
-  no_price: "정가 0 이하",
-  no_status: "판매 상태 없음",
-  no_cover: "원본 표지 없음",
-};
+/** 공급처 응답을 공통 형태로 옮긴 것. 제외 규칙을 거치기 전 단계입니다. */
+export interface Draft {
+  isbn13: string | null;
+  isbn10: string | null;
+  title: string;
+  publisher: string;
+  authors: string[];
+  translators: string[];
+  price: number;
+  pubDate: string | null;
+  description: string;
+  /** 표지 원본 후보. 앞에서부터 받아 보고 실패하면 다음 것을 씁니다. */
+  coverUrls: string[];
+  /** 화면 미리보기용. DB에는 들어가지 않습니다. */
+  thumbnail: string;
+  salesPoint: number | null;
+  status: string;
+  category: string | null;
+  link: string;
+  /** 공급처 고유 규칙에 걸렸으면 그 사유. 공통 규칙을 모두 통과한 뒤에 봅니다. */
+  rejection?: Exclusion | null;
+}
 
-/** `books`에 넣을 형태로 정제한 후보. `kakao`는 산출물 보존용 원본입니다. */
+/** `books`에 넣을 형태로 정제한 후보. `raw`는 실행 기록에 남길 공급처 원본입니다. */
 export interface Candidate {
+  source: string;
   isbn: string;
   isbn10: string | null;
   title: string;
   author: string;
+  translators: string[];
   publisher: string;
   /** 정가. `books.discount`는 2026-09-09부터 정가를 문자열로 담습니다(7-f). */
   discount: string;
   pubDate: string | null;
   description: string;
-  coverSourceUrl: string;
+  coverUrls: string[];
+  thumbnail: string;
+  /** 공급처가 준 판매지수. 없으면 NULL로 넣습니다(0은 "판매 실적 없음"이라 다른 뜻). */
+  salesPoint: number | null;
+  status: string;
+  category: string | null;
+  link: string;
   /** 출간일이 오늘 이후인 예약판매 도서. 적재 대상이며 표시용입니다. */
   preorder: boolean;
-  kakao: KakaoBook;
+  raw: unknown;
 }
 
-export interface Excluded {
-  reason: ExcludeReason;
+export interface Excluded extends Exclusion {
   isbn: string | null;
   title: string;
-  kakao: KakaoBook;
+  publisher: string;
+  raw: unknown;
 }
 
 export type Normalized =
   | { ok: true; book: Candidate }
   | { ok: false; excluded: Excluded };
 
-export function parseIsbn(raw: string): {
-  isbn13: string | null;
-  isbn10: string | null;
-} {
-  const parts = raw.split(/\s+/).filter(Boolean);
-  return {
-    isbn13: parts.find((p) => /^\d{13}$/.test(p)) ?? null,
-    isbn10: parts.find((p) => /^\d{9}[\dX]$/i.test(p))?.toUpperCase() ?? null,
-  };
-}
-
-/**
- * 썸네일 URL의 `fname`에 든 원본 표지 주소를 꺼냅니다.
- * 원본은 `t1.daumcdn.net/lbook/image/{id}`이고 폭 392~458px입니다. 썸네일 크기
- * 지정자를 키워도 이보다 커지지 않으므로 이것이 얻을 수 있는 최대 화질입니다.
- */
-export function originalCoverUrl(thumbnail: string): string | null {
-  if (!thumbnail) return null;
-  try {
-    const fname = new URL(thumbnail).searchParams.get("fname");
-    if (!fname) return null;
-    const source = new URL(fname);
-    return source.protocol === "http:" || source.protocol === "https:"
-      ? source.toString()
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 /**
  * 저자만 이름 그대로 `", "`로 잇습니다. 역자와 역할 표기는 넣지 않습니다.
- * 기존 `books`의 96%가 이 형식이고, 원본 배열은 실행 기록(JSONL)에 남깁니다.
+ * 기존 `books`의 96%가 이 형식이고, 원본은 실행 기록(JSONL)에 남깁니다.
  */
 export function formatAuthor(authors: string[]): string {
-  return authors
-    .map((name) => cleanHtmlText(name))
-    .filter(Boolean)
-    .join(", ");
+  const names = authors.map((name) => cleanHtmlText(name)).filter(Boolean);
+  return [...new Set(names)].join(", ");
 }
 
-/** `datetime`의 날짜 부분만 씁니다. `Date`로 파싱하면 KST에서 하루가 밀립니다. */
-export function toPubDate(datetime: string): string | null {
-  const day = datetime.slice(0, 10);
+/** 날짜 부분만 씁니다. `Date`로 파싱하면 KST에서 하루가 밀립니다. */
+export function toPubDate(raw: string | null | undefined): string | null {
+  const day = (raw ?? "").slice(0, 10);
   return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
 }
 
 const SET_TITLE = /세트|\bset\b/i;
 
-function normalizePublisher(name: string): string {
+function comparablePublisher(name: string): string {
   return cleanHtmlText(name).replace(/\s+/g, " ").trim();
 }
 
-export function normalizeBook(
-  kakao: KakaoBook,
+/** 공통 제외 규칙을 적용해 후보로 만듭니다. 규칙 순서가 곧 보고되는 사유의 우선순위입니다. */
+export function screen(
+  source: string,
+  draft: Draft,
+  raw: unknown,
   expectedPublisher: string,
   today: string,
 ): Normalized {
-  const title = cleanHtmlText(kakao.title);
-  const { isbn13, isbn10 } = parseIsbn(kakao.isbn);
-  const exclude = (reason: ExcludeReason): Normalized => ({
+  const exclude = (exclusion: Exclusion): Normalized => ({
     ok: false,
-    excluded: { reason, isbn: isbn13 ?? isbn10, title, kakao },
+    excluded: {
+      ...exclusion,
+      isbn: draft.isbn13 ?? draft.isbn10,
+      title: draft.title,
+      publisher: draft.publisher,
+      raw,
+    },
   });
+  const rules = COMMON_EXCLUSIONS;
 
   if (
-    normalizePublisher(kakao.publisher) !==
-    normalizePublisher(expectedPublisher)
+    comparablePublisher(draft.publisher) !==
+    comparablePublisher(expectedPublisher)
   ) {
-    return exclude("publisher_mismatch");
+    return exclude(rules.publisher_mismatch);
   }
-  if (!title) return exclude("no_title");
-  if (!isbn13) return exclude("no_isbn13");
-  if (isbn13.startsWith("977")) return exclude("periodical");
-  if (SET_TITLE.test(title)) return exclude("set");
-  if (!(kakao.price > 0)) return exclude("no_price");
-  if (!kakao.status.trim()) return exclude("no_status");
-  const coverSourceUrl = originalCoverUrl(kakao.thumbnail);
-  if (!coverSourceUrl) return exclude("no_cover");
+  if (!draft.title) return exclude(rules.no_title);
+  if (!draft.isbn13) return exclude(rules.no_isbn13);
+  if (draft.isbn13.startsWith("977")) return exclude(rules.periodical);
+  if (!/^97[89]/.test(draft.isbn13)) return exclude(rules.non_isbn);
+  if (SET_TITLE.test(draft.title)) return exclude(rules.set);
+  if (!(draft.price > 0)) return exclude(rules.no_price);
+  if (draft.rejection) return exclude(draft.rejection);
+  if (draft.coverUrls.length === 0) return exclude(rules.no_cover);
 
-  const pubDate = toPubDate(kakao.datetime);
   return {
     ok: true,
     book: {
-      isbn: isbn13,
-      isbn10,
-      title,
-      author: formatAuthor(kakao.authors),
-      publisher: cleanHtmlText(kakao.publisher),
-      discount: String(kakao.price),
-      pubDate,
-      description: cleanHtmlText(kakao.contents),
-      coverSourceUrl,
-      preorder: pubDate !== null && pubDate > today,
-      kakao,
+      source,
+      isbn: draft.isbn13,
+      isbn10: draft.isbn10,
+      title: draft.title,
+      author: formatAuthor(draft.authors),
+      translators: draft.translators,
+      publisher: draft.publisher,
+      discount: String(draft.price),
+      pubDate: draft.pubDate,
+      description: draft.description,
+      coverUrls: draft.coverUrls,
+      thumbnail: draft.thumbnail,
+      salesPoint: draft.salesPoint,
+      status: draft.status,
+      category: draft.category,
+      link: draft.link,
+      preorder: draft.pubDate !== null && draft.pubDate > today,
+      raw,
     },
   };
 }
