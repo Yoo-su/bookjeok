@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/shared/utils/index";
 
@@ -98,6 +98,50 @@ export function getCellIndex(col: number, row: number, total: number): number {
   return (base * primeMultiplier + 11) % total;
 }
 
+/** 그림자 번짐(8)과 y 오프셋(3)을 담는 여백 */
+const SHADOW_PAD = 16;
+
+/** 이 속도(px/프레임) 아래로 떨어지면 정지로 보고 다시 그리기 중단 */
+const REST_VELOCITY = 0.01;
+
+// 셀 크기로 미리 축소해 매 프레임 원본 디코딩·축소를 피함
+function rasterize(
+  img: HTMLImageElement,
+  w: number,
+  h: number,
+  dpr: number,
+): CanvasImageSource {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return img;
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+// 카드 그림자를 한 번만 그려 두고 재사용 (shadowBlur는 매 프레임 비용이 큼)
+function createShadowSprite(
+  w: number,
+  h: number,
+  r: number,
+  dpr: number,
+): HTMLCanvasElement | null {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round((w + SHADOW_PAD * 2) * dpr);
+  canvas.height = Math.round((h + SHADOW_PAD * 2) * dpr);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.shadowColor = "rgba(0, 0, 0, 0.07)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+  ctx.fillStyle = "#ffffff";
+  drawRoundedRect(ctx, SHADOW_PAD, SHADOW_PAD, w, h, r);
+  ctx.fill();
+  return canvas;
+}
+
 export function InfiniteImageField({
   className,
   items,
@@ -111,15 +155,22 @@ export function InfiniteImageField({
   onItemClick,
   ...rest
 }: InfiniteImageFieldProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const loadedImagesRef = useRef<HTMLImageElement[]>([]);
+  const spritesRef = useRef<(CanvasImageSource | null)[]>([]);
+  const shadowRef = useRef<HTMLCanvasElement | null>(null);
   const activeItemsRef = useRef<InfiniteImageItem[]>([]);
   const dimsRef = useRef({ w: 0, h: 0 });
   const camRef = useRef({ x: 0, y: 0 });
   const velRef = useRef({ x: 0, y: 0 });
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
   const isInsideRef = useRef(false);
+  const isVisibleRef = useRef(false);
   const rafRef = useRef<number>(0);
+  const scheduleDrawRef = useRef<() => void>(() => {});
+
+  // 화면 근처에 오기 전(또는 display:none)에는 이미지를 받지 않음
+  const [isNearViewport, setIsNearViewport] = useState(false);
 
   // Normalize image data (support either items object or string array)
   const normalizedItems: InfiniteImageItem[] = (
@@ -137,37 +188,80 @@ export function InfiniteImageField({
       : [{ id: 0, image: "/images/placeholder-image.svg" }];
 
   activeItemsRef.current = safeItems;
+  const imageKey = safeItems.map((i) => i.image).join(",");
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          setIsNearViewport(true);
+          scheduleDrawRef.current();
+        }
+      },
+      { rootMargin: "300px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // Pre-load images
   useEffect(() => {
-    const imgs = safeItems.map((item) => {
+    if (!isNearViewport) return;
+    let cancelled = false;
+    const dpr = window.devicePixelRatio || 1;
+    const list = activeItemsRef.current;
+    spritesRef.current = list.map(() => null);
+
+    list.forEach((item, idx) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
+      img.decoding = "async";
+      img.onload = () => {
+        if (cancelled) return;
+        spritesRef.current[idx] = rasterize(img, imageWidth, imageHeight, dpr);
+        scheduleDrawRef.current();
+      };
       img.src = item.image;
-      return img;
     });
-    loadedImagesRef.current = imgs;
-  }, [safeItems.map((i) => i.image).join(",")]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isNearViewport, imageKey, imageWidth, imageHeight]);
 
   const draw = useCallback(() => {
+    rafRef.current = 0;
+    if (!isVisibleRef.current) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const { w: W, h: H } = dimsRef.current;
-    if (W === 0 || H === 0) {
-      rafRef.current = requestAnimationFrame(draw);
-      return;
-    }
+    if (W === 0 || H === 0) return;
 
     const dpr = window.devicePixelRatio || 1;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const cellW = imageWidth + gap;
     const cellH = imageHeight + gap;
-    const imgs = loadedImagesRef.current;
-    const numImages = Math.max(imgs.length, 1);
+    const sprites = spritesRef.current;
+    const numImages = Math.max(activeItemsRef.current.length, 1);
+
+    if (!shadowRef.current || shadowRef.current.dataset.dpr !== String(dpr)) {
+      shadowRef.current = createShadowSprite(
+        imageWidth,
+        imageHeight,
+        borderRadius,
+        dpr,
+      );
+      if (shadowRef.current) shadowRef.current.dataset.dpr = String(dpr);
+    }
+    const shadow = shadowRef.current;
 
     // Physics — cursor offset from center drives velocity
     const tx = isInsideRef.current
@@ -179,6 +273,15 @@ export function InfiniteImageField({
 
     velRef.current.x += (tx - velRef.current.x) * smoothing;
     velRef.current.y += (ty - velRef.current.y) * smoothing;
+
+    if (
+      !isInsideRef.current &&
+      Math.abs(velRef.current.x) < REST_VELOCITY &&
+      Math.abs(velRef.current.y) < REST_VELOCITY
+    ) {
+      velRef.current.x = 0;
+      velRef.current.y = 0;
+    }
 
     camRef.current.x += velRef.current.x;
     camRef.current.y += velRef.current.y;
@@ -202,43 +305,54 @@ export function InfiniteImageField({
 
         // Deterministic image assignment — avoiding adjacent collision
         const imgIdx = getCellIndex(col, row, numImages);
-        const img = imgs[imgIdx];
-        const item = activeItemsRef.current[imgIdx];
+        const sprite = sprites[imgIdx];
 
-        // Draw Book Cover Image (Tactile physical book feel with soft shadow & clean edge)
-        ctx.save();
-        ctx.shadowColor = "rgba(0, 0, 0, 0.07)";
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 3;
-        ctx.fillStyle = "#ffffff";
-        drawRoundedRect(ctx, sx, sy, imageWidth, imageHeight, borderRadius);
-        ctx.fill();
-        ctx.restore();
+        // Soft shadow card (pre-rendered)
+        if (shadow) {
+          ctx.drawImage(
+            shadow,
+            sx - SHADOW_PAD,
+            sy - SHADOW_PAD,
+            imageWidth + SHADOW_PAD * 2,
+            imageHeight + SHADOW_PAD * 2,
+          );
+        }
 
-        ctx.save();
-        drawRoundedRect(ctx, sx, sy, imageWidth, imageHeight, borderRadius);
-        ctx.clip();
+        // 사각형이면 그리는 영역이 곧 셀이므로 클립 생략
+        const needsClip = borderRadius > 0;
+        if (needsClip) {
+          ctx.save();
+          drawRoundedRect(ctx, sx, sy, imageWidth, imageHeight, borderRadius);
+          ctx.clip();
+        }
 
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, sx, sy, imageWidth, imageHeight);
+        if (sprite) {
+          ctx.drawImage(sprite, sx, sy, imageWidth, imageHeight);
         } else {
           ctx.fillStyle = "rgba(0, 0, 0, 0.04)";
           ctx.fillRect(sx, sy, imageWidth, imageHeight);
         }
-        ctx.restore();
+
+        if (needsClip) ctx.restore();
 
         // Subtle crisp border outline
-        ctx.save();
         drawRoundedRect(ctx, sx, sy, imageWidth, imageHeight, borderRadius);
         ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.restore();
       }
     }
 
-    rafRef.current = requestAnimationFrame(draw);
+    // 커서가 안에 있거나 관성이 남았을 때만 다음 프레임 예약
+    const isMoving =
+      isInsideRef.current || velRef.current.x !== 0 || velRef.current.y !== 0;
+    if (isMoving) rafRef.current = requestAnimationFrame(draw);
   }, [imageWidth, imageHeight, gap, maxSpeed, smoothing, borderRadius]);
+
+  const scheduleDraw = useCallback(() => {
+    if (!rafRef.current) rafRef.current = requestAnimationFrame(draw);
+  }, [draw]);
+  scheduleDrawRef.current = scheduleDraw;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -250,6 +364,7 @@ export function InfiniteImageField({
       dimsRef.current = { w: rect.width, h: rect.height };
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
+      scheduleDraw();
     };
 
     resize();
@@ -263,15 +378,17 @@ export function InfiniteImageField({
         x: (e.clientX - rect.left) / rect.width,
         y: (e.clientY - rect.top) / rect.height,
       };
+      scheduleDraw();
     };
 
     const onEnter = () => {
       isInsideRef.current = true;
+      scheduleDraw();
     };
     const onLeave = () => {
       isInsideRef.current = false;
+      scheduleDraw();
     };
-
     const onClick = (e: MouseEvent) => {
       if (!onItemClick) return;
       const rect = canvas.getBoundingClientRect();
@@ -310,21 +427,23 @@ export function InfiniteImageField({
     canvas.addEventListener("mouseleave", onLeave);
     canvas.addEventListener("click", onClick);
 
-    rafRef.current = requestAnimationFrame(draw);
+    scheduleDraw();
 
     return () => {
       cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
       ro.disconnect();
       canvas.removeEventListener("mousemove", onMove);
       canvas.removeEventListener("mouseenter", onEnter);
       canvas.removeEventListener("mouseleave", onLeave);
       canvas.removeEventListener("click", onClick);
     };
-  }, [draw, imageWidth, imageHeight, gap, onItemClick]);
+  }, [draw, scheduleDraw, imageWidth, imageHeight, gap, onItemClick]);
 
   return (
     <div
       {...rest}
+      ref={containerRef}
       className={cn(
         "relative w-full h-full overflow-hidden select-none",
         className,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRecentBookSalesQuery } from "@bookjeok/react-query";
+import { getImageProps } from "next/image";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { Autoplay } from "swiper/modules";
@@ -17,6 +18,12 @@ import { PATHS } from "@/shared/constants/paths";
 import { RecentSaleCard } from "./recent-sale-card";
 import { RecentSalesSliderSkeleton } from "./skeleton";
 
+// 판매 사진(Blob 원본)은 모바일 카드와 같은 w=640 변형을 받아 이미지 캐시 재사용
+const toFieldImage = (src: string) =>
+  src.includes(".blob.vercel-storage.com/")
+    ? getImageProps({ src, alt: "", width: 320, height: 320 }).props.src
+    : src;
+
 export const RecentSalesSlider = () => {
   const t = useTranslations("home.sections.recent_sales");
   const { data, isLoading, isError } = useRecentBookSalesQuery();
@@ -29,10 +36,11 @@ export const RecentSalesSlider = () => {
     () =>
       sales.map((sale) => ({
         id: sale.id,
-        image:
+        image: toFieldImage(
           sale.imageUrls?.[0] ||
-          sale.book?.image ||
-          "/images/placeholder-image.svg",
+            sale.book?.image ||
+            "/images/placeholder-image.svg",
+        ),
         title: sale.title,
         price: sale.price,
         author: sale.book?.author,
