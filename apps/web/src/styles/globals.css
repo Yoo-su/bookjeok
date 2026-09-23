@@ -301,6 +301,112 @@ html::-webkit-scrollbar {
   }
 }
 
+/* 도서 검색 히어로. transform·opacity만 움직여 컴포지터에서 돈다. */
+.search-hero-orb-a {
+  animation: search-hero-orb-a 20s ease-in-out infinite;
+}
+.search-hero-orb-b {
+  animation: search-hero-orb-b 15s ease-in-out 2s infinite;
+}
+.search-hero-fade {
+  opacity: var(--to);
+  animation: search-hero-fade cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.search-hero-drift {
+  animation: search-hero-drift var(--drift) linear var(--delay) infinite;
+}
+.search-hero-twinkle {
+  opacity: 0;
+  animation:
+    search-hero-twinkle var(--twinkle) ease-in-out var(--delay) infinite both,
+    search-hero-pulse 2s ease-in-out var(--delay) infinite;
+}
+.search-hero-lens {
+  opacity: 0;
+  animation: search-hero-lens 13s ease-in-out infinite;
+}
+.search-hero-title {
+  animation: search-hero-rise 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.search-hero-subtitle {
+  animation: search-hero-fade 1s ease 0.6s both;
+}
+.search-hero[data-paused] * {
+  animation-play-state: paused;
+}
+
+@keyframes search-hero-orb-a {
+  50% {
+    transform: translate(50px, 30px);
+  }
+}
+@keyframes search-hero-orb-b {
+  50% {
+    transform: translate(-40px, -40px);
+  }
+}
+@keyframes search-hero-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes search-hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+}
+/* 100 viewBox 단위 = 12.5cqw */
+@keyframes search-hero-drift {
+  to {
+    transform: translateX(12.5cqw);
+  }
+}
+@keyframes search-hero-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: var(--peak);
+  }
+}
+@keyframes search-hero-pulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+/* 12초 이동 + 1초 휴지. 좌표는 viewBox 단위 ÷ 8 */
+@keyframes search-hero-lens {
+  0% {
+    opacity: 0;
+    transform: translate(6.25cqw, 10cqw);
+  }
+  30.77% {
+    opacity: 1;
+    transform: translate(31.25cqw, 8.75cqw);
+  }
+  61.54% {
+    opacity: 1;
+    transform: translate(56.25cqw, 11.25cqw);
+  }
+  92.31%,
+  100% {
+    opacity: 0;
+    transform: translate(81.25cqw, 10cqw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-hero * {
+    animation: none !important;
+  }
+}
+
 /* iOS Safari는 폼 컨트롤의 글자가 16px 미만이면 포커스 시 화면을 확대한다.
    개별 화면에서 text-sm/text-xs로 덮어써도 확대되지 않도록 터치 기기에서만 하한을 건다.
    @layer 밖에 두는 것이 중요하다. base 레이어에 넣으면 utilities 레이어의 .text-sm에 진다. */
