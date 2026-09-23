@@ -16,7 +16,7 @@ import {
 } from "./sources";
 import { runApply, runScan, summarizeScan } from "./workflow";
 
-const USAGE = `사용법: pnpm --filter @bookjeok/book-ingest ingest <명령> [옵션]
+const USAGE = `사용법: pnpm ingest <명령> [옵션]   (저장소 루트에서)
 
   serve                          로컬 화면(127.0.0.1)을 띄웁니다
       --port <n>                 기본 4700

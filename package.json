@@ -18,7 +18,8 @@
     "lint": "turbo lint",
     "lint:fix": "turbo lint -- --fix",
     "test": "turbo test",
-    "storybook": "pnpm --filter=@bookjeok/web storybook"
+    "storybook": "pnpm --filter=@bookjeok/web storybook",
+    "ingest": "pnpm --filter=@bookjeok/book-ingest ingest"
   },
   "devDependencies": {
     "turbo": "2.7.4",

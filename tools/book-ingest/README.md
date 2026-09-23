@@ -62,18 +62,20 @@ Object Read & Write로, DB는 `books`에 SELECT·INSERT만 있는 전용 역할�
 
 ## 쓰는 법
 
+저장소 루트에서 실행합니다(`pnpm ingest`는 이 도구의 `ingest` 스크립트로 넘깁니다).
+
 ```bash
 # 화면 — 공급처와 출판사 칩을 고르고 "신간 찾기" → 확인 후 "선택 N권 적재"
-pnpm --filter @bookjeok/book-ingest ingest serve
+pnpm ingest serve
 
 # 찾기만 (쓰기 없음). --source 기본은 kakao
-pnpm --filter @bookjeok/book-ingest ingest scan --source aladin --publishers 민음사,창비
+pnpm ingest scan --source aladin --publishers 민음사,창비
 
 # 찾은 신간 전부 적재. --yes 없이는 목록만 보여 주고 멈춥니다
-pnpm --filter @bookjeok/book-ingest ingest apply --source aladin --publishers 민음사 --yes
+pnpm ingest apply --source aladin --publishers 민음사 --yes
 
 # 특정 책만
-pnpm --filter @bookjeok/book-ingest ingest apply --publishers 민음사 --isbn 9788937477515 --yes
+pnpm ingest apply --publishers 민음사 --isbn 9788937477515 --yes
 ```
 
 화면에서 할 수 있는 것:

@@ -558,6 +558,7 @@ pnpm dev          # 전체 워크스페이스
 
 # 6. 부가 도구
 pnpm storybook    # Storybook (http://localhost:6006)
+pnpm ingest serve # 신간 적재 도구 화면 (http://127.0.0.1:4700, 운영 DB 연결 — tools/book-ingest 참고)
 pnpm db:logs      # DB 로그
 pnpm db:down      # DB 중지
 ```

@@ -10,7 +10,7 @@
     {
       "name": "book-ingest",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@bookjeok/book-ingest", "ingest", "serve"],
+      "runtimeArgs": ["ingest", "serve"],
       "port": 4700,
       "url": "http://127.0.0.1:4700"
     }
