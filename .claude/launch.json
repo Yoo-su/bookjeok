@@ -8,6 +8,12 @@
       "port": 6006
     },
     {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@bookjeok/web", "dev"],
+      "port": 3000
+    },
+    {
       "name": "book-ingest",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["ingest", "serve"],

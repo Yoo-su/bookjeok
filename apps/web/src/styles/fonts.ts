@@ -6,19 +6,12 @@ import {
   Nanum_Gothic,
   Song_Myung,
 } from "next/font/google";
-import localFont from "next/font/local";
 
 export const nanum_gothic = Nanum_Gothic({
   weight: ["400", "700", "800"],
   variable: "--font-nanum-gothic",
   display: "swap",
   preload: false,
-});
-
-export const pretendard = localFont({
-  src: "../../public/fonts/pretendard/PretendardVariable.woff2",
-  variable: "--font-pretendard",
-  display: "swap",
 });
 
 export const bitcount = Bitcount_Prop_Single({

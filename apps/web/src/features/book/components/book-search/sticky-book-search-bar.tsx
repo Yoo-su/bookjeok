@@ -52,7 +52,7 @@ export const StickyBookSearchBar = ({
         "fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-3 px-4 transition-all duration-500 ease-[0.16,1,0.3,1] transform",
         isVisible
           ? "translate-y-0 opacity-100"
-          : "-translate-y-full opacity-0 pointer-events-none",
+          : "-translate-y-full opacity-0 pointer-events-none invisible",
       )}
     >
       {/* Frosted Glass Background */}

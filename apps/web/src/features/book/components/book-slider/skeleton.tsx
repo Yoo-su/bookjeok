@@ -1,71 +1,25 @@
-"use client";
-
-import { useEffect, useState } from "react";
-
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
+import { cn } from "@/shared/utils/cn";
 
-interface BookSliderSkeletonProps {
-  radius?: number;
-  cardWidth?: number;
-  cardHeight?: number;
-}
+/**
+ * 메인 슬라이더 로딩 스켈레톤입니다.
+ * 치수는 getSliderDimensions와 같은 구간을 CSS 변수로 분기해 서버 HTML부터 맞춥니다.
+ */
+const DIMENSION_CLASS =
+  "[--r:350px] [--w:110px] [--h:165px] min-[481px]:[--r:420px] min-[481px]:[--w:130px] min-[481px]:[--h:195px] min-[769px]:[--r:480px] min-[769px]:[--w:150px] min-[769px]:[--h:225px] min-[1025px]:[--r:580px] min-[1025px]:[--w:180px] min-[1025px]:[--h:270px]";
 
-// 화면 너비별 반응형 치수 계산 헬퍼 함수
-const getSliderDimensions = (width?: number) => {
-  const w = width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
-  if (w > 1024) {
-    return { radius: 580, cardWidth: 180, cardHeight: 270 };
-  } else if (w > 768) {
-    return { radius: 480, cardWidth: 150, cardHeight: 225 };
-  } else if (w > 480) {
-    return { radius: 420, cardWidth: 130, cardHeight: 195 };
-  } else {
-    return { radius: 350, cardWidth: 110, cardHeight: 165 };
-  }
-};
-
-export const BookSliderSkeleton = ({
-  radius: propRadius,
-  cardWidth: propCardWidth,
-  cardHeight: propCardHeight,
-}: BookSliderSkeletonProps = {}) => {
-  // 화면 크기별 반응형 파라미터 (클라이언트 마운트 시 즉시 현재 창 크기 반영)
-  const defaultDimensions = getSliderDimensions();
-  const [dimensions, setDimensions] = useState(() => ({
-    radius: propRadius ?? defaultDimensions.radius,
-    cardWidth: propCardWidth ?? defaultDimensions.cardWidth,
-    cardHeight: propCardHeight ?? defaultDimensions.cardHeight,
-  }));
-
-  useEffect(() => {
-    if (propRadius && propCardWidth && propCardHeight) {
-      setDimensions({
-        radius: propRadius,
-        cardWidth: propCardWidth,
-        cardHeight: propCardHeight,
-      });
-      return;
-    }
-
-    const handleResize = () => {
-      setDimensions(getSliderDimensions(window.innerWidth));
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [propRadius, propCardWidth, propCardHeight]);
-
-  const activeRadius = propRadius ?? dimensions.radius;
-  const activeCardWidth = propCardWidth ?? dimensions.cardWidth;
-  const activeCardHeight = propCardHeight ?? dimensions.cardHeight;
-
+export const BookSliderSkeleton = () => {
   // MainBookSlider와 동일하게 18개 도서 기준 20도 각도로 배치
   const CARD_COUNT = 18;
   const ANGLE_STEP = 360 / CARD_COUNT; // 20도
 
   return (
-    <div className="w-full flex flex-col items-center select-none pointer-events-none">
+    <div
+      className={cn(
+        "w-full flex flex-col items-center select-none pointer-events-none",
+        DIMENSION_CLASS,
+      )}
+    >
       <div
         style={{
           perspective: 1200,
@@ -76,9 +30,9 @@ export const BookSliderSkeleton = ({
         <div
           style={{
             transformStyle: "preserve-3d",
-            transform: `translateZ(-${activeRadius}px)`, // 3D 원근법 확대 왜곡을 보정하기 위해 좌표축 공간을 뒤로 이동
-            width: activeCardWidth,
-            height: activeCardHeight,
+            transform: "translateZ(calc(var(--r) * -1))", // 3D 원근법 확대 왜곡을 보정하기 위해 좌표축 공간을 뒤로 이동
+            width: "var(--w)",
+            height: "var(--h)",
           }}
           className="relative"
         >
@@ -122,7 +76,7 @@ export const BookSliderSkeleton = ({
                   width: "100%",
                   height: "100%",
                   transformStyle: "preserve-3d",
-                  transform: `rotateY(${angle}deg) translateZ(${activeRadius}px)`,
+                  transform: `rotateY(${angle}deg) translateZ(var(--r))`,
                   backfaceVisibility: "hidden",
                   WebkitBackfaceVisibility: "hidden",
                 }}
