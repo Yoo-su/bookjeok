@@ -75,9 +75,9 @@ resolveBook(isbn)
 어댑터를 제거하면서 그 분기가 사실상 사라졌습니다. 체인에 외부 공급처가 없으면
 자체 DB가 못 찾은 것이 곧 "없는 책"이 되기 때문입니다.
 
-> 이름과 코드의 생성 분기(Request Collapsing, NOT NULL 폴백 등)는 아직 남아
-> 있습니다. 외부 INSERT 전용 코드라 지금은 죽은 경로이며, Phase 4에서
-> 정리합니다. 자세한 목록은 마이그레이션 계획서를 보세요.
+> 예전 생성 분기(Request Collapsing, NOT NULL 폴백, ISBN 검색 폴백)는
+> 2026-09-08 코드 점검 때 모두 지웠습니다. 지금 `resolveBook()`은 `findOneBy` 한 번과
+> 404뿐입니다(계획서 9-c).
 
 ### `BookResolvePipe`
 
@@ -110,7 +110,9 @@ BookCatalogService.findByIsbn()  BOOK_DETAIL_PROVIDERS
 ```
 
 외부 공급처를 런타임 경로에 두지 않는 것이 방침입니다. 신규 도서는 서버가
-아니라 **운영자가 주기적으로 돌리는 스크립트**로 확보합니다.
+아니라 **운영자가 필요할 때 돌리는 적재 도구**로 확보합니다. 카카오 책 검색
+API를 입구로 쓰며, 서버 코드와는 별개인 [`tools/book-ingest/`](../../../../../tools/book-ingest/README.md)입니다.
+도구는 표지를 R2에 먼저 올린 뒤 `books`에 INSERT하므로 이 모듈은 바뀌지 않습니다.
 
 검색 품질은 `title`·`author`·`publisher`의 pg_trgm GIN 인덱스
 (`docs/manual-ddl-log.md` 4번)와 어댑터의 관련도 정렬이 담당합니다. 3글자 이상

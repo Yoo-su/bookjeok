@@ -38,12 +38,13 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-02 | 채팅 테이블 인덱스 5개 추가                                                    | `e0eed214`              |
 | 2026-09-02 | 읽음 워터마크 컬럼 추가·백필, `read_receipts` 드롭                             | `778ef588`              |
 | 2026-09-05 | 거래 완료(`trade_completions`) 도입, `trade_reviews` 재구성                    | `f34ba26b` ~ `390b4fcc` |
-| 2026-09-07 | `books` 검색용 pg_trgm GIN 인덱스 3개 추가                                     | (미커밋)                |
+| 2026-09-07 | `books` 검색용 pg_trgm GIN 인덱스 3개 추가                                     | `be065b39`              |
 | 2026-09-08 | `books.pubDate` 컬럼 추가 (출간일)                                             | `026abfd5`              |
 | 2026-09-09 | 위 컬럼 값 채움 + `books.discount` 판매가 → 정가 (DDL 아님, 데이터 반영)       | (스크립트)              |
-| 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                                 | (미커밋)                |
-| 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                             | (미커밋)                |
-| 2026-09-12 | 인덱스 정리 (제거 4·교체 3·외래키 16 추가·유니크 이름 2 변경) + 고아 enum 드롭 | (미커밋)                |
+| 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                                 | `ab4d58b2`              |
+| 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                             | `745d0f16`              |
+| 2026-09-12 | 인덱스 정리 (제거 4·교체 3·외래키 16 추가·유니크 이름 2 변경) + 고아 enum 드롭 | `84b78e24`              |
+| 2026-09-23 | `book_ingest` 역할 생성 + `books` RLS 정책 2개 (신간 적재 도구 전용)           | (미커밋)                |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -930,3 +931,52 @@ WHERE n.nspname = 'public' AND t.typname = 'used_book_posts_status_enum';
 
 단, `books.embedding` 엔티티 선언은 되돌리지 마세요. 그게 이번 점검에서 가장
 위험했던 구멍입니다.
+
+## 9. 신간 적재 도구 전용 역할 (2026-09-23)
+
+`tools/book-ingest`가 운영 DB에 붙을 때 쓰는 계정입니다. 이 도구는 맥과 회사 윈도우 PC
+두 곳에 자격증명을 두므로, 유출돼도 피해가 `books` 조회·추가에 그치도록 권한을 좁혔습니다.
+테이블 구조는 바뀌지 않습니다.
+
+### 실행한 SQL
+
+```sql
+CREATE ROLE book_ingest WITH LOGIN PASSWORD '<비밀번호>';
+GRANT USAGE ON SCHEMA public TO book_ingest;
+GRANT SELECT, INSERT ON public.books TO book_ingest;
+
+-- books는 RLS가 켜져 있습니다(relrowsecurity = true). 정책이 없으면 SELECT가
+-- 에러 없이 0건을 돌려줘 도구가 모든 책을 신규로 오판하고, INSERT는 거부됩니다.
+CREATE POLICY book_ingest_select ON public.books
+  FOR SELECT TO book_ingest USING (true);
+CREATE POLICY book_ingest_insert ON public.books
+  FOR INSERT TO book_ingest WITH CHECK (true);
+```
+
+RLS를 끄는 방법은 쓰지 않았습니다. Supabase가 `public` 테이블을 REST API로
+공개하고 `anon` 역할에 기본 권한을 주므로, RLS를 끄면 `books` 전체가 anon 키에
+열립니다. 서비스는 `postgres`(테이블 소유자)로 접속해 RLS를 우회하므로 이 정책의
+영향을 받지 않습니다.
+
+접속은 Session pooler(5432)로 하며 사용자명은 `book_ingest.<project-ref>`입니다.
+
+### 확인
+
+```sql
+SELECT policyname, cmd, roles FROM pg_policies
+ WHERE tablename = 'books' AND 'book_ingest' = ANY(roles);
+```
+
+두 줄이면 정상입니다. 2026-09-23에 도구로 조회해 보니 출판사 목록이 나왔고(SELECT 적용),
+민음사 최신 50권 중 22권을 보유로 판정해 공개 API로 잰 값과 맞았습니다. 같은 날
+1권 적재(9788937477515)로 INSERT 권한까지 확인했습니다.
+
+### 되돌리기
+
+```sql
+DROP POLICY book_ingest_insert ON public.books;
+DROP POLICY book_ingest_select ON public.books;
+REVOKE ALL ON public.books FROM book_ingest;
+REVOKE USAGE ON SCHEMA public FROM book_ingest;
+DROP ROLE book_ingest;
+```

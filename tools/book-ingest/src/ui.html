@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="ingest-token" content="__INGEST_TOKEN__" />
+    <title>북적 신간 적재</title>
+    <style>
+      :root {
+        --bg: #fafaf9;
+        --panel: #ffffff;
+        --ink: #1c1917;
+        --muted: #78716c;
+        --line: #e7e5e4;
+        --strong-line: #1c1917;
+        --ok: #166534;
+        --warn: #92400e;
+        --bad: #b91c1c;
+        --chip-on-bg: #1c1917;
+        --chip-on-ink: #fafaf9;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0c0a09;
+          --panel: #1c1917;
+          --ink: #f5f5f4;
+          --muted: #a8a29e;
+          --line: #292524;
+          --strong-line: #f5f5f4;
+          --ok: #4ade80;
+          --warn: #fbbf24;
+          --bad: #f87171;
+          --chip-on-bg: #f5f5f4;
+          --chip-on-ink: #0c0a09;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          14px/1.5 system-ui,
+          -apple-system,
+          "Apple SD Gothic Neo",
+          "Malgun Gothic",
+          sans-serif;
+      }
+      header,
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 24px;
+        padding-bottom: 8px;
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 0 0 10px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .small {
+        font-size: 12px;
+      }
+      section.panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        margin: 16px 0;
+      }
+      input[type="search"],
+      select {
+        font: inherit;
+        color: inherit;
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 10px;
+      }
+      input[type="search"] {
+        width: 240px;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        color: inherit;
+        background: transparent;
+        border: 1px solid var(--strong-line);
+        border-radius: 6px;
+        padding: 6px 14px;
+        transition: transform 80ms ease;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      button.primary {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+        max-height: 260px;
+        overflow: auto;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 3px 4px 3px 12px;
+        user-select: none;
+        transition:
+          background 120ms ease,
+          color 120ms ease,
+          transform 120ms ease;
+      }
+      .chip:hover {
+        border-color: var(--strong-line);
+      }
+      .chip.on {
+        background: var(--chip-on-bg);
+        color: var(--chip-on-ink);
+        border-color: var(--chip-on-bg);
+        transform: scale(1.04);
+      }
+      .chip .pick {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 0;
+        padding: 0;
+        color: inherit;
+      }
+      .chip .pick:focus-visible,
+      .chip .star:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+      }
+      .chip .count {
+        font-size: 11px;
+        opacity: 0.6;
+      }
+      .chip .star {
+        border: 0;
+        padding: 0 6px;
+        font-size: 14px;
+        line-height: 1;
+        opacity: 0.45;
+      }
+      .chip .star.fav {
+        opacity: 1;
+      }
+      .chip .star:hover {
+        opacity: 1;
+      }
+      .progress-line {
+        font-variant-numeric: tabular-nums;
+      }
+      .pub {
+        margin: 24px 0;
+      }
+      .pub-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        border-bottom: 1px solid var(--strong-line);
+        padding-bottom: 6px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 14px;
+        margin-top: 12px;
+      }
+      .card {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px;
+        background: var(--panel);
+        cursor: pointer;
+        transition:
+          opacity 150ms ease,
+          border-color 150ms ease;
+      }
+      .card.off {
+        opacity: 0.35;
+      }
+      .card img {
+        width: 100%;
+        aspect-ratio: 120 / 174;
+        object-fit: cover;
+        border-radius: 3px;
+        background: var(--line);
+        display: block;
+      }
+      .card .title {
+        font-weight: 600;
+        margin-top: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card .meta {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .card input {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--ink);
+      }
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        padding: 0 4px;
+        margin-left: 4px;
+      }
+      .stamp {
+        position: absolute;
+        inset: 30% 8px auto;
+        text-align: center;
+        font-weight: 800;
+        font-size: 18px;
+        border: 3px solid currentColor;
+        border-radius: 6px;
+        padding: 4px;
+        background: var(--panel);
+        transform: rotate(-12deg) scale(0.4);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .stamp.show {
+        animation: stamp 260ms cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+      }
+      .stamp.inserted {
+        color: var(--ok);
+      }
+      .stamp.already_exists {
+        color: var(--warn);
+      }
+      .stamp.failed {
+        color: var(--bad);
+      }
+      @keyframes stamp {
+        to {
+          transform: rotate(-12deg) scale(1);
+          opacity: 0.95;
+        }
+      }
+      details {
+        margin-top: 10px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 12px;
+      }
+      td,
+      th {
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        padding: 4px 6px;
+      }
+      .applybar {
+        position: sticky;
+        bottom: 0;
+        background: var(--panel);
+        border-top: 1px solid var(--strong-line);
+        padding: 12px 20px;
+        display: none;
+      }
+      .applybar.show {
+        display: block;
+      }
+      .applybar .inner {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .meter {
+        height: 6px;
+        background: var(--line);
+        border-radius: 3px;
+        overflow: hidden;
+        flex: 1;
+        max-width: 360px;
+      }
+      .meter > div {
+        height: 100%;
+        width: 0;
+        background: var(--ink);
+        transition: width 200ms ease;
+      }
+      .log {
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 25vh;
+        overflow: auto;
+      }
+      .error {
+        color: var(--bad);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>북적 신간 적재</h1>
+      <span class="muted small" id="target"></span>
+    </header>
+    <main>
+      <section class="panel">
+        <div class="row" style="justify-content: space-between">
+          <h2 style="margin: 0">출판사</h2>
+          <div class="row">
+            <input
+              type="search"
+              id="filter"
+              placeholder="출판사 이름으로 거르기"
+            />
+            <label class="small muted"
+              >최대
+              <select id="maxPages">
+                <option value="2">2페이지 (100권)</option>
+                <option value="5">5페이지 (250권)</option>
+                <option value="20" selected>20페이지 (1,000권)</option>
+              </select>
+            </label>
+            <button class="primary" id="scanBtn" disabled>신간 찾기</button>
+          </div>
+        </div>
+        <p class="small muted" id="selectedLine">
+          ★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.
+        </p>
+        <div class="chips" id="chips"></div>
+        <p class="small muted" id="chipNote"></p>
+      </section>
+
+      <section class="panel" id="progressPanel" hidden>
+        <h2>진행</h2>
+        <div id="progress" class="progress-line small"></div>
+      </section>
+
+      <div id="results"></div>
+    </main>
+
+    <div class="applybar" id="applybar">
+      <div class="inner">
+        <span id="applyCount"></span>
+        <div class="meter"><div id="meter"></div></div>
+        <button class="primary" id="applyBtn">적재</button>
+      </div>
+      <div class="log inner" id="log"></div>
+    </div>
+
+    <script>
+      const TOKEN = document.querySelector('meta[name="ingest-token"]').content;
+      const $ = (id) => document.getElementById(id);
+      const el = (tag, props = {}, children = []) => {
+        const node = document.createElement(tag);
+        for (const [k, v] of Object.entries(props)) {
+          if (k === "class") node.className = v;
+          else if (k === "text") node.textContent = v;
+          else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+          else node.setAttribute(k, v);
+        }
+        for (const child of [].concat(children)) if (child) node.append(child);
+        return node;
+      };
+
+      const state = {
+        publishers: [],
+        favorites: new Set(),
+        selected: new Set(),
+        scanId: null,
+        fresh: new Map(), // isbn -> { book, checked, card }
+        busy: false,
+      };
+
+      async function api(path, options = {}) {
+        const res = await fetch(path, {
+          ...options,
+          headers: {
+            "x-ingest-token": TOKEN,
+            "content-type": "application/json",
+          },
+        });
+        if (!res.ok)
+          throw new Error(
+            (await res.json().catch(() => ({}))).error || `HTTP ${res.status}`,
+          );
+        return res;
+      }
+
+      async function stream(path, body, onEvent) {
+        const res = await api(path, {
+          method: "POST",
+          body: JSON.stringify(body),
+        });
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let nl;
+          while ((nl = buffer.indexOf("\n")) >= 0) {
+            const line = buffer.slice(0, nl).trim();
+            buffer = buffer.slice(nl + 1);
+            if (line) onEvent(JSON.parse(line));
+          }
+        }
+      }
+
+      function renderChips() {
+        const q = $("filter").value.trim();
+        const list = [...state.publishers]
+          .filter(
+            (p) =>
+              !q || p.publisher.includes(q) || state.selected.has(p.publisher),
+          )
+          .sort(
+            (a, b) =>
+              Number(state.favorites.has(b.publisher)) -
+              Number(state.favorites.has(a.publisher)),
+          );
+        const shown = list.slice(0, 200);
+        $("chips").replaceChildren(
+          ...shown.map((p) => {
+            const fav = state.favorites.has(p.publisher);
+            const on = state.selected.has(p.publisher);
+            return el("span", { class: "chip" + (on ? " on" : "") }, [
+              el(
+                "button",
+                {
+                  class: "pick",
+                  "aria-pressed": String(on),
+                  onclick: () => {
+                    on
+                      ? state.selected.delete(p.publisher)
+                      : state.selected.add(p.publisher);
+                    renderChips();
+                  },
+                },
+                [
+                  el("span", { text: p.publisher }),
+                  el("span", {
+                    class: "count",
+                    text: p.count.toLocaleString(),
+                  }),
+                ],
+              ),
+              el("button", {
+                class: "star" + (fav ? " fav" : ""),
+                "aria-label": `${p.publisher} ${fav ? "즐겨찾기 해제" : "즐겨찾기"}`,
+                title: fav ? "즐겨찾기 해제" : "즐겨찾기",
+                text: fav ? "★" : "☆",
+                onclick: () => toggleFavorite(p.publisher),
+              }),
+            ]);
+          }),
+        );
+        $("chipNote").textContent =
+          list.length > shown.length
+            ? `${list.length - shown.length}곳 더 있음 — 이름으로 거르세요`
+            : "";
+        const sel = [...state.selected];
+        $("selectedLine").textContent = sel.length
+          ? `선택: ${sel.join(", ")}`
+          : "★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.";
+        $("scanBtn").disabled = state.busy || sel.length === 0;
+      }
+
+      async function toggleFavorite(name) {
+        state.favorites.has(name)
+          ? state.favorites.delete(name)
+          : state.favorites.add(name);
+        renderChips();
+        const res = await api("/api/favorites", {
+          method: "PUT",
+          body: JSON.stringify([...state.favorites]),
+        });
+        state.favorites = new Set(await res.json());
+      }
+
+      function setBusy(busy) {
+        state.busy = busy;
+        renderChips();
+        $("applyBtn").disabled = busy || selectedIsbns().length === 0;
+      }
+
+      function selectedIsbns() {
+        return [...state.fresh.values()]
+          .filter((v) => v.checked && !v.done)
+          .map((v) => v.book.isbn);
+      }
+
+      function updateApplyBar() {
+        const n = selectedIsbns().length;
+        $("applybar").classList.toggle("show", state.fresh.size > 0);
+        $("applyCount").textContent =
+          `선택 ${n}권 / 신규 ${state.fresh.size}권`;
+        $("applyBtn").textContent = `선택 ${n}권 적재`;
+        $("applyBtn").disabled = state.busy || n === 0;
+      }
+
+      function bookCard(book) {
+        const entry = { book, checked: true, done: false };
+        const box = el("input", {
+          type: "checkbox",
+          "aria-label": `${book.title} 적재 대상`,
+        });
+        box.checked = true;
+        const stamp = el("div", { class: "stamp" });
+        const img = el("img", {
+          src: book.thumbnail,
+          alt: "",
+          loading: "lazy",
+          referrerpolicy: "no-referrer",
+        });
+        const people = [book.author || "(저자 없음)"];
+        if (book.translators.length)
+          people.push(`옮김 ${book.translators.join(", ")}`);
+        const card = el(
+          "div",
+          { class: "card", title: `${book.isbn}\n${book.status}` },
+          [
+            box,
+            img,
+            el("div", { class: "title", text: book.title }),
+            el("div", { class: "meta", text: people.join(" · ") }),
+            el("div", { class: "meta" }, [
+              document.createTextNode(
+                `${book.pubDate ?? "날짜 없음"} · ${Number(book.discount).toLocaleString()}원`,
+              ),
+              book.preorder
+                ? el("span", { class: "badge", text: "예약" })
+                : null,
+            ]),
+            stamp,
+          ],
+        );
+        const toggle = (checked) => {
+          if (entry.done || state.busy) return;
+          entry.checked = checked;
+          box.checked = checked;
+          card.classList.toggle("off", !checked);
+          updateApplyBar();
+        };
+        box.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggle(box.checked);
+        });
+        card.addEventListener("click", () => toggle(!entry.checked));
+        entry.card = card;
+        entry.stamp = stamp;
+        entry.toggle = toggle;
+        state.fresh.set(book.isbn, entry);
+        return card;
+      }
+
+      function renderResults(publishers) {
+        state.fresh.clear();
+        const sections = publishers.map(({ summary, fresh, excluded }) => {
+          const head = el("div", { class: "pub-head" }, [
+            el("h2", { style: "margin:0", text: summary.publisher }),
+            el("span", {
+              class: "small muted",
+              text:
+                `카카오 ${summary.totalCount.toLocaleString()}권 중 ${summary.pages}페이지 확인 · 신규 ${summary.fresh} · 보유 ${summary.known} · 제외 ${summary.excluded}` +
+                (summary.preorder ? ` · 예약 ${summary.preorder}` : "") +
+                (summary.emptyAuthor
+                  ? ` · 저자 없음 ${summary.emptyAuthor}`
+                  : ""),
+            }),
+          ]);
+          const cards = fresh.map(bookCard);
+          const tools = fresh.length
+            ? el("div", { class: "row small", style: "margin-top:8px" }, [
+                el("button", {
+                  text: "모두 선택",
+                  onclick: () =>
+                    cards.forEach((_, i) =>
+                      state.fresh.get(fresh[i].isbn).toggle(true),
+                    ),
+                }),
+                el("button", {
+                  text: "모두 해제",
+                  onclick: () =>
+                    cards.forEach((_, i) =>
+                      state.fresh.get(fresh[i].isbn).toggle(false),
+                    ),
+                }),
+              ])
+            : el("p", {
+                class: "muted small",
+                text: "새로 들어온 책이 없습니다.",
+              });
+          const excludedTable = excluded.length
+            ? el("details", {}, [
+                el("summary", {
+                  class: "small muted",
+                  text: `제외 ${excluded.length}건 보기`,
+                }),
+                el("table", {}, [
+                  el("tr", {}, [
+                    el("th", { text: "사유" }),
+                    el("th", { text: "ISBN" }),
+                    el("th", { text: "제목" }),
+                  ]),
+                  ...excluded.map((e) =>
+                    el("tr", {}, [
+                      el("td", { text: e.label }),
+                      el("td", { text: e.isbn ?? "" }),
+                      el("td", { text: e.title }),
+                    ]),
+                  ),
+                ]),
+              ])
+            : null;
+          return el("div", { class: "pub" }, [
+            head,
+            tools,
+            el("div", { class: "grid" }, cards),
+            excludedTable,
+          ]);
+        });
+        $("results").replaceChildren(...sections);
+        $("log").textContent = "";
+        $("meter").style.width = "0";
+        updateApplyBar();
+      }
+
+      async function scan() {
+        const publishers = [...state.selected];
+        setBusy(true);
+        $("progressPanel").hidden = false;
+        const totals = new Map(publishers.map((p) => [p, null]));
+        const draw = () => {
+          $("progress").textContent = [...totals.entries()]
+            .map(([p, t]) =>
+              t
+                ? `${p} · ${t.page}페이지 · 신규 ${t.fresh} · 보유 ${t.known} · 제외 ${t.excluded}`
+                : `${p} · 대기`,
+            )
+            .join("\n");
+        };
+        $("progress").style.whiteSpace = "pre-line";
+        draw();
+        try {
+          await stream(
+            "/api/scan",
+            { publishers, maxPages: Number($("maxPages").value) },
+            (ev) => {
+              if (ev.type === "page") {
+                const t = totals.get(ev.publisher) ?? {
+                  page: 0,
+                  fresh: 0,
+                  known: 0,
+                  excluded: 0,
+                };
+                totals.set(ev.publisher, {
+                  page: ev.page,
+                  fresh: t.fresh + ev.fresh,
+                  known: t.known + ev.known,
+                  excluded: t.excluded + ev.excluded,
+                });
+                draw();
+              } else if (ev.type === "result") {
+                state.scanId = ev.scanId;
+                renderResults(ev.publishers);
+              } else if (ev.type === "error") {
+                throw new Error(ev.message);
+              }
+            },
+          );
+        } catch (error) {
+          $("progress").append(
+            el("div", { class: "error", text: `실패: ${error.message}` }),
+          );
+        } finally {
+          setBusy(false);
+          updateApplyBar();
+        }
+      }
+
+      async function apply() {
+        const isbns = selectedIsbns();
+        if (!isbns.length) return;
+        if (
+          !confirm(
+            `${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books에 INSERT합니다. 진행할까요?`,
+          )
+        )
+          return;
+        setBusy(true);
+        const log = (text) => {
+          $("log").textContent += text + "\n";
+          $("log").scrollTop = 1e9;
+        };
+        const LABEL = {
+          inserted: "적재",
+          already_exists: "이미 있음",
+          failed: "실패",
+        };
+        try {
+          await stream("/api/apply", { scanId: state.scanId, isbns }, (ev) => {
+            if (ev.type === "book") {
+              const entry = state.fresh.get(ev.outcome.isbn);
+              // 실패한 책은 선택된 채로 남겨 바로 다시 적재할 수 있게 한다
+              entry.done = ev.outcome.status !== "failed";
+              entry.stamp.textContent = LABEL[ev.outcome.status];
+              entry.stamp.className = `stamp ${ev.outcome.status} show`;
+              $("meter").style.width = `${((ev.index + 1) / ev.total) * 100}%`;
+              log(
+                `${ev.index + 1}/${ev.total} ${LABEL[ev.outcome.status]} ${ev.outcome.isbn} ${ev.title}` +
+                  (ev.outcome.status === "failed"
+                    ? ` — ${ev.outcome.error}`
+                    : ev.outcome.cover?.reused
+                      ? " (표지 재사용)"
+                      : ""),
+              );
+            } else if (ev.type === "done") {
+              const s = ev.summary;
+              log(
+                `끝 — 적재 ${s.inserted} · 이미 있음 ${s.alreadyExists} · 실패 ${s.failed} · 표지 재사용 ${s.reusedCovers} · 저자 없음 ${s.emptyAuthor}\n기록: ${s.journal}`,
+              );
+            } else if (ev.type === "error") {
+              throw new Error(ev.message);
+            }
+          });
+        } catch (error) {
+          log(`중단: ${error.message}`);
+        } finally {
+          setBusy(false);
+          updateApplyBar();
+        }
+      }
+
+      $("filter").addEventListener("input", renderChips);
+      $("scanBtn").addEventListener("click", scan);
+      $("applyBtn").addEventListener("click", apply);
+
+      (async () => {
+        try {
+          const [meta, pubs, favs] = await Promise.all([
+            api("/api/meta").then((r) => r.json()),
+            api("/api/publishers?limit=2000").then((r) => r.json()),
+            api("/api/favorites").then((r) => r.json()),
+          ]);
+          $("target").textContent = `DB ${meta.target}`;
+          state.publishers = pubs;
+          state.favorites = new Set(favs);
+          for (const name of favs)
+            if (!pubs.some((p) => p.publisher === name))
+              state.publishers.push({ publisher: name, count: 0 });
+          renderChips();
+        } catch (error) {
+          $("chips").replaceChildren(
+            el("p", {
+              class: "error",
+              text: `출판사 목록을 못 불러왔습니다: ${error.message}`,
+            }),
+          );
+        }
+      })();
+    </script>
+  </body>
+</html>
