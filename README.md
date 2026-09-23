@@ -36,16 +36,16 @@
 
 ## 한눈에 보기
 
-|                |                                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| **서비스**     | https://bookjeok.com                                                                                |
-| **구성**       | Turborepo 모노레포 — 앱 3개(web / server / admin), 공용 패키지 3개(core / api-client / react-query) |
-| **프론트엔드** | Next.js 15 App Router + React 19, 한국어/영어 다국어, ISR + On-Demand Revalidation                  |
-| **백엔드**     | NestJS 11 + TypeORM + PostgreSQL(pgvector, cube/earthdistance)                                      |
-| **AI**         | Google Gemini — Function Calling 의도 분류 → pgvector 벡터 검색 → RAG 리랭킹                        |
-| **실시간**     | Socket.IO 채팅·알림 게이트웨이, SSE 기반 AI 추천 스트리밍                                           |
-| **결제**       | 토스페이먼츠 에스크로 + Delivery Tracker 배송 추적 + 스케줄러 기반 자동 확정/환불                   |
-| **인프라**     | Vercel(web) · Azure Container Apps(server) · Supabase PostgreSQL                                    |
+|                |                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **서비스**     | https://bookjeok.com                                                                                                                    |
+| **구성**       | Turborepo 모노레포 — 앱 3개(web / server / admin), 공용 패키지 3개(core / api-client / react-query), 운영자 도구 1개(tools/book-ingest) |
+| **프론트엔드** | Next.js 15 App Router + React 19, 한국어/영어 다국어, ISR + On-Demand Revalidation                                                      |
+| **백엔드**     | NestJS 11 + TypeORM + PostgreSQL(pgvector, cube/earthdistance)                                                                          |
+| **AI**         | Google Gemini — Function Calling 의도 분류 → pgvector 벡터 검색 → RAG 리랭킹                                                            |
+| **실시간**     | Socket.IO 채팅·알림 게이트웨이, SSE 기반 AI 추천 스트리밍                                                                               |
+| **결제**       | 토스페이먼츠 에스크로 + Delivery Tracker 배송 추적 + 스케줄러 기반 자동 확정/환불                                                       |
+| **인프라**     | Vercel(web) · Azure Container Apps(server) · Supabase PostgreSQL                                                                        |
 
 ---
 
@@ -394,13 +394,15 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | **카카오 맵 SDK**                     | 거래 위치 지도, 지오코딩                                  | `web: shared/components/map`            |
 | **다음 우편번호**                     | 배송지 주소 입력                                          | `web: order/address-input`              |
 | **GA4 · Microsoft Clarity · AdSense** | 트래픽 분석, 행동 분석, 광고                              | `web: shared/components/analytics, ads` |
+| **카카오 책 검색 API**                | 신간 적재 (운영자 도구 전용, 런타임 경로 아님)            | `tools/book-ingest`                     |
+| **Cloudflare R2**                     | 도서 표지 저장·서빙 (`cdn.bookjeok.com`)                  | `tools/book-ingest`(업로드), web(표시)  |
 
 > **도서 데이터는 런타임에 외부 API를 쓰지 않습니다.** 과거에는 네이버 도서 API와
 > 알라딘 Open API를 연동했으나, 알라딘 종료(2026-10-30)에 대비해 2026-09-08에
 > 공급처 체인에서 제거했습니다. 지금은 검색·상세 모두 자체 DB 단독이며, **외부
 > 공급처를 런타임 경로에 두지 않는 것이 방침입니다.** 신규 도서는 서버가 아니라
-> 운영자가 필요할 때 돌리는 적재 도구(카카오 책 검색 API를 입구로 사용, 2026-09-23
-> 설계 중)로 확보합니다. 표지도 2026-09-09 컷오버로
+> 운영자가 필요할 때 로컬에서 돌리는 적재 도구([`tools/book-ingest`](tools/book-ingest/README.md),
+> 카카오 책 검색 API를 입구로 사용)로 확보합니다. 표지도 2026-09-09 컷오버로
 > Cloudflare R2(`cdn.bookjeok.com`)에서 나갑니다. 경위와 남은 정리 항목은
 > [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)에 있습니다.
 
@@ -457,6 +459,9 @@ bookjeok/
 │   ├── core/                     # @bookjeok/core
 │   ├── api-client/               # @bookjeok/api-client
 │   └── react-query/              # @bookjeok/react-query
+│
+├── tools/
+│   └── book-ingest/              # 신간 적재 운영자 도구 (로컬 실행, 배포 안 함)
 │
 ├── docs/                         # 운영·설계 문서
 │   ├── used-book-pay-implementation.md
@@ -605,14 +610,15 @@ pnpm test
 
 ### 앱 · 패키지
 
-| 문서                                                                                                                          | 내용                                                      |
-| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| [apps/web/README.md](apps/web/README.md)                                                                                      | 웹 프론트엔드 개요 및 개발 원칙                           |
-| [apps/web/docs/ARCHITECTURE.md](apps/web/docs/ARCHITECTURE.md)                                                                | 컴포넌트 문맥 기반 그룹화 규칙, i18n 구조                 |
-| [apps/web/docs/CACHING.md](apps/web/docs/CACHING.md)                                                                          | 캐시 4개 층의 책임, 서버 시드 쿼리 대장, 재검증 범위 규칙 |
-| [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                         |
-| [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 기능                                          |
-| [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                        |
+| 문서                                                                                                                          | 내용                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [apps/web/README.md](apps/web/README.md)                                                                                      | 웹 프론트엔드 개요 및 개발 원칙                                 |
+| [apps/web/docs/ARCHITECTURE.md](apps/web/docs/ARCHITECTURE.md)                                                                | 컴포넌트 문맥 기반 그룹화 규칙, i18n 구조                       |
+| [apps/web/docs/CACHING.md](apps/web/docs/CACHING.md)                                                                          | 캐시 4개 층의 책임, 서버 시드 쿼리 대장, 재검증 범위 규칙       |
+| [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                               |
+| [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 (초기 세팅만 된 미배포 앱)                          |
+| [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                              |
+| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 신간 적재 운영자 도구 — 카카오 조회, 표지 R2 업로드, books 적재 |
 
 ### 도메인 기능 문서
 
