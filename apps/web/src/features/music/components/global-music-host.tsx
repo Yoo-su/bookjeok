@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMusicStore } from "../stores/use-music-store";
 
@@ -12,6 +12,7 @@ export function GlobalMusicHost() {
   const volume = useMusicStore((state) => state.volume);
   const setIsPlaying = useMusicStore((state) => state.setIsPlaying);
   const playNext = useMusicStore((state) => state.playNext);
+  const isModalOpen = useMusicStore((state) => state.isModalOpen);
 
   const currentTrack = playlist[currentIndex] || playlist[0];
 
@@ -31,6 +32,20 @@ export function GlobalMusicHost() {
   const currentYoutubeId = currentTrack?.src
     ? getYoutubeId(currentTrack.src)
     : null;
+
+  // 플레이어는 첫 사용 의사(모달 열기·재생) 이후에만 마운트 (YouTube 임베드 JS 약 1.6MB)
+  const [isArmed, setIsArmed] = useState(false);
+  const [embedId, setEmbedId] = useState<string | null>(null);
+  useEffect(() => {
+    if (isPlaying || isModalOpen) setIsArmed(true);
+  }, [isPlaying, isModalOpen]);
+
+  // iframe src 고정. 이후 곡 전환은 postMessage로 처리
+  useEffect(() => {
+    if (!isArmed || embedId || !currentYoutubeId) return;
+    lastLoadedIdRef.current = currentYoutubeId;
+    setEmbedId(currentYoutubeId);
+  }, [isArmed, embedId, currentYoutubeId]);
 
   // Helper to send command to YouTube iframe safely
   const sendYoutubeCommand = useCallback(
@@ -106,7 +121,7 @@ export function GlobalMusicHost() {
 
   // Handle Track Changes (switch video without recreating iframe DOM node)
   useEffect(() => {
-    if (!currentYoutubeId) return;
+    if (!embedId || !currentYoutubeId) return;
 
     // If it's the very first render, record the initial ID
     if (!lastLoadedIdRef.current) {
@@ -128,7 +143,14 @@ export function GlobalMusicHost() {
         applyVolume(volume);
       }
     }
-  }, [currentYoutubeId, isPlaying, volume, sendYoutubeCommand, applyVolume]);
+  }, [
+    embedId,
+    currentYoutubeId,
+    isPlaying,
+    volume,
+    sendYoutubeCommand,
+    applyVolume,
+  ]);
 
   // Handle Play / Pause
   useEffect(() => {
@@ -183,22 +205,22 @@ export function GlobalMusicHost() {
 
   if (!currentTrack) return null;
 
-  const initialYoutubeId = getYoutubeId(playlist[0]?.src || "");
-
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none fixed -left-[9999px] -top-[9999px] h-1 w-1 opacity-0"
     >
       {currentYoutubeId ? (
-        <iframe
-          ref={iframeRef}
-          src={`https://www.youtube.com/embed/${initialYoutubeId}?enablejsapi=1&autoplay=0&controls=0&playsinline=1`}
-          allow="autoplay; encrypted-media"
-          title="Global Persistent Music Engine"
-          onLoad={handleIframeLoad}
-          className="h-1 w-1 border-0"
-        />
+        embedId && (
+          <iframe
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${embedId}?enablejsapi=1&autoplay=0&controls=0&playsinline=1`}
+            allow="autoplay; encrypted-media"
+            title="Global Persistent Music Engine"
+            onLoad={handleIframeLoad}
+            className="h-1 w-1 border-0"
+          />
+        )
       ) : (
         <audio
           ref={audioRef}
