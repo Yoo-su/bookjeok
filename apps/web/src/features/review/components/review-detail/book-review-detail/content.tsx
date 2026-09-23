@@ -204,7 +204,7 @@ export function ReviewDetailContent({
       )}
       <div
         ref={bodyRef}
-        className="prose prose-stone prose-base sm:prose-lg md:prose-xl max-w-none break-words prose-headings:font-serif prose-headings:font-bold prose-p:leading-relaxed prose-img:rounded-xl prose-img:shadow-sm prose-blockquote:border-l-4 prose-blockquote:border-stone-200 prose-blockquote:bg-stone-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg [&_pre]:max-w-full [&_pre]:overflow-x-auto"
+        className="prose prose-stone prose-base sm:prose-lg max-w-none break-words text-stone-800 prose-headings:font-serif prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-stone-950 prose-p:leading-[1.85] prose-a:font-normal prose-a:text-stone-900 prose-a:underline prose-a:decoration-stone-300 prose-a:underline-offset-4 hover:prose-a:decoration-stone-900 prose-strong:text-stone-950 prose-img:rounded-lg prose-img:ring-1 prose-img:ring-stone-900/5 prose-blockquote:border-l-2 prose-blockquote:border-stone-900 prose-blockquote:pl-5 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-stone-600 prose-hr:mx-auto prose-hr:w-16 prose-hr:border-stone-300 prose-code:rounded prose-code:bg-stone-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-normal prose-code:before:content-none prose-code:after:content-none [&_blockquote_p]:before:content-none [&_blockquote_p]:after:content-none [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_pre_code]:bg-transparent [&_pre_code]:p-0"
         dangerouslySetInnerHTML={markup}
       />
     </div>

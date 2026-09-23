@@ -700,6 +700,7 @@
       "description": "Only the author can view the content."
     },
     "reactions": {
+      "prompt": "How did this review land?",
       "like": "Like",
       "insightful": "Insightful",
       "support": "Support"
