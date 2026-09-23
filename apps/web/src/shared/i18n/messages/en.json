@@ -687,7 +687,8 @@
       "update_success": "Review updated successfully!",
       "delete_success": "Review deleted successfully.",
       "unauthorized": "You do not have permission to edit.",
-      "fetch_failed": "Unable to load review information."
+      "fetch_failed": "Unable to load review information.",
+      "reaction_error": "Couldn't save your reaction. Please try again."
     },
     "recommend": {
       "title": "How about these reviews?",
@@ -700,6 +701,7 @@
       "description": "Only the author can view the content."
     },
     "reactions": {
+      "prompt": "How did this review land?",
       "like": "Like",
       "insightful": "Insightful",
       "support": "Support"

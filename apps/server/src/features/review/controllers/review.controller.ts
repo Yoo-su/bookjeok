@@ -19,7 +19,6 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OptionalJwtAuthGuard } from '@/features/auth/guards/optional-jwt-auth.guard';
 import { BookResolvePipe } from '@/features/book/pipes/book-resolve.pipe';
 import { Review } from '@/features/review/entities/review.entity';
-import { ReviewReactionType } from '@/features/review/entities/review-reaction.entity';
 import { CurrentUser } from '@/features/user/decorators/current-user.decorator';
 import { User } from '@/features/user/entities/user.entity';
 import { ActivityType } from '@/shared/activity/activity-type.enum';
@@ -37,6 +36,7 @@ import {
   ReviewResponseDto,
   TagSuggestionDto,
 } from '../dtos/review-response.dto';
+import { ToggleReactionDto } from '../dtos/toggle-reaction.dto';
 import { UpdateReviewDto } from '../dtos/update-review.dto';
 import { ViewCountInterceptor } from '../interceptors/view-count.interceptor';
 import { ReviewService } from '../services/review.service';
@@ -246,10 +246,14 @@ export class ReviewController {
     description: '리액션이 성공적으로 반영되었습니다.',
     type: ReviewResponseDto,
   })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: '리액션 종류가 올바르지 않습니다.',
+  })
   @ApiParam({ name: 'id', description: '리뷰 ID' })
   async toggleReaction(
     @Param('id', ParseIntPipe) id: number,
-    @Body('type') type: ReviewReactionType,
+    @Body() { type }: ToggleReactionDto,
     @CurrentUser() user: User,
   ): Promise<ReviewResponseDto> {
     return await this.reviewService.toggleReaction(id, user.id, type);

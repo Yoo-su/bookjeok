@@ -5,14 +5,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 
 import { getReviewShareDescription } from "@/features/review/utils/share";
-import {
-  BookOpen,
-  Calendar,
-  Eye,
-  Share2,
-} from "@/shared/components/icons/iconsax";
-import { Badge } from "@/shared/components/shadcn/badge";
-import { Button } from "@/shared/components/shadcn/button";
+import { BookOpen, Eye } from "@/shared/components/icons/iconsax";
 import { Separator } from "@/shared/components/shadcn/separator";
 import { ShareButton } from "@/shared/components/ui/share-button";
 import { StarRating } from "@/shared/components/ui/star-rating";
@@ -77,69 +70,71 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
           </div>
         </div>
 
-        {/* 책 정보 섹션 - 우아한 가로 형태 */}
+        {/* 리뷰한 책. 링크 하나로 감싸 도서 상세로 보낸다. */}
         {book && (
-          <div className="flex items-start gap-5 p-5 rounded-2xl bg-stone-50/50 border border-stone-100 hover:border-stone-200 transition-colors mb-10">
-            {book.image ? (
-              <Link href={PATHS.BOOK_DETAIL(book.isbn)} className="shrink-0">
-                <div className="relative w-16 h-22 rounded-md overflow-hidden bg-stone-200 shadow-sm transition-transform hover:-translate-y-0.5">
-                  <Image
-                    src={book.image}
-                    alt={book.title}
-                    fill
-                    className="object-cover"
-                    sizes="64px"
-                  />
+          <Link
+            href={PATHS.BOOK_DETAIL(book.isbn)}
+            className="group mb-8 flex items-center gap-5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-stone-700"
+          >
+            <div className="relative aspect-[5/7] w-16 shrink-0 origin-bottom-left overflow-hidden rounded-[2px] bg-stone-100 shadow-[2px_4px_12px_rgb(0_0_0/0.18)] ring-1 ring-black/5 transition-transform duration-300 motion-safe:group-hover:-rotate-3 sm:w-[72px]">
+              {book.image ? (
+                <Image
+                  src={book.image}
+                  alt={book.title}
+                  fill
+                  className="object-cover"
+                  sizes="72px"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <BookOpen className="size-6 text-stone-400" />
                 </div>
-              </Link>
-            ) : (
-              <div className="w-16 h-22 shrink-0 bg-stone-100 rounded-md flex items-center justify-center border border-stone-200">
-                <BookOpen className="w-6 h-6 text-stone-400" />
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0 py-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] font-bold tracking-widest text-white uppercase bg-[#3C3F45] px-2 py-0.5 rounded-sm">
-                  {t("reviewed_book")}
-                </span>
-                {review.rating > 0 && (
-                  <div className="flex items-center gap-1">
-                    <StarRating value={review.rating} readonly size={14} />
-                  </div>
-                )}
-              </div>
-
-              <Link href={PATHS.BOOK_DETAIL(book.isbn)} className="group block">
-                <h3 className="text-lg font-bold text-stone-900 truncate group-hover:text-stone-700 transition-colors font-serif">
-                  {book.title}
-                </h3>
-              </Link>
-              <p className="text-sm text-stone-500 mb-2 truncate">
-                {book.author} · {book.publisher}
-              </p>
+              )}
             </div>
 
-            {book.pubdate && (
-              <Badge
-                variant="outline"
-                className="hidden sm:inline-flex mt-1 text-stone-400 font-normal border-stone-200"
-              >
-                {book.pubdate.slice(0, 4)}
-              </Badge>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-stone-400">{t("reviewed_book")}</p>
+              <h2 className="mt-1 line-clamp-2 font-serif text-lg font-bold leading-snug text-stone-900 underline decoration-transparent decoration-1 underline-offset-4 transition-colors group-hover:decoration-stone-900">
+                {book.title}
+              </h2>
+              <p className="mt-1 truncate text-sm text-stone-500">
+                {[book.author, book.publisher, book.pubdate?.slice(0, 4)]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              {review.rating > 0 && (
+                <div className="mt-2 flex items-center gap-1.5 sm:hidden">
+                  <StarRating value={review.rating} readonly size={13} />
+                  <span className="text-sm font-semibold tabular-nums text-stone-700">
+                    {review.rating.toFixed(1)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {review.rating > 0 && (
+              <div className="hidden shrink-0 flex-col items-end gap-2 self-stretch border-l border-stone-200 pl-6 sm:flex sm:justify-center">
+                <p className="text-3xl font-semibold leading-none tracking-tight tabular-nums text-stone-900">
+                  {review.rating.toFixed(1)}
+                  <span className="ml-0.5 text-base font-normal text-stone-400">
+                    /5
+                  </span>
+                </p>
+                <StarRating value={review.rating} readonly size={12} />
+              </div>
             )}
-          </div>
+          </Link>
         )}
 
-        {/* 태그 리스트 - 하단 배치. 같은 태그가 달린 리뷰 목록으로 보낸다. */}
+        {/* 태그. 같은 태그가 달린 리뷰 목록으로 보낸다. */}
         {review.tags && review.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="-mx-1 flex flex-wrap gap-x-2">
             {review.tags.map((tag: string) => (
               <Link
                 key={tag}
                 href={PATHS.REVIEWS_BY_TAG(tag)}
                 aria-label={tAria("tag_filter", { tag })}
-                className="text-sm text-stone-500 hover:text-stone-900 hover:underline italic inline-block px-1 py-2"
+                className="inline-block px-1 py-1.5 text-sm text-stone-500 underline-offset-4 transition-colors hover:text-stone-900 hover:underline"
               >
                 #{tag}
               </Link>

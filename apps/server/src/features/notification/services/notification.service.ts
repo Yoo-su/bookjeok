@@ -99,6 +99,29 @@ export class NotificationService {
   }
 
   /**
+   * 같은 행위자가 같은 대상으로 보낸 같은 유형의 알림이 이미 있는지 확인합니다.
+   * 토글형 반응(리액션 등)을 껐다 켤 때 알림이 반복되지 않게 하는 데 씁니다.
+   *
+   * @param metadata 대상을 식별하는 메타데이터 일부. jsonb 포함(@>) 비교로 찾습니다.
+   */
+  async hasNotification(
+    recipientId: number,
+    actorId: number,
+    type: NotificationType,
+    metadata: Record<string, unknown>,
+  ) {
+    return this.notificationRepository
+      .createQueryBuilder('notification')
+      .where('notification.recipientId = :recipientId', { recipientId })
+      .andWhere('notification.actorId = :actorId', { actorId })
+      .andWhere('notification.type = :type', { type })
+      .andWhere('notification.metadata @> CAST(:metadata AS jsonb)', {
+        metadata: JSON.stringify(metadata),
+      })
+      .getExists();
+  }
+
+  /**
    * 사용자의 읽지 않은 알림 개수를 반환합니다.
    *
    * @param userId 사용자 ID

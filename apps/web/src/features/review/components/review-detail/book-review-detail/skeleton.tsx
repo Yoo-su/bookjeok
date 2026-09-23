@@ -39,34 +39,24 @@ export const ReviewDetailSkeleton = () => {
             <Skeleton className="w-9 h-9 rounded-md" />
           </div>
 
-          {/* 책 정보 섹션 - 실제 UI와 정확히 일치 (가로형 카드 형태) */}
-          <div className="flex items-start gap-5 p-5 rounded-2xl bg-stone-50/50 border border-stone-100 mb-10">
-            {/* 책 표지 이미지 (w-16 h-22 = 64px x 88px) */}
-            <Skeleton className="w-16 h-22 rounded-md shrink-0" />
-
-            <div className="flex-1 min-w-0 py-1 space-y-2">
-              {/* REVIEWED BOOK 뱃지 & 별점 */}
-              <div className="flex items-center gap-2 mb-1">
-                <Skeleton className="h-4 w-24 rounded-sm" />
-                <Skeleton className="h-3.5 w-20" />
-              </div>
-
-              {/* 도서 제목 */}
-              <Skeleton className="h-6 w-1/2 min-w-[140px] max-w-sm rounded" />
-
-              {/* 저자 및 출판사 */}
-              <Skeleton className="h-4 w-1/3 min-w-[100px] max-w-xs rounded" />
+          {/* 리뷰한 책 */}
+          <div className="flex items-center gap-5 mb-8">
+            <Skeleton className="aspect-[5/7] w-16 shrink-0 rounded-[2px] sm:w-[72px]" />
+            <div className="flex-1 min-w-0 space-y-2">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-5 w-1/2 min-w-[140px] max-w-sm" />
+              <Skeleton className="h-4 w-1/3 min-w-[100px] max-w-xs" />
             </div>
-
-            {/* 출판년도 뱃지 (반응형: hidden sm:inline-flex) */}
-            <Skeleton className="hidden sm:inline-flex mt-1 h-5 w-12 rounded-full" />
+            <div className="hidden flex-col items-end gap-2 border-l border-stone-200 pl-6 sm:flex">
+              <Skeleton className="h-8 w-16" />
+              <Skeleton className="h-3 w-16" />
+            </div>
           </div>
 
-          {/* 태그 리스트 - 하단 배치 */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            <Skeleton className="h-5 w-16 rounded" />
-            <Skeleton className="h-5 w-20 rounded" />
-            <Skeleton className="h-5 w-14 rounded" />
+          {/* 태그 */}
+          <div className="flex flex-wrap gap-3">
+            <Skeleton className="h-5 w-14" />
+            <Skeleton className="h-5 w-20" />
           </div>
         </div>
       </header>
@@ -86,10 +76,13 @@ export const ReviewDetailSkeleton = () => {
         </div>
 
         {/* 액션 버튼 영역 */}
-        <div className="flex items-center justify-center gap-4 pt-8 border-t border-stone-100">
-          <Skeleton className="h-10 w-20 rounded-full" />
-          <Skeleton className="h-10 w-20 rounded-full" />
-          <Skeleton className="h-10 w-20 rounded-full" />
+        <div className="flex flex-col items-center gap-4 pt-10 border-t border-stone-100">
+          <Skeleton className="h-4 w-28" />
+          <div className="flex flex-wrap justify-center gap-2">
+            <Skeleton className="h-11 w-28 rounded-full" />
+            <Skeleton className="h-11 w-28 rounded-full" />
+            <Skeleton className="h-11 w-28 rounded-full" />
+          </div>
         </div>
       </div>
     </article>

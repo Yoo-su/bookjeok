@@ -33,12 +33,14 @@ import { UpdateReviewDto } from '../dtos/update-review.dto';
 import { ReviewImageHelper } from '../helpers/review-image.helper';
 
 /**
- * LIKE 패턴의 메타문자를 막습니다. `local-db-book-catalog.provider`에도 같은
- * 규칙의 쌍둥이가 있습니다. SQL 표준이라 갈라질 일이 없어 각자 둡니다.
+ * LIKE 패턴의 메타문자를 막는다. `local-db-book-catalog.provider`에도 같은
+ * 규칙의 쌍둥이가 있다. SQL 표준이라 갈라질 일이 없어 각자 둔다.
  */
 function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
+
+type ReactionToggleOutcome = 'added' | 'changed' | 'removed';
 
 @Injectable()
 export class ReviewService {
@@ -663,16 +665,17 @@ export class ReviewService {
    * @param type 리액션 타입
    */
   async toggleReaction(id: number, userId: number, type: ReviewReactionType) {
-    const isAdded = await this.persistReactionToggle(id, userId, type);
+    const outcome = await this.persistReactionToggle(id, userId, type);
 
     // 커밋된 뒤에 읽고 발행한다. 트랜잭션 안에서 하면 롤백된 리액션에 대한
     // 알림이 남고, 아직 커밋되지 않은 reactionCount를 읽어 보낸다.
     const result = await this.findOne(id);
 
+    // 종류만 바꾼 경우는 새 반응이 아니므로 알림 대상이 아니다.
     this.eventEmitter.emit('review.reacted', {
       review: result,
       actorId: userId,
-      isAdded,
+      isAdded: outcome === 'added',
     });
 
     return result;
@@ -680,15 +683,14 @@ export class ReviewService {
 
   /**
    * 리액션 토글의 상태 변경만 트랜잭션 안에서 수행합니다.
-   * @returns 리액션이 추가/유지되었으면 true, 취소되었으면 false
+   * @returns 새로 추가(added), 종류 변경(changed), 취소(removed) 중 실제로 일어난 일
    */
   @Transactional()
   private async persistReactionToggle(
     id: number,
     userId: number,
     type: ReviewReactionType,
-  ): Promise<boolean> {
-    let isAdded = true;
+  ): Promise<ReactionToggleOutcome> {
     const manager = this.txHost.tx;
 
     const review = await manager.findOne(Review, { where: { id } });
@@ -714,13 +716,12 @@ export class ReviewService {
         if (deleteResult.affected && deleteResult.affected > 0) {
           await manager.decrement(Review, { id }, 'reactionCount', 1);
         }
-        isAdded = false;
-      } else {
-        // 리액션 변경
-        existingReaction.type = type;
-        await manager.save(ReviewReaction, existingReaction);
-        // 카운트 변경 없음
+        return 'removed';
       }
+      // 리액션 변경. 카운트 변경 없음
+      existingReaction.type = type;
+      await manager.save(ReviewReaction, existingReaction);
+      return 'changed';
     } else {
       // 새 리액션 추가: orIgnore()로 동시 요청 시 유니크 충돌(23505) 방어
       const insertResult = await manager
@@ -735,13 +736,11 @@ export class ReviewService {
         .orIgnore()
         .execute();
 
-      if (insertResult.identifiers?.length > 0 && insertResult.identifiers[0]) {
-        await manager.increment(Review, { id }, 'reactionCount', 1);
-      }
-      isAdded = true;
+      // 동시 요청에 밀려 무시됐다면 다른 요청이 이미 추가한 것이다.
+      if (!insertResult.identifiers?.[0]) return 'changed';
+      await manager.increment(Review, { id }, 'reactionCount', 1);
+      return 'added';
     }
-
-    return isAdded;
   }
 
   /**

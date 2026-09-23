@@ -3,12 +3,19 @@ import { Review, reviewKeys, ReviewReactionType } from "@bookjeok/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import React from "react";
+import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useToggleReviewReactionMutation } from "@/features/review/mutations";
 
 vi.mock("@bookjeok/api-client", () => ({
   toggleReviewReaction: vi.fn(),
+}));
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+}));
+vi.mock("sonner", () => ({
+  toast: { error: vi.fn(), success: vi.fn() },
 }));
 vi.mock("@/shared/config/i18n/routing", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -191,5 +198,87 @@ describe("useToggleReviewReactionMutation", () => {
     ]);
     // 실패했으므로 내 리액션은 여전히 null이어야 함
     expect(reactionCache).toBeNull();
+  });
+  it("API 호출이 실패하면 사용자에게 오류 토스트를 띄운다", async () => {
+    vi.mocked(apis.toggleReviewReaction).mockRejectedValueOnce(
+      new Error("Server error"),
+    );
+
+    const { result } = renderHook(
+      () => useToggleReviewReactionMutation(mockReviewId),
+      { wrapper },
+    );
+
+    await act(async () => {
+      result.current.mutate(ReviewReactionType.LIKE);
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("reaction_error");
+    });
+  });
+
+  it("성공하면 낙관적 카운트를 서버가 돌려준 카운트로 교정한다", async () => {
+    // 캐시는 LIKE 10인데 그사이 다른 사용자가 반응해 서버 실제 값은 12였던 상황
+    const serverCounts = {
+      [ReviewReactionType.LIKE]: 13,
+      [ReviewReactionType.INSIGHTFUL]: 5,
+      [ReviewReactionType.SUPPORT]: 2,
+    };
+    vi.mocked(apis.toggleReviewReaction).mockResolvedValueOnce({
+      ...mockReview,
+      reactionCounts: serverCounts,
+    });
+
+    const { result } = renderHook(
+      () => useToggleReviewReactionMutation(mockReviewId),
+      { wrapper },
+    );
+
+    await act(async () => {
+      result.current.mutate(ReviewReactionType.LIKE);
+    });
+
+    await waitFor(() => {
+      const reviewCache = queryClient.getQueryData<Review>(
+        reviewKeys.detail(mockReviewId).queryKey,
+      );
+      expect(reviewCache?.reactionCounts).toEqual(serverCounts);
+    });
+    expect(
+      queryClient.getQueryData([
+        ...reviewKeys.detail(mockReviewId).queryKey,
+        "reaction",
+      ]),
+    ).toBe(ReviewReactionType.LIKE);
+  });
+
+  it("서버 응답으로 교정할 때 카운트 외 필드는 덮지 않는다 (비공개 리뷰 본문 보호)", async () => {
+    // 비공개 리뷰의 작성자는 인증 조회로 받은 원문을 캐시에 들고 있다
+    queryClient.setQueryData(reviewKeys.detail(mockReviewId).queryKey, {
+      ...mockReview,
+      isPublic: false,
+    });
+    // 토글 응답은 인증 없이 조회한 결과라 본문이 비어 있다
+    vi.mocked(apis.toggleReviewReaction).mockResolvedValueOnce({
+      ...mockReview,
+      isPublic: false,
+      content: "",
+    });
+
+    const { result } = renderHook(
+      () => useToggleReviewReactionMutation(mockReviewId),
+      { wrapper },
+    );
+
+    await act(async () => {
+      result.current.mutate(ReviewReactionType.LIKE);
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const reviewCache = queryClient.getQueryData<Review>(
+      reviewKeys.detail(mockReviewId).queryKey,
+    );
+    expect(reviewCache?.content).toBe("리뷰 내용");
   });
 });

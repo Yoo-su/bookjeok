@@ -29,6 +29,15 @@ export class ReviewNotificationListener {
       // 본인 글에 리액션을 남긴 경우 알림 제외
       if (review.userId === actorId) return;
 
+      // 같은 사람이 같은 리뷰에 반응을 껐다 켜도 알림은 한 번만 보낸다
+      const alreadyNotified = await this.notificationService.hasNotification(
+        review.userId,
+        actorId,
+        NotificationType.REVIEW_REACTION,
+        { reviewId: review.id },
+      );
+      if (alreadyNotified) return;
+
       await this.notificationService.createNotification(
         review.userId,
         actorId,

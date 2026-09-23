@@ -22,6 +22,7 @@ review/
 │   ├── create-review.dto.ts
 │   ├── update-review.dto.ts
 │   ├── get-reviews-query.dto.ts
+│   ├── toggle-reaction.dto.ts        # 리액션 종류 검증 (@IsEnum)
 │   └── review-response.dto.ts
 ├── helpers/
 │   └── review-image.helper.ts        # 본문 이미지 추출 및 Vercel Blob 정리
@@ -43,11 +44,11 @@ review/
 | GET    | `/reviews/feeds`         |  -   | 홈 피드용 요약 목록                        |
 | GET    | `/reviews/popular`       |  -   | 최근 `POPULAR_REVIEW_MONTHS`개월 인기 리뷰 |
 | GET    | `/reviews/tags`          |  -   | 태그 자동완성 후보 (사용 빈도순)           |
-| GET    | `/reviews/:id`           | 선택 | 리뷰 상세 (로그인 시 내 리액션 포함)       |
+| GET    | `/reviews/:id`           | 선택 | 리뷰 상세 (비공개는 작성자만 원문)         |
 | GET    | `/reviews/:id/edit`      |  🔒  | 수정용 조회 (작성자만)                     |
 | POST   | `/reviews/:id/view`      |  -   | 조회수 증가                                |
 | GET    | `/reviews/:id/recommend` |  -   | 연관 추천 리뷰                             |
-| POST   | `/reviews/:id/reactions` |  🔒  | 리액션 토글                                |
+| POST   | `/reviews/:id/reactions` |  🔒  | 리액션 토글 (`type` 누락·오타는 400)       |
 | GET    | `/reviews/:id/reaction`  |  🔒  | 내 리액션 조회                             |
 | PATCH  | `/reviews/:id`           |  🔒  | 리뷰 수정                                  |
 | DELETE | `/reviews/:id`           |  🔒  | 리뷰 삭제                                  |
@@ -122,6 +123,8 @@ enum ReviewReactionType {
 
 사용자당 리뷰별 1건이며, 같은 타입을 다시 누르면 해제(토글)됩니다. `reactionCount`는 토글과 같은 트랜잭션에서 갱신합니다.
 
+내 리액션은 상세 응답에 들어가지 않고 `GET /reviews/:id/reaction`으로 따로 조회합니다. 상세는 웹에서 ISR로 캐시되므로 사용자별 값을 섞으면 안 됩니다.
+
 ---
 
 ## 핵심 로직
@@ -148,6 +151,8 @@ Tiptap 본문에서 이미지 URL을 추출해, 수정·삭제 시 더 이상 �
 | ---------------- | ---------------------------- | -------------------------------------- |
 | `review.reacted` | `ReviewNotificationListener` | 리뷰 작성자에게 `REVIEW_REACTION` 알림 |
 | `user.withdrawn` | `ReviewCleanupListener`      | 탈퇴 회원의 리뷰·리액션 정리           |
+
+`review.reacted`의 `isAdded`는 새로 추가된 경우에만 `true`입니다. 종류 변경·취소·동시 요청으로 무시된 추가는 `false`입니다. 리스너는 같은 사람이 같은 리뷰로 이미 보낸 알림이 있으면 다시 보내지 않습니다. 껐다 켜기를 반복해도 작성자는 알림을 한 번만 받습니다.
 
 ---
 
