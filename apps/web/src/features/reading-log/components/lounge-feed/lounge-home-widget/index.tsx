@@ -93,6 +93,7 @@ export function LoungeHomeWidget() {
                       src={item.book.image}
                       alt={item.book.title}
                       fill
+                      sizes="(min-width: 640px) 176px, 160px"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
