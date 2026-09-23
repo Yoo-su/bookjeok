@@ -44,6 +44,7 @@ export const RecentSaleCard = ({
   return (
     <Link
       href={PATHS.BOOK_SALES_DETAIL(String(sale.id))}
+      prefetch={false}
       className="group block w-full h-full"
       passHref
     >
