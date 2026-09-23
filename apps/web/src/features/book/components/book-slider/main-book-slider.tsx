@@ -13,6 +13,7 @@ import {
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
 
 import { BookOpen } from "@/shared/components/icons/iconsax";
 import { TextAnimate } from "@/shared/components/magicui/text-animate";
@@ -128,7 +129,8 @@ const BookCard = memo(
                   src={book.image || "/images/placeholder-book.svg"}
                   alt={book.title}
                   fill
-                  priority={true}
+                  // 정면 카드만 선로딩. 18장 전부 priority면 JS·폰트와 대역폭 경쟁
+                  priority={index === 0}
                   unoptimized={true}
                   draggable={false} // 마우스 먹통 방지를 위해 브라우저 기본 이미지 드래그 차단
                   sizes="(max-width: 768px) 130px, 230px"
@@ -205,9 +207,8 @@ const ActiveBookInfo = memo(
 
 ActiveBookInfo.displayName = "ActiveBookInfo";
 
-// 화면 너비별 반응형 치수 계산 헬퍼 함수
-const getSliderDimensions = (width?: number) => {
-  const w = width ?? (typeof window !== "undefined" ? window.innerWidth : 1200);
+// 화면 너비별 반응형 치수 계산 헬퍼 함수 (구간을 바꾸면 skeleton.tsx의 CSS 변수도 함께 수정)
+const getSliderDimensions = (w: number) => {
   if (w > 1024) {
     return { radius: 580, cardWidth: 180, cardHeight: 270 };
   } else if (w > 768) {
@@ -234,8 +235,8 @@ export const MainBookSlider = () => {
   // 반응형 치수가 확정되기 전까지 슬라이더를 숨겨 레이아웃 점프(FOUC) 방지
   const [isLayoutReady, setIsLayoutReady] = useState(false);
 
-  // 화면 크기별 반응형 파라미터 (클라이언트 마운트 시 즉시 현재 창 크기 반영)
-  const [dimensions, setDimensions] = useState(getSliderDimensions);
+  // 화면 크기별 반응형 파라미터 (서버와 같은 고정값으로 시작해 마운트 직후 실제 폭 반영)
+  const [dimensions, setDimensions] = useState(() => getSliderDimensions(1200));
   const { radius, cardWidth, cardHeight } = dimensions;
 
   useEffect(() => {
@@ -272,6 +273,9 @@ export const MainBookSlider = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+
+  // 화면 밖에서는 자동 회전 정지 (카드 18장의 스타일을 매 프레임 갱신)
+  const { ref: inViewRef, inView } = useInView({ initialInView: true });
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -358,20 +362,20 @@ export const MainBookSlider = () => {
 
   // 사용자 호버, 포커스 또는 드래그 상태에 따른 자동 스크롤 제어
   useEffect(() => {
-    if (isHovered || isDragging || isFocused) {
+    if (isHovered || isDragging || isFocused || !inView) {
       stopAutoplay();
     } else {
       startAutoplay();
     }
     return () => stopAutoplay();
-  }, [isHovered, isDragging, isFocused, N, angleStep]);
+  }, [isHovered, isDragging, isFocused, inView, N, angleStep]);
 
   // 출판사 변경 시 회전 상태 초기화 및 자동 스크롤 재개
   useEffect(() => {
     stopAutoplay();
     rotationY.set(0);
     dragDistanceRef.current = 0;
-    if (!isHovered && !isDragging && !isFocused) {
+    if (!isHovered && !isDragging && !isFocused && inView) {
       startAutoplay();
     }
   }, [activePublisher]);
@@ -443,7 +447,10 @@ export const MainBookSlider = () => {
   };
 
   return (
-    <div className="w-full bg-transparent py-16 md:py-24 overflow-hidden select-none">
+    <div
+      ref={inViewRef}
+      className="w-full bg-transparent py-16 md:py-24 overflow-hidden select-none"
+    >
       <div className="container mx-auto w-full px-4 md:px-0 mb-12 flex flex-col items-center text-center">
         <TextAnimate
           as="h2"
@@ -481,13 +488,7 @@ export const MainBookSlider = () => {
       </div>
 
       {/* 레이아웃 준비 전이거나 데이터 로딩 중이면 스켈레톤 표시 */}
-      {(!isLayoutReady || isLoading) && (
-        <BookSliderSkeleton
-          radius={radius}
-          cardWidth={cardWidth}
-          cardHeight={cardHeight}
-        />
-      )}
+      {(!isLayoutReady || isLoading) && <BookSliderSkeleton />}
 
       {isLayoutReady &&
         !isLoading &&
