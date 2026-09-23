@@ -9,10 +9,11 @@ import {
 
 import { UsedBookSale } from '@/features/used-book-sale/entities/used-book-sale.entity';
 
-// 운영에는 TypeORM 데코레이터로 표현할 수 없는 인덱스가 셋 있다.
-//   IDX_books_title_trgm / IDX_books_author_trgm / IDX_books_publisher_trgm
-//   → gin (컬럼 gin_trgm_ops). 연산자 클래스를 지정할 수 없어 여기 선언할 수 없다.
-// 지우지 말 것. 검색이 전부 풀스캔으로 돌아간다 (docs/manual-ddl-log.md 4절).
+// 운영에는 TypeORM 데코레이터로 표현할 수 없는 인덱스가 있다(연산자 클래스·표현식).
+//   IDX_books_search_key_trgm — 검색이 쓰는 인덱스. 지우면 검색이 풀스캔이 된다.
+//     식은 book-search-query.ts의 SEARCH_KEY_SQL과 같아야 한다 (manual-ddl-log 10절).
+//   IDX_books_title_trgm / _author_trgm / _publisher_trgm — 2026-09-23부터 코드가
+//     쓰지 않는다. 제거 대기 (manual-ddl-log 4·10절).
 @Entity({ name: 'books' })
 export class Book {
   @PrimaryColumn()
