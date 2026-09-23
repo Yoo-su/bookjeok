@@ -99,6 +99,16 @@ export const useToggleReviewReactionMutation = (
       options?.onError?.(err);
     },
     onSuccess: (data) => {
+      // 낙관적 값은 캐시가 낡았거나 다른 사용자의 반응이 겹치면 어긋난다.
+      // 응답 전체를 덮지 않는 이유: 비공개 리뷰는 서버가 본문을 가린 채 돌려주므로
+      // 작성자 본인 화면의 원문이 마스킹으로 바뀐다.
+      if (data?.reactionCounts) {
+        queryClient.setQueryData<Review>(
+          reviewKeys.detail(reviewId).queryKey,
+          (old) =>
+            old ? { ...old, reactionCounts: data.reactionCounts } : old,
+        );
+      }
       options?.onSuccess?.(data);
     },
   });

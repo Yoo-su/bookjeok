@@ -20,7 +20,14 @@ import { purgeRouteCache } from "@/shared/utils/purge-route-cache";
  * 리뷰 리액션을 토글하는 뮤테이션 훅입니다.
  */
 export const useToggleReviewReactionMutation = (reviewId: number) => {
-  return useSharedToggleReviewReactionMutation(reviewId);
+  const t = useTranslations("review.toast");
+
+  // 실패하면 공유 훅이 낙관적 반영을 되돌린다. 알리지 않으면 버튼만 조용히 원복된다.
+  return useSharedToggleReviewReactionMutation(reviewId, {
+    onError: () => {
+      toast.error(t("reaction_error"));
+    },
+  });
 };
 
 /**

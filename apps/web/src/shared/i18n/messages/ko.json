@@ -687,7 +687,8 @@
       "update_success": "리뷰가 수정되었습니다!",
       "delete_success": "리뷰가 삭제되었습니다.",
       "unauthorized": "수정 권한이 없습니다.",
-      "fetch_failed": "리뷰 정보를 불러올 수 없습니다."
+      "fetch_failed": "리뷰 정보를 불러올 수 없습니다.",
+      "reaction_error": "반응을 반영하지 못했어요. 잠시 후 다시 시도해 주세요."
     },
     "recommend": {
       "title": "이런 리뷰는 어떠세요?",
