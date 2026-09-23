@@ -38,12 +38,12 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-02 | 채팅 테이블 인덱스 5개 추가                                                    | `e0eed214`              |
 | 2026-09-02 | 읽음 워터마크 컬럼 추가·백필, `read_receipts` 드롭                             | `778ef588`              |
 | 2026-09-05 | 거래 완료(`trade_completions`) 도입, `trade_reviews` 재구성                    | `f34ba26b` ~ `390b4fcc` |
-| 2026-09-07 | `books` 검색용 pg_trgm GIN 인덱스 3개 추가                                     | (미커밋)                |
+| 2026-09-07 | `books` 검색용 pg_trgm GIN 인덱스 3개 추가                                     | `be065b39`              |
 | 2026-09-08 | `books.pubDate` 컬럼 추가 (출간일)                                             | `026abfd5`              |
 | 2026-09-09 | 위 컬럼 값 채움 + `books.discount` 판매가 → 정가 (DDL 아님, 데이터 반영)       | (스크립트)              |
-| 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                                 | (미커밋)                |
-| 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                             | (미커밋)                |
-| 2026-09-12 | 인덱스 정리 (제거 4·교체 3·외래키 16 추가·유니크 이름 2 변경) + 고아 enum 드롭 | (미커밋)                |
+| 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                                 | `ab4d58b2`              |
+| 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                             | `745d0f16`              |
+| 2026-09-12 | 인덱스 정리 (제거 4·교체 3·외래키 16 추가·유니크 이름 2 변경) + 고아 enum 드롭 | `84b78e24`              |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).

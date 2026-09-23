@@ -41,8 +41,8 @@ pnpm test
 > **`packages/core`를 수정했다면 웹 테스트 전에 반드시 1번을 먼저 돌리세요.**
 > 웹은 소스가 아니라 `dist`를 참조하므로, 재빌드하지 않으면 옛 코드로 테스트합니다.
 
-> 로컬에 Postgres도 docker도 없어 **서버를 띄운 통합 검증은 불가능합니다.**
-> 배포 후 실제 페이지로 확인하세요.
+> 로컬에 운영과 같은 스키마의 Postgres가 없어 **서버를 띄운 통합 검증은 해 본 적이 없습니다.**
+> 배포 후 실제 페이지로 확인하세요. (Docker 가용 여부는 머신마다 다릅니다 — `AGENTS.md` 참고)
 >
 > ```bash
 > curl -sL -o /dev/null -w "%{http_code}\n" https://bookjeok.com/ko

@@ -19,7 +19,7 @@
 
 ### 3. 순수 유틸리티 (`src/shared/utils`)
 
-- **Format**: `formatPrice` (통화 포맷팅), `formatAladinCoverImage` (도서 표지 고화질화)
+- **Format**: `formatPrice` (통화 포맷팅), `formatAladinCoverImage` (알라딘 표지 URL을 cover500으로 치환. 2026-09-09 R2 컷오버 후 DB에 알라딘 URL이 없어 사실상 no-op, 정리 대상)
 - **Date**: `getSimpleDate`, `formatPostDate` (상대 시간 포맷팅)
 
 ---
