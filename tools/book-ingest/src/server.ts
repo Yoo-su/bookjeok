@@ -9,13 +9,15 @@ import {
 
 import type { PublisherStat } from "./db";
 import type { IngestOutcome } from "./ingest";
-import { type Candidate, EXCLUDE_REASON_LABEL } from "./normalize";
+import type { Candidate } from "./normalize";
 import type { PageProgress, PublisherScan } from "./scan";
+import type { SourceInfo } from "./sources";
 import { type ApplySummary, summarizeScan } from "./workflow";
 
 export interface IngestServices {
   publisherStats(limit: number): Promise<PublisherStat[]>;
   scan(
+    source: string,
     publishers: string[],
     maxPages: number,
     onPage: (progress: PageProgress) => void,
@@ -28,12 +30,15 @@ export interface IngestServices {
   setFavorites(publishers: string[]): void;
   /** 화면 상단에 보여줄 접속 대상 요약(자격증명 없음). */
   target: string;
+  sources: SourceInfo[];
 }
 
 export interface ServerOptions {
   port: number;
   token: string;
   services: IngestServices;
+  /** 미리보기 표지를 불러올 출처. 공급처 정의에서 모읍니다. */
+  imageOrigins?: string[];
   html?: string;
 }
 
@@ -51,6 +56,7 @@ export function createIngestServer({
   port,
   token,
   services,
+  imageOrigins = [],
   html,
 }: ServerOptions): Server {
   const page = (
@@ -73,7 +79,7 @@ export function createIngestServer({
           "cache-control": "no-store",
           "content-security-policy":
             "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; " +
-            "img-src https://search1.kakaocdn.net; connect-src 'self'; base-uri 'none'; form-action 'none'",
+            `img-src ${imageOrigins.join(" ") || "'none'"}; connect-src 'self'; base-uri 'none'; form-action 'none'`,
           "referrer-policy": "no-referrer",
         });
         return res.end(page);
@@ -86,7 +92,10 @@ export function createIngestServer({
       }
 
       if (req.method === "GET" && url.pathname === "/api/meta") {
-        return sendJson(res, 200, { target: services.target });
+        return sendJson(res, 200, {
+          target: services.target,
+          sources: services.sources,
+        });
       }
 
       if (req.method === "GET" && url.pathname === "/api/publishers") {
@@ -114,9 +123,16 @@ export function createIngestServer({
 
       if (req.method === "POST" && url.pathname === "/api/scan") {
         const body = (await readJson(req)) as {
+          source?: unknown;
           publishers?: unknown;
           maxPages?: unknown;
         };
+        const source = services.sources.find(
+          (s) => s.id === body?.source && s.available,
+        );
+        if (!source) {
+          return sendJson(res, 400, { error: "쓸 수 있는 공급처를 고르세요" });
+        }
         const publishers = isStringArray(body?.publishers)
           ? [...new Set(body.publishers.map((p) => p.trim()).filter(Boolean))]
           : [];
@@ -125,11 +141,18 @@ export function createIngestServer({
             error: `출판사를 1~${MAX_PUBLISHERS}곳 고르세요`,
           });
         }
-        const maxPages = clamp(Number(body.maxPages ?? 20), 1, 20);
+        const maxPages = clamp(
+          Number(body.maxPages ?? source.maxPages),
+          1,
+          source.maxPages,
+        );
         const emit = openStream(res);
         try {
-          const result = await services.scan(publishers, maxPages, (p) =>
-            emit({ type: "page", ...p }),
+          const result = await services.scan(
+            source.id,
+            publishers,
+            maxPages,
+            (p) => emit({ type: "page", ...p }),
           );
           const scanId = randomUUID();
           scans.set(
@@ -201,28 +224,12 @@ export function createIngestServer({
   });
 }
 
+/** 화면에 보낼 모양. 공급처 원본(`raw`)은 보내지 않습니다. */
 function toScanView(scan: PublisherScan) {
   return {
     summary: summarizeScan(scan),
-    fresh: scan.fresh.map((b) => ({
-      isbn: b.isbn,
-      title: b.title,
-      author: b.author,
-      translators: b.kakao.translators,
-      publisher: b.publisher,
-      discount: b.discount,
-      pubDate: b.pubDate,
-      preorder: b.preorder,
-      status: b.kakao.status,
-      thumbnail: b.kakao.thumbnail,
-    })),
-    excluded: scan.excluded.map((e) => ({
-      reason: e.reason,
-      label: EXCLUDE_REASON_LABEL[e.reason],
-      isbn: e.isbn,
-      title: e.title,
-      publisher: e.kakao.publisher,
-    })),
+    fresh: scan.fresh.map(({ raw: _raw, coverUrls: _covers, ...book }) => book),
+    excluded: scan.excluded.map(({ raw: _raw, ...item }) => item),
   };
 }
 

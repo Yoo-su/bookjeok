@@ -37,6 +37,9 @@
       * {
         box-sizing: border-box;
       }
+      [hidden] {
+        display: none !important;
+      }
       body {
         margin: 0;
         background: var(--bg);
@@ -342,6 +345,125 @@
       .error {
         color: var(--bad);
       }
+      .segmented {
+        display: inline-flex;
+        border: 1px solid var(--strong-line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .segmented label {
+        position: relative;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background 120ms ease;
+      }
+      .segmented label + label {
+        border-left: 1px solid var(--strong-line);
+      }
+      .segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .segmented label:has(input:checked) {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .segmented label:has(input:disabled) {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .segmented label:has(input:focus-visible) {
+        outline: 2px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--bg);
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .toolbar input[type="search"] {
+        width: 220px;
+      }
+      .card:focus-visible {
+        outline: 2px solid var(--ink);
+        outline-offset: 2px;
+      }
+      .card:hover {
+        border-color: var(--strong-line);
+      }
+      .card .sales {
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+      dialog {
+        width: min(760px, calc(100vw - 32px));
+        max-height: calc(100dvh - 48px);
+        border: 1px solid var(--strong-line);
+        border-radius: 10px;
+        padding: 0;
+        background: var(--panel);
+        color: var(--ink);
+      }
+      dialog::backdrop {
+        background: rgb(0 0 0 / 0.45);
+      }
+      .detail-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .detail-body {
+        display: grid;
+        grid-template-columns: 160px 1fr;
+        gap: 16px;
+        padding: 16px;
+        overflow: auto;
+        max-height: calc(100dvh - 120px);
+      }
+      .detail-body img {
+        width: 100%;
+        border-radius: 4px;
+        background: var(--line);
+      }
+      .detail-body h3 {
+        margin: 0 0 8px;
+        font-size: 17px;
+      }
+      .detail-body dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 2px 12px;
+        margin: 0 0 12px;
+        font-size: 13px;
+      }
+      .detail-body dt {
+        color: var(--muted);
+      }
+      .detail-body dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      .description {
+        white-space: pre-wrap;
+        font-size: 13px;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+      @media (max-width: 560px) {
+        .detail-body {
+          grid-template-columns: 1fr;
+        }
+        .detail-body img {
+          max-width: 160px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -352,7 +474,15 @@
     <main>
       <section class="panel">
         <div class="row" style="justify-content: space-between">
-          <h2 style="margin: 0">출판사</h2>
+          <div class="row">
+            <h2 style="margin: 0">출판사</h2>
+            <div
+              class="segmented"
+              id="sources"
+              role="radiogroup"
+              aria-label="공급처"
+            ></div>
+          </div>
           <div class="row">
             <input
               type="search"
@@ -361,15 +491,12 @@
             />
             <label class="small muted"
               >최대
-              <select id="maxPages">
-                <option value="2">2페이지 (100권)</option>
-                <option value="5">5페이지 (250권)</option>
-                <option value="20" selected>20페이지 (1,000권)</option>
-              </select>
+              <select id="maxPages"></select>
             </label>
             <button class="primary" id="scanBtn" disabled>신간 찾기</button>
           </div>
         </div>
+        <p class="small muted" id="sourceNote"></p>
         <p class="small muted" id="selectedLine">
           ★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.
         </p>
@@ -382,6 +509,28 @@
         <div id="progress" class="progress-line small"></div>
       </section>
 
+      <div class="toolbar row" id="toolbar" hidden>
+        <input
+          type="search"
+          id="query"
+          placeholder="제목·저자로 거르기"
+          aria-label="결과를 제목·저자로 거르기"
+        />
+        <label class="small"
+          ><input type="checkbox" id="hidePreorder" /> 예약판매 숨기기</label
+        >
+        <label class="small muted"
+          >정렬
+          <select id="sort">
+            <option value="source">공급처 순서(최신순)</option>
+            <option value="date">출간일 최신순</option>
+            <option value="sales">판매지수 높은순</option>
+            <option value="title">제목순</option>
+          </select>
+        </label>
+        <span class="small muted" id="viewCount"></span>
+      </div>
+
       <div id="results"></div>
     </main>
 
@@ -393,6 +542,30 @@
       </div>
       <div class="log inner" id="log"></div>
     </div>
+
+    <dialog id="detail" aria-labelledby="detailTitle">
+      <div class="detail-head">
+        <div class="row">
+          <button id="prevBtn" aria-label="이전 책">←</button>
+          <button id="nextBtn" aria-label="다음 책">→</button>
+          <span class="small muted" id="detailPos"></span>
+        </div>
+        <div class="row">
+          <label class="small"
+            ><input type="checkbox" id="detailPick" /> 적재 대상</label
+          >
+          <button id="closeBtn">닫기</button>
+        </div>
+      </div>
+      <div class="detail-body">
+        <img id="detailImg" alt="" referrerpolicy="no-referrer" />
+        <div>
+          <h3 id="detailTitle"></h3>
+          <dl id="detailMeta"></dl>
+          <div class="description" id="detailDesc"></div>
+        </div>
+      </div>
+    </dialog>
 
     <script>
       const TOKEN = document.querySelector('meta[name="ingest-token"]').content;
@@ -408,13 +581,35 @@
         for (const child of [].concat(children)) if (child) node.append(child);
         return node;
       };
+      const SOURCE_KEY = "book-ingest:source";
+      const store = {
+        get(key) {
+          try {
+            return localStorage.getItem(key);
+          } catch {
+            return null;
+          }
+        },
+        set(key, value) {
+          try {
+            localStorage.setItem(key, value);
+          } catch {}
+        },
+      };
 
       const state = {
+        sources: [],
+        source: null,
         publishers: [],
         favorites: new Set(),
         selected: new Set(),
         scanId: null,
-        fresh: new Map(), // isbn -> { book, checked, card }
+        scanSource: null,
+        // isbn -> { book, order, checked, done, card, stamp, box, section }
+        fresh: new Map(),
+        sections: [],
+        view: { query: "", hidePreorder: false, sort: "source" },
+        detail: null,
         busy: false,
       };
 
@@ -453,6 +648,64 @@
           }
         }
       }
+
+      const sourceById = (id) => state.sources.find((s) => s.id === id);
+      const won = (n) => `${Number(n).toLocaleString()}원`;
+
+      // ── 공급처 ────────────────────────────────────────────────
+
+      function renderSources() {
+        $("sources").replaceChildren(
+          ...state.sources.map((s) => {
+            const input = el("input", {
+              type: "radio",
+              name: "source",
+              value: s.id,
+            });
+            input.checked = s.id === state.source;
+            input.disabled = !s.available || state.busy;
+            input.addEventListener("change", () => selectSource(s.id));
+            return el(
+              "label",
+              { title: s.available ? "" : `${s.envKey}가 없어 쓸 수 없습니다` },
+              [input, document.createTextNode(s.label)],
+            );
+          }),
+        );
+        const current = sourceById(state.source);
+        $("sourceNote").textContent = current
+          ? `${current.label}: 출판사당 최대 ${current.maxPages}페이지(${(current.maxPages * 50).toLocaleString()}권)까지 조회합니다.` +
+            (current.enrichNote ? ` ${current.enrichNote}` : "")
+          : "쓸 수 있는 공급처가 없습니다. .env에 키를 넣으세요.";
+      }
+
+      function renderMaxPages() {
+        const current = sourceById(state.source);
+        const max = current?.maxPages ?? 1;
+        const pages = [...new Set([1, 2, 5, max].filter((n) => n <= max))];
+        $("maxPages").replaceChildren(
+          ...pages.map((n) =>
+            el("option", {
+              value: String(n),
+              text:
+                n === max
+                  ? `끝까지 (${(n * 50).toLocaleString()}권)`
+                  : `${n}페이지 (${n * 50}권)`,
+            }),
+          ),
+        );
+        $("maxPages").value = String(max);
+      }
+
+      function selectSource(id) {
+        state.source = id;
+        store.set(SOURCE_KEY, id);
+        renderSources();
+        renderMaxPages();
+        renderChips();
+      }
+
+      // ── 출판사 칩 ─────────────────────────────────────────────
 
       function renderChips() {
         const q = $("filter").value.trim();
@@ -510,7 +763,8 @@
         $("selectedLine").textContent = sel.length
           ? `선택: ${sel.join(", ")}`
           : "★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.";
-        $("scanBtn").disabled = state.busy || sel.length === 0;
+        $("scanBtn").disabled =
+          state.busy || sel.length === 0 || !sourceById(state.source);
       }
 
       async function toggleFavorite(name) {
@@ -527,27 +781,96 @@
 
       function setBusy(busy) {
         state.busy = busy;
+        renderSources();
         renderChips();
-        $("applyBtn").disabled = busy || selectedIsbns().length === 0;
+        updateApplyBar();
       }
 
-      function selectedIsbns() {
-        return [...state.fresh.values()]
-          .filter((v) => v.checked && !v.done)
-          .map((v) => v.book.isbn);
+      // ── 결과 보기: 거르기·정렬 ────────────────────────────────
+
+      function isVisible(entry) {
+        const { book } = entry;
+        if (state.view.hidePreorder && book.preorder) return false;
+        const q = state.view.query;
+        if (!q) return true;
+        return [book.title, book.author, ...book.translators]
+          .join(" ")
+          .toLowerCase()
+          .includes(q);
+      }
+
+      const SORTS = {
+        source: () => 0,
+        date: (a, b) =>
+          (b.book.pubDate ?? "").localeCompare(a.book.pubDate ?? ""),
+        sales: (a, b) => (b.book.salesPoint ?? -1) - (a.book.salesPoint ?? -1),
+        title: (a, b) => a.book.title.localeCompare(b.book.title, "ko"),
+      };
+
+      function orderedEntries(section) {
+        const compare = SORTS[state.view.sort];
+        return [...section.entries].sort(
+          (a, b) => compare(a, b) || a.order - b.order,
+        );
+      }
+
+      /** 화면 순서대로 보이는 책. 상세 보기의 이전·다음이 이 순서를 따릅니다. */
+      function visibleEntries() {
+        return state.sections.flatMap((s) =>
+          orderedEntries(s).filter(isVisible),
+        );
+      }
+
+      function applyView() {
+        let visible = 0;
+        for (const section of state.sections) {
+          const entries = orderedEntries(section);
+          let shown = 0;
+          for (const entry of entries) {
+            entry.card.hidden = !isVisible(entry);
+            if (!entry.card.hidden) shown += 1;
+          }
+          section.grid.append(...entries.map((e) => e.card));
+          section.count.textContent =
+            shown === section.entries.length
+              ? ""
+              : `보이는 ${shown} / ${section.entries.length}`;
+          visible += shown;
+        }
+        $("viewCount").textContent =
+          `보이는 ${visible}권 / 신규 ${state.fresh.size}권`;
+        updateApplyBar();
+      }
+
+      function selectedEntries() {
+        return [...state.fresh.values()].filter((e) => e.checked && !e.done);
       }
 
       function updateApplyBar() {
-        const n = selectedIsbns().length;
+        const picked = selectedEntries();
+        const applicable = picked.filter(isVisible);
+        const hidden = picked.length - applicable.length;
         $("applybar").classList.toggle("show", state.fresh.size > 0);
         $("applyCount").textContent =
-          `선택 ${n}권 / 신규 ${state.fresh.size}권`;
-        $("applyBtn").textContent = `선택 ${n}권 적재`;
-        $("applyBtn").disabled = state.busy || n === 0;
+          `선택 ${applicable.length}권` +
+          (hidden ? ` · 숨겨진 선택 ${hidden}권은 적재하지 않음` : "");
+        $("applyBtn").textContent = `선택 ${applicable.length}권 적재`;
+        $("applyBtn").disabled = state.busy || applicable.length === 0;
       }
 
-      function bookCard(book) {
-        const entry = { book, checked: true, done: false };
+      // ── 카드 ──────────────────────────────────────────────────
+
+      function setChecked(entry, checked) {
+        if (entry.done || state.busy) return;
+        entry.checked = checked;
+        entry.box.checked = checked;
+        entry.card.classList.toggle("off", !checked);
+        if (state.detail === entry) $("detailPick").checked = checked;
+        updateApplyBar();
+      }
+
+      function bookCard(book, order) {
+        const entry = { book, order, checked: true, done: false };
         const box = el("input", {
           type: "checkbox",
           "aria-label": `${book.title} 적재 대상`,
@@ -565,7 +888,12 @@
           people.push(`옮김 ${book.translators.join(", ")}`);
         const card = el(
           "div",
-          { class: "card", title: `${book.isbn}\n${book.status}` },
+          {
+            class: "card",
+            tabindex: "0",
+            role: "button",
+            "aria-label": `${book.title} 상세 보기`,
+          },
           [
             box,
             img,
@@ -573,66 +901,162 @@
             el("div", { class: "meta", text: people.join(" · ") }),
             el("div", { class: "meta" }, [
               document.createTextNode(
-                `${book.pubDate ?? "날짜 없음"} · ${Number(book.discount).toLocaleString()}원`,
+                `${book.pubDate ?? "날짜 없음"} · ${won(book.discount)}`,
               ),
               book.preorder
                 ? el("span", { class: "badge", text: "예약" })
                 : null,
             ]),
+            book.salesPoint !== null
+              ? el("div", {
+                  class: "meta sales",
+                  text: `판매지수 ${book.salesPoint.toLocaleString()}`,
+                })
+              : null,
             stamp,
           ],
         );
-        const toggle = (checked) => {
-          if (entry.done || state.busy) return;
-          entry.checked = checked;
-          box.checked = checked;
-          card.classList.toggle("off", !checked);
-          updateApplyBar();
-        };
         box.addEventListener("click", (e) => {
           e.stopPropagation();
-          toggle(box.checked);
+          setChecked(entry, box.checked);
         });
-        card.addEventListener("click", () => toggle(!entry.checked));
-        entry.card = card;
-        entry.stamp = stamp;
-        entry.toggle = toggle;
+        card.addEventListener("click", () => openDetail(entry));
+        card.addEventListener("keydown", (e) => {
+          if (e.target !== card) return;
+          if (e.key === "Enter") openDetail(entry);
+          if (e.key === " ") {
+            e.preventDefault();
+            setChecked(entry, !entry.checked);
+          }
+        });
+        Object.assign(entry, { card, stamp, box });
         state.fresh.set(book.isbn, entry);
-        return card;
+        return entry;
       }
+
+      // ── 상세 보기 ─────────────────────────────────────────────
+
+      function openDetail(entry) {
+        state.detail = entry;
+        const { book } = entry;
+        const source = sourceById(book.source);
+        $("detailImg").src = book.thumbnail;
+        $("detailTitle").textContent = book.title;
+        const rows = [
+          ["저자", book.author || "(없음)"],
+          ["역자", book.translators.join(", ")],
+          ["출판사", book.publisher],
+          [
+            "출간일",
+            (book.pubDate ?? "없음") + (book.preorder ? " (예약판매)" : ""),
+          ],
+          ["정가", won(book.discount)],
+          [
+            "판매지수",
+            book.salesPoint === null
+              ? "없음 — NULL로 들어갑니다"
+              : book.salesPoint.toLocaleString(),
+          ],
+          ["카테고리", book.category ?? ""],
+          ["판매 상태", book.status],
+          ["ISBN-13", book.isbn],
+          ["ISBN-10", book.isbn10 ?? ""],
+        ].filter(([, v]) => v);
+        $("detailMeta").replaceChildren(
+          ...rows.flatMap(([k, v]) => [
+            el("dt", { text: k }),
+            el("dd", { text: v }),
+          ]),
+          ...(book.link
+            ? [
+                el("dt", { text: "원본" }),
+                el("dd", {}, [
+                  el("a", {
+                    href: book.link,
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    text: `${source?.label ?? book.source}에서 보기`,
+                  }),
+                ]),
+              ]
+            : []),
+        );
+        $("detailDesc").textContent =
+          (book.description || "(소개 없음)") +
+          (source?.enrichNote ? `\n\n※ ${source.enrichNote}` : "");
+        $("detailPick").checked = entry.checked;
+        $("detailPick").disabled = entry.done || state.busy;
+        const list = visibleEntries();
+        const at = list.indexOf(entry);
+        $("detailPos").textContent =
+          at >= 0 ? `${at + 1} / ${list.length}` : "";
+        $("prevBtn").disabled = at <= 0;
+        $("nextBtn").disabled = at < 0 || at >= list.length - 1;
+        if (!$("detail").open) $("detail").showModal();
+      }
+
+      function stepDetail(delta) {
+        const list = visibleEntries();
+        const next = list[list.indexOf(state.detail) + delta];
+        if (next) openDetail(next);
+      }
+
+      $("prevBtn").addEventListener("click", () => stepDetail(-1));
+      $("nextBtn").addEventListener("click", () => stepDetail(1));
+      $("closeBtn").addEventListener("click", () => $("detail").close());
+      $("detailPick").addEventListener("change", (e) =>
+        setChecked(state.detail, e.target.checked),
+      );
+      $("detail").addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") stepDetail(-1);
+        if (e.key === "ArrowRight") stepDetail(1);
+      });
+      $("detail").addEventListener("click", (e) => {
+        // 바깥(backdrop)을 누르면 닫는다
+        if (e.target === $("detail")) $("detail").close();
+      });
+      $("detail").addEventListener("close", () => {
+        state.detail?.card.focus();
+        state.detail = null;
+      });
+
+      // ── 결과 ──────────────────────────────────────────────────
 
       function renderResults(publishers) {
         state.fresh.clear();
-        const sections = publishers.map(({ summary, fresh, excluded }) => {
+        state.sections = [];
+        const label = sourceById(state.scanSource)?.label ?? state.scanSource;
+        const nodes = publishers.map(({ summary, fresh, excluded }) => {
+          const count = el("span", { class: "small muted" });
           const head = el("div", { class: "pub-head" }, [
             el("h2", { style: "margin:0", text: summary.publisher }),
             el("span", {
               class: "small muted",
               text:
-                `카카오 ${summary.totalCount.toLocaleString()}권 중 ${summary.pages}페이지 확인 · 신규 ${summary.fresh} · 보유 ${summary.known} · 제외 ${summary.excluded}` +
+                `${label} ${summary.totalCount.toLocaleString()}권 중 ${summary.pages}페이지 확인 · 신규 ${summary.fresh} · 보유 ${summary.known} · 제외 ${summary.excluded}` +
                 (summary.preorder ? ` · 예약 ${summary.preorder}` : "") +
                 (summary.emptyAuthor
                   ? ` · 저자 없음 ${summary.emptyAuthor}`
                   : ""),
             }),
           ]);
-          const cards = fresh.map(bookCard);
-          const tools = fresh.length
+          const entries = fresh.map((book, i) => bookCard(book, i));
+          const grid = el("div", { class: "grid" });
+          const section = { entries, grid, count };
+          state.sections.push(section);
+          const bulk = (checked) => () =>
+            entries.filter(isVisible).forEach((e) => setChecked(e, checked));
+          const tools = entries.length
             ? el("div", { class: "row small", style: "margin-top:8px" }, [
                 el("button", {
-                  text: "모두 선택",
-                  onclick: () =>
-                    cards.forEach((_, i) =>
-                      state.fresh.get(fresh[i].isbn).toggle(true),
-                    ),
+                  text: "보이는 것 모두 선택",
+                  onclick: bulk(true),
                 }),
                 el("button", {
-                  text: "모두 해제",
-                  onclick: () =>
-                    cards.forEach((_, i) =>
-                      state.fresh.get(fresh[i].isbn).toggle(false),
-                    ),
+                  text: "보이는 것 모두 해제",
+                  onclick: bulk(false),
                 }),
+                count,
               ])
             : el("p", {
                 class: "muted small",
@@ -663,27 +1087,54 @@
           return el("div", { class: "pub" }, [
             head,
             tools,
-            el("div", { class: "grid" }, cards),
+            grid,
             excludedTable,
           ]);
         });
-        $("results").replaceChildren(...sections);
+        $("results").replaceChildren(...nodes);
+        $("toolbar").hidden = state.fresh.size === 0;
+        // 판매지수가 하나도 없으면(카카오) 그 정렬은 의미가 없다
+        const hasSales = [...state.fresh.values()].some(
+          (e) => e.book.salesPoint !== null,
+        );
+        $("sort").querySelector('[value="sales"]').disabled = !hasSales;
+        if (!hasSales && state.view.sort === "sales") {
+          state.view.sort = "source";
+          $("sort").value = "source";
+        }
         $("log").textContent = "";
         $("meter").style.width = "0";
-        updateApplyBar();
+        applyView();
       }
+
+      $("query").addEventListener("input", (e) => {
+        state.view.query = e.target.value.trim().toLowerCase();
+        applyView();
+      });
+      $("hidePreorder").addEventListener("change", (e) => {
+        state.view.hidePreorder = e.target.checked;
+        applyView();
+      });
+      $("sort").addEventListener("change", (e) => {
+        state.view.sort = e.target.value;
+        applyView();
+      });
+
+      // ── 조회·적재 ─────────────────────────────────────────────
 
       async function scan() {
         const publishers = [...state.selected];
+        const source = state.source;
         setBusy(true);
         $("progressPanel").hidden = false;
         const totals = new Map(publishers.map((p) => [p, null]));
+        const label = sourceById(source)?.label ?? source;
         const draw = () => {
           $("progress").textContent = [...totals.entries()]
             .map(([p, t]) =>
               t
-                ? `${p} · ${t.page}페이지 · 신규 ${t.fresh} · 보유 ${t.known} · 제외 ${t.excluded}`
-                : `${p} · 대기`,
+                ? `${label} · ${p} · ${t.page}페이지 · 신규 ${t.fresh} · 보유 ${t.known} · 제외 ${t.excluded}`
+                : `${label} · ${p} · 대기`,
             )
             .join("\n");
         };
@@ -692,7 +1143,7 @@
         try {
           await stream(
             "/api/scan",
-            { publishers, maxPages: Number($("maxPages").value) },
+            { source, publishers, maxPages: Number($("maxPages").value) },
             (ev) => {
               if (ev.type === "page") {
                 const t = totals.get(ev.publisher) ?? {
@@ -710,6 +1161,7 @@
                 draw();
               } else if (ev.type === "result") {
                 state.scanId = ev.scanId;
+                state.scanSource = source;
                 renderResults(ev.publishers);
               } else if (ev.type === "error") {
                 throw new Error(ev.message);
@@ -722,16 +1174,17 @@
           );
         } finally {
           setBusy(false);
-          updateApplyBar();
         }
       }
 
       async function apply() {
-        const isbns = selectedIsbns();
+        const entries = selectedEntries().filter(isVisible);
+        const isbns = entries.map((e) => e.book.isbn);
         if (!isbns.length) return;
+        const label = sourceById(state.scanSource)?.label ?? "";
         if (
           !confirm(
-            `${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books에 INSERT합니다. 진행할까요?`,
+            `${label}에서 찾은 ${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books에 INSERT합니다. 진행할까요?`,
           )
         )
           return;
@@ -775,7 +1228,6 @@
           log(`중단: ${error.message}`);
         } finally {
           setBusy(false);
-          updateApplyBar();
         }
       }
 
@@ -791,11 +1243,20 @@
             api("/api/favorites").then((r) => r.json()),
           ]);
           $("target").textContent = `DB ${meta.target}`;
+          state.sources = meta.sources;
+          const remembered = sourceById(store.get(SOURCE_KEY));
+          state.source = (
+            remembered?.available
+              ? remembered
+              : meta.sources.find((s) => s.available)
+          )?.id;
           state.publishers = pubs;
           state.favorites = new Set(favs);
           for (const name of favs)
             if (!pubs.some((p) => p.publisher === name))
               state.publishers.push({ publisher: name, count: 0 });
+          renderSources();
+          renderMaxPages();
           renderChips();
         } catch (error) {
           $("chips").replaceChildren(

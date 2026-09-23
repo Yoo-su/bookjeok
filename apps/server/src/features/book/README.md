@@ -111,7 +111,8 @@ BookCatalogService.findByIsbn()  BOOK_DETAIL_PROVIDERS
 
 외부 공급처를 런타임 경로에 두지 않는 것이 방침입니다. 신규 도서는 서버가
 아니라 **운영자가 필요할 때 돌리는 적재 도구**로 확보합니다. 카카오 책 검색
-API를 입구로 쓰며, 서버 코드와는 별개인 [`tools/book-ingest/`](../../../../../tools/book-ingest/README.md)입니다.
+API(2026-10-30까지는 알라딘도 선택 가능)를 입구로 쓰며, 서버 코드와는 별개인 [`tools/book-ingest/`](../../../../../tools/book-ingest/README.md)입니다.
+알라딘으로 적재한 책은 `salesPoint`가 채워지고, 카카오로 적재한 책은 NULL입니다.
 도구는 표지를 R2에 먼저 올린 뒤 `books`에 INSERT하므로 이 모듈은 바뀌지 않습니다.
 
 검색 품질은 `title`·`author`·`publisher`의 pg_trgm GIN 인덱스

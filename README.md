@@ -395,6 +395,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | **다음 우편번호**                     | 배송지 주소 입력                                          | `web: order/address-input`              |
 | **GA4 · Microsoft Clarity · AdSense** | 트래픽 분석, 행동 분석, 광고                              | `web: shared/components/analytics, ads` |
 | **카카오 책 검색 API**                | 신간 적재 (운영자 도구 전용, 런타임 경로 아님)            | `tools/book-ingest`                     |
+| **알라딘 Open API**                   | 신간 적재 (운영자 도구 전용, **2026-10-30 종료 시 제거**) | `tools/book-ingest`                     |
 | **Cloudflare R2**                     | 도서 표지 저장·서빙 (`cdn.bookjeok.com`)                  | `tools/book-ingest`(업로드), web(표시)  |
 
 > **도서 데이터는 런타임에 외부 API를 쓰지 않습니다.** 과거에는 네이버 도서 API와
@@ -402,7 +403,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 > 공급처 체인에서 제거했습니다. 지금은 검색·상세 모두 자체 DB 단독이며, **외부
 > 공급처를 런타임 경로에 두지 않는 것이 방침입니다.** 신규 도서는 서버가 아니라
 > 운영자가 필요할 때 로컬에서 돌리는 적재 도구([`tools/book-ingest`](tools/book-ingest/README.md),
-> 카카오 책 검색 API를 입구로 사용)로 확보합니다. 표지도 2026-09-09 컷오버로
+> 카카오 책 검색 API를 입구로 사용, 10/30까지는 알라딘도 선택 가능)로 확보합니다. 표지도 2026-09-09 컷오버로
 > Cloudflare R2(`cdn.bookjeok.com`)에서 나갑니다. 경위와 남은 정리 항목은
 > [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)에 있습니다.
 
@@ -557,6 +558,7 @@ pnpm dev          # 전체 워크스페이스
 
 # 6. 부가 도구
 pnpm storybook    # Storybook (http://localhost:6006)
+pnpm ingest serve # 신간 적재 도구 화면 (http://127.0.0.1:4700, 운영 DB 연결 — tools/book-ingest 참고)
 pnpm db:logs      # DB 로그
 pnpm db:down      # DB 중지
 ```
@@ -578,31 +580,31 @@ pnpm test
 
 전체 목록과 설명은 [.env.example](.env.example)에 있습니다. 주요 항목:
 
-| 변수                                                 | 필수 | 설명                                                           |
-| ---------------------------------------------------- | :--: | -------------------------------------------------------------- |
-| `DATABASE_URL`                                       |  ✅  | PostgreSQL 연결 문자열                                         |
-| `JWT_SECRET` / `JWT_REFRESH_SECRET`                  |  ✅  | 액세스/리프레시 토큰 서명 키                                   |
-| `CLIENT_DOMAIN`                                      |  ✅  | CORS 및 소셜 로그인 리다이렉트 대상                            |
-| `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 소셜 로그인 (도서 검색에는 쓰지 않음)                   |
-| `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                  |
-| `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 서지 수확 스크립트 전용 — 지우지 말 것   |
-| `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                  |
-| `GEMINI_MODEL_NAME`                                  |      | 사용할 Gemini 모델명                                           |
-| `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                            |
-| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`               |  ✅  | 이메일 인증·알림 발송                                          |
-| `BLOB_READ_WRITE_TOKEN`                              |  ✅  | Vercel Blob 이미지 업로드                                      |
-| `TOSS_PAYMENTS_SECRET_KEY` / `_CLIENT_KEY`           |      | 토스페이먼츠 에스크로                                          |
-| `DELIVERY_TRACKER_BASE_URL`                          |      | 배송 추적 API 엔드포인트                                       |
-| `FEATURE_PAYMENT_ENABLED`                            |      | 서버 측 결제 기능 플래그                                       |
-| `NEXT_PUBLIC_API_URL`                                |  ✅  | 웹에서 바라볼 백엔드 주소                                      |
-| `NEXT_PUBLIC_KAKAO_APP_KEY`                          |  ✅  | 카카오 맵 JS SDK 키                                            |
-| `NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY`               |      | 결제 위젯 클라이언트 키                                        |
-| `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED`                |      | 웹 측 결제 기능 플래그                                         |
-| `USER_WEB_URL`                                       |      | 관리자 포털 서버가 갱신 요청을 보낼 사용자 웹 주소 (서버 전용) |
-| `REVALIDATE_TOKEN`                                   |      | On-Demand ISR 갱신 시크릿 (서버 전용, 폴백 없음)               |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID`                      |      | Google Analytics                                               |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID`                     |      | Microsoft Clarity                                              |
-| `NEXT_PUBLIC_GOOGLE_ADSENSE_ID`                      |      | Google AdSense                                                 |
+| 변수                                                 | 필수 | 설명                                                                           |
+| ---------------------------------------------------- | :--: | ------------------------------------------------------------------------------ |
+| `DATABASE_URL`                                       |  ✅  | PostgreSQL 연결 문자열                                                         |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET`                  |  ✅  | 액세스/리프레시 토큰 서명 키                                                   |
+| `CLIENT_DOMAIN`                                      |  ✅  | CORS 및 소셜 로그인 리다이렉트 대상                                            |
+| `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 소셜 로그인 (도서 검색에는 쓰지 않음)                                   |
+| `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                                  |
+| `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 적재 도구의 알라딘 공급처 전용(10/30까지) — 지우지 말 것 |
+| `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                                  |
+| `GEMINI_MODEL_NAME`                                  |      | 사용할 Gemini 모델명                                                           |
+| `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                                            |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`               |  ✅  | 이메일 인증·알림 발송                                                          |
+| `BLOB_READ_WRITE_TOKEN`                              |  ✅  | Vercel Blob 이미지 업로드                                                      |
+| `TOSS_PAYMENTS_SECRET_KEY` / `_CLIENT_KEY`           |      | 토스페이먼츠 에스크로                                                          |
+| `DELIVERY_TRACKER_BASE_URL`                          |      | 배송 추적 API 엔드포인트                                                       |
+| `FEATURE_PAYMENT_ENABLED`                            |      | 서버 측 결제 기능 플래그                                                       |
+| `NEXT_PUBLIC_API_URL`                                |  ✅  | 웹에서 바라볼 백엔드 주소                                                      |
+| `NEXT_PUBLIC_KAKAO_APP_KEY`                          |  ✅  | 카카오 맵 JS SDK 키                                                            |
+| `NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY`               |      | 결제 위젯 클라이언트 키                                                        |
+| `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED`                |      | 웹 측 결제 기능 플래그                                                         |
+| `USER_WEB_URL`                                       |      | 관리자 포털 서버가 갱신 요청을 보낼 사용자 웹 주소 (서버 전용)                 |
+| `REVALIDATE_TOKEN`                                   |      | On-Demand ISR 갱신 시크릿 (서버 전용, 폴백 없음)                               |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID`                      |      | Google Analytics                                                               |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID`                     |      | Microsoft Clarity                                                              |
+| `NEXT_PUBLIC_GOOGLE_ADSENSE_ID`                      |      | Google AdSense                                                                 |
 
 ---
 
@@ -610,15 +612,15 @@ pnpm test
 
 ### 앱 · 패키지
 
-| 문서                                                                                                                          | 내용                                                            |
-| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| [apps/web/README.md](apps/web/README.md)                                                                                      | 웹 프론트엔드 개요 및 개발 원칙                                 |
-| [apps/web/docs/ARCHITECTURE.md](apps/web/docs/ARCHITECTURE.md)                                                                | 컴포넌트 문맥 기반 그룹화 규칙, i18n 구조                       |
-| [apps/web/docs/CACHING.md](apps/web/docs/CACHING.md)                                                                          | 캐시 4개 층의 책임, 서버 시드 쿼리 대장, 재검증 범위 규칙       |
-| [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                               |
-| [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 (초기 세팅만 된 미배포 앱)                          |
-| [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                              |
-| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 신간 적재 운영자 도구 — 카카오 조회, 표지 R2 업로드, books 적재 |
+| 문서                                                                                                                          | 내용                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| [apps/web/README.md](apps/web/README.md)                                                                                      | 웹 프론트엔드 개요 및 개발 원칙                                        |
+| [apps/web/docs/ARCHITECTURE.md](apps/web/docs/ARCHITECTURE.md)                                                                | 컴포넌트 문맥 기반 그룹화 규칙, i18n 구조                              |
+| [apps/web/docs/CACHING.md](apps/web/docs/CACHING.md)                                                                          | 캐시 4개 층의 책임, 서버 시드 쿼리 대장, 재검증 범위 규칙              |
+| [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                                      |
+| [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 (초기 세팅만 된 미배포 앱)                                 |
+| [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                                     |
+| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 신간 적재 운영자 도구 — 카카오·알라딘 조회, 표지 R2 업로드, books 적재 |
 
 ### 도메인 기능 문서
 

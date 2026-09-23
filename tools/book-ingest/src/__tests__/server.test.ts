@@ -16,9 +16,28 @@ afterEach(async () => {
 async function start(overrides: Partial<IngestServices> = {}) {
   const services: IngestServices = {
     target: "db.example:5432/postgres",
+    sources: [
+      {
+        id: "kakao",
+        label: "카카오",
+        maxPages: 20,
+        envKey: "KAKAO_REST_API_KEY",
+        enrichNote: null,
+        available: true,
+      },
+      {
+        id: "other",
+        label: "다른 공급처",
+        maxPages: 4,
+        envKey: "OTHER_API_KEY",
+        enrichNote: null,
+        available: false,
+      },
+    ],
     publisherStats: vi.fn(async () => [{ publisher: "민음사", count: 839 }]),
-    scan: vi.fn<IngestServices["scan"]>(async (publishers) =>
+    scan: vi.fn<IngestServices["scan"]>(async (source, publishers) =>
       publishers.map((publisher) => ({
+        source,
         publisher,
         pages: 1,
         totalCount: 1,
@@ -69,6 +88,7 @@ async function start(overrides: Partial<IngestServices> = {}) {
     port,
     token: TOKEN,
     services,
+    imageOrigins: ["https://search1.kakaocdn.net", "https://img.example"],
     html: "<p>__INGEST_TOKEN__</p>",
   });
   await new Promise<void>((r) => server.listen(port, "127.0.0.1", r));
@@ -96,6 +116,16 @@ describe("createIngestServer", () => {
   it("화면에 이번 실행의 토큰을 심는다", async () => {
     const { base } = await start();
     expect(await (await fetch(base + "/")).text()).toBe(`<p>${TOKEN}</p>`);
+  });
+
+  it("공급처 정의에서 모은 출처만 표지 미리보기로 허용한다", async () => {
+    const { base } = await start();
+    const csp = (await fetch(base + "/")).headers.get(
+      "content-security-policy",
+    );
+    expect(csp).toContain(
+      "img-src https://search1.kakaocdn.net https://img.example;",
+    );
   });
 
   it("토큰이 없거나 틀리면 API를 거절한다", async () => {
@@ -133,10 +163,14 @@ describe("createIngestServer", () => {
     const events = await readEvents(
       await call("/api/scan", {
         method: "POST",
-        body: JSON.stringify({ publishers: ["민음사"] }),
+        body: JSON.stringify({ source: "kakao", publishers: ["민음사"] }),
       }),
     );
-    const { scanId } = events.find((e) => e.type === "result");
+    const result = events.find((e) => e.type === "result");
+    const { scanId } = result;
+    // 화면에는 공급처 원본과 표지 원본 주소를 보내지 않는다
+    expect(result.publishers[0].fresh[0]).not.toHaveProperty("raw");
+    expect(result.publishers[0].fresh[0]).not.toHaveProperty("coverUrls");
 
     const unknown = await call("/api/apply", {
       method: "POST",
@@ -171,9 +205,41 @@ describe("createIngestServer", () => {
     const { call, services } = await start();
     const res = await call("/api/scan", {
       method: "POST",
-      body: JSON.stringify({ publishers: [] }),
+      body: JSON.stringify({ source: "kakao", publishers: [] }),
     });
     expect(res.status).toBe(400);
     expect(services.scan).not.toHaveBeenCalled();
+  });
+
+  it("키가 없거나 모르는 공급처로는 조회하지 않는다", async () => {
+    const { call, services } = await start();
+    for (const source of ["other", "naver", undefined]) {
+      const res = await call("/api/scan", {
+        method: "POST",
+        body: JSON.stringify({ source, publishers: ["민음사"] }),
+      });
+      expect(res.status).toBe(400);
+    }
+    expect(services.scan).not.toHaveBeenCalled();
+  });
+
+  it("페이지 수를 공급처 상한으로 자른다", async () => {
+    const { call, services } = await start();
+    await (
+      await call("/api/scan", {
+        method: "POST",
+        body: JSON.stringify({
+          source: "kakao",
+          publishers: ["민음사"],
+          maxPages: 99,
+        }),
+      })
+    ).text();
+    expect(services.scan).toHaveBeenCalledWith(
+      "kakao",
+      ["민음사"],
+      20,
+      expect.any(Function),
+    );
   });
 });

@@ -1,8 +1,8 @@
-import { KAKAO_MAX_PAGE, type KakaoSearch } from "./kakao";
-import { type Candidate, type Excluded, normalizeBook } from "./normalize";
+import type { Candidate, Excluded } from "./normalize";
+import type { BookSource } from "./sources";
 
 export interface ScanDeps {
-  search: KakaoSearch;
+  source: BookSource;
   /** 주어진 ISBN 중 `books`에 이미 있는 것. ISBN-10과 13을 섞어 넘깁니다. */
   findExisting(isbns: string[]): Promise<Set<string>>;
 }
@@ -23,10 +23,11 @@ export interface PageProgress {
 }
 
 export interface PublisherScan {
+  source: string;
   publisher: string;
   pages: number;
   totalCount: number;
-  /** DB에 없는 적재 후보. 카카오 최신순 그대로입니다. */
+  /** DB에 없는 적재 후보. 공급처의 최신순 그대로입니다. */
   fresh: Candidate[];
   /** DB에 이미 있는 책(ISBN-10으로만 있는 것 포함). */
   known: Candidate[];
@@ -34,18 +35,20 @@ export interface PublisherScan {
 }
 
 /**
- * 한 출판사의 최신순 목록을 `is_end`까지(최대 `maxPages`) 훑어 DB에 없는 책을 고릅니다.
+ * 한 출판사의 최신순 목록을 끝까지(최대 `maxPages`) 훑어 DB에 없는 책을 고릅니다.
  *
  * 최근 페이지가 전부 이미 가진 책이어도 멈추지 않습니다. 기존 카탈로그는 크롤러
- * 유입으로 채워져 몇 달 전 책도 군데군데 빠져 있습니다(2026-09-23 실측). 최대 20페이지라
- * 끝까지 봐도 카카오 호출은 출판사당 20회입니다.
+ * 유입으로 채워져 몇 달 전 책도 군데군데 빠져 있습니다(2026-09-23 실측).
+ * 페이지 수는 공급처 상한(`source.maxPages`)을 넘지 않습니다. 넘기면 앞 페이지를
+ * 반복해 주는 공급처가 있어서입니다.
  */
 export async function scanPublisher(
   publisher: string,
-  deps: ScanDeps,
-  { maxPages = KAKAO_MAX_PAGE, today, onPage }: ScanOptions,
+  { source, findExisting }: ScanDeps,
+  { maxPages = source.maxPages, today, onPage }: ScanOptions,
 ): Promise<PublisherScan> {
   const result: PublisherScan = {
+    source: source.id,
     publisher,
     pages: 0,
     totalCount: 0,
@@ -54,17 +57,17 @@ export async function scanPublisher(
     excluded: [],
   };
   const seen = new Set<string>();
-  const lastPage = Math.min(Math.max(1, maxPages), KAKAO_MAX_PAGE);
+  const lastPage = Math.min(Math.max(1, maxPages), source.maxPages);
 
   for (let page = 1; page <= lastPage; page += 1) {
-    const { documents, meta } = await deps.search(publisher, page);
+    const { items, totalCount, isEnd } = await source.search(publisher, page);
     result.pages = page;
-    result.totalCount = meta.total_count;
+    result.totalCount = totalCount;
 
     const candidates: Candidate[] = [];
     let excludedOnPage = 0;
-    for (const doc of documents) {
-      const normalized = normalizeBook(doc, publisher, today);
+    for (const item of items) {
+      const normalized = source.normalize(item, publisher, today);
       if (!normalized.ok) {
         result.excluded.push(normalized.excluded);
         excludedOnPage += 1;
@@ -77,7 +80,7 @@ export async function scanPublisher(
     }
 
     const existing = candidates.length
-      ? await deps.findExisting(
+      ? await findExisting(
           candidates.flatMap((c) => (c.isbn10 ? [c.isbn, c.isbn10] : [c.isbn])),
         )
       : new Set<string>();
@@ -97,13 +100,13 @@ export async function scanPublisher(
     onPage?.({
       publisher,
       page,
-      totalCount: meta.total_count,
+      totalCount,
       fresh: freshOnPage,
       known: candidates.length - freshOnPage,
       excluded: excludedOnPage,
     });
 
-    if (meta.is_end || documents.length === 0) break;
+    if (isEnd || items.length === 0) break;
   }
 
   return result;
