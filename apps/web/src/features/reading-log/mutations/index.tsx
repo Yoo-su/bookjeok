@@ -9,6 +9,12 @@ import {
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { API_ERROR_CODES, getErrorCode } from "@/shared/utils/error-handler";
+
+/** 같은 책·같은 날 중복은 서버가 409로 막는다. 폼은 열어 둬 날짜를 고치게 한다. */
+const isDuplicateError = (error: unknown) =>
+  getErrorCode(error) === API_ERROR_CODES.READING_LOG_DUPLICATE;
+
 /**
  * 독서 기록 생성 뮤테이션 훅
  */
@@ -18,8 +24,10 @@ export const useCreateReadingLogMutation = () => {
     onSuccess: () => {
       toast.success(t("create_success"));
     },
-    onError: () => {
-      toast.error(t("create_error"));
+    onError: (error) => {
+      toast.error(
+        t(isDuplicateError(error) ? "already_added" : "create_error"),
+      );
     },
   });
 };
@@ -33,8 +41,10 @@ export const useUpdateReadingLogMutation = () => {
     onSuccess: () => {
       toast.success(t("update_success"));
     },
-    onError: () => {
-      toast.error(t("update_error"));
+    onError: (error) => {
+      toast.error(
+        t(isDuplicateError(error) ? "already_added" : "update_error"),
+      );
     },
   });
 };

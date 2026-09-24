@@ -168,6 +168,10 @@ export const ERROR_CODES = {
     code: 'READING_LOG_001',
     message: '독서 기록을 찾을 수 없습니다.',
   },
+  READING_LOG_DUPLICATE: {
+    code: 'READING_LOG_002',
+    message: '그날 이미 기록한 책입니다.',
+  },
 
   // ============================================
   // 채팅 관련 에러 (CHAT)

@@ -741,8 +741,7 @@
     "controls": {
       "all_logs": "전체 기록",
       "view_calendar": "달력",
-      "view_list": "리스트",
-      "view_deck": "카드 덱"
+      "view_list": "리스트"
     },
     "stats": {
       "monthly_title": "{month}월의 독서",
@@ -768,7 +767,7 @@
     },
     "form_modal": {
       "title_create": "책 기록하기",
-      "title_edit": "메모 수정하기",
+      "title_edit": "기록 수정하기",
       "label_memo": "한 줄 메모",
       "label_optional": "(선택)",
       "placeholder_memo": "이 책은 어떠셨나요? 짧은 감상을 남겨주세요.",
@@ -776,7 +775,13 @@
       "submit_create": "기록하기",
       "submit_edit": "수정하기",
       "processing": "처리중...",
-      "error_max_length": "메모는 최대 {max}자까지 입력 가능합니다."
+      "error_max_length": "메모는 최대 {max}자까지 입력 가능합니다.",
+      "label_date": "읽은 날",
+      "error_date_required": "날짜를 선택해주세요.",
+      "error_date_future": "미래 날짜는 기록할 수 없습니다."
+    },
+    "mark_as_read": {
+      "button": "읽었어요"
     },
     "details_dialog": {
       "desc_write": "오늘 읽은 책을 한 줄의 감상으로 남겨보세요.",
@@ -808,7 +813,11 @@
       "metadata_title": "{nickname}님의 독서 카드 덱",
       "metadata_description": "{period} 완독한 소중한 책들의 카드 컬렉션을 둘러보세요.",
       "metadata_period_year": "{year}년",
-      "metadata_period_this_year": "올해"
+      "metadata_period_this_year": "올해",
+      "dialog_title": "{year}년 독서 덱",
+      "dialog_desc": "카드를 끌어서 넘겨 보세요. 링크를 복사해 자랑할 수 있어요.",
+      "private_notice": "독서 기록이 비공개라 링크를 받은 사람에게는 덱이 보이지 않아요.",
+      "make_public": "공개로 전환하기"
     },
     "toast": {
       "create_success": "독서 기록이 등록되었습니다.",
@@ -818,8 +827,8 @@
       "delete_success": "독서 기록이 삭제되었습니다.",
       "delete_error": "독서 기록 삭제에 실패했습니다.",
       "settings_updated": "독서 기록 설정이 변경되었습니다.",
-      "already_added": "이미 추가된 책입니다.",
-      "share_deck_copied": "올해의 독서 덱 링크가 복사되었습니다! 새 탭에서 확인해보세요.",
+      "already_added": "그날 이미 기록한 책입니다.",
+      "share_deck_copied": "독서 덱 링크가 복사되었습니다.",
       "login_required_share": "로그인 후 공유 기능을 이용하실 수 있습니다."
     },
     "dialog": {

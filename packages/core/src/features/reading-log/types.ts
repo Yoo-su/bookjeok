@@ -30,6 +30,7 @@ export interface ReadingLogListResponse {
 export interface UpdateReadingLogParams {
   id: string;
   memo: string;
+  date?: string; // YYYY-MM-DD
 }
 
 /**

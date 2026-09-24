@@ -2,7 +2,6 @@ import { useReadingLogSettingsQuery } from "@bookjeok/react-query";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { Label } from "@/shared/components/shadcn/label";
@@ -11,6 +10,7 @@ import { cn } from "@/shared/utils";
 
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { useUpdateReadingLogSettingsMutation } from "../../../mutations";
+import { ShareDeckDialog } from "../../deck-view/share-deck-dialog";
 
 interface ReadingLogHeroProps {
   currentDate: Date;
@@ -19,7 +19,6 @@ interface ReadingLogHeroProps {
 export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
   const t = useTranslations("reading_log.hero");
   const tDeck = useTranslations("reading_log.deck");
-  const tToast = useTranslations("reading_log.toast");
   // 테마 및 배경 이미지 로직
   const theme = useSeasonalTheme(currentDate);
   const [isMounted, setIsMounted] = useState(false);
@@ -59,19 +58,7 @@ export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
   };
 
   const user = useAuthStore((state) => state.user);
-
-  const handleYearlyDeckClick = () => {
-    if (!user) return;
-    const year = currentDate.getFullYear();
-    const shareUrl = `${window.location.origin}/share/deck/${user.handle}?year=${year}`;
-
-    // 공유 링크 클립보드 복증 복사
-    navigator.clipboard.writeText(shareUrl);
-    toast.success(tToast("share_deck_copied"));
-
-    // 새 탭으로 미리보기 페이지 열기
-    window.open(shareUrl, "_blank");
-  };
+  const [isDeckOpen, setIsDeckOpen] = useState(false);
 
   if (!isMounted) return null;
 
@@ -146,7 +133,7 @@ export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
 
             {user && (
               <button
-                onClick={handleYearlyDeckClick}
+                onClick={() => setIsDeckOpen(true)}
                 className="px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 text-white font-bold text-[10px] md:text-xs tracking-widest uppercase hover:scale-105 active:scale-95 duration-300 shadow-md cursor-pointer transition-all w-fit"
               >
                 {tDeck("share_button")}
@@ -155,6 +142,14 @@ export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
           </div>
         </div>
       </div>
+
+      {user && (
+        <ShareDeckDialog
+          year={currentDate.getFullYear()}
+          open={isDeckOpen}
+          onOpenChange={setIsDeckOpen}
+        />
+      )}
     </section>
   );
 }

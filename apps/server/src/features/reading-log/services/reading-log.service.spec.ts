@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 
 import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions';
@@ -59,6 +59,7 @@ describe('ReadingLogService', () => {
       create: jest.fn(),
       save: jest.fn(),
       delete: jest.fn(),
+      exists: jest.fn().mockResolvedValue(false),
     };
 
     userRepository = {
@@ -84,6 +85,109 @@ describe('ReadingLogService', () => {
     }).compile();
 
     service = module.get<ReadingLogService>(ReadingLogService);
+  });
+
+  describe('update', () => {
+    const existing = () =>
+      ({
+        id: VALID_UUID,
+        userId: 1,
+        isbn: '9788937460449',
+        date: '2026-09-10',
+        memo: '처음 메모',
+      }) as ReadingLog;
+
+    beforeEach(() => {
+      (readingLogRepository.findOne as jest.Mock)
+        .mockResolvedValueOnce(existing())
+        .mockResolvedValueOnce(existing());
+      (readingLogRepository.save as jest.Mock).mockImplementation(
+        (log: ReadingLog) => Promise.resolve(log),
+      );
+    });
+
+    it('날짜를 바꾼다', async () => {
+      await service.update(1, VALID_UUID, { date: '2026-09-12' });
+
+      expect(readingLogRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ date: '2026-09-12', memo: '처음 메모' }),
+      );
+    });
+
+    it('같은 책이 이미 있는 날로 옮기면 409로 막는다', async () => {
+      (readingLogRepository.exists as jest.Mock).mockResolvedValueOnce(true);
+
+      await expect(
+        service.update(1, VALID_UUID, { date: '2026-09-12' }),
+      ).rejects.toMatchObject({
+        errorCode: 'READING_LOG_DUPLICATE',
+        status: HttpStatus.CONFLICT,
+      });
+      expect(readingLogRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('중복 검사에서 자기 자신은 뺀다', async () => {
+      await service.update(1, VALID_UUID, { date: '2026-09-11' });
+
+      const [{ where }] = (readingLogRepository.exists as jest.Mock).mock
+        .calls[0] as [{ where: Record<string, unknown> }];
+      expect(where).toMatchObject({
+        userId: 1,
+        isbn: '9788937460449',
+        date: '2026-09-11',
+      });
+      expect(where.id).toEqual(Not(VALID_UUID));
+    });
+
+    it.each([
+      ['날짜 없이', { memo: '새' }],
+      ['같은 날짜와 함께', { memo: '새', date: '2026-09-10' }],
+    ])('메모만 고치면(%s) 중복 검사를 하지 않는다', async (_, dto) => {
+      (readingLogRepository.exists as jest.Mock).mockResolvedValue(true);
+
+      await service.update(1, VALID_UUID, dto);
+
+      expect(readingLogRepository.exists).not.toHaveBeenCalled();
+      expect(readingLogRepository.save).toHaveBeenCalled();
+    });
+
+    it('도서는 바꾸지 않는다', async () => {
+      await service.update(1, VALID_UUID, { isbn: '9791190090018' });
+
+      expect(readingLogRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ isbn: '9788937460449' }),
+      );
+    });
+  });
+
+  describe('create', () => {
+    const dto = { isbn: '9788937460449', date: '2026-09-10', memo: '' };
+
+    it('같은 책을 같은 날 또 기록하면 409로 막는다', async () => {
+      (readingLogRepository.exists as jest.Mock).mockResolvedValueOnce(true);
+
+      await expect(service.create(1, dto)).rejects.toMatchObject({
+        errorCode: 'READING_LOG_DUPLICATE',
+        status: HttpStatus.CONFLICT,
+      });
+      expect(readingLogRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('중복이 아니면 저장한다', async () => {
+      (readingLogRepository.create as jest.Mock).mockImplementation(
+        (log: ReadingLog) => log,
+      );
+      (readingLogRepository.save as jest.Mock).mockImplementation(
+        (log: ReadingLog) => Promise.resolve({ ...log, id: VALID_UUID }),
+      );
+
+      await service.create(1, dto);
+
+      expect(readingLogRepository.exists).toHaveBeenCalledWith({
+        where: { userId: 1, isbn: dto.isbn, date: dto.date },
+      });
+      expect(readingLogRepository.save).toHaveBeenCalled();
+    });
   });
 
   describe('findAllInfinite 커서 검증', () => {

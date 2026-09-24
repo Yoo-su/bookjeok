@@ -19,7 +19,8 @@ reading-log/
     │   ├── reading-log-controls/     # 월/연 이동, 뷰 전환
     │   └── reading-log-calendar-skeleton/
     ├── deck-view/
-    │   └── reading-log-card-deck.tsx # 3D 카드 덱 뷰어
+    │   ├── reading-log-card-deck.tsx # 3D 카드 덱 뷰어
+    │   └── share-deck-dialog.tsx     # 공유 전 연간 덱 미리보기
     ├── list-view/
     │   └── reading-log-list-view/
     ├── stats-view/
@@ -35,7 +36,8 @@ reading-log/
     │   └── lounge-empty-state/
     └── common/
         ├── reading-log-hero/
-        ├── reading-log-form-dialog/  # 기록 작성·수정
+        ├── reading-log-form-dialog/  # 기록 작성·수정 (날짜·메모)
+        ├── mark-as-read-button/      # 도서 상세의 「읽었어요」
         └── day-details-dialog/       # 특정 날짜의 기록 상세
 ```
 
@@ -43,12 +45,12 @@ reading-log/
 
 이 기능은 성격이 다른 두 화면을 함께 담고 있습니다.
 
-|        | 개인 독서 기록                                     | 독서 라운지              |
-| ------ | -------------------------------------------------- | ------------------------ |
-| 라우트 | `/my-page/reading-log`                             | `/lounge`                |
-| 접근   | 본인만                                             | 공개                     |
-| 구성   | calendar-view · list-view · stats-view · deck-view | lounge-feed/\*           |
-| 데이터 | `/reading-logs`, `/reading-logs/stats`             | `/reading-logs/lounge/*` |
+|        | 개인 독서 기록                         | 독서 라운지              |
+| ------ | -------------------------------------- | ------------------------ |
+| 라우트 | `/my-page/reading-log`                 | `/lounge`                |
+| 접근   | 본인만                                 | 공개                     |
+| 구성   | calendar-view · list-view · stats-view | lounge-feed/\*           |
+| 데이터 | `/reading-logs`, `/reading-logs/stats` | `/reading-logs/lounge/*` |
 
 라운지 공개 여부는 `/reading-logs/settings`로 사용자가 직접 제어합니다.
 
@@ -56,11 +58,20 @@ reading-log/
 
 ### 캘린더
 
-`reading-log-calendar`가 월 단위로 기록을 조회해 `reading-log-day-cell`에 배치하고, 셀을 클릭하면 `day-details-dialog`가 그날의 완독 도서·한줄평·감상문을 보여줍니다. 작성·수정은 `reading-log-form-dialog`에서 처리합니다. `use-seasonal-theme`이 월에 따라 배색을 바꿉니다.
+`reading-log-calendar`가 월 단위로 기록을 조회해 `reading-log-day-cell`에 배치하고, 셀을 클릭하면 `day-details-dialog`가 그날의 완독 도서와 한 줄 메모를 보여줍니다. 작성·수정은 `reading-log-form-dialog`에서 처리합니다. `use-seasonal-theme`이 월에 따라 배색을 바꿉니다.
+
+### 기록 진입 경로
+
+- 캘린더 날짜 칸 → `day-details-dialog` → 도서 검색 → 폼. 지난 날짜를 채울 때 씁니다.
+- 도서 상세의 `mark-as-read-button` → 폼. 날짜 기본값은 오늘입니다. 비로그인이면 복귀 경로를 저장하고 로그인으로 보냅니다.
+
+폼은 두 경로 모두 날짜를 바꿀 수 있고 미래 날짜는 막습니다. 같은 책·같은 날 중복은 서버가 409(`READING_LOG_002`)로 거절하고, 뮤테이션이 「그날 이미 기록한 책」 안내를 띄운 뒤 폼을 열어 둡니다. 수정에서 날짜를 바꾸면 기록이 다른 달로 옮겨 가므로, 수정 뮤테이션은 모든 월 목록 캐시에서 빼고 새 달에만 넣습니다. 생성·수정 모두 **캐시가 없는 달에는 심지 않습니다.** `[data]`를 심으면 그 달이 한 권짜리로 먼저 그려집니다.
 
 ### 3D 카드 덱 (`deck-view`)
 
-Framer Motion으로 완독 기록을 카드 덱처럼 넘겨보는 뷰입니다. `/share/deck/[handle]`(`share-deck-view`)로 공유 가능한 공개 페이지가 별도로 존재합니다.
+Framer Motion으로 완독 기록을 카드 덱처럼 넘겨보는 뷰입니다. 보기 전환(달력·리스트)에는 없고, 히어로의 공유 버튼이 여는 `share-deck-dialog`에서 연간 덱을 미리 봅니다. 공개 페이지는 `/share/deck/[handle]`(`share-deck-view`)입니다.
+
+공개 페이지는 공개 설정된 기록만 보여 주므로, 비공개 사용자에게는 다이얼로그가 링크 복사 대신 공개 전환 안내를 띄웁니다.
 
 > 모션 부하가 큰 화면이라 `use-prefers-reduced-motion`을 존중하고, 카드 수가 많을 때 렌더 범위를 제한합니다.
 
