@@ -14,7 +14,7 @@ import {
 } from "@/shared/components/shadcn/select";
 import { cn } from "@/shared/utils";
 
-export type ReadingLogViewMode = "calendar" | "list" | "deck";
+export type ReadingLogViewMode = "calendar" | "list";
 
 interface ReadingLogControlsProps {
   viewMode: ReadingLogViewMode;
@@ -159,12 +159,12 @@ export function ReadingLogControls({
           </>
         ) : (
           <h2 className="text-3xl md:text-4xl font-serif font-medium text-stone-900 tracking-tight">
-            {viewMode === "deck" ? t("view_deck") : t("all_logs")}
+            {t("all_logs")}
           </h2>
         )}
       </div>
 
-      {/* 뷰 모드 토글 (캘린더/리스트/카드 덱) */}
+      {/* 뷰 모드 토글 (캘린더/리스트) */}
       {!readOnly && (
         <div className="flex items-center gap-6">
           <button
@@ -195,23 +195,6 @@ export function ReadingLogControls({
           >
             {t("view_list")}
             {viewMode === "list" && (
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
-            )}
-          </button>
-
-          <div className="w-px h-3 bg-stone-200" />
-
-          <button
-            onClick={() => onViewModeChange("deck")}
-            className={cn(
-              "text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 relative py-1",
-              viewMode === "deck"
-                ? "text-stone-900"
-                : "text-stone-400 hover:text-stone-600",
-            )}
-          >
-            {t("view_deck")}
-            {viewMode === "deck" && (
               <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
             )}
           </button>

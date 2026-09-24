@@ -105,12 +105,13 @@ export const useCreateReadingLogMutation = (options?: {
         const year = parseInt(yearStr, 10);
         const month = parseInt(monthStr, 10);
 
+        // 캐시가 없는 달에 [data]를 심으면 그 달이 한 권짜리로 먼저 그려진다.
+        // 도서 상세처럼 캘린더 밖에서 기록하면 흔하다.
         queryClient.setQueryData<ReadingLog[]>(
           readingLogKeys.list({ year, month }).queryKey,
-          (old) => {
-            if (!old) return [data];
-            return [...old, data].sort((a, b) => a.date.localeCompare(b.date));
-          },
+          (old) =>
+            old &&
+            [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
         );
       }
       // 동기화를 위해 백그라운드로 캐시 전체 무효화
@@ -138,14 +139,16 @@ export const useUpdateReadingLogMutation = (options?: {
         const year = parseInt(yearStr, 10);
         const month = parseInt(monthStr, 10);
 
+        // 날짜가 바뀌면 다른 달로 옮겨 가므로 모든 목록에서 빼고 새 달에만 넣는다.
+        queryClient.setQueriesData<ReadingLog[]>(
+          { queryKey: readingLogKeys.list._def },
+          (old) => old?.filter((log) => log.id !== data.id),
+        );
         queryClient.setQueryData<ReadingLog[]>(
           readingLogKeys.list({ year, month }).queryKey,
-          (old) => {
-            if (!old) return [data];
-            return old
-              .map((log) => (log.id === data.id ? data : log))
-              .sort((a, b) => a.date.localeCompare(b.date));
-          },
+          (old) =>
+            old &&
+            [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
         );
       }
       queryClient.invalidateQueries({ queryKey: readingLogKeys._def });

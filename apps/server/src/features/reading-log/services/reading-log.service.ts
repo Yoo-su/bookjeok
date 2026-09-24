@@ -7,7 +7,7 @@ import {
 } from '@bookjeok/core';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
 import { User } from '@/features/user/entities/user.entity';
@@ -553,6 +553,7 @@ export class ReadingLogService {
    */
   async create(userId: number, createReadingLogDto: CreateReadingLogDto) {
     const { isbn, ...data } = createReadingLogDto;
+    await this.assertNotDuplicate(userId, isbn, data.date);
     const log = this.readingLogRepository.create({
       userId,
       ...data,
@@ -748,6 +749,20 @@ export class ReadingLogService {
     if (updateReadingLogDto.memo !== undefined) {
       log.memo = updateReadingLogDto.memo;
     }
+    // 도서는 바꾸지 않는다. 다른 책이면 새 기록이다.
+    // 날짜가 그대로면 검사하지 않는다. 이미 중복인 기록의 메모 수정까지 막힌다.
+    if (
+      updateReadingLogDto.date !== undefined &&
+      updateReadingLogDto.date !== log.date
+    ) {
+      await this.assertNotDuplicate(
+        userId,
+        log.isbn,
+        updateReadingLogDto.date,
+        log.id,
+      );
+      log.date = updateReadingLogDto.date;
+    }
 
     const updatedLog = await this.readingLogRepository.save(log);
 
@@ -756,6 +771,29 @@ export class ReadingLogService {
       where: { id: updatedLog.id },
       relations: ['book'],
     });
+  }
+
+  /**
+   * 같은 사용자가 같은 책을 같은 날 두 번 기록하지 못하게 한다. 다른 날 재독은 허용한다.
+   * DB 유니크 제약은 없다. 동시 요청까지는 막지 못하고, 연타는 멱등 키가 막는다.
+   */
+  private async assertNotDuplicate(
+    userId: number,
+    isbn: string,
+    date: string,
+    excludeId?: string,
+  ) {
+    const duplicated = await this.readingLogRepository.exists({
+      where: {
+        userId,
+        isbn,
+        date,
+        ...(excludeId && { id: Not(excludeId) }),
+      },
+    });
+    if (duplicated) {
+      throw new BusinessException('READING_LOG_DUPLICATE', HttpStatus.CONFLICT);
+    }
   }
 
   /**

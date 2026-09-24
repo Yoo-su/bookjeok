@@ -741,8 +741,7 @@
     "controls": {
       "all_logs": "All Logs",
       "view_calendar": "Calendar",
-      "view_list": "List",
-      "view_deck": "Deck"
+      "view_list": "List"
     },
     "stats": {
       "monthly_title": "Reading in {month}",
@@ -768,7 +767,7 @@
     },
     "form_modal": {
       "title_create": "Log Book",
-      "title_edit": "Edit Memo",
+      "title_edit": "Edit Record",
       "label_memo": "One-line Memo",
       "label_optional": "(Optional)",
       "placeholder_memo": "How was this book? Leave a short note.",
@@ -776,7 +775,13 @@
       "submit_create": "Log",
       "submit_edit": "Update",
       "processing": "Processing...",
-      "error_max_length": "Memo can be up to {max} characters."
+      "error_max_length": "Memo can be up to {max} characters.",
+      "label_date": "Date read",
+      "error_date_required": "Please choose a date.",
+      "error_date_future": "You can't log a future date."
+    },
+    "mark_as_read": {
+      "button": "I read this"
     },
     "details_dialog": {
       "desc_write": "Leave a one-line thought for the books you read today.",
@@ -808,7 +813,11 @@
       "metadata_title": "{nickname}'s reading card deck",
       "metadata_description": "Browse the card collection of books finished in {period}.",
       "metadata_period_year": "{year}",
-      "metadata_period_this_year": "this year"
+      "metadata_period_this_year": "this year",
+      "dialog_title": "{year} Reading Deck",
+      "dialog_desc": "Drag the cards to flip through. Copy the link to share it.",
+      "private_notice": "Your reading log is private, so people with the link won't see your deck.",
+      "make_public": "Make public"
     },
     "toast": {
       "create_success": "Reading log registered successfully.",
@@ -818,8 +827,8 @@
       "delete_success": "Reading log deleted successfully.",
       "delete_error": "Failed to delete reading log.",
       "settings_updated": "Reading log settings updated successfully.",
-      "already_added": "This book is already added.",
-      "share_deck_copied": "Reading deck link copied to clipboard!",
+      "already_added": "You've already logged this book for that day.",
+      "share_deck_copied": "Reading deck link copied.",
       "login_required_share": "Please log in to use the share feature."
     },
     "dialog": {

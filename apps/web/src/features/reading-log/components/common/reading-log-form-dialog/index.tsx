@@ -2,6 +2,7 @@
 
 import { MAX_MEMO_LENGTH } from "@bookjeok/core";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -25,7 +26,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shared/components/shadcn/form";
+import { Input } from "@/shared/components/shadcn/input";
 import { Textarea } from "@/shared/components/shadcn/textarea";
+
+export interface ReadingLogFormValues {
+  memo: string;
+  date: string; // YYYY-MM-DD
+}
 
 interface ReadingLogFormDialogProps {
   book: {
@@ -34,16 +41,18 @@ interface ReadingLogFormDialogProps {
     image: string;
   } | null;
   initialMemo?: string;
+  initialDate: string;
   mode: "create" | "edit";
   open: boolean;
   isPending?: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (memo: string) => void;
+  onSubmit: (values: ReadingLogFormValues) => void;
 }
 
 export function ReadingLogFormDialog({
   book,
   initialMemo = "",
+  initialDate,
   mode,
   open,
   isPending = false,
@@ -52,7 +61,14 @@ export function ReadingLogFormDialog({
 }: ReadingLogFormDialogProps) {
   const t = useTranslations("reading_log.form_modal");
 
+  // 로컬 기준 오늘. 미래 날짜 기록을 막는다.
+  const today = format(new Date(), "yyyy-MM-dd");
+
   const formSchema = z.object({
+    date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, { message: t("error_date_required") })
+      .refine((value) => value <= today, { message: t("error_date_future") }),
     memo: z.string().max(MAX_MEMO_LENGTH, {
       message: t("error_max_length", { max: MAX_MEMO_LENGTH }),
     }),
@@ -62,18 +78,19 @@ export function ReadingLogFormDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       memo: initialMemo,
+      date: initialDate,
     },
   });
 
   // 새로 열었을 때 초기화
   useEffect(() => {
     if (open) {
-      form.reset({ memo: initialMemo });
+      form.reset({ memo: initialMemo, date: initialDate });
     }
-  }, [open, initialMemo, form]);
+  }, [open, initialMemo, initialDate, form]);
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit(values.memo);
+    onSubmit(values);
     if (mode === "create") form.reset();
   };
 
@@ -110,6 +127,27 @@ export function ReadingLogFormDialog({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-stone-600 font-medium">
+                    {t("label_date")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      max={today}
+                      className="h-11 border-stone-200 text-base md:text-sm focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-stone-400"
+                      disabled={isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="memo"

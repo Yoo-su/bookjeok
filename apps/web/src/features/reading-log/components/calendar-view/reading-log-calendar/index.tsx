@@ -22,7 +22,6 @@ import { cn } from "@/shared/utils";
 import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { DayDetailsDialog } from "../../common/day-details-dialog";
-import { ReadingLogCardDeck } from "../../deck-view/reading-log-card-deck";
 import { ReadingLogListView } from "../../list-view/reading-log-list-view";
 import { ReadingLogStats } from "../../stats-view/reading-log-stats";
 import { ReadingLogCalendarSkeleton } from "../reading-log-calendar-skeleton";
@@ -123,12 +122,6 @@ export function ReadingLogCalendar({
       {viewMode === "list" ? (
         <ReadingLogListView
           logs={readOnly ? initialLogs : undefined}
-          readOnly={readOnly}
-        />
-      ) : viewMode === "deck" ? (
-        <ReadingLogCardDeck
-          logs={readOnly ? initialLogs : undefined}
-          currentDate={currentDate}
           readOnly={readOnly}
         />
       ) : isLoading ? (

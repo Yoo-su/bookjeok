@@ -34,7 +34,7 @@ book/
     │   └── book-search-result-list/      # index + skeleton
     ├── book-detail/
     │   ├── index.tsx, book-info.tsx, book-cover.tsx, book-description.tsx
-    │   ├── book-actions.tsx              # 위시리스트·리뷰 쓰기 등 액션
+    │   ├── book-actions.tsx              # 읽었어요(독서 기록)·위시리스트 등 액션
     │   ├── ai-summary.tsx                # AI 3단 요약 카드
     │   ├── related-books-section.tsx
     │   └── skeleton.tsx, error.tsx

@@ -1,8 +1,10 @@
 "use client";
 
+import { BookInfo } from "@bookjeok/core";
 import { useBookStatsQuery } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
 
+import { MarkAsReadButton } from "@/features/reading-log/components/common/mark-as-read-button";
 import { WishlistButton } from "@/features/user/components/wishlist/wishlist-button";
 import {
   Tooltip,
@@ -12,21 +14,25 @@ import {
 } from "@/shared/components/shadcn/tooltip";
 
 interface BookActionsProps {
-  isbn: string;
+  book: Pick<BookInfo, "isbn" | "title" | "author" | "image">;
 }
 
-export const BookActions = ({ isbn }: BookActionsProps) => {
+export const BookActions = ({ book }: BookActionsProps) => {
+  const { isbn } = book;
   const t = useTranslations("book.detail");
   const { data: stats, isLoading } = useBookStatsQuery(isbn);
 
   return (
     <TooltipProvider>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4 flex-wrap">
-        <WishlistButton
-          type="BOOK"
-          id={isbn}
-          className="w-full sm:w-auto border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-8 rounded-md shrink-0"
-        />
+        <div className="flex w-full gap-2 sm:w-auto">
+          <MarkAsReadButton book={book} className="flex-1 sm:flex-none" />
+          <WishlistButton
+            type="BOOK"
+            id={isbn}
+            className="w-14 sm:w-auto border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 sm:px-8 rounded-md shrink-0"
+          />
+        </div>
 
         {/* 데스크톱용 구분 세로선 */}
         <div className="hidden sm:block h-6 w-px bg-stone-200" />

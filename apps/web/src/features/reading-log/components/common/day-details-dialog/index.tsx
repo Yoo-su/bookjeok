@@ -32,7 +32,10 @@ import {
   useDeleteReadingLogMutation,
   useUpdateReadingLogMutation,
 } from "../../../mutations";
-import { ReadingLogFormDialog } from "../reading-log-form-dialog";
+import {
+  ReadingLogFormDialog,
+  ReadingLogFormValues,
+} from "../reading-log-form-dialog";
 
 interface DayDetailsDialogProps {
   date: Date | null;
@@ -93,14 +96,14 @@ export function DayDetailsDialog({
     setSelectedBookForCreate(book);
   };
 
-  const handleCreateLog = (memo: string) => {
-    if (!selectedBookForCreate || !date) return;
+  const handleCreateLog = ({ memo, date: logDate }: ReadingLogFormValues) => {
+    if (!selectedBookForCreate) return;
 
     executeSafeSubmit(async (idempotencyKey) => {
       await createMutation.mutateAsync(
         {
           isbn: selectedBookForCreate.isbn,
-          date: format(date, "yyyy-MM-dd"),
+          date: logDate,
           memo,
           idempotencyKey,
         },
@@ -110,6 +113,8 @@ export function DayDetailsDialog({
           },
         },
       );
+    }).catch(() => {
+      // 실패 안내는 뮤테이션 onError가 띄운다. 폼은 열어 둔다.
     });
   };
 
@@ -117,13 +122,14 @@ export function DayDetailsDialog({
     setEditingLog(log);
   };
 
-  const handleUpdateLog = (memo: string) => {
+  const handleUpdateLog = ({ memo, date: logDate }: ReadingLogFormValues) => {
     if (!editingLog) return;
 
     updateMutation.mutate(
       {
         id: editingLog.id,
         memo,
+        date: logDate,
       },
       {
         onSuccess: () => {
@@ -261,6 +267,7 @@ export function DayDetailsDialog({
       <ReadingLogFormDialog
         mode="create"
         book={selectedBookForCreate}
+        initialDate={format(date, "yyyy-MM-dd")}
         open={!!selectedBookForCreate}
         isPending={createMutation.isPending}
         onOpenChange={(open) => !open && setSelectedBookForCreate(null)}
@@ -280,6 +287,7 @@ export function DayDetailsDialog({
             : null
         }
         initialMemo={editingLog?.memo}
+        initialDate={editingLog?.date ?? format(date, "yyyy-MM-dd")}
         open={!!editingLog}
         isPending={updateMutation.isPending}
         onOpenChange={(open) => !open && setEditingLog(null)}

@@ -70,10 +70,11 @@ export const createReadingLog = async (
 export const updateReadingLog = async ({
   id,
   memo,
+  date,
 }: UpdateReadingLogParams): Promise<ReadingLog> => {
   const response = await privateApiClient.patch<ReadingLog>(
     API_PATHS.readingLog.detail(id),
-    { memo },
+    { memo, date },
   );
   return response.data;
 };
