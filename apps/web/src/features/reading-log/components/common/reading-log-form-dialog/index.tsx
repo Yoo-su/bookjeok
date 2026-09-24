@@ -4,13 +4,15 @@ import { MAX_MEMO_LENGTH } from "@bookjeok/core";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Calendar as CalendarIcon } from "@/shared/components/icons/iconsax";
 import { CoolMode } from "@/shared/components/magicui/cool-mode";
 import { Button } from "@/shared/components/shadcn/button";
+import { Calendar } from "@/shared/components/shadcn/calendar";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +28,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/shared/components/shadcn/form";
-import { Input } from "@/shared/components/shadcn/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/shadcn/popover";
 import { Textarea } from "@/shared/components/shadcn/textarea";
+import { cn } from "@/shared/utils";
+import {
+  formatDate,
+  getDateLocale,
+  parseCalendarDate,
+} from "@/shared/utils/format-date";
 
 export interface ReadingLogFormValues {
   memo: string;
@@ -60,6 +72,8 @@ export function ReadingLogFormDialog({
   onSubmit,
 }: ReadingLogFormDialogProps) {
   const t = useTranslations("reading_log.form_modal");
+  const locale = useLocale();
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   // 로컬 기준 오늘. 미래 날짜 기록을 막는다.
   const today = format(new Date(), "yyyy-MM-dd");
@@ -130,23 +144,67 @@ export function ReadingLogFormDialog({
             <FormField
               control={form.control}
               name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-stone-600 font-medium">
-                    {t("label_date")}
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      max={today}
-                      className="h-11 border-stone-200 text-base md:text-sm focus-visible:ring-1 focus-visible:ring-offset-0 focus-visible:ring-stone-400"
-                      disabled={isPending}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const selected = field.value
+                  ? parseCalendarDate(field.value)
+                  : undefined;
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-stone-600 font-medium">
+                      {t("label_date")}
+                    </FormLabel>
+                    <Popover
+                      open={isDatePickerOpen}
+                      onOpenChange={setIsDatePickerOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <button
+                            type="button"
+                            disabled={isPending}
+                            className={cn(
+                              "flex h-11 w-full items-center justify-between rounded-md border border-stone-200 bg-white px-3 text-base md:text-sm outline-none transition-colors hover:bg-stone-50 focus-visible:ring-1 focus-visible:ring-stone-400 disabled:opacity-50",
+                              selected ? "text-stone-800" : "text-stone-400",
+                            )}
+                          >
+                            {selected
+                              ? formatDate(selected, locale, "full")
+                              : t("error_date_required")}
+                            <CalendarIcon
+                              className="w-4 h-4 text-stone-400"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto p-0"
+                        align="start"
+                        // 열자마자 이전 달 버튼에 포커스 링이 잡히지 않게 한다
+                        onOpenAutoFocus={(event) => event.preventDefault()}
+                      >
+                        <Calendar
+                          mode="single"
+                          locale={getDateLocale(locale)}
+                          captionLayout="dropdown"
+                          startMonth={new Date(2000, 0)}
+                          endMonth={new Date()}
+                          defaultMonth={selected}
+                          selected={selected}
+                          disabled={{ after: new Date() }}
+                          onSelect={(date) => {
+                            if (!date) return;
+                            field.onChange(format(date, "yyyy-MM-dd"));
+                            setIsDatePickerOpen(false);
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             <FormField
               control={form.control}
