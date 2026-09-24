@@ -76,7 +76,7 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
           className,
         )}
       >
-        <BookOpen className="w-4 h-4 mr-2" aria-hidden="true" />
+        <BookOpen aria-hidden="true" />
         {t("button")}
       </Button>
 
