@@ -878,9 +878,9 @@ DB에 없는 책을 골라 넣을 수 있습니다. 출판사 완전일치 규�
   알라딘에 없는 책(오류 8)은 판형 없이 넣습니다.
 - 표지색은 기존 행을 만든 `cover-colors.mjs`를 TS로 옮겼고, 로컬 원본 197장에서 결과가
   모두 같음을 확인했습니다.
-- **운영 반영 전제: DDL 로그 12절(미적용).** `book_ingest`에 `book_dimensions`의 SELECT·INSERT
-  권한과 RLS 정책 2개가 필요합니다. `ON CONFLICT` 때문에 INSERT만으로는 안 된다는 것을
-  PGlite로 확인했습니다. 적용 전에는 도구가 적재 시작 전 권한 점검에서 멈춥니다(조회는 됨).
+- **운영 권한: DDL 로그 12절(2026-09-25 적용).** `book_ingest`에 `book_dimensions`의 SELECT·INSERT
+  권한과 RLS 정책 2개를 줬습니다. `ON CONFLICT` 때문에 INSERT만으로는 안 된다는 것을
+  PGlite로 확인했습니다. 권한이 빠지면 도구가 적재 시작 전 권한 점검에서 멈춥니다(조회는 됨).
 
 ### 검색 경로 설계 (2026-09-07 결정 · 2026-09-08 폐기)
 
@@ -1799,7 +1799,7 @@ DB는 407MB(무료 한도 500MB)이고 `books`가 390MB입니다. 새 코드는 
 - [x] 추정 상수를 수확본 값으로 교체 (2026-09-25)
 - [x] `~/bookjeok-migration/README.md`에 스크립트 3개와 산출물 기록
 - [x] 적재 도구가 새 책의 `book_dimensions` 행을 함께 넣도록 (2026-09-25, 코드·테스트)
-- [ ] `book_ingest` 역할에 `book_dimensions` 권한 부여 — DDL 로그 12절 **미적용**
+- [x] `book_ingest` 역할에 `book_dimensions` 권한 부여 — DDL 로그 12절 (2026-09-25)
 - [ ] 권한 적용 뒤 알라딘으로 1권 적재해 `book_dimensions` 행 확인
 
 ## 8-b. 작업 산출물 정리 (마이그레이션 완료 후 필수)
@@ -2165,3 +2165,4 @@ curl -s https://bookjeok.com/ko/book/9788932925554/detail | grep -c "바움가�
 | 2026-09-25 | —       | **책탑용 판형·표지색 수확** (8-f) — 판형 수확 시작, 표지색 추출 완료, `book_dimensions` 빈 테이블 생성(DDL 11절). 책탑 코드 점검·수정                                      | 판형 44,514/57,015 진행 중. `smallint` 초과 1행 → 적재 시 범위 밖 NULL 규칙(DDL 11절). **적재 미실행(승인 대기)**. core 24·서버 318·웹 449 통과                                      |
 | 2026-09-25 | —       | **`book_dimensions` 운영 적재** (8-f) — 판형 수확 완료 후 `apply-dimensions.mjs --apply`, 추정 상수를 수확본 값으로 교체                                                   | 57,035행 / 25.6초 / 5.7MB. 세 치수 54,904 · 표지색 56,837 · 범위 밖 NULL 687건 · books에 없는 13건 제외                                                                              |
 | 2026-09-25 | —       | **적재 도구 자유 검색·`book_dimensions` 적재** (6-d) — 검색으로 책 선택, 알라딘 판형·표지색을 books와 한 트랜잭션으로                                                      | 테스트 137건. 표지색 이식 197/197 일치. SQL은 PGlite로 확인. **권한 DDL(12절) 미적용·적재 미실행**                                                                                   |
+| 2026-09-25 | —       | `book_ingest`에 `book_dimensions` 권한 부여 (DDL 12절, SQL Editor)                                                                                                         | SELECT·INSERT 권한 true 확인. 도구로 한 권 넣어 행 생성 확인은 아직                                                                                                                  |

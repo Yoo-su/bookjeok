@@ -48,7 +48,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 미상       | `books` 검색 키 표현식 인덱스 `IDX_books_search_key_trgm` (2026-09-23에 발견·기록) | (코드는 아래 10절)      |
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                      | `79b04b2f`, 10절        |
 | 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「책탑」용 실측 판형·표지색, 빈 테이블)    | (미커밋), 11절          |
-| **미적용** | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)  | 12절                    |
+| 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)  | `532dfd31`, 12절        |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -1154,7 +1154,7 @@ smallint를 넘던 `9788954415415`는 쪽수·무게 NULL. `relrowsecurity = tru
 적재 전에 운영 `books`는 57,035행이었고 모든 책이 행을 받았습니다(판형이 없으면 표지색만).
 ~~10/30 이후 들어오는 신간은 행이 없어 서버가 추정합니다.~~ **2026-09-25 정정:** 적재
 도구가 새 책을 넣을 때 이 테이블 행도 함께 넣도록 바꿨습니다(10/30까지 알라딘 판형,
-이후에는 표지색만 — 크기는 여전히 서버가 추정). 도구 계정의 권한은 12절이며 **미적용**입니다.
+이후에는 표지색만 — 크기는 여전히 서버가 추정). 도구 계정의 권한은 12절(2026-09-25 적용)입니다.
 도구 도입(2026-09-23)부터 이 적재(2026-09-25) 사이에 들어간 책은 위 적재에 포함됐습니다.
 
 ### 되돌리기
@@ -1166,10 +1166,7 @@ DROP TABLE public.book_dimensions; -- 테이블까지 제거 (서버 책탑 API�
 
 ---
 
-## 12. 적재 도구에 `book_dimensions` 쓰기 권한 (작성 2026-09-25 · **미적용**)
-
-> **운영에 아직 적용하지 않았습니다.** 적용하면 이 머리말과 위 「적용 이력」 표의
-> 날짜를 고치고 「확인」 결과를 채우세요.
+## 12. 적재 도구에 `book_dimensions` 쓰기 권한 (2026-09-25)
 
 ### 배경
 
@@ -1180,7 +1177,9 @@ DROP TABLE public.book_dimensions; -- 테이블까지 제거 (서버 책탑 API�
 (보강 조회 쿼터와 R2 업로드를 쓰기 전). 한 트랜잭션이라 `books`만 들어가고 판형이
 빠지는 일은 없습니다. 도구에 UPDATE 권한이 없어 그렇게 빠지면 채울 길이 없기 때문입니다.
 
-### 실행할 SQL
+### 실행한 SQL
+
+Supabase SQL Editor(`postgres`, 테이블 소유자)에서 한 트랜잭션(`BEGIN`…`COMMIT`)으로 실행했습니다.
 
 ```sql
 GRANT SELECT, INSERT ON public.book_dimensions TO book_ingest;
@@ -1197,7 +1196,7 @@ CREATE POLICY book_ingest_insert ON public.book_dimensions
 
 | 적용한 것                            | 결과                                                              |
 | ------------------------------------ | ----------------------------------------------------------------- |
-| 없음 (지금 운영)                     | `permission denied for table book_dimensions` → 책도 롤백         |
+| 없음 (적용 전 운영)                  | `permission denied for table book_dimensions` → 책도 롤백         |
 | `GRANT INSERT` + INSERT 정책         | `permission denied` (충돌 검사의 SELECT)                          |
 | `GRANT SELECT, INSERT` + INSERT 정책 | `new row violates row-level security policy`                      |
 | **위 SQL 전부**                      | 적재 성공. 다시 넣으면 두 테이블 모두 건너뜀(기존 행을 덮지 않음) |
@@ -1217,6 +1216,10 @@ SELECT has_table_privilege('book_ingest', 'public.book_dimensions', 'SELECT') AS
 정책 두 줄, `sel`·`ins` 모두 true면 정상입니다. 이어서 도구로 한 권만
 (`pnpm ingest apply --source aladin --query <ISBN> --isbn <ISBN> --yes`) 넣어
 `book_dimensions`에 그 ISBN 행이 생기는지 봅니다.
+
+**2026-09-25 적용 직후:** `sel`·`ins` 모두 true(SQL Editor에서 확인). 정책 조회 결과는 따로
+기록하지 않았습니다. 정책이 빠졌다면 도구가 적재 시작 전 권한 점검에서 이름을 대고 멈춥니다.
+도구로 한 권 넣어 행이 생기는지는 아직 확인하지 않았습니다.
 
 ### 되돌리기
 
