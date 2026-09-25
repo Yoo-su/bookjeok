@@ -1800,7 +1800,7 @@ DB는 407MB(무료 한도 500MB)이고 `books`가 390MB입니다. 새 코드는 
 - [x] `~/bookjeok-migration/README.md`에 스크립트 3개와 산출물 기록
 - [x] 적재 도구가 새 책의 `book_dimensions` 행을 함께 넣도록 (2026-09-25, 코드·테스트)
 - [x] `book_ingest` 역할에 `book_dimensions` 권한 부여 — DDL 로그 12절 (2026-09-25)
-- [ ] 권한 적용 뒤 알라딘으로 1권 적재해 `book_dimensions` 행 확인
+- [x] 권한 적용 뒤 알라딘으로 적재해 `book_dimensions` 행 확인 (2026-09-25, 2권 — DDL 로그 12절)
 
 ## 8-b. 작업 산출물 정리 (마이그레이션 완료 후 필수)
 
@@ -2166,3 +2166,4 @@ curl -s https://bookjeok.com/ko/book/9788932925554/detail | grep -c "바움가�
 | 2026-09-25 | —       | **`book_dimensions` 운영 적재** (8-f) — 판형 수확 완료 후 `apply-dimensions.mjs --apply`, 추정 상수를 수확본 값으로 교체                                                   | 57,035행 / 25.6초 / 5.7MB. 세 치수 54,904 · 표지색 56,837 · 범위 밖 NULL 687건 · books에 없는 13건 제외                                                                              |
 | 2026-09-25 | —       | **적재 도구 자유 검색·`book_dimensions` 적재** (6-d) — 검색으로 책 선택, 알라딘 판형·표지색을 books와 한 트랜잭션으로                                                      | 테스트 137건. 표지색 이식 197/197 일치. SQL은 PGlite로 확인. **권한 DDL(12절) 미적용·적재 미실행**                                                                                   |
 | 2026-09-25 | —       | `book_ingest`에 `book_dimensions` 권한 부여 (DDL 12절, SQL Editor)                                                                                                         | SELECT·INSERT 권한 true 확인. 도구로 한 권 넣어 행 생성 확인은 아직                                                                                                                  |
+| 2026-09-25 | —       | 도구로 알라딘 2권 적재 — `book_dimensions` 첫 운영 반영                                                                                                                    | 『육질은 부드러워』·『당신에게 가고 있어』 판형 실측·표지색 행 생성                                                                                                                  |
