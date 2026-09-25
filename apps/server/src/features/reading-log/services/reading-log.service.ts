@@ -5,6 +5,7 @@ import {
   LoungeFeedResponse,
   LoungePopularResponse,
   LoungeReader,
+  ReadingLogBookStatus,
   ReadingTowerResponse,
 } from '@bookjeok/core';
 import { HttpStatus, Injectable } from '@nestjs/common';
@@ -864,6 +865,28 @@ export class ReadingLogService {
       where: { id: updatedLog.id },
       relations: ['book'],
     });
+  }
+
+  /**
+   * 내가 이 책을 기록한 횟수와 마지막 날짜. 「읽었어요」 폼이 재독 여부를 알린다.
+   * 없는 ISBN이면 기록이 없는 것과 같으므로 도서 존재는 확인하지 않는다.
+   */
+  async getBookStatus(
+    userId: number,
+    isbn: string,
+  ): Promise<ReadingLogBookStatus> {
+    const row = await this.readingLogRepository
+      .createQueryBuilder('rl')
+      .select('COUNT(*)', 'count')
+      .addSelect(MAX_READING_DATE_AS_TEXT, 'lastDate')
+      .where('rl.userId = :userId', { userId })
+      .andWhere('rl.isbn = :isbn', { isbn })
+      .getRawOne<{ count: string; lastDate: string | null }>();
+
+    return {
+      count: parseInt(row?.count ?? '0', 10),
+      lastDate: row?.lastDate ?? null,
+    };
   }
 
   /**

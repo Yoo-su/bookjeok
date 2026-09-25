@@ -15,6 +15,9 @@ export const readingLogKeys = createQueryKeys("readingLog", {
   publicTower: (handle: string, year: number) => ({
     queryKey: [handle, year],
   }),
+  bookStatus: (isbn: string) => ({
+    queryKey: [isbn],
+  }),
   // ✅ 라운지 전용 쿼리 키 추가
   loungeFeed: null,
   loungePopular: null,

@@ -1,6 +1,7 @@
 "use client";
 
 import { BookInfo, bookKeys } from "@bookjeok/core";
+import { useReadingLogBookStatusQuery } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -37,6 +38,11 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
 
   const createMutation = useCreateReadingLogMutation();
   const { executeSafeSubmit } = useSafeSubmit();
+
+  // 폼 열 때만 조회. 저장 중엔 멈춰 저장 직후 무효화로 닫히는 폼에서 재조회 방지
+  const { data: bookStatus } = useReadingLogBookStatusQuery(book.isbn, {
+    enabled: open && !createMutation.isPending,
+  });
 
   const handleClick = () => {
     if (!user) {
@@ -84,6 +90,7 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
         mode="create"
         book={book}
         initialDate={format(new Date(), "yyyy-MM-dd")}
+        bookStatus={bookStatus}
         open={open}
         isPending={createMutation.isPending}
         onOpenChange={setOpen}

@@ -193,6 +193,48 @@ describe('ReadingLogService', () => {
     });
   });
 
+  describe('getBookStatus', () => {
+    const isbn = '9788937460449';
+
+    it('내 기록만 세고 마지막 날짜를 텍스트로 받는다', async () => {
+      const qb = mockSelectQueryBuilder({
+        getRawOne: jest
+          .fn()
+          .mockResolvedValue({ count: '2', lastDate: '2026-03-12' }),
+      });
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        qb,
+      );
+
+      const result = await service.getBookStatus(1, isbn);
+
+      expect(qb.where).toHaveBeenCalledWith('rl.userId = :userId', {
+        userId: 1,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('rl.isbn = :isbn', { isbn });
+      expect(qb.addSelect).toHaveBeenCalledWith(
+        "TO_CHAR(MAX(rl.date), 'YYYY-MM-DD')",
+        'lastDate',
+      );
+      expect(result).toEqual({ count: 2, lastDate: '2026-03-12' });
+    });
+
+    it('기록이 없으면 0회, 날짜 없음', async () => {
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        mockSelectQueryBuilder({
+          getRawOne: jest
+            .fn()
+            .mockResolvedValue({ count: '0', lastDate: null }),
+        }),
+      );
+
+      await expect(service.getBookStatus(1, isbn)).resolves.toEqual({
+        count: 0,
+        lastDate: null,
+      });
+    });
+  });
+
   describe('getTower', () => {
     const log = (
       isbn: string,

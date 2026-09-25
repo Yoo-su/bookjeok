@@ -27,6 +27,13 @@ export interface ReadingLogListResponse {
   nextCursor: string | null;
 }
 
+/** 내가 한 책을 기록한 이력. 「읽었어요」 폼이 재독 여부를 알린다 */
+export interface ReadingLogBookStatus {
+  count: number;
+  /** 가장 최근 기록일(YYYY-MM-DD). 기록이 없으면 null */
+  lastDate: string | null;
+}
+
 export interface UpdateReadingLogParams {
   id: string;
   memo: string;

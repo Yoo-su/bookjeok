@@ -75,6 +75,8 @@ export const API_PATHS = {
     /** 공개 프로필의 책탑. 독서 기록이 비공개면 빈 목록 */
     publicTower: (handle: string) => `/reading-logs/users/${handle}/tower`,
     settings: "/reading-logs/settings",
+    /** 내가 이 책을 기록한 횟수와 마지막 날짜 */
+    bookStatus: (isbn: string) => `/reading-logs/book/${isbn}/status`,
     detail: (id: string) => `/reading-logs/${id}`,
     // ✅ 라운지 API 경로 추가
     loungeFeed: "/reading-logs/lounge",

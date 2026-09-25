@@ -6,6 +6,7 @@ import {
   LoungeFeedResponse,
   LoungePopularResponse,
   ReadingLog,
+  ReadingLogBookStatus,
   ReadingLogListResponse,
   ReadingLogSettings,
   ReadingLogStats,
@@ -124,6 +125,18 @@ export const getPublicReadingTower = async (
   const { data } = await publicApiClient.get<ReadingTowerResponse>(
     API_PATHS.readingLog.publicTower(handle),
     { params: { year } },
+  );
+  return data;
+};
+
+/**
+ * 내가 이 책을 기록한 횟수와 마지막 날짜를 조회합니다.
+ */
+export const getReadingLogBookStatus = async (
+  isbn: string,
+): Promise<ReadingLogBookStatus> => {
+  const { data } = await privateApiClient.get<ReadingLogBookStatus>(
+    API_PATHS.readingLog.bookStatus(isbn),
   );
   return data;
 };
