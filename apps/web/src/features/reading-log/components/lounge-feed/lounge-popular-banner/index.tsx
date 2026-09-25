@@ -24,7 +24,7 @@ export function LoungePopularBanner({ onCardClick }: LoungePopularBannerProps) {
     return (
       <section>
         <div className="mb-10">
-          <Skeleton className="h-8 w-48 mb-3" />
+          <Skeleton className="h-7 w-48 mb-3" />
           <Skeleton className="h-4 w-64" />
         </div>
         <div className="flex gap-5 overflow-hidden">
@@ -48,7 +48,7 @@ export function LoungePopularBanner({ onCardClick }: LoungePopularBannerProps) {
     <section>
       {/* 섹션 헤더: 기존 슬라이더 헤더 패턴 */}
       <div className="mb-10 border-b border-stone-200 pb-5">
-        <h2 className="font-serif text-3xl sm:text-4xl text-stone-900 font-medium tracking-tight">
+        <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 font-medium tracking-tight">
           {t("title")}
         </h2>
         <p className="mt-2 text-sm sm:text-base text-stone-500 font-light">

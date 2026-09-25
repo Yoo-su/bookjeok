@@ -33,7 +33,7 @@ export function LoungeActiveReaders() {
     <section>
       {/* 섹션 헤더 */}
       <div className="mb-6 border-b border-stone-200 pb-5">
-        <h2 className="font-serif text-3xl sm:text-4xl text-stone-900 font-medium tracking-tight">
+        <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 font-medium tracking-tight">
           {t("title")}
         </h2>
         <p className="mt-2 text-sm sm:text-base text-stone-500 font-light">

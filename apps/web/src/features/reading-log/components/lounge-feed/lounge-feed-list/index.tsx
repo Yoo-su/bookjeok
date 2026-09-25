@@ -41,7 +41,7 @@ export function LoungeFeedList({ onCardClick }: LoungeFeedListProps) {
     return (
       <section>
         <div className="mb-10 border-b border-stone-200 dark:border-stone-800 pb-5">
-          <Skeleton className="h-9 w-48 mb-2" />
+          <Skeleton className="h-7 w-48 mb-2" />
           <Skeleton className="h-4 w-72" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,7 +96,7 @@ export function LoungeFeedList({ onCardClick }: LoungeFeedListProps) {
     <section>
       {/* 섹션 헤더 */}
       <div className="mb-10 border-b border-stone-200 dark:border-stone-800 pb-5">
-        <h2 className="font-serif text-3xl sm:text-4xl text-stone-900 dark:text-stone-100 font-medium tracking-tight">
+        <h2 className="font-serif text-2xl sm:text-3xl text-stone-900 dark:text-stone-100 font-medium tracking-tight">
           {t("title")}
         </h2>
         <p className="mt-2 text-sm sm:text-base text-stone-500 font-light">
