@@ -23,6 +23,7 @@ async function start(overrides: Partial<IngestServices> = {}) {
         maxPages: 20,
         envKey: "KAKAO_REST_API_KEY",
         enrichNote: null,
+        dimensionNote: "",
         available: true,
       },
       {
@@ -31,18 +32,22 @@ async function start(overrides: Partial<IngestServices> = {}) {
         maxPages: 4,
         envKey: "OTHER_API_KEY",
         enrichNote: null,
+        dimensionNote: "",
         available: false,
       },
     ],
     publisherStats: vi.fn(async () => [{ publisher: "민음사", count: 839 }]),
-    scan: vi.fn<IngestServices["scan"]>(async (source, publishers) =>
-      publishers.map((publisher) => ({
+    scan: vi.fn<IngestServices["scan"]>(async (source, targets) =>
+      targets.map((target) => ({
         source,
-        publisher,
+        target,
+        label: target.kind === "publisher" ? target.publisher : "검색",
         pages: 1,
-        totalCount: 1,
+        totalCount: 2,
         fresh: [candidate()],
-        known: [],
+        known: [
+          candidate({ isbn: "9788932027265", title: "사람, 장소, 환대" }),
+        ],
         excluded: [],
       })),
     ),
@@ -54,6 +59,11 @@ async function start(overrides: Partial<IngestServices> = {}) {
             status: "inserted",
             image: "https://cdn.bookjeok.com/covers/x.webp",
             cover: { key: "covers/x.webp", reused: false },
+            dimension: {
+              written: true,
+              dimensions: null,
+              coverColor: "#2a4b7c",
+            },
           },
           i,
           book,
@@ -66,6 +76,9 @@ async function start(overrides: Partial<IngestServices> = {}) {
         failed: 0,
         reusedCovers: 0,
         emptyAuthor: 0,
+        dimensionRows: books.length,
+        measured: 0,
+        colorFailed: 0,
         journal: "run.jsonl",
       };
     }),
@@ -169,8 +182,24 @@ describe("createIngestServer", () => {
     const result = events.find((e) => e.type === "result");
     const { scanId } = result;
     // 화면에는 공급처 원본과 표지 원본 주소를 보내지 않는다
-    expect(result.publishers[0].fresh[0]).not.toHaveProperty("raw");
-    expect(result.publishers[0].fresh[0]).not.toHaveProperty("coverUrls");
+    expect(result.sections[0].fresh[0]).not.toHaveProperty("raw");
+    expect(result.sections[0].fresh[0]).not.toHaveProperty("coverUrls");
+    // 이미 있는 책은 목록 표시에 필요한 것만
+    expect(result.sections[0].known).toEqual([
+      {
+        isbn: "9788932027265",
+        title: "사람, 장소, 환대",
+        author: "이서수",
+        pubDate: "2026-09-18",
+      },
+    ]);
+
+    // 보유 책은 조회 결과에 있어도 적재 대상이 아니다
+    const known = await call("/api/apply", {
+      method: "POST",
+      body: JSON.stringify({ scanId, isbns: ["9788932027265"] }),
+    });
+    expect(known.status).toBe(400);
 
     const unknown = await call("/api/apply", {
       method: "POST",
@@ -237,9 +266,49 @@ describe("createIngestServer", () => {
     ).text();
     expect(services.scan).toHaveBeenCalledWith(
       "kakao",
-      ["민음사"],
+      [{ kind: "publisher", publisher: "민음사" }],
       20,
       expect.any(Function),
     );
+  });
+
+  it("자유 검색어를 받아 ISBN을 알아보고 조회한다", async () => {
+    const { call, services } = await start();
+    await (
+      await call("/api/scan", {
+        method: "POST",
+        body: JSON.stringify({
+          source: "kakao",
+          query: { text: "978-89-320-2726-5", field: "title", sort: "latest" },
+          maxPages: 1,
+        }),
+      })
+    ).text();
+    expect(services.scan).toHaveBeenCalledWith(
+      "kakao",
+      [
+        {
+          kind: "keyword",
+          query: { text: "9788932027265", field: "isbn", sort: "latest" },
+        },
+      ],
+      1,
+      expect.any(Function),
+    );
+  });
+
+  it.each([
+    [{ text: "  " }],
+    [{ text: 42 }],
+    [{ text: "사탄탱고", field: "publisher" }],
+    [{ text: "사탄탱고", sort: "sales" }],
+  ])("잘못된 검색어 %j는 조회하지 않는다", async (query) => {
+    const { call, services } = await start();
+    const res = await call("/api/scan", {
+      method: "POST",
+      body: JSON.stringify({ source: "kakao", query }),
+    });
+    expect(res.status).toBe(400);
+    expect(services.scan).not.toHaveBeenCalled();
   });
 });

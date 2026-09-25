@@ -2,7 +2,12 @@ import { cleanHtmlText } from "@bookjeok/core";
 
 import { fetchWithRetry } from "../http";
 import { type Draft, type Exclusion, screen, toPubDate } from "../normalize";
-import type { BookSource, SourceDefinition } from "./types";
+import type {
+  BookSource,
+  KeywordQuery,
+  SourceDefinition,
+  SourcePage,
+} from "./types";
 
 /** 카카오 책 검색 응답의 문서 한 건. 필드는 카카오가 주는 그대로입니다. */
 export interface KakaoBook {
@@ -34,10 +39,19 @@ export interface KakaoPage {
 const PAGE_SIZE = 50;
 
 /**
- * 출판사 검색이 돌려주는 페이지 상한. `pageable_count`가 최대 1,000(50×20)이고,
- * 21페이지 이후를 요청하면 **에러 없이 20페이지를 반복해** 돌려줍니다(2026-09-23 실측).
+ * 검색이 돌려주는 페이지 상한. `pageable_count`가 최대 1,000(50×20)이고,
+ * 21페이지 이후를 요청하면 **에러 없이 20페이지를 반복해** 돌려줍니다
+ * (출판사 검색 2026-09-23, 자유 검색 2026-09-25 실측).
  */
 export const KAKAO_MAX_PAGE = 20;
+
+/** 자유 검색 필드 → 카카오 `target`. 전체는 `target`을 빼서 보냅니다. */
+const KAKAO_TARGET: Record<KeywordQuery["field"], string | null> = {
+  all: null,
+  title: "title",
+  author: "person",
+  isbn: "isbn",
+};
 
 /** 판매 상태가 빈 문서. 굿즈 KIT 같은 비도서가 여기 걸립니다. */
 const NO_STATUS: Exclusion = { reason: "no_status", label: "판매 상태 없음" };
@@ -106,34 +120,43 @@ export function toKakaoDraft(doc: KakaoBook): Draft {
 }
 
 export function createKakaoSource(apiKey: string): BookSource<KakaoBook> {
+  async function search(
+    params: Record<string, string>,
+    page: number,
+  ): Promise<SourcePage<KakaoBook>> {
+    const query = new URLSearchParams({
+      ...params,
+      size: String(PAGE_SIZE),
+      page: String(page),
+    });
+    const res = await fetchWithRetry(
+      `https://dapi.kakao.com/v3/search/book?${query}`,
+      { headers: { Authorization: `KakaoAK ${apiKey}` } },
+    );
+    if (!res.ok) {
+      throw new Error(
+        `카카오 검색 실패 (HTTP ${res.status}): ${await res.text()}`,
+      );
+    }
+    const { documents, meta } = (await res.json()) as KakaoPage;
+    return {
+      items: documents,
+      totalCount: meta.total_count,
+      isEnd: meta.is_end,
+    };
+  }
+
   return {
     id: kakaoSource.id,
     label: kakaoSource.label,
     maxPages: KAKAO_MAX_PAGE,
 
-    async search(publisher, page) {
-      const params = new URLSearchParams({
-        query: publisher,
-        target: "publisher",
-        sort: "latest",
-        size: String(PAGE_SIZE),
-        page: String(page),
-      });
-      const res = await fetchWithRetry(
-        `https://dapi.kakao.com/v3/search/book?${params}`,
-        { headers: { Authorization: `KakaoAK ${apiKey}` } },
-      );
-      if (!res.ok) {
-        throw new Error(
-          `카카오 검색 실패 (HTTP ${res.status}): ${await res.text()}`,
-        );
-      }
-      const { documents, meta } = (await res.json()) as KakaoPage;
-      return {
-        items: documents,
-        totalCount: meta.total_count,
-        isEnd: meta.is_end,
-      };
+    searchPublisher: (publisher, page) =>
+      search({ query: publisher, target: "publisher", sort: "latest" }, page),
+
+    searchKeyword({ text, field, sort }, page) {
+      const target = KAKAO_TARGET[field];
+      return search({ query: text, sort, ...(target ? { target } : {}) }, page);
     },
 
     normalize: (doc, publisher, today) =>

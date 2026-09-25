@@ -48,6 +48,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 미상       | `books` 검색 키 표현식 인덱스 `IDX_books_search_key_trgm` (2026-09-23에 발견·기록) | (코드는 아래 10절)      |
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                      | `79b04b2f`, 10절        |
 | 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「책탑」용 실측 판형·표지색, 빈 테이블)    | (미커밋), 11절          |
+| 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)  | `532dfd31`, 12절        |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -1151,8 +1152,10 @@ COMMIT;
 smallint를 넘던 `9788954415415`는 쪽수·무게 NULL. `relrowsecurity = true` 유지.
 
 적재 전에 운영 `books`는 57,035행이었고 모든 책이 행을 받았습니다(판형이 없으면 표지색만).
-**10/30 이후 들어오는 신간은 행이 없어 서버가 추정합니다.** 필요하면 새 책의 표지로
-`cover-colors.mjs`를 다시 돌려 표지색만 추가할 수 있습니다(판형은 받을 곳이 없음).
+~~10/30 이후 들어오는 신간은 행이 없어 서버가 추정합니다.~~ **2026-09-25 정정:** 적재
+도구가 새 책을 넣을 때 이 테이블 행도 함께 넣도록 바꿨습니다(10/30까지 알라딘 판형,
+이후에는 표지색만 — 크기는 여전히 서버가 추정). 도구 계정의 권한은 12절(2026-09-25 적용)입니다.
+도구 도입(2026-09-23)부터 이 적재(2026-09-25) 사이에 들어간 책은 위 적재에 포함됐습니다.
 
 ### 되돌리기
 
@@ -1160,3 +1163,75 @@ smallint를 넘던 `9788954415415`는 쪽수·무게 NULL. `relrowsecurity = tru
 TRUNCATE public.book_dimensions;   -- 데이터만 비우기 (책탑은 전부 추정 크기로 돌아감)
 DROP TABLE public.book_dimensions; -- 테이블까지 제거 (서버 책탑 API가 500)
 ```
+
+---
+
+## 12. 적재 도구에 `book_dimensions` 쓰기 권한 (2026-09-25)
+
+### 배경
+
+2026-09-25부터 `tools/book-ingest`가 책을 넣을 때 `book_dimensions` 행도 **같은
+트랜잭션으로** 넣습니다(알라딘 판형·쪽수, 표지에서 뽑은 대표색 — 계획서 8-f). 그런데
+9절의 `book_ingest` 역할은 `books` 권한만 있고, 11절 테이블은 RLS가 켜져 있고 정책이
+없습니다. 이 SQL을 적용하기 전에는 도구가 **적재를 시작하기 전 권한 점검에서 멈춥니다**
+(보강 조회 쿼터와 R2 업로드를 쓰기 전). 한 트랜잭션이라 `books`만 들어가고 판형이
+빠지는 일은 없습니다. 도구에 UPDATE 권한이 없어 그렇게 빠지면 채울 길이 없기 때문입니다.
+
+### 실행한 SQL
+
+Supabase SQL Editor(`postgres`, 테이블 소유자)에서 한 트랜잭션(`BEGIN`…`COMMIT`)으로 실행했습니다.
+
+```sql
+GRANT SELECT, INSERT ON public.book_dimensions TO book_ingest;
+
+CREATE POLICY book_ingest_select ON public.book_dimensions
+  FOR SELECT TO book_ingest USING (true);
+CREATE POLICY book_ingest_insert ON public.book_dimensions
+  FOR INSERT TO book_ingest WITH CHECK (true);
+```
+
+**INSERT만으로는 안 됩니다.** 도구는 `INSERT … ON CONFLICT (isbn) DO NOTHING`을 쓰는데,
+충돌 검사에 SELECT 권한이 필요하고, RLS가 켜진 테이블에서는 SELECT 정책도 있어야 합니다.
+2026-09-25에 PGlite(Postgres WASM)에 운영과 같은 역할·RLS를 만들어 확인했습니다.
+
+| 적용한 것                            | 결과                                                              |
+| ------------------------------------ | ----------------------------------------------------------------- |
+| 없음 (적용 전 운영)                  | `permission denied for table book_dimensions` → 책도 롤백         |
+| `GRANT INSERT` + INSERT 정책         | `permission denied` (충돌 검사의 SELECT)                          |
+| `GRANT SELECT, INSERT` + INSERT 정책 | `new row violates row-level security policy`                      |
+| **위 SQL 전부**                      | 적재 성공. 다시 넣으면 두 테이블 모두 건너뜀(기존 행을 덮지 않음) |
+
+도구의 권한 점검(`assertWritable`)은 이 네 가지를 그대로 구분해 알려 줍니다.
+RLS를 끄지 않는 이유는 9절과 같습니다.
+
+### 확인
+
+```sql
+SELECT policyname, cmd FROM pg_policies
+ WHERE tablename = 'book_dimensions' AND 'book_ingest' = ANY(roles);
+SELECT has_table_privilege('book_ingest', 'public.book_dimensions', 'SELECT') AS sel,
+       has_table_privilege('book_ingest', 'public.book_dimensions', 'INSERT') AS ins;
+```
+
+정책 두 줄, `sel`·`ins` 모두 true면 정상입니다. 이어서 도구로 한 권만
+(`pnpm ingest apply --source aladin --query <ISBN> --isbn <ISBN> --yes`) 넣어
+`book_dimensions`에 그 ISBN 행이 생기는지 봅니다.
+
+**2026-09-25 적용 직후:** `sel`·`ins` 모두 true(SQL Editor에서 확인). 정책 조회 결과는 따로
+기록하지 않았습니다. 정책이 빠졌다면 도구가 적재 시작 전 권한 점검에서 이름을 대고 멈춥니다.
+같은 날 도구로 알라딘에서 두 권을 넣어 행이 생기는 것까지 확인했습니다(도구 적재 기록 기준).
+
+| ISBN            | 책                 | 판형                                   | 표지색    |
+| --------------- | ------------------ | -------------------------------------- | --------- |
+| `9791167140524` | 육질은 부드러워    | 130×200×17mm · 308쪽 · 400g · 반양장본 | `#283547` |
+| `9788963717579` | 당신에게 가고 있어 | 120×185×10mm · 152쪽 · 197g · 반양장본 | `#d4d7d3` |
+
+### 되돌리기
+
+```sql
+DROP POLICY book_ingest_insert ON public.book_dimensions;
+DROP POLICY book_ingest_select ON public.book_dimensions;
+REVOKE ALL ON public.book_dimensions FROM book_ingest;
+```
+
+되돌리면 도구는 다시 권한 점검에서 멈춥니다(적재 불가).

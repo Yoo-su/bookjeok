@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { NAVIGATION_START_EVENT } from "@/shared/utils/navigation-progress";
+
 /** 점근이 멈춘 뒤에도 막대가 남지 않도록 두는 상한 */
 const MAX_VISIBLE_MS = 10_000;
 
@@ -14,7 +16,7 @@ const MAX_VISIBLE_MS = 10_000;
  * (soft 404 → ISR 캐시 오염) 그래서 라우트 밖에서 지연만 가린다.
  *
  * `useSearchParams`는 정적 렌더링을 무효화하므로 쓰지 않는다. 쿼리만 바뀌는
- * 전환은 상한 타이머로 정리한다.
+ * 전환은 진행 중 URL 변화를 확인하고, 실패한 이동은 상한 타이머로 정리한다.
  */
 export const NavigationProgress = () => {
   const pathname = usePathname();
@@ -24,6 +26,7 @@ export const NavigationProgress = () => {
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const capRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fromUrlRef = useRef("");
 
   const clearTimers = useCallback(() => {
     if (tickRef.current) clearInterval(tickRef.current);
@@ -43,11 +46,20 @@ export const NavigationProgress = () => {
 
   const start = useCallback(() => {
     clearTimers();
+    fromUrlRef.current = window.location.pathname + window.location.search;
     setVisible(true);
     setProgress(8);
 
     // 도착 시점을 모르므로 90%까지만 점근한다. 남은 10%는 완료 때 채운다.
     tickRef.current = setInterval(() => {
+      // 쿼리만 바뀌는 이동은 usePathname() 값이 그대로라 URL 변경도 확인한다.
+      if (
+        window.location.pathname + window.location.search !==
+        fromUrlRef.current
+      ) {
+        finish();
+        return;
+      }
       setProgress((prev) => (prev >= 90 ? prev : prev + (90 - prev) * 0.12));
     }, 120);
     capRef.current = setTimeout(finish, MAX_VISIBLE_MS);
@@ -60,9 +72,16 @@ export const NavigationProgress = () => {
   }, [pathname, finish, clearTimers]);
 
   useEffect(() => {
+    window.addEventListener(NAVIGATION_START_EVENT, start);
+    return () => window.removeEventListener(NAVIGATION_START_EVENT, start);
+  }, [start]);
+
+  useEffect(() => {
     const onClick = (event: MouseEvent) => {
       // 새 탭·다운로드·수정키 조합은 현재 문서를 떠나지 않음
-      if (event.defaultPrevented || event.button !== 0) return;
+      // Next Link도 클라이언트 이동을 시작할 때 기본 클릭 동작을 막는다.
+      // 여기서 defaultPrevented를 거르면 정작 상세 페이지 링크가 빠진다.
+      if (event.button !== 0) return;
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
         return;
 
@@ -73,6 +92,13 @@ export const NavigationProgress = () => {
         anchor.hasAttribute("download")
       )
         return;
+
+      // Swiper는 드래그 직후 클릭을 취소해도 이벤트 전파는 허용할 수 있다.
+      // 이때 Next Link는 이동하지 않으므로 막대도 시작하지 않는다.
+      const swiper = anchor.closest<
+        HTMLElement & { swiper?: { allowClick: boolean } }
+      >(".swiper")?.swiper;
+      if (swiper?.allowClick === false) return;
 
       const href = anchor.getAttribute("href");
       if (!href || href.startsWith("#")) return;

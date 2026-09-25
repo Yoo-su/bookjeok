@@ -5,7 +5,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/shadcn/avatar";
-import { Link, useRouter } from "@/shared/config/i18n/routing";
+import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
@@ -15,16 +15,11 @@ interface PopularReviewItemProps {
 
 // 인기 리뷰 카드 컴포넌트 - 미니멀 텍스트 중심 디자인
 export function PopularReviewItem({ review }: PopularReviewItemProps) {
-  const router = useRouter();
-
-  const handleCardClick = () => {
-    router.push(PATHS.REVIEW_DETAIL(review.id));
-  };
-
   return (
-    <div
+    <Link
+      href={PATHS.REVIEW_DETAIL(review.id)}
+      prefetch={false}
       className="h-full flex flex-col bg-white border border-stone-100 p-5 cursor-pointer group transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
-      onClick={handleCardClick}
     >
       {/* 상단: 카테고리 + 별점 */}
       <div className="flex items-center justify-between mb-3">
@@ -83,6 +78,6 @@ export function PopularReviewItem({ review }: PopularReviewItemProps) {
           <span>{review.reactionCount || 0} likes</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
