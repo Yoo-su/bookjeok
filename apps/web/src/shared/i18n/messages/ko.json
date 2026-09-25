@@ -781,7 +781,9 @@
       "error_max_length": "메모는 최대 {max}자까지 입력 가능합니다.",
       "label_date": "읽은 날",
       "error_date_required": "날짜를 선택해주세요.",
-      "error_date_future": "미래 날짜는 기록할 수 없습니다."
+      "error_date_future": "미래 날짜는 기록할 수 없습니다.",
+      "logged_same_day": "이날 이미 기록한 책이에요. 다른 날 읽었다면 날짜를 바꿔 주세요.",
+      "logged_before": "{count, plural, =1 {{date}에 기록한 책이에요.} other {#번 기록한 책이에요(마지막 {date}).}} 다시 읽었다면 그대로 기록하세요."
     },
     "mark_as_read": {
       "button": "읽었어요"

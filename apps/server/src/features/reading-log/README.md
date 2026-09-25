@@ -26,16 +26,17 @@ reading-log/
 
 ### 개인 독서 기록 (`/reading-logs`) — 전 구간 인증 필요
 
-| 메서드 | 경로        | 설명                              |
-| ------ | ----------- | --------------------------------- |
-| POST   | `/`         | 독서 기록 생성                    |
-| GET    | `/`         | 월별 독서 기록 조회 (캘린더용)    |
-| GET    | `/list`     | 커서 기반 목록 조회 (무한 스크롤) |
-| GET    | `/stats`    | 월간·연간 독서 통계               |
-| GET    | `/settings` | 라운지 공개 설정 조회             |
-| PATCH  | `/settings` | 라운지 공개 설정 변경             |
-| PATCH  | `/:id`      | 기록 수정 (메모·날짜)             |
-| DELETE | `/:id`      | 기록 삭제                         |
+| 메서드 | 경로                 | 설명                                        |
+| ------ | -------------------- | ------------------------------------------- |
+| POST   | `/`                  | 독서 기록 생성                              |
+| GET    | `/`                  | 월별 독서 기록 조회 (캘린더용)              |
+| GET    | `/list`              | 커서 기반 목록 조회 (무한 스크롤)           |
+| GET    | `/stats`             | 월간·연간 독서 통계                         |
+| GET    | `/book/:isbn/status` | 이 책을 기록한 횟수·마지막 날짜 (재독 안내) |
+| GET    | `/settings`          | 라운지 공개 설정 조회                       |
+| PATCH  | `/settings`          | 라운지 공개 설정 변경                       |
+| PATCH  | `/:id`               | 기록 수정 (메모·날짜)                       |
+| DELETE | `/:id`               | 기록 삭제                                   |
 
 ### 독서 라운지 (`/reading-logs/lounge`) — 공개
 
@@ -121,6 +122,8 @@ reading-log/
 
 DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 통과할 수 있고, 같은 제출의 연타는 멱등 키가 막습니다. 제약을 걸려면 운영에 이미 있는 중복부터 확인해야 합니다.
 
+`getBookStatus(userId, isbn)` — `GET /reading-logs/book/:isbn/status`. 내가 이 책을 기록한 횟수와 가장 최근 기록일(`{ count, lastDate }`, 없으면 `0`·`null`)을 돌려줍니다. 웹의 「읽었어요」 폼이 재독인지 알리는 데 씁니다. 마지막 날짜는 `MAX_READING_DATE_AS_TEXT`로 텍스트로 받습니다. 기록을 만들지 않는 조회라 `BookResolvePipe`를 두지 않으며, 없는 ISBN은 기록 0건으로 끝납니다.
+
 ### 통계
 
 `getStats(userId, year, month)` — 해당 월과 해당 연도의 완독 수를 반환합니다.
@@ -129,7 +132,7 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 `getTower(userId, year)` — `GET /reading-logs/tower?year=`. 한 해의 기록을 완독일 오름차순(바닥부터 쌓는 순서)으로, 책 크기(mm)·무게·표지색과 함께 돌려줍니다.
 
-- 크기는 `book_dimensions`(알라딘 실측 수확본, 2026-10-30 이후 갱신 없음)에서 읽습니다. 행이 없거나 값이 비정상이면 `estimateBookSize`(core)가 채우고 `sizeSource: "estimated"`로 표시합니다. **추정값은 저장하지 않습니다.**
+- 크기는 `book_dimensions`(알라딘 실측 수확본, 2026-10-30 이후 갱신 없음)를 기록 조회에 조인해 한 번에 읽습니다(`leftJoinAndMapOne`). 서버(Azure)와 DB(Supabase)가 다른 클라우드라 왕복을 줄이려는 것입니다. 이 조인 때문에 모듈의 `forFeature`에서 `BookDimension`을 빼면 안 됩니다(`autoLoadEntities`). 행이 없거나 값이 비정상이면 `estimateBookSize`(core)가 채우고 `sizeSource: "estimated"`로 표시합니다. **추정값은 저장하지 않습니다.**
 - 쪽수도 같은 범위(`BOOK_SIZE_PLAUSIBLE`)로 걸러 벗어나면 `pages: null`입니다. 원본에는 18,480쪽 같은 오기가 섞여 있어 그대로 내보내면 쪽수 합계와 공유 이미지에 찍힙니다.
 - 도서는 제목·저자·출판사·표지만 읽습니다(`description` 제외).
 - 표지색이 없으면 `coverColor: null`로 두고 웹이 대체색을 고릅니다.

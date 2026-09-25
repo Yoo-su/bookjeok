@@ -26,6 +26,17 @@ export const Create: Story = {
   args: { mode: "create" },
 };
 
+export const LoggedBefore: Story = {
+  args: { mode: "create", bookStatus: { count: 2, lastDate: "2026-03-12" } },
+};
+
+export const LoggedSameDay: Story = {
+  args: {
+    mode: "create",
+    bookStatus: { count: 1, lastDate: format(new Date(), "yyyy-MM-dd") },
+  },
+};
+
 export const Edit: Story = {
   args: {
     mode: "edit",

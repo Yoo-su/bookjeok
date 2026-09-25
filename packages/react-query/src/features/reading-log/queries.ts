@@ -6,6 +6,7 @@ import {
   getLoungeFeed,
   getLoungePopular,
   getPublicReadingTower,
+  getReadingLogBookStatus,
   getReadingLogs,
   getReadingLogSettings,
   getReadingLogsInfinite,
@@ -60,6 +61,20 @@ export const usePublicReadingTowerQuery = (handle: string, year: number) => {
   return useQuery({
     queryKey: readingLogKeys.publicTower(handle, year).queryKey,
     queryFn: () => getPublicReadingTower(handle, year),
+  });
+};
+
+/**
+ * 내가 이 책을 기록한 이력 조회
+ */
+export const useReadingLogBookStatusQuery = (
+  isbn: string,
+  options?: { enabled?: boolean },
+) => {
+  return useQuery({
+    queryKey: readingLogKeys.bookStatus(isbn).queryKey,
+    queryFn: () => getReadingLogBookStatus(isbn),
+    enabled: options?.enabled,
   });
 };
 

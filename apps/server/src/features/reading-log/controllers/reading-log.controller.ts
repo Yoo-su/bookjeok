@@ -153,6 +153,21 @@ export class ReadingLogController {
     );
   }
 
+  @Get('book/:isbn/status')
+  @ApiOperation({
+    summary: '도서별 내 기록 이력 조회',
+    description:
+      '내가 이 책을 기록한 횟수와 가장 최근 기록일을 반환합니다. 기록이 없으면 count 0, lastDate null입니다.',
+  })
+  @ApiParam({ name: 'isbn', description: '도서 ISBN' })
+  @ApiResponse({
+    status: 200,
+    description: '기록 횟수와 가장 최근 기록일(YYYY-MM-DD)을 반환합니다.',
+  })
+  getBookStatus(@Request() req, @Param('isbn') isbn: string) {
+    return this.readingLogService.getBookStatus(req.user.id, isbn);
+  }
+
   @Get('list')
   @ApiOperation({
     summary: '독서 기록 리스트 조회 (Infinite Scroll)',

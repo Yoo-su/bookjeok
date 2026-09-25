@@ -2,7 +2,7 @@
 
 import { inkColorFor, type ReadingTowerBook } from "@bookjeok/core";
 import { useTranslations } from "next-intl";
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { cm1 } from "../hooks/use-tower-copy";
 import { bookColor } from "../lib/scene";
@@ -136,9 +136,13 @@ function SketchBook({
 
 /**
  * 쌓인 순서. 맨 위가 가장 최근에 읽은 책이고, 월마다 지층처럼 나눈다.
+ * 인트로 동안 부모가 권수를 올리며 자주 다시 그려져 memo로 막는다.
  */
-export const TowerStackList = forwardRef<HTMLElement, TowerStackListProps>(
-  function TowerStackList({ books, onBookClick }, ref) {
+export const TowerStackList = memo(
+  forwardRef<HTMLElement, TowerStackListProps>(function TowerStackList(
+    { books, onBookClick },
+    ref,
+  ) {
     const t = useTranslations("reading_log.tower");
     const colRef = useRef<HTMLDivElement>(null);
     const [colWidth, setColWidth] = useState(0);
@@ -260,5 +264,5 @@ export const TowerStackList = forwardRef<HTMLElement, TowerStackListProps>(
         </div>
       </section>
     );
-  },
+  }),
 );

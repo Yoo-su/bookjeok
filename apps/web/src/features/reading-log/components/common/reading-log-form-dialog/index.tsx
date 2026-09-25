@@ -1,6 +1,6 @@
 "use client";
 
-import { MAX_MEMO_LENGTH } from "@bookjeok/core";
+import { MAX_MEMO_LENGTH, ReadingLogBookStatus } from "@bookjeok/core";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -9,7 +9,10 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Calendar as CalendarIcon } from "@/shared/components/icons/iconsax";
+import {
+  Calendar as CalendarIcon,
+  Info,
+} from "@/shared/components/icons/iconsax";
 import { CoolMode } from "@/shared/components/magicui/cool-mode";
 import { Button } from "@/shared/components/shadcn/button";
 import { Calendar } from "@/shared/components/shadcn/calendar";
@@ -54,6 +57,8 @@ interface ReadingLogFormDialogProps {
   } | null;
   initialMemo?: string;
   initialDate: string;
+  /** 이 책을 이미 기록했으면 날짜 아래에 알린다. 생성에서만 쓴다 */
+  bookStatus?: ReadingLogBookStatus;
   mode: "create" | "edit";
   open: boolean;
   isPending?: boolean;
@@ -65,6 +70,7 @@ export function ReadingLogFormDialog({
   book,
   initialMemo = "",
   initialDate,
+  bookStatus,
   mode,
   open,
   isPending = false,
@@ -201,6 +207,30 @@ export function ReadingLogFormDialog({
                         />
                       </PopoverContent>
                     </Popover>
+                    {/* 수정은 기록 자신이 이력에 포함되므로 생성에서만 */}
+                    {mode === "create" && bookStatus?.lastDate && (
+                      <p
+                        role="status"
+                        className="flex items-start gap-2 rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-600"
+                      >
+                        <Info
+                          className="mt-0.5 h-4 w-4 shrink-0 text-stone-400"
+                          aria-hidden="true"
+                        />
+                        <span>
+                          {field.value === bookStatus.lastDate
+                            ? t("logged_same_day")
+                            : t("logged_before", {
+                                count: bookStatus.count,
+                                date: formatDate(
+                                  bookStatus.lastDate,
+                                  locale,
+                                  "full",
+                                ),
+                              })}
+                        </span>
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 );

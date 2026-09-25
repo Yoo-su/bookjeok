@@ -781,7 +781,9 @@
       "error_max_length": "Memo can be up to {max} characters.",
       "label_date": "Date read",
       "error_date_required": "Please choose a date.",
-      "error_date_future": "You can't log a future date."
+      "error_date_future": "You can't log a future date.",
+      "logged_same_day": "You already logged this book on this day. If you read it on another day, change the date.",
+      "logged_before": "{count, plural, =1 {You logged this book on {date}.} other {You've logged this book # times (last on {date}).}} If you read it again, just log it."
     },
     "mark_as_read": {
       "button": "I read this"

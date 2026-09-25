@@ -17,6 +17,7 @@ function mockSelectQueryBuilder(overrides: Record<string, unknown> = {}) {
   return {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
+    leftJoinAndMapOne: jest.fn().mockReturnThis(),
     innerJoin: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
@@ -52,7 +53,6 @@ describe('ReadingLogService', () => {
   let service: ReadingLogService;
   let readingLogRepository: jest.Mocked<Partial<Repository<ReadingLog>>>;
   let userRepository: jest.Mocked<Partial<Repository<User>>>;
-  let bookDimensionRepository: jest.Mocked<Partial<Repository<BookDimension>>>;
   let dataSource: jest.Mocked<Partial<DataSource>>;
 
   beforeEach(async () => {
@@ -70,10 +70,6 @@ describe('ReadingLogService', () => {
       findOne: jest.fn(),
     };
 
-    bookDimensionRepository = {
-      find: jest.fn().mockResolvedValue([]),
-    };
-
     dataSource = {
       transaction: jest.fn(),
       getRepository: jest.fn(),
@@ -87,10 +83,6 @@ describe('ReadingLogService', () => {
           useValue: readingLogRepository,
         },
         { provide: getRepositoryToken(User), useValue: userRepository },
-        {
-          provide: getRepositoryToken(BookDimension),
-          useValue: bookDimensionRepository,
-        },
         { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
@@ -201,8 +193,54 @@ describe('ReadingLogService', () => {
     });
   });
 
+  describe('getBookStatus', () => {
+    const isbn = '9788937460449';
+
+    it('내 기록만 세고 마지막 날짜를 텍스트로 받는다', async () => {
+      const qb = mockSelectQueryBuilder({
+        getRawOne: jest
+          .fn()
+          .mockResolvedValue({ count: '2', lastDate: '2026-03-12' }),
+      });
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        qb,
+      );
+
+      const result = await service.getBookStatus(1, isbn);
+
+      expect(qb.where).toHaveBeenCalledWith('rl.userId = :userId', {
+        userId: 1,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('rl.isbn = :isbn', { isbn });
+      expect(qb.addSelect).toHaveBeenCalledWith(
+        "TO_CHAR(MAX(rl.date), 'YYYY-MM-DD')",
+        'lastDate',
+      );
+      expect(result).toEqual({ count: 2, lastDate: '2026-03-12' });
+    });
+
+    it('기록이 없으면 0회, 날짜 없음', async () => {
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        mockSelectQueryBuilder({
+          getRawOne: jest
+            .fn()
+            .mockResolvedValue({ count: '0', lastDate: null }),
+        }),
+      );
+
+      await expect(service.getBookStatus(1, isbn)).resolves.toEqual({
+        count: 0,
+        lastDate: null,
+      });
+    });
+  });
+
   describe('getTower', () => {
-    const log = (isbn: string, date: string) =>
+    const log = (
+      isbn: string,
+      date: string,
+      dimension?: Partial<BookDimension>,
+    ) =>
       ({
         id: `log-${isbn}`,
         userId: 1,
@@ -215,31 +253,27 @@ describe('ReadingLogService', () => {
           publisher: '출판사',
           image: '',
         },
+        dimension,
       }) as unknown as ReadingLog;
 
     it('실측이 있으면 그대로, 없으면 추정값으로 채운다', async () => {
       (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
         mockSelectQueryBuilder({
-          getMany: jest
-            .fn()
-            .mockResolvedValue([
-              log('9788936434120', '2026-01-03'),
-              log('9791100000000', '2026-02-01'),
-            ]),
+          getMany: jest.fn().mockResolvedValue([
+            log('9788936434120', '2026-01-03', {
+              isbn: '9788936434120',
+              width: 145,
+              height: 210,
+              depth: 13,
+              pages: 216,
+              weight: 300,
+              binding: '반양장본',
+              coverColor: '#332f22',
+            }),
+            log('9791100000000', '2026-02-01'),
+          ]),
         }),
       );
-      (bookDimensionRepository.find as jest.Mock).mockResolvedValue([
-        {
-          isbn: '9788936434120',
-          width: 145,
-          height: 210,
-          depth: 13,
-          pages: 216,
-          weight: 300,
-          binding: '반양장본',
-          coverColor: '#332f22',
-        },
-      ]);
 
       const result = await service.getTower(1, 2026);
 
@@ -266,33 +300,41 @@ describe('ReadingLogService', () => {
     it('범위를 벗어난 쪽수는 null로 내보낸다', async () => {
       (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
         mockSelectQueryBuilder({
-          getMany: jest
-            .fn()
-            .mockResolvedValue([log('9788954415415', '2026-03-01')]),
+          getMany: jest.fn().mockResolvedValue([
+            log('9788954415415', '2026-03-01', {
+              isbn: '9788954415415',
+              width: 164,
+              height: 225,
+              depth: 8,
+              pages: 18480,
+              weight: null,
+              binding: null,
+              coverColor: null,
+            }),
+          ]),
         }),
       );
-      (bookDimensionRepository.find as jest.Mock).mockResolvedValue([
-        {
-          isbn: '9788954415415',
-          width: 164,
-          height: 225,
-          depth: 8,
-          pages: 18480,
-          weight: null,
-          binding: null,
-          coverColor: null,
-        },
-      ]);
 
       const result = await service.getTower(1, 2026);
 
       expect(result.items[0]).toMatchObject({ pages: null, depth: 8 });
     });
 
-    it('기록이 없으면 크기 조회를 건너뛴다', async () => {
+    it('판형은 기록 조회에 조인해 한 번에 받는다', async () => {
+      const qb = mockSelectQueryBuilder();
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        qb,
+      );
+
       const result = await service.getTower(1, 2026);
+
       expect(result.items).toEqual([]);
-      expect(bookDimensionRepository.find).not.toHaveBeenCalled();
+      expect(qb.leftJoinAndMapOne).toHaveBeenCalledWith(
+        'log.dimension',
+        BookDimension,
+        'dim',
+        'dim.isbn = log.isbn',
+      );
     });
 
     it('연도가 이상하면 400', async () => {
