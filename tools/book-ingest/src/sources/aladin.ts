@@ -6,6 +6,7 @@
  */
 import { cleanHtmlText } from "@bookjeok/core";
 
+import { toDimensions } from "../dimensions";
 import { fetchWithRetry } from "../http";
 import {
   type Candidate,
@@ -14,7 +15,12 @@ import {
   screen,
   toPubDate,
 } from "../normalize";
-import type { BookSource, SourceDefinition } from "./types";
+import type {
+  BookSource,
+  KeywordQuery,
+  SourceDefinition,
+  SourcePage,
+} from "./types";
 
 /** ItemSearch·ItemLookUp 응답의 상품 한 건. 쓰는 필드만 적었습니다. */
 export interface AladinItem {
@@ -44,6 +50,18 @@ export interface AladinItem {
   fullDescription?: string;
   /** ItemLookUp에서만 옵니다. 출판사 제공 책소개(HTML). */
   fullDescription2?: string;
+  /** ItemLookUp에서만 값이 옵니다(검색 응답은 빈 객체). 판형은 `OptResult=packing`. */
+  subInfo?: {
+    itemPage?: number;
+    packing?: {
+      /** 양장본·반양장본·`미확인` 등. */
+      styleDesc?: string;
+      weight?: number;
+      sizeDepth?: number;
+      sizeHeight?: number;
+      sizeWidth?: number;
+    };
+  };
 }
 
 interface AladinResponse {
@@ -60,10 +78,27 @@ const API = "https://www.aladin.co.kr/ttb/api";
 const PAGE_SIZE = 50;
 
 /**
- * 출판사 검색이 돌려주는 페이지 상한. 결과가 수천 건이어도 200건(50×4)까지만 주고,
- * 5페이지 이후를 요청하면 **에러 없이 1페이지를 다시** 돌려줍니다(2026-09-23 실측).
+ * 검색이 돌려주는 페이지 상한. 결과가 수천 건이어도 200건(50×4)까지만 주고,
+ * 5페이지 이후를 요청하면 **에러 없이 1페이지를 다시** 돌려줍니다
+ * (출판사 검색 2026-09-23, 자유 검색 2026-09-25 실측).
  */
 export const ALADIN_MAX_PAGE = 4;
+
+/** ItemLookUp이 "없는 상품"에 주는 오류 코드(2026-09-25 실측). 쿼터·키 오류와 구분합니다. */
+const NOT_FOUND = 8;
+
+/** 자유 검색 필드 → `QueryType`. ISBN은 키워드 검색이 정확히 한 권으로 찾습니다. */
+const ALADIN_QUERY_TYPE: Record<KeywordQuery["field"], string> = {
+  all: "Keyword",
+  title: "Title",
+  author: "Author",
+  isbn: "Keyword",
+};
+
+const ALADIN_SORT: Record<KeywordQuery["sort"], string> = {
+  accuracy: "Accuracy",
+  latest: "PublishTime",
+};
 
 const ADULT: Exclusion = { reason: "adult", label: "성인 도서" };
 const TRANSLATOR_ROLES = new Set(["옮긴이", "번역", "역자", "역"]);
@@ -137,6 +172,28 @@ export function toAladinDraft(item: AladinItem): Draft {
   };
 }
 
+/** ItemLookUp 응답에서 판형을 꺼냅니다. 값이 없으면 null. */
+export function aladinDimensions(item: AladinItem) {
+  const packing = item.subInfo?.packing ?? {};
+  return toDimensions("aladin", {
+    width: packing.sizeWidth,
+    height: packing.sizeHeight,
+    depth: packing.sizeDepth,
+    pages: item.subInfo?.itemPage,
+    weight: packing.weight,
+    binding: packing.styleDesc,
+  });
+}
+
+class AladinError extends Error {
+  constructor(
+    readonly code: number,
+    message: string,
+  ) {
+    super(`알라딘 오류 ${code}: ${message}`);
+  }
+}
+
 /** `Output=js` 응답은 끝에 세미콜론이 붙기도 합니다. 오류도 200으로 옵니다. */
 async function call(request: Request, url: string): Promise<AladinResponse> {
   const res = await request(url);
@@ -149,7 +206,7 @@ async function call(request: Request, url: string): Promise<AladinResponse> {
     throw new Error(`알라딘 응답을 읽지 못했습니다: ${text.slice(0, 120)}`);
   }
   if (data.errorCode) {
-    throw new Error(`알라딘 오류 ${data.errorCode}: ${data.errorMessage}`);
+    throw new AladinError(data.errorCode, data.errorMessage ?? "");
   }
   return data;
 }
@@ -160,38 +217,71 @@ export function createAladinSource(
 ): BookSource<AladinItem> {
   const common = { ttbkey: ttbKey, Output: "js", Version: "20131101" };
 
+  async function search(
+    params: Record<string, string>,
+    page: number,
+  ): Promise<SourcePage<AladinItem>> {
+    const query = new URLSearchParams({
+      ...common,
+      ...params,
+      SearchTarget: "Book",
+      MaxResults: String(PAGE_SIZE),
+      Start: String(page),
+      Cover: "Big",
+    });
+    const data = await call(request, `${API}/ItemSearch.aspx?${query}`);
+    const totalCount = data.totalResults ?? 0;
+    // 상한을 넘긴 요청은 1페이지를 다시 줍니다. 페이지 번호가 어긋나면 끝으로 봅니다.
+    if (data.startIndex !== page) {
+      return { items: [], totalCount, isEnd: true };
+    }
+    const items = data.item ?? [];
+    return {
+      items,
+      totalCount,
+      isEnd:
+        items.length < PAGE_SIZE ||
+        page * PAGE_SIZE >= totalCount ||
+        page >= ALADIN_MAX_PAGE,
+    };
+  }
+
+  async function lookUp(isbn: string, options: string) {
+    const params = new URLSearchParams({
+      ...common,
+      ItemId: isbn,
+      ItemIdType: "ISBN13",
+      Cover: "Big",
+      OptResult: options,
+    });
+    const data = await call(request, `${API}/ItemLookUp.aspx?${params}`);
+    const item = data.item?.[0];
+    if (!item || item.isbn13 !== isbn) {
+      throw new Error(`알라딘 상세 조회 결과가 ${isbn}과 다릅니다`);
+    }
+    return item;
+  }
+
   return {
     id: aladinSource.id,
     label: aladinSource.label,
     maxPages: ALADIN_MAX_PAGE,
 
-    async search(publisher, page) {
-      const params = new URLSearchParams({
-        ...common,
-        Query: publisher,
-        QueryType: "Publisher",
-        SearchTarget: "Book",
-        Sort: "PublishTime",
-        MaxResults: String(PAGE_SIZE),
-        Start: String(page),
-        Cover: "Big",
-      });
-      const data = await call(request, `${API}/ItemSearch.aspx?${params}`);
-      const totalCount = data.totalResults ?? 0;
-      // 상한을 넘긴 요청은 1페이지를 다시 줍니다. 페이지 번호가 어긋나면 끝으로 봅니다.
-      if (data.startIndex !== page) {
-        return { items: [], totalCount, isEnd: true };
-      }
-      const items = data.item ?? [];
-      return {
-        items,
-        totalCount,
-        isEnd:
-          items.length < PAGE_SIZE ||
-          page * PAGE_SIZE >= totalCount ||
-          page >= ALADIN_MAX_PAGE,
-      };
-    },
+    searchPublisher: (publisher, page) =>
+      search(
+        { Query: publisher, QueryType: "Publisher", Sort: "PublishTime" },
+        page,
+      ),
+
+    searchKeyword: ({ text, field, sort }, page) =>
+      search(
+        {
+          Query: text,
+          QueryType: ALADIN_QUERY_TYPE[field],
+          Sort: ALADIN_SORT[sort],
+        },
+        page,
+      ),
 
     normalize: (item, publisher, today) =>
       screen(aladinSource.id, toAladinDraft(item), item, publisher, today),
@@ -199,21 +289,13 @@ export function createAladinSource(
     /**
      * 검색 응답의 소개는 요약이라 적재 직전에 ItemLookUp으로 전문을 받습니다.
      * 기존 `books`가 쓰던 우선순위(출판사 소개 → 알라딘 소개 → 요약)를 그대로 따릅니다.
-     * 판매지수도 이 응답의 값으로 갱신합니다.
+     * 판매지수도 이 응답의 값으로 갱신하고, 같은 호출에서 판형(`packing`)도 받습니다.
      */
     async enrich(book: Candidate): Promise<Candidate> {
-      const params = new URLSearchParams({
-        ...common,
-        ItemId: book.isbn,
-        ItemIdType: "ISBN13",
-        Cover: "Big",
-        OptResult: "fulldescription,fulldescription2",
-      });
-      const data = await call(request, `${API}/ItemLookUp.aspx?${params}`);
-      const item = data.item?.[0];
-      if (!item || item.isbn13 !== book.isbn) {
-        throw new Error(`알라딘 상세 조회 결과가 ${book.isbn}과 다릅니다`);
-      }
+      const item = await lookUp(
+        book.isbn,
+        "fulldescription,fulldescription2,packing",
+      );
       const salesPoint = Number(item.salesPoint);
       return {
         ...book,
@@ -222,8 +304,21 @@ export function createAladinSource(
             item.fullDescription2 || item.fullDescription || item.description,
           ) || book.description,
         salesPoint: Number.isFinite(salesPoint) ? salesPoint : book.salesPoint,
+        dimensions: aladinDimensions(item),
         raw: item,
       };
+    },
+
+    /** 카카오처럼 판형을 주지 않는 공급처의 책에 빌려 줍니다. 알라딘에 없는 책이면 null. */
+    async lookupDimensions(isbn) {
+      try {
+        return aladinDimensions(await lookUp(isbn, "packing"));
+      } catch (error) {
+        if (error instanceof AladinError && error.code === NOT_FOUND) {
+          return null;
+        }
+        throw error;
+      }
     },
   };
 }
@@ -235,6 +330,6 @@ export const aladinSource: SourceDefinition = {
   maxPages: ALADIN_MAX_PAGE,
   imageOrigins: ["https://image.aladin.co.kr"],
   enrichNote:
-    "적재할 때 한 권씩 상세 조회해 긴 소개(출판사 제공)와 판매지수를 다시 받습니다. 여기 보이는 소개는 검색 응답의 요약입니다.",
+    "적재할 때 한 권씩 상세 조회해 긴 소개(출판사 제공)·판매지수·판형을 다시 받습니다. 여기 보이는 소개는 검색 응답의 요약입니다.",
   create: (apiKey) => createAladinSource(apiKey),
 };

@@ -1,5 +1,7 @@
 import { cleanHtmlText } from "@bookjeok/core";
 
+import type { BookDimensions } from "./dimensions";
+
 /** 적재하지 않는 이유. 공급처 고유 사유는 각 공급처 파일에서 같은 모양으로 만듭니다. */
 export interface Exclusion {
   reason: string;
@@ -70,6 +72,8 @@ export interface Candidate {
   link: string;
   /** 출간일이 오늘 이후인 예약판매 도서. 적재 대상이며 표시용입니다. */
   preorder: boolean;
+  /** 실측 판형. 검색 응답에는 없고 적재 직전 보강 조회가 채웁니다. */
+  dimensions: BookDimensions | null;
   raw: unknown;
 }
 
@@ -105,12 +109,15 @@ function comparablePublisher(name: string): string {
   return cleanHtmlText(name).replace(/\s+/g, " ").trim();
 }
 
-/** 공통 제외 규칙을 적용해 후보로 만듭니다. 규칙 순서가 곧 보고되는 사유의 우선순위입니다. */
+/**
+ * 공통 제외 규칙을 적용해 후보로 만듭니다. 규칙 순서가 곧 보고되는 사유의 우선순위입니다.
+ * `expectedPublisher`가 null이면(자유 검색) 출판사를 대조하지 않습니다.
+ */
 export function screen(
   source: string,
   draft: Draft,
   raw: unknown,
-  expectedPublisher: string,
+  expectedPublisher: string | null,
   today: string,
 ): Normalized {
   const exclude = (exclusion: Exclusion): Normalized => ({
@@ -126,8 +133,9 @@ export function screen(
   const rules = COMMON_EXCLUSIONS;
 
   if (
+    expectedPublisher !== null &&
     comparablePublisher(draft.publisher) !==
-    comparablePublisher(expectedPublisher)
+      comparablePublisher(expectedPublisher)
   ) {
     return exclude(rules.publisher_mismatch);
   }
@@ -160,6 +168,7 @@ export function screen(
       category: draft.category,
       link: draft.link,
       preorder: draft.pubDate !== null && draft.pubDate > today,
+      dimensions: null,
       raw,
     },
   };

@@ -43,6 +43,7 @@ export function candidate(overrides: Partial<Candidate> = {}): Candidate {
     category: null,
     link: kakaoBook().url,
     preorder: false,
+    dimensions: null,
     raw: kakaoBook(),
     ...overrides,
   };

@@ -99,6 +99,10 @@
       input[type="search"] {
         width: 240px;
       }
+      #searchText {
+        width: 320px;
+        max-width: 100%;
+      }
       button {
         font: inherit;
         cursor: pointer;
@@ -456,6 +460,11 @@
         border-top: 1px solid var(--line);
         padding-top: 10px;
       }
+      .mode-row {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line);
+      }
       @media (max-width: 560px) {
         .detail-body {
           grid-template-columns: 1fr;
@@ -473,9 +482,22 @@
     </header>
     <main>
       <section class="panel">
-        <div class="row" style="justify-content: space-between">
+        <div class="row mode-row" style="justify-content: space-between">
+          <div class="segmented" role="radiogroup" aria-label="찾는 방법">
+            <label
+              ><input
+                type="radio"
+                name="mode"
+                value="publisher"
+                checked
+              />출판사 신간</label
+            >
+            <label
+              ><input type="radio" name="mode" value="keyword" />책 검색</label
+            >
+          </div>
           <div class="row">
-            <h2 style="margin: 0">출판사</h2>
+            <span class="small muted">공급처</span>
             <div
               class="segmented"
               id="sources"
@@ -483,25 +505,58 @@
               aria-label="공급처"
             ></div>
           </div>
-          <div class="row">
-            <input
-              type="search"
-              id="filter"
-              placeholder="출판사 이름으로 거르기"
-            />
-            <label class="small muted"
-              >최대
-              <select id="maxPages"></select>
-            </label>
-            <button class="primary" id="scanBtn" disabled>신간 찾기</button>
-          </div>
         </div>
+
+        <div id="publisherMode">
+          <div class="row" style="justify-content: space-between">
+            <h2 style="margin: 0">출판사</h2>
+            <div class="row">
+              <input
+                type="search"
+                id="filter"
+                placeholder="출판사 이름으로 거르기"
+              />
+              <label class="small muted"
+                >최대
+                <select id="maxPages"></select>
+              </label>
+              <button class="primary" id="scanBtn" disabled>신간 찾기</button>
+            </div>
+          </div>
+          <p class="small muted" id="selectedLine">
+            ★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.
+          </p>
+          <div class="chips" id="chips"></div>
+          <p class="small muted" id="chipNote"></p>
+        </div>
+
+        <form id="keywordMode" class="row" hidden>
+          <input
+            type="search"
+            id="searchText"
+            placeholder="제목·저자·ISBN"
+            aria-label="검색어"
+            maxlength="100"
+          />
+          <select id="searchField" aria-label="검색 대상">
+            <option value="all">전체</option>
+            <option value="title">제목</option>
+            <option value="author">저자</option>
+          </select>
+          <select id="searchSort" aria-label="공급처 정렬">
+            <option value="accuracy">정확도순</option>
+            <option value="latest">최신순</option>
+          </select>
+          <label class="small muted"
+            >최대
+            <select id="searchPages"></select>
+          </label>
+          <button class="primary" id="searchBtn" type="submit" disabled>
+            검색
+          </button>
+        </form>
+
         <p class="small muted" id="sourceNote"></p>
-        <p class="small muted" id="selectedLine">
-          ★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.
-        </p>
-        <div class="chips" id="chips"></div>
-        <p class="small muted" id="chipNote"></p>
       </section>
 
       <section class="panel" id="progressPanel" hidden>
@@ -522,7 +577,7 @@
         <label class="small muted"
           >정렬
           <select id="sort">
-            <option value="source">공급처 순서(최신순)</option>
+            <option value="source">공급처 순서</option>
             <option value="date">출간일 최신순</option>
             <option value="sales">판매지수 높은순</option>
             <option value="title">제목순</option>
@@ -582,6 +637,7 @@
         return node;
       };
       const SOURCE_KEY = "book-ingest:source";
+      const MODE_KEY = "book-ingest:mode";
       const store = {
         get(key) {
           try {
@@ -598,6 +654,7 @@
       };
 
       const state = {
+        mode: "publisher",
         sources: [],
         source: null,
         publishers: [],
@@ -674,8 +731,9 @@
         );
         const current = sourceById(state.source);
         $("sourceNote").textContent = current
-          ? `${current.label}: 출판사당 최대 ${current.maxPages}페이지(${(current.maxPages * 50).toLocaleString()}권)까지 조회합니다.` +
-            (current.enrichNote ? ` ${current.enrichNote}` : "")
+          ? `${current.label}: 최대 ${current.maxPages}페이지(${(current.maxPages * 50).toLocaleString()}권)까지 조회합니다.` +
+            (current.enrichNote ? ` ${current.enrichNote}` : "") +
+            ` ${current.dimensionNote}`
           : "쓸 수 있는 공급처가 없습니다. .env에 키를 넣으세요.";
       }
 
@@ -683,8 +741,8 @@
         const current = sourceById(state.source);
         const max = current?.maxPages ?? 1;
         const pages = [...new Set([1, 2, 5, max].filter((n) => n <= max))];
-        $("maxPages").replaceChildren(
-          ...pages.map((n) =>
+        const options = () =>
+          pages.map((n) =>
             el("option", {
               value: String(n),
               text:
@@ -692,9 +750,12 @@
                   ? `끝까지 (${(n * 50).toLocaleString()}권)`
                   : `${n}페이지 (${n * 50}권)`,
             }),
-          ),
-        );
+          );
+        // 출판사 신간은 끝까지, 검색은 정확도순 앞쪽만 보면 충분하다
+        $("maxPages").replaceChildren(...options());
         $("maxPages").value = String(max);
+        $("searchPages").replaceChildren(...options());
+        $("searchPages").value = "1";
       }
 
       function selectSource(id) {
@@ -703,7 +764,34 @@
         renderSources();
         renderMaxPages();
         renderChips();
+        renderSearch();
       }
+
+      // ── 찾는 방법 ─────────────────────────────────────────────
+
+      function selectMode(mode) {
+        state.mode = mode === "keyword" ? "keyword" : "publisher";
+        store.set(MODE_KEY, state.mode);
+        document.querySelector(
+          `input[name="mode"][value="${state.mode}"]`,
+        ).checked = true;
+        $("publisherMode").hidden = state.mode !== "publisher";
+        $("keywordMode").hidden = state.mode !== "keyword";
+        if (state.mode === "keyword") $("searchText").focus();
+      }
+
+      function renderSearch() {
+        $("searchBtn").disabled =
+          state.busy ||
+          !$("searchText").value.trim() ||
+          !sourceById(state.source);
+      }
+
+      document
+        .querySelectorAll('input[name="mode"]')
+        .forEach((input) =>
+          input.addEventListener("change", () => selectMode(input.value)),
+        );
 
       // ── 출판사 칩 ─────────────────────────────────────────────
 
@@ -783,6 +871,7 @@
         state.busy = busy;
         renderSources();
         renderChips();
+        renderSearch();
         updateApplyBar();
       }
 
@@ -869,13 +958,13 @@
         updateApplyBar();
       }
 
-      function bookCard(book, order) {
-        const entry = { book, order, checked: true, done: false };
+      function bookCard(book, order, checked) {
+        const entry = { book, order, checked, done: false };
         const box = el("input", {
           type: "checkbox",
           "aria-label": `${book.title} 적재 대상`,
         });
-        box.checked = true;
+        box.checked = checked;
         const stamp = el("div", { class: "stamp" });
         const img = el("img", {
           src: book.thumbnail,
@@ -889,7 +978,7 @@
         const card = el(
           "div",
           {
-            class: "card",
+            class: checked ? "card" : "card off",
             tabindex: "0",
             role: "button",
             "aria-label": `${book.title} 상세 보기`,
@@ -898,6 +987,7 @@
             box,
             img,
             el("div", { class: "title", text: book.title }),
+            el("div", { class: "meta", text: book.publisher }),
             el("div", { class: "meta", text: people.join(" · ") }),
             el("div", { class: "meta" }, [
               document.createTextNode(
@@ -1022,14 +1112,14 @@
 
       // ── 결과 ──────────────────────────────────────────────────
 
-      function renderResults(publishers) {
+      function renderResults(sections) {
         state.fresh.clear();
         state.sections = [];
         const label = sourceById(state.scanSource)?.label ?? state.scanSource;
-        const nodes = publishers.map(({ summary, fresh, excluded }) => {
+        const nodes = sections.map(({ summary, fresh, known, excluded }) => {
           const count = el("span", { class: "small muted" });
           const head = el("div", { class: "pub-head" }, [
-            el("h2", { style: "margin:0", text: summary.publisher }),
+            el("h2", { style: "margin:0", text: summary.label }),
             el("span", {
               class: "small muted",
               text:
@@ -1040,7 +1130,9 @@
                   : ""),
             }),
           ]);
-          const entries = fresh.map((book, i) => bookCard(book, i));
+          // 검색 결과에는 해외판·다른 판본이 섞이므로 고른 것만 적재한다
+          const preselect = summary.kind !== "keyword";
+          const entries = fresh.map((book, i) => bookCard(book, i, preselect));
           const grid = el("div", { class: "grid" });
           const section = { entries, grid, count };
           state.sections.push(section);
@@ -1060,8 +1152,35 @@
               ])
             : el("p", {
                 class: "muted small",
-                text: "새로 들어온 책이 없습니다.",
+                text:
+                  summary.kind === "keyword"
+                    ? "DB에 없는 책이 없습니다."
+                    : "새로 들어온 책이 없습니다.",
               });
+          const knownTable = known.length
+            ? el("details", {}, [
+                el("summary", {
+                  class: "small muted",
+                  text: `이미 있는 책 ${known.length}권 보기`,
+                }),
+                el("table", {}, [
+                  el("tr", {}, [
+                    el("th", { text: "ISBN" }),
+                    el("th", { text: "제목" }),
+                    el("th", { text: "저자" }),
+                    el("th", { text: "출간일" }),
+                  ]),
+                  ...known.map((b) =>
+                    el("tr", {}, [
+                      el("td", { text: b.isbn }),
+                      el("td", { text: b.title }),
+                      el("td", { text: b.author }),
+                      el("td", { text: b.pubDate ?? "" }),
+                    ]),
+                  ),
+                ]),
+              ])
+            : null;
           const excludedTable = excluded.length
             ? el("details", {}, [
                 el("summary", {
@@ -1088,6 +1207,7 @@
             head,
             tools,
             grid,
+            knownTable,
             excludedTable,
           ]);
         });
@@ -1122,14 +1242,40 @@
 
       // ── 조회·적재 ─────────────────────────────────────────────
 
-      async function scan() {
+      function scan() {
         const publishers = [...state.selected];
+        return runScan(publishers, {
+          publishers,
+          maxPages: Number($("maxPages").value),
+        });
+      }
+
+      function search(event) {
+        event.preventDefault();
+        const text = $("searchText").value.trim();
+        if (!text || state.busy) return;
+        // 서버가 검색어를 정리해 이름을 붙이므로(ISBN 하이픈 등) 미리 줄을 만들지 않는다
+        return runScan([], {
+          query: {
+            text,
+            field: $("searchField").value,
+            sort: $("searchSort").value,
+          },
+          maxPages: Number($("searchPages").value),
+        });
+      }
+
+      async function runScan(labels, body) {
         const source = state.source;
         setBusy(true);
         $("progressPanel").hidden = false;
-        const totals = new Map(publishers.map((p) => [p, null]));
+        const totals = new Map(labels.map((p) => [p, null]));
         const label = sourceById(source)?.label ?? source;
         const draw = () => {
+          if (totals.size === 0) {
+            $("progress").textContent = `${label} · 조회 중`;
+            return;
+          }
           $("progress").textContent = [...totals.entries()]
             .map(([p, t]) =>
               t
@@ -1141,33 +1287,29 @@
         $("progress").style.whiteSpace = "pre-line";
         draw();
         try {
-          await stream(
-            "/api/scan",
-            { source, publishers, maxPages: Number($("maxPages").value) },
-            (ev) => {
-              if (ev.type === "page") {
-                const t = totals.get(ev.publisher) ?? {
-                  page: 0,
-                  fresh: 0,
-                  known: 0,
-                  excluded: 0,
-                };
-                totals.set(ev.publisher, {
-                  page: ev.page,
-                  fresh: t.fresh + ev.fresh,
-                  known: t.known + ev.known,
-                  excluded: t.excluded + ev.excluded,
-                });
-                draw();
-              } else if (ev.type === "result") {
-                state.scanId = ev.scanId;
-                state.scanSource = source;
-                renderResults(ev.publishers);
-              } else if (ev.type === "error") {
-                throw new Error(ev.message);
-              }
-            },
-          );
+          await stream("/api/scan", { source, ...body }, (ev) => {
+            if (ev.type === "page") {
+              const t = totals.get(ev.label) ?? {
+                page: 0,
+                fresh: 0,
+                known: 0,
+                excluded: 0,
+              };
+              totals.set(ev.label, {
+                page: ev.page,
+                fresh: t.fresh + ev.fresh,
+                known: t.known + ev.known,
+                excluded: t.excluded + ev.excluded,
+              });
+              draw();
+            } else if (ev.type === "result") {
+              state.scanId = ev.scanId;
+              state.scanSource = source;
+              renderResults(ev.sections);
+            } else if (ev.type === "error") {
+              throw new Error(ev.message);
+            }
+          });
         } catch (error) {
           $("progress").append(
             el("div", { class: "error", text: `실패: ${error.message}` }),
@@ -1184,7 +1326,7 @@
         const label = sourceById(state.scanSource)?.label ?? "";
         if (
           !confirm(
-            `${label}에서 찾은 ${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books에 INSERT합니다. 진행할까요?`,
+            `${label}에서 찾은 ${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books와 book_dimensions에 INSERT합니다. 진행할까요?`,
           )
         )
           return;
@@ -1209,16 +1351,15 @@
               $("meter").style.width = `${((ev.index + 1) / ev.total) * 100}%`;
               log(
                 `${ev.index + 1}/${ev.total} ${LABEL[ev.outcome.status]} ${ev.outcome.isbn} ${ev.title}` +
-                  (ev.outcome.status === "failed"
-                    ? ` — ${ev.outcome.error}`
-                    : ev.outcome.cover?.reused
-                      ? " (표지 재사용)"
-                      : ""),
+                  describeOutcome(ev.outcome),
               );
             } else if (ev.type === "done") {
               const s = ev.summary;
               log(
-                `끝 — 적재 ${s.inserted} · 이미 있음 ${s.alreadyExists} · 실패 ${s.failed} · 표지 재사용 ${s.reusedCovers} · 저자 없음 ${s.emptyAuthor}\n기록: ${s.journal}`,
+                `끝 — 적재 ${s.inserted} · 이미 있음 ${s.alreadyExists} · 실패 ${s.failed} · 표지 재사용 ${s.reusedCovers} · 저자 없음 ${s.emptyAuthor}` +
+                  ` · 판형 행 ${s.dimensionRows}(실측 ${s.measured})` +
+                  (s.colorFailed ? ` · 표지색 실패 ${s.colorFailed}` : "") +
+                  `\n기록: ${s.journal}`,
               );
             } else if (ev.type === "error") {
               throw new Error(ev.message);
@@ -1231,8 +1372,40 @@
         }
       }
 
+      function describeOutcome(o) {
+        if (o.status === "failed") return ` — ${o.error}`;
+        const d = o.dimension;
+        const dims = d.dimensions;
+        const size = dims
+          ? [
+              dims.width && dims.height
+                ? `${dims.width}×${dims.height}${dims.depth ? `×${dims.depth}` : ""}mm`
+                : dims.depth
+                  ? `두께 ${dims.depth}mm`
+                  : null,
+              dims.pages && `${dims.pages}쪽`,
+            ]
+              .filter(Boolean)
+              .join(" ")
+          : "";
+        return (
+          " (" +
+          [
+            o.cover?.reused ? "표지 재사용" : null,
+            size ? `판형 ${size}` : "판형 없음",
+            d.coverColor ?? `표지색 실패: ${d.colorError}`,
+            d.written ? null : "판형 행 추가 안 함",
+          ]
+            .filter(Boolean)
+            .join(" · ") +
+          ")"
+        );
+      }
+
       $("filter").addEventListener("input", renderChips);
       $("scanBtn").addEventListener("click", scan);
+      $("keywordMode").addEventListener("submit", search);
+      $("searchText").addEventListener("input", renderSearch);
       $("applyBtn").addEventListener("click", apply);
 
       (async () => {
@@ -1258,6 +1431,8 @@
           renderSources();
           renderMaxPages();
           renderChips();
+          renderSearch();
+          selectMode(store.get(MODE_KEY));
         } catch (error) {
           $("chips").replaceChildren(
             el("p", {

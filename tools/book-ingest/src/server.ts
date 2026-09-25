@@ -10,18 +10,25 @@ import {
 import type { PublisherStat } from "./db";
 import type { IngestOutcome } from "./ingest";
 import type { Candidate } from "./normalize";
-import type { PageProgress, PublisherScan } from "./scan";
-import type { SourceInfo } from "./sources";
+import {
+  type PageProgress,
+  parseKeywordQuery,
+  type ScanResult,
+  type ScanTarget,
+  SEARCH_FIELDS,
+  SEARCH_SORTS,
+} from "./scan";
+import type { SearchField, SearchSort, SourceInfo } from "./sources";
 import { type ApplySummary, summarizeScan } from "./workflow";
 
 export interface IngestServices {
   publisherStats(limit: number): Promise<PublisherStat[]>;
   scan(
     source: string,
-    publishers: string[],
+    targets: ScanTarget[],
     maxPages: number,
     onPage: (progress: PageProgress) => void,
-  ): Promise<PublisherScan[]>;
+  ): Promise<ScanResult[]>;
   apply(
     books: Candidate[],
     onBook: (outcome: IngestOutcome, index: number, book: Candidate) => void,
@@ -121,10 +128,12 @@ export function createIngestServer({
         return sendJson(res, 200, services.getFavorites());
       }
 
+      // 출판사 신간(`publishers`)이나 자유 검색(`query`) 중 하나를 받습니다
       if (req.method === "POST" && url.pathname === "/api/scan") {
         const body = (await readJson(req)) as {
           source?: unknown;
           publishers?: unknown;
+          query?: { text?: unknown; field?: unknown; sort?: unknown };
           maxPages?: unknown;
         };
         const source = services.sources.find(
@@ -133,13 +142,11 @@ export function createIngestServer({
         if (!source) {
           return sendJson(res, 400, { error: "쓸 수 있는 공급처를 고르세요" });
         }
-        const publishers = isStringArray(body?.publishers)
-          ? [...new Set(body.publishers.map((p) => p.trim()).filter(Boolean))]
-          : [];
-        if (publishers.length === 0 || publishers.length > MAX_PUBLISHERS) {
-          return sendJson(res, 400, {
-            error: `출판사를 1~${MAX_PUBLISHERS}곳 고르세요`,
-          });
+        const targets = body.query
+          ? keywordTargets(body.query)
+          : publisherTargets(body.publishers);
+        if (typeof targets === "string") {
+          return sendJson(res, 400, { error: targets });
         }
         const maxPages = clamp(
           Number(body.maxPages ?? source.maxPages),
@@ -150,7 +157,7 @@ export function createIngestServer({
         try {
           const result = await services.scan(
             source.id,
-            publishers,
+            targets,
             maxPages,
             (p) => emit({ type: "page", ...p }),
           );
@@ -161,7 +168,7 @@ export function createIngestServer({
               result.flatMap((s) => s.fresh.map((b) => [b.isbn, b] as const)),
             ),
           );
-          emit({ type: "result", scanId, publishers: result.map(toScanView) });
+          emit({ type: "result", scanId, sections: result.map(toScanView) });
         } catch (error) {
           emit({ type: "error", message: messageOf(error) });
         }
@@ -224,11 +231,47 @@ export function createIngestServer({
   });
 }
 
+/** 오류면 화면에 보여 줄 문구를 돌려줍니다. */
+function publisherTargets(value: unknown): ScanTarget[] | string {
+  const publishers = isStringArray(value)
+    ? [...new Set(value.map((p) => p.trim()).filter(Boolean))]
+    : [];
+  if (publishers.length === 0 || publishers.length > MAX_PUBLISHERS) {
+    return `출판사를 1~${MAX_PUBLISHERS}곳 고르세요`;
+  }
+  return publishers.map((publisher) => ({ kind: "publisher", publisher }));
+}
+
+function keywordTargets(query: {
+  text?: unknown;
+  field?: unknown;
+  sort?: unknown;
+}): ScanTarget[] | string {
+  const field = query.field ?? "all";
+  const sort = query.sort ?? "accuracy";
+  if (!SEARCH_FIELDS.includes(field as SearchField))
+    return "검색 필드가 잘못됐습니다";
+  if (!SEARCH_SORTS.includes(sort as SearchSort)) return "정렬이 잘못됐습니다";
+  const parsed =
+    typeof query.text === "string"
+      ? parseKeywordQuery(query.text, field as SearchField, sort as SearchSort)
+      : null;
+  if (!parsed) return "검색어를 1~100자로 넣으세요";
+  return [{ kind: "keyword", query: parsed }];
+}
+
 /** 화면에 보낼 모양. 공급처 원본(`raw`)은 보내지 않습니다. */
-function toScanView(scan: PublisherScan) {
+function toScanView(scan: ScanResult) {
   return {
     summary: summarizeScan(scan),
     fresh: scan.fresh.map(({ raw: _raw, coverUrls: _covers, ...book }) => book),
+    // 자유 검색에서 "이미 있는지"를 확인하는 용도라 목록 표시에 필요한 것만 보냅니다
+    known: scan.known.map(({ isbn, title, author, pubDate }) => ({
+      isbn,
+      title,
+      author,
+      pubDate,
+    })),
     excluded: scan.excluded.map(({ raw: _raw, ...item }) => item),
   };
 }

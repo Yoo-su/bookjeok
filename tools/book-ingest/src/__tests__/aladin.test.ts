@@ -159,14 +159,17 @@ describe("알라딘 normalize", () => {
   });
 });
 
-describe("알라딘 search", () => {
+describe("알라딘 searchPublisher", () => {
   it("출판사 최신순으로 50권씩 요청한다", async () => {
     const request = respond({
       totalResults: 4313,
       startIndex: 1,
       item: Array.from({ length: 50 }, () => aladinItem()),
     });
-    const page = await createAladinSource("key", request).search("민음사", 1);
+    const page = await createAladinSource("key", request).searchPublisher(
+      "민음사",
+      1,
+    );
 
     const url = new URL(request.mock.calls[0][0]);
     expect(url.pathname).toBe("/ttb/api/ItemSearch.aspx");
@@ -188,7 +191,10 @@ describe("알라딘 search", () => {
       startIndex: 4,
       item: Array.from({ length: 50 }, () => aladinItem()),
     });
-    const page = await createAladinSource("key", request).search("민음사", 4);
+    const page = await createAladinSource("key", request).searchPublisher(
+      "민음사",
+      4,
+    );
     expect(page.isEnd).toBe(true);
   });
 
@@ -198,14 +204,17 @@ describe("알라딘 search", () => {
       startIndex: 1,
       item: [aladinItem()],
     });
-    const page = await createAladinSource("key", request).search("민음사", 5);
+    const page = await createAladinSource("key", request).searchPublisher(
+      "민음사",
+      5,
+    );
     expect(page).toEqual({ items: [], totalCount: 4313, isEnd: true });
   });
 
   it("200으로 온 오류 응답을 오류로 올린다", async () => {
     const request = respond({ errorCode: 10, errorMessage: "쿼터 초과" });
     await expect(
-      createAladinSource("key", request).search("민음사", 1),
+      createAladinSource("key", request).searchPublisher("민음사", 1),
     ).rejects.toThrow("알라딘 오류 10: 쿼터 초과");
   });
 });
@@ -233,8 +242,9 @@ describe("알라딘 enrich", () => {
 
     const url = new URL(request.mock.calls[0][0]);
     expect(url.pathname).toBe("/ttb/api/ItemLookUp.aspx");
+    // 판형도 같은 호출에서 받는다 — 쿼터를 더 쓰지 않는다
     expect(url.searchParams.get("OptResult")).toBe(
-      "fulldescription,fulldescription2",
+      "fulldescription,fulldescription2,packing",
     );
     expect(enriched).toMatchObject({
       description: "출판사 소개\n둘째 줄",
@@ -266,5 +276,108 @@ describe("알라딘 enrich", () => {
     await expect(
       createAladinSource("key", request).enrich!(book()),
     ).rejects.toThrow("9788937465024");
+  });
+
+  it("판형·쪽수를 book_dimensions 규칙으로 싣는다", async () => {
+    // 2026-09-25 실측 『사람, 장소, 환대』 응답의 subInfo
+    const request = respond({
+      item: [
+        aladinItem({
+          subInfo: {
+            itemPage: 297,
+            packing: {
+              styleDesc: "반양장본",
+              weight: 440,
+              sizeDepth: 17,
+              sizeHeight: 223,
+              sizeWidth: 152,
+            },
+          },
+        }),
+      ],
+    });
+    const enriched = await createAladinSource("key", request).enrich!(book());
+    expect(enriched.dimensions).toEqual({
+      source: "aladin",
+      width: 152,
+      height: 223,
+      depth: 17,
+      pages: 297,
+      weight: 440,
+      binding: "반양장본",
+    });
+  });
+
+  it("판형이 비어 있으면 dimensions는 null", async () => {
+    const request = respond({
+      item: [aladinItem({ subInfo: { packing: { styleDesc: "미확인" } } })],
+    });
+    const enriched = await createAladinSource("key", request).enrich!(book());
+    expect(enriched.dimensions).toBeNull();
+  });
+});
+
+describe("알라딘 searchKeyword", () => {
+  it.each([
+    ["all", "accuracy", "Keyword", "Accuracy"],
+    ["title", "latest", "Title", "PublishTime"],
+    ["author", "accuracy", "Author", "Accuracy"],
+    // ISBN은 키워드 검색이 정확히 한 권을 찾는다(2026-09-25 실측)
+    ["isbn", "accuracy", "Keyword", "Accuracy"],
+  ] as const)(
+    "%s·%s → QueryType %s, Sort %s",
+    async (field, sort, type, order) => {
+      const request = respond({ totalResults: 5, startIndex: 1, item: [] });
+      await createAladinSource("key", request).searchKeyword(
+        { text: "사탄탱고", field, sort },
+        1,
+      );
+      const url = new URL(request.mock.calls[0][0]);
+      expect(Object.fromEntries(url.searchParams)).toMatchObject({
+        Query: "사탄탱고",
+        QueryType: type,
+        Sort: order,
+        SearchTarget: "Book",
+        MaxResults: "50",
+      });
+    },
+  );
+});
+
+describe("알라딘 lookupDimensions", () => {
+  const packing = {
+    subInfo: {
+      itemPage: 297,
+      packing: { sizeWidth: 223, sizeHeight: 152, sizeDepth: 17 },
+    },
+  };
+
+  it("ISBN으로 판형만 조회하고 가로·세로가 뒤바뀐 값을 바로잡는다", async () => {
+    const request = respond({
+      item: [aladinItem({ isbn13: "9788932027265", ...packing })],
+    });
+    const dims = await createAladinSource("key", request).lookupDimensions!(
+      "9788932027265",
+    );
+    const url = new URL(request.mock.calls[0][0]);
+    expect(url.searchParams.get("OptResult")).toBe("packing");
+    expect(dims).toMatchObject({ width: 152, height: 223, depth: 17 });
+  });
+
+  it("알라딘에 없는 책(오류 8)이면 null", async () => {
+    const request = respond({
+      errorCode: 8,
+      errorMessage: "키에 해당하는 상품이 존재하지 않습니다.",
+    });
+    await expect(
+      createAladinSource("key", request).lookupDimensions!("9791199999996"),
+    ).resolves.toBeNull();
+  });
+
+  it("쿼터·키 오류는 던진다 — 판형 없이 넣으면 나중에 채울 길이 없다", async () => {
+    const request = respond({ errorCode: 10, errorMessage: "쿼터 초과" });
+    await expect(
+      createAladinSource("key", request).lookupDimensions!("9788932027265"),
+    ).rejects.toThrow("알라딘 오류 10");
   });
 });

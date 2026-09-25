@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   createKakaoSource,
@@ -120,5 +120,54 @@ describe("카카오 normalize", () => {
 
   it("출판사 비교는 앞뒤·연속 공백을 무시한다", () => {
     expect(normalize(kakaoBook({ publisher: " 민음사 " })).ok).toBe(true);
+  });
+});
+
+describe("카카오 검색 요청", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  const capture = () =>
+    vi.spyOn(globalThis, "fetch").mockImplementation(
+      async () =>
+        new Response(
+          JSON.stringify({
+            documents: [],
+            meta: { is_end: true, pageable_count: 0, total_count: 0 },
+          }),
+        ),
+    );
+  const params = (spy: ReturnType<typeof capture>) =>
+    Object.fromEntries(new URL(String(spy.mock.calls[0][0])).searchParams);
+
+  it("출판사 신간은 target=publisher, 최신순", async () => {
+    const spy = capture();
+    await createKakaoSource("key").searchPublisher("민음사", 2);
+    expect(params(spy)).toEqual({
+      query: "민음사",
+      target: "publisher",
+      sort: "latest",
+      size: "50",
+      page: "2",
+    });
+  });
+
+  it.each([
+    ["all", undefined],
+    ["title", "title"],
+    ["author", "person"],
+    ["isbn", "isbn"],
+  ] as const)("자유 검색 %s → target %s", async (field, target) => {
+    const spy = capture();
+    await createKakaoSource("key").searchKeyword(
+      { text: "사탄탱고", field, sort: "accuracy" },
+      1,
+    );
+    expect(params(spy)).toEqual({
+      query: "사탄탱고",
+      sort: "accuracy",
+      size: "50",
+      page: "1",
+      ...(target ? { target } : {}),
+    });
   });
 });

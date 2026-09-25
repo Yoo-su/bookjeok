@@ -620,7 +620,7 @@ pnpm test
 | [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                                      |
 | [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 (초기 세팅만 된 미배포 앱)                                 |
 | [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                                     |
-| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 신간 적재 운영자 도구 — 카카오·알라딘 조회, 표지 R2 업로드, books 적재 |
+| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 운영자 적재 도구 — 신간·자유 검색, 표지 R2, books·book_dimensions 적재 |
 
 ### 도메인 기능 문서
 

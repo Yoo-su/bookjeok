@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "카카오 책 검색 API로 출판사별 신간을 찾아 표지를 R2에 올리고 books에 적재하는 운영자 도구",
+  "description": "카카오·알라딘에서 출판사 신간이나 검색 결과 중 DB에 없는 책을 찾아 표지를 R2에 올리고 books·book_dimensions에 적재하는 운영자 도구",
   "scripts": {
     "ingest": "tsx src/cli.ts",
     "lint": "eslint src/",
