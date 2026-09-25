@@ -1,15 +1,18 @@
 import {
   ActiveReadersResponse,
+  estimateBookSize,
   LoungeBookReadersResponse,
   LoungeFeedResponse,
   LoungePopularResponse,
   LoungeReader,
+  ReadingTowerResponse,
 } from '@bookjeok/core';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Not, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
+import { BookDimension } from '@/features/book/entities/book-dimension.entity';
 import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 
@@ -83,6 +86,8 @@ export class ReadingLogService {
     private readonly readingLogRepository: Repository<ReadingLog>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(BookDimension)
+    private readonly bookDimensionRepository: Repository<BookDimension>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -613,6 +618,94 @@ export class ReadingLogService {
       .addOrderBy('log.createdAt', 'DESC')
       .take(limit || 50)
       .getMany();
+  }
+
+  /**
+   * 책탑용 연간 기록. 완독일 오름차순(바닥부터 쌓는 순서)으로 크기와 표지색을 붙인다.
+   * 실측 크기가 없는 책은 `estimateBookSize`로 채우고 `sizeSource`로 구분한다.
+   */
+  async getTower(userId: number, year: number): Promise<ReadingTowerResponse> {
+    this.assertTowerYear(year);
+
+    const logs = await this.readingLogRepository
+      .createQueryBuilder('log')
+      // 소개글(text)은 쓰지 않으므로 필요한 열만
+      .leftJoin('log.book', 'book')
+      .addSelect([
+        'book.isbn',
+        'book.title',
+        'book.author',
+        'book.publisher',
+        'book.image',
+      ])
+      .where('log.userId = :userId', { userId })
+      .andWhere('log.date >= :start AND log.date <= :end', {
+        start: `${year}-01-01`,
+        end: `${year}-12-31`,
+      })
+      .orderBy('log.date', 'ASC')
+      .addOrderBy('log.createdAt', 'ASC')
+      .getMany();
+
+    const isbns = [...new Set(logs.map((log) => log.isbn))];
+    const dimensions = isbns.length
+      ? await this.bookDimensionRepository.find({
+          where: { isbn: In(isbns) },
+        })
+      : [];
+    const byIsbn = new Map(dimensions.map((d) => [d.isbn, d]));
+
+    return {
+      year,
+      items: logs.map((log) => {
+        const dimension = byIsbn.get(log.isbn);
+        const size = estimateBookSize(log.isbn, dimension ?? {});
+        return {
+          logId: log.id,
+          isbn: log.isbn,
+          date: log.date,
+          memo: log.memo || undefined,
+          title: log.book?.title ?? '',
+          author: log.book?.author ?? '',
+          publisher: log.book?.publisher ?? '',
+          image: log.book?.image ?? '',
+          width: size.width,
+          height: size.height,
+          depth: size.depth,
+          pages: size.pages,
+          weight: size.weight,
+          binding: dimension?.binding ?? null,
+          coverColor: dimension?.coverColor ?? null,
+          sizeSource: size.sizeSource,
+        };
+      }),
+    };
+  }
+
+  /**
+   * 공개 프로필의 책탑. 독서 기록이 비공개면 기록이 없는 것처럼 빈 목록을 돌려준다
+   * (공개 프로필의 `readingLogs`와 같은 규칙).
+   */
+  async getPublicTower(
+    handle: string,
+    year: number,
+  ): Promise<ReadingTowerResponse> {
+    this.assertTowerYear(year);
+    const user = await this.userRepository.findOne({
+      where: { handle },
+      select: ['id', 'isReadingLogPublic', 'deletedAt'],
+    });
+    if (!user || user.deletedAt) {
+      throw new BusinessException('USER_NOT_FOUND', HttpStatus.NOT_FOUND);
+    }
+    if (!user.isReadingLogPublic) return { year, items: [] };
+    return this.getTower(user.id, year);
+  }
+
+  private assertTowerYear(year: number) {
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      throw new BusinessException('VALIDATION_ERROR', HttpStatus.BAD_REQUEST);
+    }
   }
 
   /**

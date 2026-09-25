@@ -3,14 +3,12 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
-import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { Label } from "@/shared/components/shadcn/label";
 import { Switch } from "@/shared/components/shadcn/switch";
 import { cn } from "@/shared/utils";
 
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { useUpdateReadingLogSettingsMutation } from "../../../mutations";
-import { ShareDeckDialog } from "../../deck-view/share-deck-dialog";
 
 interface ReadingLogHeroProps {
   currentDate: Date;
@@ -18,7 +16,6 @@ interface ReadingLogHeroProps {
 
 export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
   const t = useTranslations("reading_log.hero");
-  const tDeck = useTranslations("reading_log.deck");
   // 테마 및 배경 이미지 로직
   const theme = useSeasonalTheme(currentDate);
   const [isMounted, setIsMounted] = useState(false);
@@ -56,9 +53,6 @@ export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
     setIsPublic(checked);
     updateSettings(checked);
   };
-
-  const user = useAuthStore((state) => state.user);
-  const [isDeckOpen, setIsDeckOpen] = useState(false);
 
   if (!isMounted) return null;
 
@@ -130,26 +124,9 @@ export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
                 className="data-[state=checked]:bg-sky-400 data-[state=unchecked]:bg-stone-500/50 border-transparent h-4 w-7 md:h-5 md:w-9 transition-colors duration-300"
               />
             </div>
-
-            {user && (
-              <button
-                onClick={() => setIsDeckOpen(true)}
-                className="px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 text-white font-bold text-[10px] md:text-xs tracking-widest uppercase hover:scale-105 active:scale-95 duration-300 shadow-md cursor-pointer transition-all w-fit"
-              >
-                {tDeck("share_button")}
-              </button>
-            )}
           </div>
         </div>
       </div>
-
-      {user && (
-        <ShareDeckDialog
-          year={currentDate.getFullYear()}
-          open={isDeckOpen}
-          onOpenChange={setIsDeckOpen}
-        />
-      )}
     </section>
   );
 }

@@ -421,3 +421,65 @@ html::-webkit-scrollbar {
     font-size: max(16px, 1em);
   }
 }
+
+/* 독서기록 책탑: 캐릭터 선을 세 벌 번갈아 보여 손그림처럼 살짝 떨리게 한다(line boil) */
+.tower-boil {
+  visibility: hidden;
+}
+.tower-boil-0 {
+  animation: tower-boil-0 0.6s infinite;
+}
+.tower-boil-1 {
+  animation: tower-boil-1 0.6s infinite;
+}
+.tower-boil-2 {
+  animation: tower-boil-2 0.6s infinite;
+}
+.tower-bubble {
+  transform-box: fill-box;
+  transform-origin: 40% 100%;
+}
+@keyframes tower-boil-0 {
+  0%,
+  33.3% {
+    visibility: visible;
+  }
+  33.4%,
+  100% {
+    visibility: hidden;
+  }
+}
+@keyframes tower-boil-1 {
+  0%,
+  33.3% {
+    visibility: hidden;
+  }
+  33.4%,
+  66.6% {
+    visibility: visible;
+  }
+  66.7%,
+  100% {
+    visibility: hidden;
+  }
+}
+@keyframes tower-boil-2 {
+  0%,
+  66.6% {
+    visibility: hidden;
+  }
+  66.7%,
+  100% {
+    visibility: visible;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tower-boil-0 {
+    animation: none;
+    visibility: visible;
+  }
+  .tower-boil-1,
+  .tower-boil-2 {
+    display: none;
+  }
+}

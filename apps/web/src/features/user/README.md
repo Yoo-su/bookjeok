@@ -27,7 +27,7 @@ user/
 ### 프로필 수정
 
 - **닉네임 중복 확인** — `GET /user/check-nickname`으로 저장 전에 검증합니다.
-- **핸들(`handle`)** — 공개 프로필 URL(`/users/[handle]`)과 공유 덱(`/share/deck/[handle]`)의 식별자입니다. **가입 시 자동 생성되며 수정 수단이 없습니다** (`UpdateUserDto`에 필드가 없습니다). 바꿀 수 있게 만든다면 기존 링크가 깨지는 것과 별개로, 이전 핸들 경로의 ISR 캐시도 함께 비워야 합니다([캐싱 문서](../../../docs/CACHING.md#재검증-범위-규칙)).
+- **핸들(`handle`)** — 공개 프로필 URL(`/users/[handle]`)의 식별자입니다. 폐지된 공유 덱 링크(`/share/deck/[handle]`)는 이 프로필로 리다이렉트하고, 그 사용자의 책탑을 보게 됩니다. **가입 시 자동 생성되며 수정 수단이 없습니다** (`UpdateUserDto`에 필드가 없습니다). 바꿀 수 있게 만든다면 기존 링크가 깨지는 것과 별개로, 이전 핸들 경로의 ISR 캐시도 함께 비워야 합니다([캐싱 문서](../../../docs/CACHING.md#재검증-범위-규칙)).
 - **공개 프로필은 1시간 ISR입니다.** 닉네임이 `generateMetadata` 타이틀에도 들어가므로, 저장 후 `revalidateUserProfile`로 서버 캐시까지 비웁니다. 쿼리 무효화만으로는 다른 방문자·크롤러에게 닿지 않습니다.
 - **프로필 이미지** — 클라이언트 압축 후 Vercel Blob 업로드. 표시용 URL 정규화는 `shared/utils/profile-image`가 담당합니다.
 
@@ -48,6 +48,8 @@ user/
 `GET /user/stats` 기준 완독 수, 리뷰 수, 리액션 등을 표시합니다. 서비스 전체 통계는 [`insights`](../insights/README.md) 기능입니다.
 
 ### 신뢰 지표
+
+공개 프로필의 독서 기록은 **캐릭터 없는 책탑**입니다(2026-09-25, 이전에는 PC 캘린더·모바일 리스트). 주인의 키는 그 사람 기기에만 있으므로 탑만 세우고, 공유·키 입력은 없습니다. 독서 기록이 공개이고 기록이 있을 때만 보이며, 첫 연도는 가장 최근 기록의 연도입니다. 코드는 [`reading-log`](../reading-log/README.md)의 `public-reading-tower`이고 `next/dynamic`으로 불러옵니다. 책탑은 브라우저에서만 그리므로 프로필 HTML에는 읽은 책 제목이 들어가지 않습니다.
 
 공개 프로필에는 [`order`](../order/README.md) 기능의 `seller-stats-card` / `seller-trust-badge`가 함께 노출되어 "거래 완료 N건 · 긍정 후기 N%"를 보여줍니다.
 

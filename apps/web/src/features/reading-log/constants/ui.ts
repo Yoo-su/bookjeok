@@ -83,3 +83,6 @@ export const SEASONAL_THEMES = {
 
 export type SeasonalTheme =
   (typeof SEASONAL_THEMES)[keyof typeof SEASONAL_THEMES];
+
+/** 연도 선택과 책탑 연도 이동의 하한 */
+export const READING_LOG_MIN_YEAR = 2020;

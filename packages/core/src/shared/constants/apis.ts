@@ -71,6 +71,9 @@ export const API_PATHS = {
     base: "/reading-logs",
     stats: "/reading-logs/stats",
     list: "/reading-logs/list",
+    tower: "/reading-logs/tower",
+    /** 공개 프로필의 책탑. 독서 기록이 비공개면 빈 목록 */
+    publicTower: (handle: string) => `/reading-logs/users/${handle}/tower`,
     settings: "/reading-logs/settings",
     detail: (id: string) => `/reading-logs/${id}`,
     // ✅ 라운지 API 경로 추가

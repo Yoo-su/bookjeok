@@ -14,7 +14,9 @@ import {
 } from "@/shared/components/shadcn/select";
 import { cn } from "@/shared/utils";
 
-export type ReadingLogViewMode = "calendar" | "list";
+import { READING_LOG_MIN_YEAR } from "../../../constants/ui";
+
+export type ReadingLogViewMode = "calendar" | "list" | "tower";
 
 interface ReadingLogControlsProps {
   viewMode: ReadingLogViewMode;
@@ -42,7 +44,7 @@ export function ReadingLogControls({
   // 연도 선택 옵션 생성 (현재 연도 + 1 년 동안 2020년까지)
   const currentYear = new Date().getFullYear();
   const years = Array.from(
-    { length: currentYear - 2020 + 2 },
+    { length: currentYear - READING_LOG_MIN_YEAR + 2 },
     (_, i) => currentYear + 1 - i,
   );
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -54,6 +56,9 @@ export function ReadingLogControls({
   const handleMonthChange = (monthStr: string) => {
     onDateChange(setMonth(currentDate, parseInt(monthStr) - 1));
   };
+
+  const shiftYear = (delta: number) =>
+    onDateChange(setYear(currentDate, currentDate.getFullYear() + delta));
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-8">
@@ -157,6 +162,30 @@ export function ReadingLogControls({
               </button>
             </div>
           </>
+        ) : viewMode === "tower" ? (
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => shiftYear(-1)}
+              disabled={
+                isLoading || currentDate.getFullYear() <= READING_LOG_MIN_YEAR
+              }
+              aria-label={t("prev_year")}
+              className="group p-2 rounded-full hover:bg-stone-100 transition-colors disabled:opacity-30"
+            >
+              <ChevronLeft className="w-5 h-5 text-stone-400 group-hover:text-stone-900 transition-colors" />
+            </button>
+            <h2 className="text-3xl md:text-4xl font-serif font-medium text-stone-900 tracking-tight tabular-nums">
+              {currentDate.getFullYear()}
+            </h2>
+            <button
+              onClick={() => shiftYear(1)}
+              disabled={isLoading || currentDate.getFullYear() >= currentYear}
+              aria-label={t("next_year")}
+              className="group p-2 rounded-full hover:bg-stone-100 transition-colors disabled:opacity-30"
+            >
+              <ChevronRight className="w-5 h-5 text-stone-400 group-hover:text-stone-900 transition-colors" />
+            </button>
+          </div>
         ) : (
           <h2 className="text-3xl md:text-4xl font-serif font-medium text-stone-900 tracking-tight">
             {t("all_logs")}
@@ -195,6 +224,23 @@ export function ReadingLogControls({
           >
             {t("view_list")}
             {viewMode === "list" && (
+              <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
+            )}
+          </button>
+
+          <div className="w-px h-3 bg-stone-200" />
+
+          <button
+            onClick={() => onViewModeChange("tower")}
+            className={cn(
+              "text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 relative py-1",
+              viewMode === "tower"
+                ? "text-stone-900"
+                : "text-stone-400 hover:text-stone-600",
+            )}
+          >
+            {t("view_tower")}
+            {viewMode === "tower" && (
               <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
             )}
           </button>

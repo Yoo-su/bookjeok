@@ -26,6 +26,7 @@ export const PATHS = {
   MY_PAGE_WISHLIST: "/my-page/wishlist",
   BOOK_MARKET: "/book/market",
   USER_PROFILE: (handle: string) => `/users/${handle}`,
+  /** 카드덱 공유 링크(폐지). 옛 링크를 프로필로 보내는 라우트만 남았다 */
   SHARE_DECK: (handle: string) => `/share/deck/${handle}`,
   INSIGHTS: "/insights",
   READING_LOG: "/my-page/reading-log",

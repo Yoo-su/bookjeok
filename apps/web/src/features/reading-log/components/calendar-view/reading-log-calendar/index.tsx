@@ -13,6 +13,7 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -24,6 +25,7 @@ import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { DayDetailsDialog } from "../../common/day-details-dialog";
 import { ReadingLogListView } from "../../list-view/reading-log-list-view";
 import { ReadingLogStats } from "../../stats-view/reading-log-stats";
+import { TowerSkeleton } from "../../tower-view/tower-skeleton";
 import { ReadingLogCalendarSkeleton } from "../reading-log-calendar-skeleton";
 import {
   ReadingLogControls,
@@ -31,11 +33,20 @@ import {
 } from "../reading-log-controls";
 import { ReadingLogDayCell } from "../reading-log-day-cell";
 
+// 책탑은 누른 뒤에만 그리므로 공개 프로필(readOnly) 번들에서 뺀다
+const ReadingTower = dynamic(
+  () => import("../../tower-view/reading-tower").then((m) => m.ReadingTower),
+  { ssr: false, loading: () => <TowerSkeleton /> },
+);
+
 interface ReadingLogCalendarProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   readOnly?: boolean;
   initialLogs?: ReadingLog[];
+  /** 넘기면 보기 모드를 밖에서 제어한다(내 독서기록 페이지가 마지막 보기를 기억한다) */
+  viewMode?: ReadingLogViewMode;
+  onViewModeChange?: (mode: ReadingLogViewMode) => void;
 }
 
 export function ReadingLogCalendar({
@@ -43,10 +54,15 @@ export function ReadingLogCalendar({
   onDateChange,
   readOnly = false,
   initialLogs = [],
+  viewMode: controlledViewMode,
+  onViewModeChange,
 }: ReadingLogCalendarProps) {
   const t = useTranslations("reading_log.calendar");
   const overlay = useOverlay();
-  const [viewMode, setViewMode] = useState<ReadingLogViewMode>("calendar");
+  const [innerViewMode, setInnerViewMode] =
+    useState<ReadingLogViewMode>("calendar");
+  const viewMode = controlledViewMode ?? innerViewMode;
+  const setViewMode = onViewModeChange ?? setInnerViewMode;
 
   // 계절 테마 훅 사용
   const theme = useSeasonalTheme(currentDate);
@@ -119,7 +135,13 @@ export function ReadingLogCalendar({
         readOnly={readOnly}
       />
 
-      {viewMode === "list" ? (
+      {viewMode === "tower" && !readOnly ? (
+        // 연도마다 새로 마운트해 인트로·측정·선택 상태를 처음부터 시작한다
+        <ReadingTower
+          key={currentDate.getFullYear()}
+          year={currentDate.getFullYear()}
+        />
+      ) : viewMode === "list" ? (
         <ReadingLogListView
           logs={readOnly ? initialLogs : undefined}
           readOnly={readOnly}

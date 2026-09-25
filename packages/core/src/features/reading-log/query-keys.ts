@@ -9,6 +9,12 @@ export const readingLogKeys = createQueryKeys("readingLog", {
   }),
   settings: null,
   infinite: null,
+  tower: (year: number) => ({
+    queryKey: [year],
+  }),
+  publicTower: (handle: string, year: number) => ({
+    queryKey: [handle, year],
+  }),
   // ✅ 라운지 전용 쿼리 키 추가
   loungeFeed: null,
   loungePopular: null,

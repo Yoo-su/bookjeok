@@ -1,10 +1,10 @@
 import * as apis from "@bookjeok/api-client";
 import { ReadingLog, readingLogKeys } from "@bookjeok/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { AxiosError, AxiosHeaders } from "axios";
 import React from "react";
-import { toast } from "sonner";
+import { type Action, toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -16,6 +16,12 @@ vi.mock("@bookjeok/api-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@bookjeok/api-client")>()),
   createReadingLog: vi.fn(),
   updateReadingLog: vi.fn(),
+  getReadingTower: vi.fn(),
+}));
+
+const push = vi.fn();
+vi.mock("@/shared/config/i18n/routing", () => ({
+  useRouter: () => ({ push }),
 }));
 
 vi.mock("sonner", () => ({
@@ -218,5 +224,100 @@ describe("중복 기록 안내", () => {
     });
 
     expect(toast.error).toHaveBeenCalledWith("create_error");
+  });
+});
+
+describe("기록 생성 알림", () => {
+  const year = new Date().getFullYear();
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+
+  const towerOf = (depths: number[]) => ({
+    year,
+    items: depths.map((depth, i) => ({
+      logId: `log-${i}`,
+      isbn: `isbn-${i}`,
+      date: `${year}-01-0${i + 1}`,
+      title: `책 ${i}`,
+      author: "",
+      publisher: "",
+      image: "",
+      width: 145,
+      height: 210,
+      depth,
+      pages: null,
+      weight: 300,
+      binding: null,
+      coverColor: null,
+      sizeSource: "measured" as const,
+    })),
+  });
+
+  const create = async (logId: string) => {
+    vi.mocked(apis.createReadingLog).mockResolvedValue(
+      makeLog(logId, `${year}-01-02`),
+    );
+    const { result } = renderHook(() => useCreateReadingLogMutation(), {
+      wrapper,
+    });
+    await act(() =>
+      result.current.mutateAsync({ isbn: "x", date: `${year}-01-02` }),
+    );
+  };
+
+  it("쌓인 두께와 다음 부위까지 남은 높이를 알리고, 책탑 보기로 보낸다", async () => {
+    // 기본 키 173cm: 100mm → 117mm는 발목을 이미 넘은 상태라 다음 부위(무릎)를 말한다
+    vi.mocked(apis.getReadingTower).mockResolvedValue(towerOf([100, 17]));
+
+    await create("log-1");
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    const [title, options] = vi.mocked(toast.success).mock.calls[0];
+    expect(title).toBe("create_tower");
+    expect(options).toMatchObject({ description: "tower_to_next" });
+
+    const action = options?.action as Action;
+    act(() => action.onClick({} as React.MouseEvent<HTMLButtonElement>));
+    expect(push).toHaveBeenCalledWith("/my-page/reading-log");
+    expect(
+      JSON.parse(localStorage.getItem("reading-log-view") ?? "{}").state
+        ?.viewMode,
+    ).toBe("tower");
+  });
+
+  it("이번 책으로 부위를 넘으면 넘었다고 알린다", async () => {
+    // 173cm의 무릎(28%) = 484.4mm. 480 → 497
+    vi.mocked(apis.getReadingTower).mockResolvedValue(towerOf([480, 17]));
+
+    await create("log-1");
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    expect(vi.mocked(toast.success).mock.calls[0][1]).toMatchObject({
+      description: "tower_passed",
+    });
+  });
+
+  it("책탑을 못 받으면 평범한 완료 알림", async () => {
+    vi.mocked(apis.getReadingTower).mockRejectedValue(new Error("offline"));
+
+    await create("log-1");
+
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith("create_success"),
+    );
   });
 });
