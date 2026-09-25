@@ -12,7 +12,7 @@ import {
 } from "motion/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { BookOpen } from "@/shared/components/icons/iconsax";
@@ -30,6 +30,7 @@ const BookCard = memo(
     rotationY,
     angleStep,
     radius,
+    initiallyVisible,
     onCardClick,
   }: {
     book: BookInfo;
@@ -37,6 +38,7 @@ const BookCard = memo(
     rotationY: MotionValue<number>;
     angleStep: number;
     radius: number;
+    initiallyVisible: boolean;
     onCardClick: (e: React.MouseEvent) => void;
   }) => {
     const cardAngle = index * angleStep;
@@ -129,11 +131,17 @@ const BookCard = memo(
                   src={book.image || "/images/placeholder-book.svg"}
                   alt={book.title}
                   fill
-                  // 정면 카드만 선로딩. 18장 전부 priority면 JS·폰트와 대역폭 경쟁
+                  // 정면은 우선순위, 첫 화면의 양옆 카드는 즉시 요청한다.
                   priority={index === 0}
-                  unoptimized={true}
+                  loading={
+                    index === 0
+                      ? undefined
+                      : initiallyVisible
+                        ? "eager"
+                        : "lazy"
+                  }
                   draggable={false} // 마우스 먹통 방지를 위해 브라우저 기본 이미지 드래그 차단
-                  sizes="(max-width: 768px) 130px, 230px"
+                  sizes="(max-width: 480px) 120px, (max-width: 768px) 140px, (max-width: 1024px) 160px, 200px"
                   className="object-cover transition-transform duration-1000 group-hover:scale-102 cursor-pointer"
                 />
                 {/* 입체적인 조명 효과를 위한 베벨 링 */}
@@ -279,8 +287,15 @@ export const MainBookSlider = () => {
 
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const animationRef = useRef<ReturnType<typeof animate> | null>(null);
   const isSnappingRef = useRef(false);
   const dragDistanceRef = useRef(0);
+
+  const stopAnimation = useCallback(() => {
+    animationRef.current?.stop();
+    animationRef.current = null;
+    isSnappingRef.current = false;
+  }, []);
 
   // 모바일 사선 스와이프 시 전체 세로 스크롤과 슬라이더 드래그의 충돌을 방지하는 이벤트 바인딩
   useEffect(() => {
@@ -342,11 +357,12 @@ export const MainBookSlider = () => {
       const nextAngle = Math.round(current / angleStep) * angleStep - angleStep;
 
       isSnappingRef.current = true;
-      animate(rotationY, nextAngle, {
+      animationRef.current = animate(rotationY, nextAngle, {
         type: "spring",
         stiffness: 60,
         damping: 18,
         onComplete: () => {
+          animationRef.current = null;
           isSnappingRef.current = false;
         },
       });
@@ -373,6 +389,7 @@ export const MainBookSlider = () => {
   // 출판사 변경 시 회전 상태 초기화 및 자동 스크롤 재개
   useEffect(() => {
     stopAutoplay();
+    stopAnimation();
     rotationY.set(0);
     dragDistanceRef.current = 0;
     if (!isHovered && !isDragging && !isFocused && inView) {
@@ -384,6 +401,8 @@ export const MainBookSlider = () => {
   const handlePanStart = () => {
     setIsDragging(true);
     stopAutoplay();
+    stopAnimation();
+    dragDistanceRef.current = 0;
   };
 
   const handlePan = (
@@ -419,32 +438,30 @@ export const MainBookSlider = () => {
     const targetAngle = -targetIndex * angleStep;
 
     isSnappingRef.current = true;
-    animate(rotationY, targetAngle, {
+    animationRef.current = animate(rotationY, targetAngle, {
       type: "spring",
       stiffness: 70,
       damping: 18,
       mass: 0.9,
       velocity: velocity * sensitivity,
       onComplete: () => {
+        animationRef.current = null;
         isSnappingRef.current = false;
-        // 드래그 직후 클릭 이벤트 오작동을 방지하기 위해 리셋 지연
-        setTimeout(() => {
-          dragDistanceRef.current = 0;
-        }, 50);
-        if (!isHovered && !isDragging) {
-          startAutoplay();
-        }
       },
     });
+    // 안착 애니메이션이 중단돼도 다음 클릭은 정상 동작해야 한다.
+    setTimeout(() => {
+      dragDistanceRef.current = 0;
+    }, 50);
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
     // 드래그 누적 거리가 5px 이상이면 클릭 이동 차단
     if (dragDistanceRef.current > 5) {
       e.preventDefault();
       e.stopPropagation();
     }
-  };
+  }, []);
 
   return (
     <div
@@ -516,9 +533,15 @@ export const MainBookSlider = () => {
             onPanStart={handlePanStart}
             onPan={handlePan}
             onPanEnd={handlePanEnd}
-            onMouseEnter={() => setIsHovered(true)}
+            onMouseEnter={() => {
+              stopAnimation();
+              setIsHovered(true);
+            }}
             onMouseLeave={() => setIsHovered(false)}
-            onFocus={() => setIsFocused(true)}
+            onFocus={() => {
+              stopAnimation();
+              setIsFocused(true);
+            }}
             onBlur={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setIsFocused(false);
@@ -543,6 +566,7 @@ export const MainBookSlider = () => {
                   rotationY={rotationY}
                   angleStep={angleStep}
                   radius={radius}
+                  initiallyVisible={index <= 4 || index >= N - 4}
                   onCardClick={handleCardClick}
                 />
               ))}
