@@ -79,7 +79,12 @@ export function ReadingTower({ year }: { year: number }) {
           Math.floor((now - t0 - TOWER_INTRO_LAND_MS) / step) + 1,
         ),
       );
-      setCounter({ count: landed, mm: landed ? cum[landed - 1] : 0 });
+      // 권수가 그대로인 프레임은 건너뛴다. 새 객체를 넣으면 매 프레임 전체가 다시 그려진다
+      setCounter((prev) =>
+        prev?.count === landed
+          ? prev
+          : { count: landed, mm: landed ? cum[landed - 1] : 0 },
+      );
       if (now - t0 < end + 80) counterRaf.current = requestAnimationFrame(tick);
       else setCounter(null);
     };
@@ -93,6 +98,10 @@ export function ReadingTower({ year }: { year: number }) {
   const [bookOpen, setBookOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const stackRef = useRef<HTMLElement>(null);
+  const handleBookClick = useCallback((b: ReadingTowerBook) => {
+    setSelected(b);
+    setBookOpen(true);
+  }, []);
 
   if (isLoading) return <TowerSkeleton />;
 
@@ -258,10 +267,7 @@ export function ReadingTower({ year }: { year: number }) {
         <TowerStackList
           ref={stackRef}
           books={books}
-          onBookClick={(b) => {
-            setSelected(b);
-            setBookOpen(true);
-          }}
+          onBookClick={handleBookClick}
         />
       )}
 

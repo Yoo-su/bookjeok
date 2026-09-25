@@ -214,12 +214,16 @@ export function TowerStage({
       svg.querySelectorAll<SVGGElement>("g.tower-book"),
     );
     const step = towerIntroStepMs(groups.length);
-    const animations = groups.map((g, i) => {
+    // 먼저 다 재고 나서 건다. 재기와 걸기를 섞으면 책마다 레이아웃을 새로 계산한다
+    const drops = groups.map((g) => {
       const bb = g.getBBox();
+      return bb.y + bb.height + 40;
+    });
+    const animations = groups.map((g, i) => {
       return g.animate(
         [
           {
-            transform: `translateY(${-(bb.y + bb.height + 40)}px)`,
+            transform: `translateY(${-drops[i]}px)`,
             opacity: 0,
             easing: "cubic-bezier(.55,0,1,.45)",
           },
