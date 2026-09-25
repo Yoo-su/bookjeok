@@ -18,7 +18,8 @@ import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
 import { HomeView } from "@/views/home-view";
 
-export const revalidate = 3600;
+// 방문자는 마운트 시 refetch로 최신을 받는다. HTML은 크롤러·첫 화면용이라 길게 둔다
+export const revalidate = 21600; // 6시간
 
 export async function generateMetadata({
   params,

@@ -40,18 +40,18 @@ refetchOnWindowFocus: false,
 
 | 시드 키                          | 굽는 라우트           | ISR TTL | staleTime                        |
 | -------------------------------- | --------------------- | ------- | -------------------------------- |
-| `bookSale.recentSales(25)`       | `/`                   | 1시간   | 전역 (마켓 히어로만 60초 + 폴링) |
-| `book.popularBooks`              | `/`                   | 1시간   | 전역                             |
-| `review.list({page:1,limit:20})` | `/`                   | 1시간   | 전역                             |
-| `book.list(출판사, 18)`          | `/`                   | 1시간   | 5분                              |
-| `readingLog.loungePopular`       | `/` · `/lounge`       | 1시간   | 5분                              |
-| `readingLog.loungeActiveReaders` | `/lounge`             | 1시간   | 5분                              |
+| `bookSale.recentSales(25)`       | `/`                   | 6시간   | 전역 (마켓 히어로만 60초 + 폴링) |
+| `book.popularBooks`              | `/`                   | 6시간   | 전역                             |
+| `review.list({page:1,limit:20})` | `/`                   | 6시간   | 전역                             |
+| `book.list(출판사, 18)`          | `/`                   | 6시간   | 5분                              |
+| `readingLog.loungePopular`       | `/` · `/lounge`       | 6시간   | 5분                              |
+| `readingLog.loungeActiveReaders` | `/lounge`             | 6시간   | 5분                              |
 | `insights.all`                   | `/insights`           | 6시간   | 전역                             |
-| `bookSale.popularSales`          | `/book/market`        | 1시간   | 전역                             |
-| `bookSale.marketSales({})`       | `/book/market`        | 1시간   | 전역                             |
-| `review.popular`                 | `/book/reviews`       | 1시간   | 전역                             |
-| `review.feeds()`                 | `/book/reviews`       | 1시간   | 전역                             |
-| `book.popularKeywords`           | `/book/search`        | 1시간   | 호출부 지정                      |
+| `bookSale.popularSales`          | `/book/market`        | 6시간   | 전역                             |
+| `bookSale.marketSales({})`       | `/book/market`        | 6시간   | 전역                             |
+| `review.popular`                 | `/book/reviews`       | 6시간   | 전역                             |
+| `review.feeds()`                 | `/book/reviews`       | 6시간   | 전역                             |
+| `book.popularKeywords`           | `/book/search`        | 6시간   | 호출부 지정                      |
 | `user.publicProfile(handle)`     | `/users/[handle]`     | 1시간   | 전역                             |
 | `book.detail(isbn)`              | `/book/[isbn]/detail` | 30일    | 5분                              |
 | `book.summary(isbn)`             | `/book/[isbn]/detail` | 30일    | Infinity (불변)                  |
@@ -60,7 +60,18 @@ refetchOnWindowFocus: false,
 
 홈의 `review.list`는 **화면에 5건만 보이지만 20건을 시드합니다.** 최신 리뷰 티커가 순환시킬 풀이라 그렇습니다. 개수는 `features/review/components/recent-review-list`의 `TICKER_POOL_SIZE`와 홈 페이지의 `queryFn`이 함께 가지며, 어긋나면 키가 달라져 시드가 통째로 버려집니다.
 
-`readingLog.loungePopular`는 두 라우트가 각각 독립된 시각에 굽습니다. 방문 순서에 따라 더 최신 스냅샷이 이깁니다 (`hydrate()`는 `dataUpdatedAt`이 더 클 때만 덮어씀).
+`readingLog.loungePopular`는 두 라우트가 각각 독립된 시각에 굽습니다. 스냅샷의 `dataUpdatedAt`은 0이라(아래 「시드의 시각 필드」) 이미 캐시에 있는 값을 덮지 않고, 먼저 들어온 값이 마운트 시 refetch로 교정됩니다.
+
+### 시드의 시각 필드
+
+`ServerQueryBoundary`는 `dehydrate()` 대신 `dehydrateStable()`을 씁니다. 시드 쿼리의 `dataUpdatedAt`·`dehydratedAt`을 0으로 고정합니다.
+
+Vercel은 재검증 결과가 이전과 같으면 ISR 쓰기를 과금하지 않습니다. 시각이 섞이면 데이터가 그대로여도 매번 전체 크기만큼 쓰기가 잡힙니다. 2026-09-25 실측에서 최근 12시간 ISR 쓰기의 60%가 홈·목록 재생성이었습니다. 로컬 프로덕션 빌드에서 ISR 페이지 9종을 재검증 전후로 비교해 HTML·RSC가 바이트 단위로 같음을 확인했습니다.
+
+- 클라이언트에서는 시드가 staleTime과 무관하게 stale로 복원돼 마운트 시 refetch됩니다. 원래도 스냅샷은 대개 staleTime보다 오래돼 있었으므로 동작 차이는 거의 없습니다. 예외는 staleTime이 `Infinity`인 쿼리로, 그대로 fresh입니다.
+- `hydrate()`는 `dataUpdatedAt`이 더 클 때만 덮어쓰므로, 시드는 이미 캐시에 있는 데이터를 덮지 않습니다.
+- promise가 달린 스트리밍 쿼리는 건드리지 않습니다. hydrate가 `dehydratedAt`으로 신선도를 판단하기 때문입니다.
+- 렌더 결과에 `new Date()`·`Math.random()` 같은 비결정 값을 넣으면 이 효과가 사라집니다.
 
 ## 재검증 범위 규칙
 
@@ -236,7 +247,7 @@ next-intl은 `setRequestLocale`이 없으면 헤더에서 로케일을 읽고, �
 
 `ServerQueryBoundary`는 실패를 reject하는 `fetchQuery`/`fetchInfiniteQuery`를 병렬 실행하고 실패를 기록합니다. 마켓 기본 목록·리뷰 카테고리 피드·라운지 최신 피드는 `required: true`입니다. 이 쿼리가 실패하면 렌더 실패를 전파해 기존 정상 ISR을 유지하며, 최초 생성이라면 실패로 처리합니다. `[locale]/layout.tsx`의 `generateStaticParams: []`로 언어별 페이지의 빌드 시 사전 생성을 생략합니다. 마켓·리뷰 홈·라운지를 포함한 정적 페이지는 첫 방문에 생성하고 각 페이지의 `revalidate`를 유지하므로, 빌드 환경에 API 서버가 없어도 됩니다. 기존 동적 페이지의 요청별 렌더링은 유지됩니다. 배포 후 캐시가 없는 첫 요청은 생성 시간만큼 느릴 수 있습니다. 부가 쿼리는 성공한 나머지 데이터와 함께 폴백합니다.
 
-라운지는 `readingLog.loungeFeed`의 첫 페이지를 `initialPageParam: null`로 시딩합니다(ISR 1시간, 클라이언트 staleTime 1분). sitemap은 `connection()`으로 빌드 시 API 조회를 생략합니다. 첫 요청부터 공개 리뷰·판매글을 50개씩 커서 순회하고 완성된 목록을 `unstable_cache`로 6시간 보관합니다. `next.config.ts`의 `/sitemap.xml` 전용 `Vercel-CDN-Cache-Control`로 XML 응답도 6시간 캐시합니다(만료 뒤 stale-while-revalidate 24시간). 이 헤더는 Vercel CDN 전용이고 preview는 no-store입니다. CDN MISS에서만 함수가 데이터 캐시를 읽어 XML을 직렬화합니다. 데이터·응답 캐시의 만료 시각이 다르므로 목록의 실제 신선도가 정확히 6시간 이내라는 보장은 하지 않습니다. 정상 데이터 캐시가 있으면 재검증 실패 시에도 기존 목록을 제공합니다. 최초 조회가 실패하면 오류를 반환합니다. 중간 API 실패·반복 커서는 부분 결과를 저장하지 않고 전파합니다. 단일 sitemap 5만 URL 한도를 넘기기 전에 분할해야 하며, 무한 순회 방지를 위해 글 수 약 2.5만에서 가드를 둡니다.
+라운지는 `readingLog.loungeFeed`의 첫 페이지를 `initialPageParam: null`로 시딩합니다(ISR 6시간, 클라이언트 staleTime 1분). sitemap은 `connection()`으로 빌드 시 API 조회를 생략합니다. 첫 요청부터 공개 리뷰·판매글을 50개씩 커서 순회하고 완성된 목록을 `unstable_cache`로 6시간 보관합니다. `next.config.ts`의 `/sitemap.xml` 전용 `Vercel-CDN-Cache-Control`로 XML 응답도 6시간 캐시합니다(만료 뒤 stale-while-revalidate 24시간). 이 헤더는 Vercel CDN 전용이고 preview는 no-store입니다. CDN MISS에서만 함수가 데이터 캐시를 읽어 XML을 직렬화합니다. 데이터·응답 캐시의 만료 시각이 다르므로 목록의 실제 신선도가 정확히 6시간 이내라는 보장은 하지 않습니다. 정상 데이터 캐시가 있으면 재검증 실패 시에도 기존 목록을 제공합니다. 최초 조회가 실패하면 오류를 반환합니다. 중간 API 실패·반복 커서는 부분 결과를 저장하지 않고 전파합니다. 단일 sitemap 5만 URL 한도를 넘기기 전에 분할해야 하며, 무한 순회 방지를 위해 글 수 약 2.5만에서 가드를 둡니다.
 
 
 ## 번역 사전 전송 (2026-09-20)

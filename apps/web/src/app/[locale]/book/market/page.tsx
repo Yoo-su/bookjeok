@@ -12,7 +12,8 @@ import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
 import { BookMarketView } from "@/views/book-market-view";
 
-export const revalidate = 3600;
+// 방문자는 마운트 시 refetch로 최신을 받는다. HTML은 크롤러·첫 화면용이라 길게 둔다
+export const revalidate = 21600; // 6시간
 
 // API 서버에 의존하는 목록은 첫 방문에 생성한 뒤 ISR로 유지한다.
 export function generateStaticParams() {
