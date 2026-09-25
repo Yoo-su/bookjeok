@@ -391,12 +391,13 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | **Delivery Tracker**                  | 택배 배송 상태 조회 및 30분 주기 폴링                     | `server: order`                         |
 | **Resend**                            | 회원가입 이메일 인증 링크, 채팅 개설 알림 메일            | `server: shared/mail`                   |
 | **Vercel Blob**                       | 리뷰·판매글·프로필 이미지 업로드/삭제                     | `web: /api/upload`, `server`            |
+| **Vercel Image Optimization**         | 홈 메인 슬라이더의 R2 표지를 화면 크기에 맞게 변환·캐시   | `web: book-slider`                      |
 | **카카오 맵 SDK**                     | 거래 위치 지도, 지오코딩                                  | `web: shared/components/map`            |
 | **다음 우편번호**                     | 배송지 주소 입력                                          | `web: order/address-input`              |
 | **GA4 · Microsoft Clarity · AdSense** | 트래픽 분석, 행동 분석, 광고                              | `web: shared/components/analytics, ads` |
 | **카카오 책 검색 API**                | 신간 적재 (운영자 도구 전용, 런타임 경로 아님)            | `tools/book-ingest`                     |
 | **알라딘 Open API**                   | 신간 적재 (운영자 도구 전용, **2026-10-30 종료 시 제거**) | `tools/book-ingest`                     |
-| **Cloudflare R2**                     | 도서 표지 저장·서빙 (`cdn.bookjeok.com`)                  | `tools/book-ingest`(업로드), web(표시)  |
+| **Cloudflare R2**                     | 도서 표지 원본 저장·서빙 (`cdn.bookjeok.com`)             | `tools/book-ingest`(업로드), web(표시)  |
 
 > **도서 데이터는 런타임에 외부 API를 쓰지 않습니다.** 과거에는 네이버 도서 API와
 > 알라딘 Open API를 연동했으나, 알라딘 종료(2026-10-30)에 대비해 2026-09-08에
@@ -404,7 +405,8 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 > 공급처를 런타임 경로에 두지 않는 것이 방침입니다.** 신규 도서는 서버가 아니라
 > 운영자가 필요할 때 로컬에서 돌리는 적재 도구([`tools/book-ingest`](tools/book-ingest/README.md),
 > 카카오 책 검색 API를 입구로 사용, 10/30까지는 알라딘도 선택 가능)로 확보합니다. 표지도 2026-09-09 컷오버로
-> Cloudflare R2(`cdn.bookjeok.com`)에서 나갑니다. 경위와 남은 정리 항목은
+> Cloudflare R2(`cdn.bookjeok.com`)에서 나갑니다. 홈 메인 슬라이더는 Vercel 이미지
+> 최적화를 거쳐 화면 크기에 맞는 표지를 받습니다. 경위와 남은 정리 항목은
 > [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)에 있습니다.
 
 ---
