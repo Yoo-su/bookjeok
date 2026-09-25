@@ -5,11 +5,11 @@ import {
   getLoungeBookReaders,
   getLoungeFeed,
   getLoungePopular,
+  getPublicReadingTower,
   getReadingLogs,
   getReadingLogSettings,
   getReadingLogsInfinite,
   getReadingLogStats,
-  getPublicReadingTower,
   getReadingTower,
 } from "@bookjeok/api-client";
 import { readingLogKeys } from "@bookjeok/core";
