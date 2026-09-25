@@ -112,6 +112,17 @@ export class ReadingLogController {
     return this.readingLogService.getStats(req.user.id, year, month);
   }
 
+  @Get('tower')
+  @ApiOperation({
+    summary: '책탑 조회',
+    description:
+      '한 해의 독서 기록을 완독일 순으로, 책 크기(mm)·무게·표지색과 함께 반환합니다. 실측이 없는 책은 추정값이며 sizeSource로 구분합니다.',
+  })
+  @ApiQuery({ name: 'year', description: '조회할 연도 (YYYY)', example: 2026 })
+  getTower(@Request() req, @Query('year') year: string) {
+    return this.readingLogService.getTower(req.user.id, Number(year));
+  }
+
   @Get('settings')
   @ApiOperation({
     summary: '독서 기록 설정 조회',

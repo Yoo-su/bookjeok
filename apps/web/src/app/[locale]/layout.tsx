@@ -35,6 +35,7 @@ import {
   bitcount,
   diphylleia,
   do_hyeon,
+  gaegu,
   gowun_batang,
   nanum_gothic,
   song_myung,
@@ -80,7 +81,7 @@ export default async function Layout({
   return (
     <html
       lang={locale}
-      className={`${nanum_gothic.variable} ${bitcount.variable} ${gowun_batang.variable} ${song_myung.variable} ${do_hyeon.variable} ${diphylleia.variable}`}
+      className={`${nanum_gothic.variable} ${bitcount.variable} ${gowun_batang.variable} ${song_myung.variable} ${do_hyeon.variable} ${diphylleia.variable} ${gaegu.variable}`}
     >
       <body style={{ fontFamily: "var(--font-pretendard)" }}>
         <a

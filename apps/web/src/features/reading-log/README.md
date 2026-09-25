@@ -1,6 +1,6 @@
 # Frontend Feature: Reading Log (독서 기록 · 독서 라운지)
 
-개인 독서 기록(캘린더·통계·3D 덱)과 공개 피드인 독서 라운지를 담당합니다.
+개인 독서 기록(캘린더·리스트·책탑·통계)과 공개 피드인 독서 라운지를 담당합니다.
 
 ## 1. 폴더 구조
 
@@ -11,16 +11,30 @@ reading-log/
 │   └── use-seasonal-theme.ts         # 계절별 캘린더 테마
 ├── constants/ui.ts
 ├── mutations/
-├── __tests__/                        # queries · day-details-dialog
+├── stores/
+│   ├── use-tower-settings-store.ts   # 책탑 키·캐릭터 (기기에만 저장)
+│   └── use-reading-log-view-store.ts # 마지막으로 본 보기 (달력·리스트·책탑)
+├── __tests__/                        # queries · mutations · day-details-dialog · tower-height-card
 └── components/
     ├── calendar-view/
     │   ├── reading-log-calendar/     # 월별 캘린더 본체
     │   ├── reading-log-day-cell/     # 날짜 셀 (완독 표시)
     │   ├── reading-log-controls/     # 월/연 이동, 뷰 전환
     │   └── reading-log-calendar-skeleton/
-    ├── deck-view/
-    │   ├── reading-log-card-deck.tsx # 3D 카드 덱 뷰어
-    │   └── share-deck-dialog.tsx     # 공유 전 연간 덱 미리보기
+    ├── tower-view/                   # 책탑
+    │   ├── reading-tower/            # 내 책탑 조립 (+ stories, stories-data)
+    │   ├── public-reading-tower/     # 공개 프로필 책탑: 캐릭터 없음 (+ stories)
+    │   ├── tower-stage/              # 책탑과 캐릭터를 같은 축척으로 그리는 무대 (캐릭터 생략 가능)
+    │   ├── tower-height-chip/        # 「내 키」 버튼 → 팝오버로 키 입력 카드
+    │   ├── tower-height-card/        # 키 입력·남녀 캐릭터
+    │   ├── tower-progress/           # 키까지 진행률·합계
+    │   ├── tower-stack-list/         # 쌓인 순서 (월별 지층)
+    │   ├── tower-book-dialog/
+    │   ├── tower-share-dialog/       # 공유 이미지 (Canvas)
+    │   ├── tower-skeleton/           # 코드 분할·데이터 로딩 공용 스켈레톤
+    │   ├── hooks/use-tower-copy.ts   # 문구
+    │   ├── hooks/use-tower-person.ts # 내 캐릭터·키 (저장값 없으면 프로필 성별·평균 키)
+    │   └── lib/                      # 장면 생성·손그림 선·캐릭터·SVG/Canvas 렌더러
     ├── list-view/
     │   └── reading-log-list-view/
     ├── stats-view/
@@ -67,13 +81,27 @@ reading-log/
 
 폼은 두 경로 모두 날짜를 바꿀 수 있고 미래 날짜는 막습니다. 같은 책·같은 날 중복은 서버가 409(`READING_LOG_002`)로 거절하고, 뮤테이션이 「그날 이미 기록한 책」 안내를 띄운 뒤 폼을 열어 둡니다. 수정에서 날짜를 바꾸면 기록이 다른 달로 옮겨 가므로, 수정 뮤테이션은 모든 월 목록 캐시에서 빼고 새 달에만 넣습니다. 생성·수정 모두 **캐시가 없는 달에는 심지 않습니다.** `[data]`를 심으면 그 달이 한 권짜리로 먼저 그려집니다.
 
-### 3D 카드 덱 (`deck-view`)
+### 책탑 (`tower-view`)
 
-Framer Motion으로 완독 기록을 카드 덱처럼 넘겨보는 뷰입니다. 보기 전환(달력·리스트)에는 없고, 히어로의 공유 버튼이 여는 `share-deck-dialog`에서 연간 덱을 미리 봅니다. 공개 페이지는 `/share/deck/[handle]`(`share-deck-view`)입니다.
+한 해에 읽은 책을 **실제 두께로** 눕혀 쌓고, 사용자가 입력한 키만 한 손그림 캐릭터를 옆에 세웁니다. 보기 전환의 「책탑」 탭으로 들어오고, **마지막으로 본 보기를 기억**해 다음 방문 때 그대로 엽니다(`use-reading-log-view-store`). 데이터는 `GET /reading-logs/tower?year=`이고, 책 크기는 `book_dimensions`(알라딘 실측 수확본)에서, 없으면 서버가 추정합니다(`sizeSource`).
 
-공개 페이지는 공개 설정된 기록만 보여 주므로, 비공개 사용자에게는 다이얼로그가 링크 복사 대신 공개 전환 안내를 띄웁니다.
+- **같은 축척**: 무대의 책탑과 캐릭터는 같은 px/mm로 그립니다. 캐릭터는 인체 비율(무릎 28%·허리 60%·어깨 82%)이라 말풍선의 "허리까지 9cm"가 그림과 맞습니다.
+- **장면 하나, 렌더러 둘**: `lib/scene.ts`가 도형 목록을 만들고, 화면은 SVG(`scene-svg.tsx`), 공유 이미지는 Canvas(`draw-canvas.ts`)로 같은 목록을 그립니다. 좌표를 px로 굳혀 두 결과가 같습니다.
+- **공유**: 입력한 키가 적용된 장면을 1080px 이미지(스토리 9:16·피드 4:5)로 그려, 모바일은 공유 시트, 데스크톱은 파일로 내보냅니다. 공개 링크 페이지는 없습니다. 다이얼로그에도 「내 키」 버튼이 있어 키를 바꾸면 이미지를 다시 그립니다(150ms 모아서).
+- **키는 서버에 보내지 않습니다.** `use-tower-settings-store`(localStorage)에만 둡니다. 입력 전에는 평균 키(남 173·여 161cm), 캐릭터는 `users.gender`(`'M' | 'F'`)로 시작합니다. 키 입력은 화면에 늘 펼쳐 두지 않고, 무대 위 「내 키 입력 / 내 키 170cm」 버튼의 팝오버(`tower-height-chip`)에 둡니다.
+- **기록하면 알린다**: 기록을 만들면(달력·도서 상세 「읽었어요」) 그해 책탑을 받아 "기록했어요. 책탑이 1.7cm 높아졌어요"와 다음 부위까지 남은 높이(또는 "무릎을 넘었어요!")를 토스트로 띄우고, 올해 기록이면 「책탑 보기」로 보냅니다. 책탑을 못 받으면 평범한 완료 알림입니다(`mutations/index.tsx`).
+- **공개 프로필**: `/users/[handle]`의 독서 기록은 캘린더·리스트 대신 `public-reading-tower`입니다. 주인의 키는 기기에만 있으므로 **캐릭터·말풍선·진행률 없이 탑만** 세우고, 축척을 탑 높이에 맞춥니다(최소 40cm). 공유·키 입력은 없고, 연도 이동과 쌓인 순서·책 다이얼로그만 둡니다. 데이터는 `GET /reading-logs/users/:handle/tower?year=`(인증 없음, 비공개면 빈 목록).
+- **쌓인 순서도 손그림**: 목록의 책도 무대 미니어처처럼 그립니다(`tower-stack-list`의 `SketchBook`). 색면을 윤곽에서 어긋나게 찍고, 진한 선과 흐린 선을 겹친 흔들린 윤곽, 책등 양끝 띠, 손글씨(Gaegu) 제목. 얇은 책은 제목 없이 색 띠만 보입니다.
+- **헤더 문구**: 화면은 「책탑」(영어 Book tower)만 두고 연도는 연도 이동에만 보입니다. 연도가 따로 필요한 공유 이미지만 `share.kicker`(「2026 책탑」)를 씁니다.
+- **표지색이 없는 책**(10/30 이후 신간 등)은 `fallbackCoverColor`(core)의 옅은 색으로 칠합니다.
+- **책이 많을 때**: 축척이 줄어 한 화면에 들어오고, 쌓는 애니메이션은 권수와 무관하게 약 2초로 묶었습니다. 키를 넘으면 다음 목표를 키의 N배로 올립니다.
+- **손글씨 글꼴** Gaegu(`styles/fonts.ts`)는 글자 묶음별로 늦게 받아지므로, 무대가 `document.fonts`의 `loadingdone`마다 다시 재서 말풍선 폭을 맞춥니다.
+- **움직임**: 캐릭터 선을 세 벌 번갈아 보여 떨리게 하고(`globals.css`의 `tower-boil`), 동작 줄이기 설정이면 멈춥니다. 보이지 않는 탭에서는 인트로를 건너뜁니다.
+- **키가 바뀔 때**: 한 번 바뀌면 380ms 트윈, 슬라이더 드래그처럼 연달아 바뀌면 트윈 없이 바로 따라갑니다. 바뀌는 동안은 캐릭터를 한 벌만 그립니다(세 벌이 장면 생성 비용의 2/3, 300권 기준 3.9ms → 1.7ms). 장면 항목에는 `id`가 있어 React key로 쓰고, 눈금 수가 바뀌어도 책·캐릭터 노드가 밀리지 않습니다.
+- **코드 분할**: 캘린더는 `ReadingTower`를, 공개 프로필은 `PublicReadingTower`를 `next/dynamic`으로 불러옵니다. 연도마다 `key`로 새로 마운트합니다.
+- **키 입력**: 입력 중에는 유효한 값(80~230)만 반영하고, 오류는 칸을 벗어날 때만 띄웁니다.
 
-> 모션 부하가 큰 화면이라 `use-prefers-reduced-motion`을 존중하고, 카드 수가 많을 때 렌더 범위를 제한합니다.
+> 카드덱 뷰(`deck-view`)와 공유 페이지는 책탑으로 대체하며 지웠습니다(2026-09-25). 옛 링크 `/share/deck/[handle]`은 그 사용자의 공개 프로필로 영구 리다이렉트합니다.
 
 ### 라운지 피드
 
@@ -89,7 +117,7 @@ Framer Motion으로 완독 기록을 카드 덱처럼 넘겨보는 뷰입니다.
 ## 4. 관련
 
 - 서버: [`features/reading-log`](../../../../server/src/features/reading-log/README.md) (`reading-log.controller` + `lounge.controller`)
-- 뷰: `reading-log-view`, `lounge-view`, `share-deck-view`
+- 뷰: `reading-log-view`, `lounge-view`
 
 ### 라운지 검색 노출 (2026-09-19)
 

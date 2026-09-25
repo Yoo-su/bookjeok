@@ -3,13 +3,13 @@ import {
   usePublicUserProfileQuery,
   useSellerStatsQuery,
 } from "@bookjeok/react-query";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { SaleStatusBadge } from "@/features/book-sale/components/common/sale-status-badge";
-import { ReadingLogCalendar } from "@/features/reading-log/components/calendar-view/reading-log-calendar";
-import { ReadingLogListView } from "@/features/reading-log/components/list-view/reading-log-list-view";
+import { READING_LOG_MIN_YEAR } from "@/features/reading-log/constants/ui";
 import { SellerTrustBadge, UserTradeReviewsList } from "@/features/trade";
 import {
   ArrowRight,
@@ -34,6 +34,20 @@ import { PATHS } from "@/shared/constants/paths";
 import { formatDate, formatRelativeTime } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
+// 책탑은 브라우저에서만 그리고 코드가 커서 프로필 첫 로드에서 뺀다
+const PublicReadingTower = dynamic(
+  () =>
+    import(
+      "@/features/reading-log/components/tower-view/public-reading-tower"
+    ).then((m) => m.PublicReadingTower),
+  {
+    ssr: false,
+    loading: () => (
+      <Skeleton className="h-[440px] w-full rounded-2xl md:h-[500px]" />
+    ),
+  },
+);
+
 interface UserProfileProps {
   handle: string;
 }
@@ -52,7 +66,6 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
     enabled: Boolean(handle),
   });
   const [activeTab, setActiveTab] = useState<ProfileTab>("READING");
-  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
   if (isLoading) {
     return <UserProfileSkeleton />;
@@ -105,41 +118,25 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
       {/* 탭 콘텐츠: 독서 활동 */}
       {activeTab === "READING" && (
         <div className="space-y-10">
-          {/* 독서 기록 영역 (PC: 캘린더, 모바일: 리스트) */}
+          {/* 독서 기록 영역: 캐릭터 없는 책탑(주인의 키는 기기에만 있다) */}
           {Array.isArray(profile.readingLogs) &&
             profile.readingLogs.length > 0 && (
-              <div>
-                {/* PC 뷰 (md 이상: 캘린더) */}
-                <div className="hidden md:block rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs sm:p-8">
-                  <div className="mb-6 flex items-center justify-between gap-3">
-                    <h3 className="font-serif text-xl font-semibold text-stone-900 break-keep">
-                      {t("reading_log_calendar_title", {
-                        name: profile.nickname,
-                      })}
-                    </h3>
-                    <span className="text-xs text-stone-400 font-serif shrink-0 whitespace-nowrap">
-                      {t("sections.badge_calendar")}
-                    </span>
-                  </div>
-                  <ReadingLogCalendar
-                    currentDate={currentDate}
-                    onDateChange={setCurrentDate}
-                    readOnly
-                    initialLogs={profile.readingLogs}
-                  />
-                </div>
-
-                {/* 모바일 뷰 (md 미만: 리스트 & 무한 스크롤) */}
-                <div className="block md:hidden rounded-2xl border border-stone-200/80 bg-white p-4 sm:p-5 shadow-xs">
-                  <div className="mb-4">
-                    <h3 className="font-serif text-base sm:text-lg font-semibold text-stone-900 break-keep">
-                      {t("reading_log_calendar_title", {
-                        name: profile.nickname,
-                      })}
-                    </h3>
-                  </div>
-                  <ReadingLogListView logs={profile.readingLogs} readOnly />
-                </div>
+              <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-xs sm:p-6 md:p-8">
+                <h3 className="mb-5 font-serif text-base font-semibold text-stone-900 break-keep sm:text-lg md:text-xl">
+                  {t("reading_log_title", { name: profile.nickname })}
+                </h3>
+                <PublicReadingTower
+                  handle={profile.handle}
+                  nickname={profile.nickname}
+                  initialYear={Math.min(
+                    new Date().getFullYear(),
+                    Math.max(
+                      READING_LOG_MIN_YEAR,
+                      // readingLogs는 최신순
+                      Number(profile.readingLogs[0].date.slice(0, 4)),
+                    ),
+                  )}
+                />
               </div>
             )}
 

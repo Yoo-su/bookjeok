@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Not, Repository } from 'typeorm';
 
+import { BookDimension } from '@/features/book/entities/book-dimension.entity';
 import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions';
 
@@ -15,6 +16,7 @@ const VALID_UUID = '11111111-1111-4111-8111-111111111111';
 function mockSelectQueryBuilder(overrides: Record<string, unknown> = {}) {
   return {
     leftJoinAndSelect: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
     innerJoin: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     addSelect: jest.fn().mockReturnThis(),
@@ -50,6 +52,7 @@ describe('ReadingLogService', () => {
   let service: ReadingLogService;
   let readingLogRepository: jest.Mocked<Partial<Repository<ReadingLog>>>;
   let userRepository: jest.Mocked<Partial<Repository<User>>>;
+  let bookDimensionRepository: jest.Mocked<Partial<Repository<BookDimension>>>;
   let dataSource: jest.Mocked<Partial<DataSource>>;
 
   beforeEach(async () => {
@@ -67,6 +70,10 @@ describe('ReadingLogService', () => {
       findOne: jest.fn(),
     };
 
+    bookDimensionRepository = {
+      find: jest.fn().mockResolvedValue([]),
+    };
+
     dataSource = {
       transaction: jest.fn(),
       getRepository: jest.fn(),
@@ -80,6 +87,10 @@ describe('ReadingLogService', () => {
           useValue: readingLogRepository,
         },
         { provide: getRepositoryToken(User), useValue: userRepository },
+        {
+          provide: getRepositoryToken(BookDimension),
+          useValue: bookDimensionRepository,
+        },
         { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
@@ -187,6 +198,163 @@ describe('ReadingLogService', () => {
         where: { userId: 1, isbn: dto.isbn, date: dto.date },
       });
       expect(readingLogRepository.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('getTower', () => {
+    const log = (isbn: string, date: string) =>
+      ({
+        id: `log-${isbn}`,
+        userId: 1,
+        isbn,
+        date,
+        memo: '',
+        book: {
+          title: `책 ${isbn}`,
+          author: '저자',
+          publisher: '출판사',
+          image: '',
+        },
+      }) as unknown as ReadingLog;
+
+    it('실측이 있으면 그대로, 없으면 추정값으로 채운다', async () => {
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        mockSelectQueryBuilder({
+          getMany: jest
+            .fn()
+            .mockResolvedValue([
+              log('9788936434120', '2026-01-03'),
+              log('9791100000000', '2026-02-01'),
+            ]),
+        }),
+      );
+      (bookDimensionRepository.find as jest.Mock).mockResolvedValue([
+        {
+          isbn: '9788936434120',
+          width: 145,
+          height: 210,
+          depth: 13,
+          pages: 216,
+          weight: 300,
+          binding: '반양장본',
+          coverColor: '#332f22',
+        },
+      ]);
+
+      const result = await service.getTower(1, 2026);
+
+      expect(result.year).toBe(2026);
+      expect(result.items[0]).toMatchObject({
+        isbn: '9788936434120',
+        width: 145,
+        height: 210,
+        depth: 13,
+        weight: 300,
+        coverColor: '#332f22',
+        sizeSource: 'measured',
+        memo: undefined,
+      });
+      expect(result.items[1]).toMatchObject({
+        isbn: '9791100000000',
+        coverColor: null,
+        pages: null,
+        sizeSource: 'estimated',
+      });
+      expect(result.items[1].depth).toBeGreaterThan(0);
+    });
+
+    it('범위를 벗어난 쪽수는 null로 내보낸다', async () => {
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        mockSelectQueryBuilder({
+          getMany: jest
+            .fn()
+            .mockResolvedValue([log('9788954415415', '2026-03-01')]),
+        }),
+      );
+      (bookDimensionRepository.find as jest.Mock).mockResolvedValue([
+        {
+          isbn: '9788954415415',
+          width: 164,
+          height: 225,
+          depth: 8,
+          pages: 18480,
+          weight: null,
+          binding: null,
+          coverColor: null,
+        },
+      ]);
+
+      const result = await service.getTower(1, 2026);
+
+      expect(result.items[0]).toMatchObject({ pages: null, depth: 8 });
+    });
+
+    it('기록이 없으면 크기 조회를 건너뛴다', async () => {
+      const result = await service.getTower(1, 2026);
+      expect(result.items).toEqual([]);
+      expect(bookDimensionRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('연도가 이상하면 400', async () => {
+      await expectInvalidCursor(service.getTower(1, Number('abc')));
+      await expectInvalidCursor(service.getTower(1, 1999));
+    });
+  });
+
+  describe('getPublicTower', () => {
+    it('없는 사용자와 탈퇴한 사용자는 404', async () => {
+      (userRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
+      await expect(
+        service.getPublicTower('nobody', 2026),
+      ).rejects.toMatchObject({ errorCode: 'USER_NOT_FOUND' });
+
+      (userRepository.findOne as jest.Mock).mockResolvedValueOnce({
+        id: 2,
+        isReadingLogPublic: true,
+        deletedAt: new Date(),
+      });
+      await expect(service.getPublicTower('left', 2026)).rejects.toMatchObject({
+        errorCode: 'USER_NOT_FOUND',
+      });
+    });
+
+    it('비공개면 기록을 조회하지 않고 빈 목록', async () => {
+      (userRepository.findOne as jest.Mock).mockResolvedValue({
+        id: 2,
+        isReadingLogPublic: false,
+        deletedAt: null,
+      });
+
+      const result = await service.getPublicTower('private_user', 2026);
+
+      expect(result).toEqual({ year: 2026, items: [] });
+      expect(readingLogRepository.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('공개면 그 사용자의 책탑', async () => {
+      (userRepository.findOne as jest.Mock).mockResolvedValue({
+        id: 7,
+        isReadingLogPublic: true,
+        deletedAt: null,
+      });
+      const qb = mockSelectQueryBuilder();
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        qb,
+      );
+
+      await service.getPublicTower('reader', 2026);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { handle: 'reader' } }),
+      );
+      expect(qb.where).toHaveBeenCalledWith('log.userId = :userId', {
+        userId: 7,
+      });
+    });
+
+    it('연도가 이상하면 사용자 조회 전에 400', async () => {
+      await expectInvalidCursor(service.getPublicTower('reader', 1999));
+      expect(userRepository.findOne).not.toHaveBeenCalled();
     });
   });
 

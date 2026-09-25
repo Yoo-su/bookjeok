@@ -47,6 +47,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-23 | `book_ingest` 역할 생성 + `books` RLS 정책 2개 (신간 적재 도구 전용)               | (미커밋)                |
 | 미상       | `books` 검색 키 표현식 인덱스 `IDX_books_search_key_trgm` (2026-09-23에 발견·기록) | (코드는 아래 10절)      |
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                      | `79b04b2f`, 10절        |
+| 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「책탑」용 실측 판형·표지색, 빈 테이블)    | (미커밋), 11절          |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -175,6 +176,7 @@ DROP TABLE read_receipts;
 > 이름은 엔티티 데코레이터에도 같은 값으로 박아두어 개발(`synchronize`)과 어긋나지
 > 않게 했습니다. PK·FK 이름은 TypeORM 데코레이터로 지정할 수 없어 개발 환경과는
 > 다를 수 있습니다(기존 테이블도 이미 그런 상태입니다).
+> **(2026-09-25 정정: 지정할 수 있습니다. 8절 「앞으로의 규칙」 참고.)**
 >
 > **2026-09-05 운영 DB(Supabase)에 적용 완료되었습니다.**
 > 엔티티 정의 및 derive-ddl.ts 결과를 대조하여 아래 순서대로 실행되었습니다.
@@ -784,8 +786,15 @@ console.log(ns.uniqueConstraintName('users', ['email']));
   재현되지 않음 → `bookId`를 쓰던 시절의 잔재. 읽을 수 있는 이름으로 변경.
 
 **앞으로의 규칙: 인덱스와 유니크 제약은 엔티티 데코레이터에 이름을 반드시
-명시합니다.** 무명으로 두면 해시 이름이 되어 운영과 어긋납니다. PK·FK만
-데코레이터로 이름을 줄 수 없어 예외입니다(3절 명명 규칙 참고).
+명시합니다.** 무명으로 두면 해시 이름이 되어 운영과 어긋납니다.
+
+**PK·FK도 새로 만드는 것부터는 이름을 명시합니다(2026-09-25 정정).** 이 절을 쓸 때는
+"데코레이터로 이름을 줄 수 없다"고 적었지만 TypeORM 0.3부터 가능합니다
+(`@PrimaryColumn({ primaryKeyConstraintName })`, `@JoinColumn({ foreignKeyConstraintName })`,
+설치본 0.3.27에서 확인). 특히 FK는 `RdbmsSchemaBuilder`가 **이름으로** 대조하므로,
+이름이 다르면 운영 사본인 개발 DB에서 `synchronize`가 FK를 지우고 해시 이름으로 다시
+만들고, `derive-ddl.ts`도 그 차이를 계속 보고합니다. PK는 이름을 대조하지 않아 무해합니다.
+기존 테이블의 PK·FK는 아직 무명 선언입니다(별건). 첫 적용은 11절 `book_dimensions`입니다.
 
 ### 배포 순서
 
@@ -1055,3 +1064,99 @@ DROP INDEX CONCURRENTLY IF EXISTS "IDX_books_publisher_trgm";
 | 검색 속도      | —     | 변화 없음 (3글자 이상 21~52ms, 짧은 단어 309~440ms) |
 
 되돌리기는 4절의 `CREATE INDEX`를 `CONCURRENTLY`로 다시 실행하면 됩니다(몇 초).
+
+---
+
+## 11. `book_dimensions` 테이블 (2026-09-25)
+
+### 배경
+
+독서기록 「책탑」은 한 해에 읽은 책을 **실제 두께로** 쌓아 내 키와 나란히 세웁니다.
+`books`에는 판형·쪽수·무게가 없고, 알라딘 Open API가 2026-10-30에 종료되면 받을 곳도
+없습니다(카카오는 판형·쪽수를 주지 않습니다). 그래서 종료 전에 전량 수확해 이 테이블에
+넣습니다. 수확은 `~/bookjeok-migration/scripts/harvest-packing.mjs`, 표지 대표색은
+`cover-colors.mjs`가 만듭니다.
+
+**`books`에 컬럼을 늘리지 않고 떼어 둔 이유**: `books`는 검색·상세·중고거래가 다 쓰는
+핵심 테이블이고, 이 값은 책탑 하나만 씁니다. 값이 없는 책은 행을 만들지 않고, 조회 시
+서버가 추정합니다(`estimateBookSize`, core). 추정값은 저장하지 않습니다.
+
+### 실행한 SQL
+
+```sql
+BEGIN;
+CREATE TABLE public.book_dimensions (
+  "isbn"       character varying NOT NULL,
+  "width"      smallint,              -- mm
+  "height"     smallint,              -- mm
+  "depth"      smallint,              -- mm (두께)
+  "pages"      smallint,
+  "weight"     smallint,              -- g
+  "binding"    character varying(20), -- 양장본·반양장본 등
+  "coverColor" character varying(7),  -- #rrggbb
+  CONSTRAINT "PK_book_dimensions_isbn" PRIMARY KEY ("isbn"),
+  CONSTRAINT "FK_book_dimensions_isbn" FOREIGN KEY ("isbn")
+    REFERENCES public.books ("isbn") ON DELETE CASCADE
+);
+ALTER TABLE public.book_dimensions ENABLE ROW LEVEL SECURITY;
+COMMIT;
+```
+
+- **RLS를 켠 이유**: 9절과 같습니다. Supabase가 `public` 테이블을 anon REST API에 열기
+  때문입니다. 정책은 두지 않았습니다. 서비스는 테이블 소유자(`postgres`)로 접속해 RLS를
+  우회합니다.
+- **엔티티 관계**: `ManyToOne`입니다. `OneToOne`은 기본키가 이미 보장하는 유니크 제약을
+  하나 더 만듭니다. PK·FK 이름은 3절 규칙대로 손으로 붙였고, 엔티티에도 같은 이름을
+  `primaryKeyConstraintName`·`foreignKeyConstraintName`으로 박았습니다(8절 정정 참고).
+  TypeORM 메타데이터로 `PK_book_dimensions_isbn`·`FK_book_dimensions_isbn`(CASCADE)이
+  나오는 것을 확인했습니다.
+
+### 확인 (2026-09-25 실행 직후)
+
+`information_schema.columns`로 컬럼 8개, `pg_constraint`로 PK·FK(ON DELETE CASCADE),
+`pg_class`로 `relrowsecurity = true`, 소유자 `postgres`, 크기 16kB를 확인했습니다.
+
+### 남은 일
+
+- ~~수확이 끝나면 JSONL을 적재합니다.~~ **2026-09-25 완료** — 아래 「적재 결과」.
+  적재 스크립트 `~/bookjeok-migration/scripts/apply-dimensions.mjs`가 지키는 규칙:
+  - **범위 밖 값은 NULL로 넣습니다.** 기준은 core `BOOK_SIZE_PLAUSIBLE`(조회 시
+    `estimateBookSize`가 쓰는 범위와 같음). 수치 컬럼이 `smallint`(최대 32767)라
+    원본을 그대로 넣으면 실패합니다. 2026-09-25 점검 때 `packing.jsonl` 36,205행 중
+    `9788954415415`(무게 35112g, 쪽수 18480)가 이미 범위를 넘었고, `COPY`나 한
+    트랜잭션 INSERT라면 이 한 행 때문에 전부 롤백됩니다. 결측 처리일 뿐이라
+    "추정값은 저장하지 않는다"와 충돌하지 않습니다.
+  - **`books`에 없는 ISBN은 건너뜁니다.** FK가 걸려 있습니다. `colors.jsonl`은
+    56,850건이고, 전부 `books`에 있는지는 아직 확인하지 않았습니다.
+  - **`outcome`이 `found`인 행만** 넣습니다(`title_mismatch` 130행은 다른 책의 값).
+  - 판형 행과 표지색 행은 ISBN으로 합쳐 한 행으로 넣습니다. 한쪽만 있어도 행을 만듭니다.
+- **서버 배포 순서**: 이 테이블이 있어야 `GET /reading-logs/tower`가 동작합니다(적재 전에는
+  모든 책이 추정 크기). 웹은 서버보다 나중에 배포해야 책탑 탭이 에러를 내지 않습니다.
+
+### 적재 결과 (2026-09-25)
+
+`apply-dimensions.mjs`를 dry-run으로 확인한 뒤 `--apply`로 한 트랜잭션에 넣었습니다
+(`INSERT ... ON CONFLICT (isbn) DO UPDATE`, 2,000행씩 `unnest`, 25.6초).
+
+| 항목                   | 값                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| 입력                   | packing 57,035 ISBN (found 56,885 · 제목 불일치 148 · 없음 2), 표지색 56,850 |
+| 적재 행                | **57,035** (세 치수 모두 54,904 · 표지색 있음 56,837 · 표지색만 221)         |
+| 제외                   | `books`에 없는 ISBN 13 (표지색만 있던 삭제된 책)                             |
+| 범위 밖이라 NULL       | 가로 161 · 세로 60 · 두께 165 · 쪽수 207 · 무게 94                           |
+| 적재 후 컬럼별 값 있음 | 가로 55,860 · 세로 55,911 · 두께 55,283 · 쪽수 56,423 · 무게 56,719          |
+| 크기                   | 5,752 kB (인덱스 포함)                                                       |
+
+표본 확인: `9788932027265`(사람, 장소, 환대) 152×223×17mm·297쪽·440g·반양장본,
+smallint를 넘던 `9788954415415`는 쪽수·무게 NULL. `relrowsecurity = true` 유지.
+
+적재 전에 운영 `books`는 57,035행이었고 모든 책이 행을 받았습니다(판형이 없으면 표지색만).
+**10/30 이후 들어오는 신간은 행이 없어 서버가 추정합니다.** 필요하면 새 책의 표지로
+`cover-colors.mjs`를 다시 돌려 표지색만 추가할 수 있습니다(판형은 받을 곳이 없음).
+
+### 되돌리기
+
+```sql
+TRUNCATE public.book_dimensions;   -- 데이터만 비우기 (책탑은 전부 추정 크기로 돌아감)
+DROP TABLE public.book_dimensions; -- 테이블까지 제거 (서버 책탑 API가 500)
+```

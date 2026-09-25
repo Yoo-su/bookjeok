@@ -2,6 +2,7 @@ import {
   Bitcount_Prop_Single,
   Diphylleia,
   Do_Hyeon,
+  Gaegu,
   Gowun_Batang,
   Nanum_Gothic,
   Song_Myung,
@@ -45,6 +46,14 @@ export const do_hyeon = Do_Hyeon({
 export const diphylleia = Diphylleia({
   weight: ["400"],
   variable: "--font-diphylleia",
+  display: "swap",
+  preload: false,
+});
+
+/** 독서기록 「책탑」의 손글씨 주석과 말풍선 */
+export const gaegu = Gaegu({
+  weight: ["400", "700"],
+  variable: "--font-gaegu",
   display: "swap",
   preload: false,
 });

@@ -31,6 +31,7 @@ export * from "./features/order/types";
 export * from "./features/reading-log/constants";
 export { readingLogKeys } from "./features/reading-log/query-keys";
 export * from "./features/reading-log/types";
+export * from "./features/reading-log/utils";
 export * from "./features/review/constants";
 export { reviewMutationKeys } from "./features/review/mutation-keys";
 export { reviewKeys } from "./features/review/query-keys";

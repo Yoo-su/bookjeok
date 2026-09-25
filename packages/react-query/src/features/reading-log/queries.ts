@@ -5,10 +5,12 @@ import {
   getLoungeBookReaders,
   getLoungeFeed,
   getLoungePopular,
+  getPublicReadingTower,
   getReadingLogs,
   getReadingLogSettings,
   getReadingLogsInfinite,
   getReadingLogStats,
+  getReadingTower,
 } from "@bookjeok/api-client";
 import { readingLogKeys } from "@bookjeok/core";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -34,6 +36,30 @@ export const useReadingLogStatsQuery = (year: number, month: number) => {
   return useQuery({
     queryKey: readingLogKeys.stats(year, month).queryKey,
     queryFn: () => getReadingLogStats({ year, month }),
+  });
+};
+
+/**
+ * 책탑 조회
+ */
+export const useReadingTowerQuery = (
+  year: number,
+  options?: { enabled?: boolean },
+) => {
+  return useQuery({
+    queryKey: readingLogKeys.tower(year).queryKey,
+    queryFn: () => getReadingTower(year),
+    enabled: options?.enabled,
+  });
+};
+
+/**
+ * 공개 프로필 책탑 조회
+ */
+export const usePublicReadingTowerQuery = (handle: string, year: number) => {
+  return useQuery({
+    queryKey: readingLogKeys.publicTower(handle, year).queryKey,
+    queryFn: () => getPublicReadingTower(handle, year),
   });
 };
 

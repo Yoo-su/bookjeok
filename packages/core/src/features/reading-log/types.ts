@@ -33,6 +33,39 @@ export interface UpdateReadingLogParams {
   date?: string; // YYYY-MM-DD
 }
 
+/** 책 크기의 출처. 알라딘 실측값이 없으면 서버가 추정한다 */
+export type BookSizeSource = "measured" | "estimated";
+
+/**
+ * 책탑에 쌓이는 책 한 권(독서 기록 1건).
+ * 크기는 mm, 무게는 g. 눕혀 쌓으므로 탑에서는 height가 가로, depth가 높이가 된다.
+ */
+export interface ReadingTowerBook {
+  logId: string;
+  isbn: string;
+  date: string; // YYYY-MM-DD
+  memo?: string;
+  title: string;
+  author: string;
+  publisher: string;
+  image: string;
+  width: number;
+  height: number;
+  depth: number;
+  pages: number | null;
+  weight: number;
+  binding: string | null;
+  /** 표지 대표색(#rrggbb). 없으면 화면이 기본색으로 칠한다 */
+  coverColor: string | null;
+  sizeSource: BookSizeSource;
+}
+
+/** 책탑 API 응답. items는 완독일 오름차순(바닥부터 쌓는 순서) */
+export interface ReadingTowerResponse {
+  year: number;
+  items: ReadingTowerBook[];
+}
+
 /**
  * 독서 기록 공개 설정
  */

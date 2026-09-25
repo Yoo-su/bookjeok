@@ -741,7 +741,10 @@
     "controls": {
       "all_logs": "전체 기록",
       "view_calendar": "달력",
-      "view_list": "리스트"
+      "view_list": "리스트",
+      "view_tower": "책탑",
+      "prev_year": "이전 연도",
+      "next_year": "다음 연도"
     },
     "stats": {
       "monthly_title": "{month}월의 독서",
@@ -790,35 +793,6 @@
       "empty_write_sub": "오늘 읽은 책을 기록해 보세요.",
       "empty_read": "기록된 책이 없습니다."
     },
-    "deck": {
-      "share_button": "올해의 독서 덱 자랑하기",
-      "empty_sub": "오늘 읽은 책을 기록해 나만의 근사한 카드 덱을 완성해 보세요!",
-      "finished_message": "올해 완독한 모든 도서 카드를 감상하셨습니다.",
-      "total_count_label": "올해 누적 독서량",
-      "reset_button": "처음부터 다시보기",
-      "copy_link": "공유 링크 복사",
-      "swipe_hint": "좌우로 스와이프하여 다음 카드 보기",
-      "flipped_hint": "카드 뒤집기",
-      "back_title": "독서 기록 카드",
-      "empty_memo": "이 책에 대해 남긴 한줄평이 없습니다.",
-      "share_title": "{name}님의 {year}년 독서 덱",
-      "share_title_all": "{name}님의 독서 덱",
-      "share_subtitle": "올해 완독한 {count}권의 소중한 독서 기록 카드 컬렉션입니다.",
-      "create_my_deck": "나만의 독서 덱 만들기",
-      "loading_message": "독서 카드를 꺼내오고 있어요...",
-      "error_title": "사용자를 찾을 수 없습니다",
-      "error_desc": "요청하신 독서 덱 정보가 유효하지 않거나 비공개 상태일 수 있습니다.",
-      "go_home": "북적 홈으로 가기",
-      "footer_brand": "책과 지식의 선순환 플랫폼, 북적",
-      "metadata_title": "{nickname}님의 독서 카드 덱",
-      "metadata_description": "{period} 완독한 소중한 책들의 카드 컬렉션을 둘러보세요.",
-      "metadata_period_year": "{year}년",
-      "metadata_period_this_year": "올해",
-      "dialog_title": "{year}년 독서 덱",
-      "dialog_desc": "카드를 끌어서 넘겨 보세요. 링크를 복사해 자랑할 수 있어요.",
-      "private_notice": "독서 기록이 비공개라 링크를 받은 사람에게는 덱이 보이지 않아요.",
-      "make_public": "공개로 전환하기"
-    },
     "toast": {
       "create_success": "독서 기록이 등록되었습니다.",
       "create_error": "독서 기록 등록에 실패했습니다.",
@@ -828,8 +802,12 @@
       "delete_error": "독서 기록 삭제에 실패했습니다.",
       "settings_updated": "독서 기록 설정이 변경되었습니다.",
       "already_added": "그날 이미 기록한 책입니다.",
-      "share_deck_copied": "독서 덱 링크가 복사되었습니다.",
-      "login_required_share": "로그인 후 공유 기능을 이용하실 수 있습니다."
+      "create_tower": "기록했어요. 책탑이 {cm}cm 높아졌어요",
+      "tower_passed": "{part} 넘었어요!",
+      "tower_over_passed": "책탑이 내 키를 넘었어요!",
+      "tower_over": "내 키보다 {cm}cm 높아요",
+      "tower_to_next": "{part}까지 {cm}cm 남았어요",
+      "view_tower": "책탑 보기"
     },
     "dialog": {
       "delete_title": "독서 기록 삭제",
@@ -839,6 +817,133 @@
     },
     "feed": {
       "fetch_error": "데이터를 불러오는 중 문제가 발생했습니다."
+    },
+    "tower": {
+      "kicker": "책탑",
+      "count_unit": "권",
+      "pages_unit": "쪽",
+      "height_unit": "cm",
+      "height_chip": "내 키 {cm}cm",
+      "height_chip_default": "내 키 입력",
+      "lede_passed": "책탑이 내 {part} 넘었어요. {next}까지 {cm}cm, 지금 속도면 {eta}쯤 내 키에 닿아요.",
+      "lede_start": "{next}까지 {cm}cm, 지금 속도면 {eta}쯤 내 키에 닿아요.",
+      "lede_over": "책탑이 내 키보다 {cm}cm 높아요. 다음 목표는 키의 {times}배, {goal}cm예요.",
+      "lede_empty": "읽은 책을 기록하면 한 권씩 쌓여요.",
+      "height_label": "내 키",
+      "height_hint": "이 기기에만 저장돼요",
+      "height_default_hint": "평균 키로 보여주는 중이에요. 내 키를 입력해 보세요",
+      "height_error": "{min}~{max}cm 사이로 입력해 주세요",
+      "height_decrease": "1cm 줄이기",
+      "height_increase": "1cm 늘리기",
+      "height_slider": "내 키 조절",
+      "character_label": "캐릭터",
+      "character_m": "남",
+      "character_f": "여",
+      "scale_hint": "눈금 한 칸 10cm",
+      "replay": "다시 쌓기",
+      "stage_label": "책 {count}권을 쌓은 높이 {height}cm와 내 키 {me}cm 비교",
+      "view_stack": "쌓인 책 목록 보기",
+      "my_height": "내 키 {cm}cm",
+      "remain": "{cm}cm 남음",
+      "approx_books": "약 {count}권",
+      "progress_to_height": "내 키까지",
+      "progress_over": "내 키를 넘었어요",
+      "progress_remain": "{cm}cm 남았어요. 평균 두께로 치면 약 {count}권이에요.",
+      "progress_double": "키의 {times}배까지 {cm}cm 남았어요.",
+      "stat_count": "완독",
+      "stat_pages": "쪽수",
+      "stat_weight": "무게",
+      "share_button": "이미지로 공유하기",
+      "stack_title": "쌓인 순서",
+      "stack_hint": "맨 위가 가장 최근에 읽은 책",
+      "layer_month": "{month}월",
+      "layer_count": "{count}권",
+      "empty_title": "{year}년에 완독한 책이 아직 없어요",
+      "estimated_note": "{count}권은 크기 정보가 없어 평균 판형으로 쌓았어요",
+      "bubble_start": "이제 시작!",
+      "bubble_passed": "{part} 넘었다!",
+      "bubble_to_next": "{part}까지 {cm}cm",
+      "bubble_over": "머리를 넘었다!",
+      "bubble_over_cm": "+{cm}cm",
+      "parts": {
+        "ankle": {
+          "name": "발목",
+          "topic": "발목은",
+          "object": "발목을"
+        },
+        "knee": {
+          "name": "무릎",
+          "topic": "무릎은",
+          "object": "무릎을"
+        },
+        "waist": {
+          "name": "허리",
+          "topic": "허리는",
+          "object": "허리를"
+        },
+        "chest": {
+          "name": "가슴",
+          "topic": "가슴은",
+          "object": "가슴을"
+        },
+        "shoulder": {
+          "name": "어깨",
+          "topic": "어깨는",
+          "object": "어깨를"
+        },
+        "eyes": {
+          "name": "눈높이",
+          "topic": "눈높이는",
+          "object": "눈높이를"
+        },
+        "head": {
+          "name": "내 키",
+          "topic": "머리는",
+          "object": "머리를"
+        }
+      },
+      "sheet": {
+        "tower_add": "탑 +{cm}cm",
+        "pages": "{count}쪽",
+        "size": "{w}×{h}×{d}mm",
+        "estimated": "크기 추정",
+        "finished": "{date} 완독",
+        "position": "바닥에서 {cm}cm 높이에 놓여 있어요",
+        "no_memo": "한줄평을 남기지 않았어요",
+        "cover_alt": "{title} 표지"
+      },
+      "share": {
+        "title": "공유 이미지",
+        "kicker": "{year} 책탑",
+        "story": "스토리 9:16",
+        "feed": "피드 4:5",
+        "share": "공유하기",
+        "save": "이미지 저장",
+        "hint": "이미지를 길게 누르거나 우클릭해서 저장할 수도 있어요",
+        "failed": "공유 창을 열 수 없어 이미지를 저장했어요",
+        "brand": "북적",
+        "site": "bookjeok.com",
+        "stats": "{pages}쪽 · {kg}kg",
+        "sub_over": "내 키보다 {cm}cm 높이 쌓았어요",
+        "sub_passed": "{part} 넘어서 {next}까지 {cm}cm 남았어요",
+        "sub_start": "{next}까지 {cm}cm 남았어요",
+        "image_alt": "책탑 공유 이미지 미리보기",
+        "rendering": "이미지를 그리는 중이에요",
+        "render_failed": "이미지를 만들지 못했어요. 닫았다가 다시 열어 주세요.",
+        "format_label": "이미지 비율"
+      },
+      "lede_past": "{year}년에 {cm}cm를 쌓았어요.",
+      "lede_past_passed": "{year}년에 {cm}cm를 쌓아 내 {part} 넘었어요.",
+      "lede_past_over": "{year}년에 {cm}cm를 쌓아 내 키를 넘었어요.",
+      "error_title": "책탑을 불러오지 못했어요",
+      "retry": "다시 시도",
+      "public": {
+        "prev_year": "이전 연도",
+        "next_year": "다음 연도",
+        "empty": "{name}님이 {year}년에 완독한 책이 없어요",
+        "stage_label": "{name}님이 {year}년에 읽은 책 {count}권을 쌓은 높이 {height}cm",
+        "cta": "나도 책탑 쌓아 보기"
+      }
     }
   },
   "insights": {
@@ -1137,7 +1242,7 @@
     "email_verified": "이메일 인증 완료",
     "email_verified_tooltip": "이메일 인증을 완료한 사용자입니다.",
     "last_active": "{time} 접속",
-    "reading_log_calendar_title": "{name}님의 독서 기록",
+    "reading_log_title": "{name}님의 독서 기록",
     "stats": {
       "sales_count": "판매 중인 도서",
       "reviews_count": "작성한 리뷰",
@@ -1150,7 +1255,6 @@
     "sections": {
       "recent_reviews": "최근 리뷰",
       "recent_sales": "최근 판매 도서",
-      "badge_calendar": "월별 독서 캘린더",
       "badge_recent_reading": "독서 기록 목록",
       "badge_recent_reviews": "최근 리뷰",
       "badge_recent_sales": "책방 거래"

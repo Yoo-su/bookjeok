@@ -14,6 +14,10 @@ vi.mock("@bookjeok/api-client", () => ({
   getReadingLogs: vi.fn(),
 }));
 
+vi.mock("@/shared/config/i18n/routing", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock("next-intl", () => ({
   useLocale: () => "ko",
   useTranslations: () => (key: string) => key,
