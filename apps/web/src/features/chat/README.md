@@ -10,6 +10,7 @@
   - **역할**: 웹소켓 연결의 생명주기를 관리하는 최하위 Provider입니다.
   - **로직**: `useAuthStore`에서 Access Token을 가져와, 토큰이 있을 경우에만 Socket.IO 클라이언트 인스턴스를 생성하고 서버의 `/chat` 네임스페이스에 연결을 시도합니다. Access Token이 변경되거나 없어지면 기존 연결을 끊고 새로 연결합니다.
   - `useSocketContext` 훅을 통해 하위 컴포넌트에 `socket` 인스턴스와 연결 상태(`isConnected`)를 제공합니다.
+  - `socket.io-client`는 연결할 때 동적으로 불러옵니다. 정적 import면 Node 빌드가 `ws`까지 끌고 와 모든 라우트의 서버 번들에 실리고, 콜드 스타트마다 로드됩니다. 불러오기 전에 언마운트되거나 토큰이 바뀌면 연결하지 않습니다.
 
 - **`features/chat/providers/chat-provider.tsx`**:
   - **역할**: `SocketProvider` 위에서 실제 채팅 기능의 이벤트 리스너를 등록하고, 채팅방에 입장하는 등 채팅 관련 로직을 총괄하는 Provider입니다.
@@ -17,6 +18,7 @@
     1.  사용자가 로그인하고 소켓이 연결되면 `useChatEvents` 훅을 통해 소켓 이벤트 리스너(`newMessage`, `newChatRoom` 등)를 등록합니다.
     2.  `useMyChatRoomsQuery`로 채팅방 목록을 가져온 후, `hasJoinedRooms` 상태를 확인하여 아직 참여하지 않은 방이 있으면 `joinRooms` 이벤트를 서버로 보내 한 번에 모든 방에 참여(subscribe)합니다. 실패하면 백오프로 재시도하고, 끝내 실패하면 토스트로 알립니다.
     3.  **재연결 동기화**: 연결이 끊긴 동안 온 메시지는 소켓으로 받지 못하는데 메시지 캐시는 `staleTime: INFINITY`라 스스로 다시 받아오지 않습니다. 그래서 `connect` 리스너를 소켓 인스턴스 수명 내내 붙여 두고(연결 상태로 가두면 끊긴 사이에 리스너가 떨어져 나가 재연결을 놓칩니다), 재연결이면 방 목록을 무효화하고 열려 있는 방은 첫 페이지만 남겨 다시 받습니다. 닫혀 있는 방의 메시지 캐시는 버려 다음에 열 때 새로 받습니다.
+    4.  **위젯 지연 로딩**: `ChatToggleButton`·`ChatWidget`은 `next/dynamic`(`ssr: false`)으로 불러옵니다. 마운트 후 로그인 사용자에게만 그려지므로 서버 렌더 결과는 같습니다. 정적 import였을 때는 이미지 업로드(`@vercel/blob/client` → undici, 이미지 압축)까지 루트 레이아웃을 타고 모든 라우트의 서버 번들에 실렸습니다.
 
 - **`features/chat/hooks/use-chat-events.ts`**:
   - **역할**: 서버로부터 오는 각종 웹소켓 이벤트를 수신하고, 그에 따라 TanStack Query 캐시를 업데이트하는 로직을 모아놓은 커스텀 훅입니다.

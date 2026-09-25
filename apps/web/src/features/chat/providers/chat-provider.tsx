@@ -3,20 +3,36 @@
 import { chatKeys } from "@bookjeok/core";
 import { useMyChatRoomsQuery } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { ChatToggleButton } from "@/features/chat/components/widgets/chat-toggle-button";
-import { ChatWidget } from "@/features/chat/components/widgets/chat-widget";
 import { useChatEvents } from "@/features/chat/hooks/use-chat-events";
 import { useChatStore } from "@/features/chat/stores/use-chat-store";
 import { useSocketContext } from "@/shared/providers/socket-provider";
 
 import { HIDE_CHAT_WIDGET_ROUTES } from "../constants/routes";
 import { resyncRoomMessages } from "../utils/chat-cache-utils";
+
+// 위젯은 마운트 후 로그인 사용자에게만 그려져 서버 렌더에 나오지 않는다.
+// 정적 import면 업로드(@vercel/blob → undici)까지 모든 라우트의 서버 번들에 실려 콜드 스타트마다 로드된다
+const ChatToggleButton = dynamic(
+  () =>
+    import("@/features/chat/components/widgets/chat-toggle-button").then(
+      (m) => m.ChatToggleButton,
+    ),
+  { ssr: false },
+);
+const ChatWidget = dynamic(
+  () =>
+    import("@/features/chat/components/widgets/chat-widget").then(
+      (m) => m.ChatWidget,
+    ),
+  { ssr: false },
+);
 
 /** joinRooms ack 대기 제한 시간 */
 const JOIN_ACK_TIMEOUT_MS = 10_000;
