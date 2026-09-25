@@ -3,7 +3,7 @@
 import type { ReadingTowerBook } from "@bookjeok/core";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -15,7 +15,8 @@ import {
 import { cn } from "@/shared/utils";
 import { gaegu, gowun_batang } from "@/styles/fonts";
 
-import type { SceneLabels } from "../lib/scene";
+import { LEGEND_MAX } from "../lib/legend";
+import { bookColor, type SceneLabels } from "../lib/scene";
 import {
   renderTowerShareImage,
   type ShareFormat,
@@ -64,10 +65,41 @@ export function TowerShareDialog({
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
 
+  // 제목을 적을 책. 고르기 전에는 탑 맨 위(최근) 책들
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const [picking, setPicking] = useState(false);
+  const legendIds = useMemo(() => {
+    const exists = new Set(scene.books.map((b) => b.logId));
+    return (
+      picked?.filter((id) => exists.has(id)) ??
+      scene.books.slice(-LEGEND_MAX).map((b) => b.logId)
+    );
+  }, [picked, scene.books]);
+  const newestFirst = useMemo(() => [...scene.books].reverse(), [scene.books]);
+  const rest = scene.books.length - legendIds.length;
+  const legendRef = useRef<
+    { ids: string[]; heading: string; rest?: string } | undefined
+  >(undefined);
+  legendRef.current = legendIds.length
+    ? {
+        ids: legendIds,
+        heading: t("legend_heading"),
+        rest: rest > 0 ? t("legend_rest", { count: rest }) : undefined,
+      }
+    : undefined;
+  const legendKey = legendIds.join(",");
+  const toggle = (id: string) =>
+    setPicked(
+      legendIds.includes(id)
+        ? legendIds.filter((v) => v !== id)
+        : [...legendIds, id].slice(0, LEGEND_MAX),
+    );
+
   useEffect(() => {
     // 닫히면 내용이 사라져 해제한 blob URL을 다시 열 수 없다
     if (!open) {
       setImage(null);
+      setPicking(false);
       return;
     }
     let cancelled = false;
@@ -80,6 +112,7 @@ export function TowerShareDialog({
         const canvas = await renderTowerShareImage({
           format,
           ...sceneRef.current,
+          legend: legendRef.current,
           fonts: {
             hand: gaegu.style.fontFamily,
             serif: gowun_batang.style.fontFamily,
@@ -104,7 +137,7 @@ export function TowerShareDialog({
       clearTimeout(timer);
       if (url) URL.revokeObjectURL(url);
     };
-  }, [open, format, scene.userMm, scene.character]);
+  }, [open, format, scene.userMm, scene.character, legendKey]);
 
   const filename = `bookjeok-tower-${year}.png`;
 
@@ -176,6 +209,66 @@ export function TowerShareDialog({
             ))}
           </div>
           <TowerHeightChip />
+        </div>
+        <div className="rounded-2xl border border-stone-200 px-3.5 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[13px] font-semibold text-stone-800">
+              {t("legend_label")}
+              <span className="ml-1.5 tabular-nums text-stone-400">
+                {legendIds.length}/{LEGEND_MAX}
+              </span>
+            </span>
+            <button
+              type="button"
+              aria-expanded={picking}
+              onClick={() => setPicking((v) => !v)}
+              className="cursor-pointer rounded-full px-2.5 py-1 text-[12.5px] font-semibold text-stone-600 hover:bg-stone-100"
+            >
+              {picking ? t("legend_done") : t("legend_edit")}
+            </button>
+          </div>
+          {picking && (
+            <>
+              <p className="mt-0.5 text-xs text-stone-500">
+                {t("legend_hint", { max: LEGEND_MAX })}
+              </p>
+              <ul className="-mx-1.5 mt-2 max-h-52 overflow-y-auto">
+                {newestFirst.map((b) => {
+                  const on = legendIds.includes(b.logId);
+                  const full = !on && legendIds.length >= LEGEND_MAX;
+                  return (
+                    <li key={b.logId}>
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-[13px] hover:bg-stone-50",
+                          full && "cursor-not-allowed opacity-40",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          disabled={full}
+                          onChange={() => toggle(b.logId)}
+                          className="size-4 shrink-0 accent-stone-900"
+                        />
+                        <span
+                          aria-hidden="true"
+                          className="h-2.5 w-5 shrink-0 rounded-[2px] border border-stone-900/70"
+                          style={{ backgroundColor: bookColor(b) }}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-stone-800">
+                          {b.title}
+                        </span>
+                        <span className="shrink-0 text-xs tabular-nums text-stone-400">
+                          {b.date.slice(5).replace("-", ".")}
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-2">
           <button

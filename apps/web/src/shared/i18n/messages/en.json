@@ -932,7 +932,13 @@
         "image_alt": "Book tower share image preview",
         "rendering": "Drawing the image",
         "render_failed": "Couldn't create the image. Close and try again.",
-        "format_label": "Image format"
+        "format_label": "Image format",
+        "legend_heading": "In the stack",
+        "legend_rest": "+{count} more",
+        "legend_label": "Titles on the image",
+        "legend_edit": "Change",
+        "legend_done": "Done",
+        "legend_hint": "Pick up to {max} books. Clear them all for an image without titles."
       },
       "lede_past": "You stacked {cm}cm in {year}.",
       "lede_past_passed": "You stacked {cm}cm in {year} — past your {part}.",
