@@ -1,11 +1,57 @@
-import { bookSaleKeys, reviewKeys } from "@bookjeok/core";
-import { QueryClient } from "@tanstack/react-query";
+import { bookSaleKeys, CACHE_TIME, reviewKeys } from "@bookjeok/core";
+import { hydrate, QueryClient } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/shared/libs/axios", () => ({}));
-import { ServerQueryBoundary } from "./server-query-boundary";
+import { dehydrateStable, ServerQueryBoundary } from "./server-query-boundary";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
+
+describe("dehydrateStable", () => {
+  const snapshotAt = async (time: string) => {
+    vi.useFakeTimers({ now: new Date(time) });
+    const client = new QueryClient();
+    await client.fetchQuery({
+      queryKey: reviewKeys.popular.queryKey,
+      queryFn: async () => ["same"],
+    });
+    return JSON.stringify(dehydrateStable(client));
+  };
+
+  it("데이터가 같으면 생성 시각이 달라도 출력이 같다", async () => {
+    expect(await snapshotAt("2026-09-25T00:00:00Z")).toBe(
+      await snapshotAt("2026-09-25T06:00:00Z"),
+    );
+  });
+
+  it("새 클라이언트에는 stale로 복원되고 기존 캐시는 덮어쓰지 않는다", async () => {
+    const server = new QueryClient();
+    await server.fetchQuery({
+      queryKey: reviewKeys.popular.queryKey,
+      queryFn: async () => ["snapshot"],
+    });
+    const state = dehydrateStable(server);
+
+    const fresh = new QueryClient();
+    hydrate(fresh, state);
+    const restored = fresh.getQueryCache().find({
+      queryKey: reviewKeys.popular.queryKey,
+    });
+    expect(restored?.state.data).toEqual(["snapshot"]);
+    // 전역 staleTime(1분) 기준으로 이미 stale → 마운트 시 refetch
+    expect(restored?.isStaleByTime(CACHE_TIME.ONE_MINUTE)).toBe(true);
+
+    const existing = new QueryClient();
+    existing.setQueryData(reviewKeys.popular.queryKey, ["client"]);
+    hydrate(existing, state);
+    expect(existing.getQueryData(reviewKeys.popular.queryKey)).toEqual([
+      "client",
+    ]);
+  });
+});
 
 describe("ServerQueryBoundary 장애 처리", () => {
   it.each([false, true])(

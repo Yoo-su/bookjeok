@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { config } from "@/shared/config/env";
@@ -31,8 +31,15 @@ export const SocketProvider = ({
   const [isConnected, setIsConnected] = useState(false);
   const accessToken = useAuthStore((state) => state.accessToken);
   useEffect(() => {
-    if (accessToken) {
-      const newSocket = io(`${config.NEXT_PUBLIC_API_URL}${namespace}`, {
+    if (!accessToken) return;
+
+    let newSocket: Socket | null = null;
+    let disposed = false;
+
+    // 연결할 때 불러온다. 정적 import면 Node 빌드의 ws까지 모든 라우트 서버 번들에 실린다
+    void import("socket.io-client").then(({ io }) => {
+      if (disposed) return;
+      const s = io(`${config.NEXT_PUBLIC_API_URL}${namespace}`, {
         transports: ["websocket"],
         auth: {
           token: accessToken,
@@ -45,42 +52,44 @@ export const SocketProvider = ({
         randomizationFactor: 0.5, // 재연결 지연에 랜덤 요소 추가 (동시 재연결 방지)
       });
 
-      newSocket.on("connect", () => {
+      s.on("connect", () => {
         setIsConnected(true);
       });
 
-      newSocket.on("disconnect", (reason) => {
+      s.on("disconnect", (reason) => {
         setIsConnected(false);
       });
 
       // 재연결 관련 이벤트 핸들러
-      newSocket.on("reconnect", (attemptNumber) => {});
+      s.on("reconnect", (attemptNumber) => {});
 
-      newSocket.on("reconnect_attempt", (attemptNumber) => {});
+      s.on("reconnect_attempt", (attemptNumber) => {});
 
-      newSocket.on("reconnect_error", (error) => {
+      s.on("reconnect_error", (error) => {
         console.error(`Socket reconnection error on ${namespace}:`, error);
       });
 
-      newSocket.on("connect_error", (error) => {
+      s.on("connect_error", (error) => {
         console.error(`Socket connection error on ${namespace}:`, error);
         setIsConnected(false);
       });
 
-      newSocket.on("connected", (data) => {});
+      s.on("connected", (data) => {});
 
-      newSocket.on("error", (error) => {
+      s.on("error", (error) => {
         console.error(`Socket error on ${namespace}:`, error.message);
       });
 
-      setSocket(newSocket);
+      newSocket = s;
+      setSocket(s);
+    });
 
-      return () => {
-        newSocket.disconnect();
-        setSocket(null);
-        setIsConnected(false);
-      };
-    }
+    return () => {
+      disposed = true;
+      newSocket?.disconnect();
+      setSocket(null);
+      setIsConnected(false);
+    };
   }, [accessToken, namespace]);
 
   const value = useMemo(() => ({ socket, isConnected }), [socket, isConnected]);

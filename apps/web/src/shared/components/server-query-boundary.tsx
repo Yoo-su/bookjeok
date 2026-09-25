@@ -7,7 +7,9 @@ import "@/shared/libs/axios";
 
 import {
   dehydrate,
+  DehydratedState,
   HydrationBoundary,
+  QueryClient,
   QueryFunction,
 } from "@tanstack/react-query";
 import { ReactNode } from "react";
@@ -71,8 +73,30 @@ export async function ServerQueryBoundary({
   }
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
+    <HydrationBoundary state={dehydrateStable(queryClient)}>
       {children}
     </HydrationBoundary>
   );
+}
+
+/**
+ * 시각 필드를 0으로 고정한 dehydrate.
+ * 재검증 결과가 이전과 같으면 Vercel은 ISR 쓰기를 과금하지 않는데, 시각이 섞이면 매번 달라진다.
+ * 스냅샷은 대개 staleTime보다 오래돼 어차피 마운트 시 refetch되고, 기존 캐시는 덮어쓰지 않게 된다.
+ */
+export function dehydrateStable(queryClient: QueryClient): DehydratedState {
+  const state = dehydrate(queryClient);
+  return {
+    ...state,
+    queries: state.queries.map((query) =>
+      // promise가 있는 스트리밍 쿼리는 hydrate가 dehydratedAt으로 신선도를 판단한다
+      query.promise
+        ? query
+        : {
+            ...query,
+            dehydratedAt: 0,
+            state: { ...query.state, dataUpdatedAt: 0 },
+          },
+    ),
+  };
 }
