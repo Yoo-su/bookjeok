@@ -7,7 +7,7 @@ export const LoungeActiveReadersSkeleton = () => {
     <div className="w-full">
       {/* 헤더 스켈레톤 */}
       <div className="mb-10">
-        <Skeleton className="h-8 w-48 mb-3" />
+        <Skeleton className="h-7 w-48 mb-3" />
         <Skeleton className="h-4 w-72" />
       </div>
 
