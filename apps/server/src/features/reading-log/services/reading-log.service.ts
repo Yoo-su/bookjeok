@@ -9,7 +9,7 @@ import {
 } from '@bookjeok/core';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 
 import { Book } from '@/features/book/entities/book.entity';
 import { BookDimension } from '@/features/book/entities/book-dimension.entity';
@@ -71,6 +71,9 @@ interface FeedGroupAccumulator {
   readersMap: Map<number, LoungeReader>;
 }
 
+/** 판형을 `leftJoinAndMapOne`으로 붙인 기록. 실측이 없으면 비어 있다 */
+type TowerLog = ReadingLog & { dimension?: BookDimension | null };
+
 interface PopularGroupAccumulator {
   isbn: string;
   book: LoungePopularResponse['items'][number]['book'] | null;
@@ -86,8 +89,6 @@ export class ReadingLogService {
     private readonly readingLogRepository: Repository<ReadingLog>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(BookDimension)
-    private readonly bookDimensionRepository: Repository<BookDimension>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -627,7 +628,7 @@ export class ReadingLogService {
   async getTower(userId: number, year: number): Promise<ReadingTowerResponse> {
     this.assertTowerYear(year);
 
-    const logs = await this.readingLogRepository
+    const logs: TowerLog[] = await this.readingLogRepository
       .createQueryBuilder('log')
       // 소개글(text)은 쓰지 않으므로 필요한 열만
       .leftJoin('log.book', 'book')
@@ -638,6 +639,13 @@ export class ReadingLogService {
         'book.publisher',
         'book.image',
       ])
+      // 판형도 같은 쿼리로. 서버와 DB가 다른 클라우드라 왕복 한 번이 아깝다
+      .leftJoinAndMapOne(
+        'log.dimension',
+        BookDimension,
+        'dim',
+        'dim.isbn = log.isbn',
+      )
       .where('log.userId = :userId', { userId })
       .andWhere('log.date >= :start AND log.date <= :end', {
         start: `${year}-01-01`,
@@ -647,18 +655,10 @@ export class ReadingLogService {
       .addOrderBy('log.createdAt', 'ASC')
       .getMany();
 
-    const isbns = [...new Set(logs.map((log) => log.isbn))];
-    const dimensions = isbns.length
-      ? await this.bookDimensionRepository.find({
-          where: { isbn: In(isbns) },
-        })
-      : [];
-    const byIsbn = new Map(dimensions.map((d) => [d.isbn, d]));
-
     return {
       year,
       items: logs.map((log) => {
-        const dimension = byIsbn.get(log.isbn);
+        const dimension = log.dimension;
         const size = estimateBookSize(log.isbn, dimension ?? {});
         return {
           logId: log.id,

@@ -129,7 +129,7 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 `getTower(userId, year)` — `GET /reading-logs/tower?year=`. 한 해의 기록을 완독일 오름차순(바닥부터 쌓는 순서)으로, 책 크기(mm)·무게·표지색과 함께 돌려줍니다.
 
-- 크기는 `book_dimensions`(알라딘 실측 수확본, 2026-10-30 이후 갱신 없음)에서 읽습니다. 행이 없거나 값이 비정상이면 `estimateBookSize`(core)가 채우고 `sizeSource: "estimated"`로 표시합니다. **추정값은 저장하지 않습니다.**
+- 크기는 `book_dimensions`(알라딘 실측 수확본, 2026-10-30 이후 갱신 없음)를 기록 조회에 조인해 한 번에 읽습니다(`leftJoinAndMapOne`). 서버(Azure)와 DB(Supabase)가 다른 클라우드라 왕복을 줄이려는 것입니다. 이 조인 때문에 모듈의 `forFeature`에서 `BookDimension`을 빼면 안 됩니다(`autoLoadEntities`). 행이 없거나 값이 비정상이면 `estimateBookSize`(core)가 채우고 `sizeSource: "estimated"`로 표시합니다. **추정값은 저장하지 않습니다.**
 - 쪽수도 같은 범위(`BOOK_SIZE_PLAUSIBLE`)로 걸러 벗어나면 `pages: null`입니다. 원본에는 18,480쪽 같은 오기가 섞여 있어 그대로 내보내면 쪽수 합계와 공유 이미지에 찍힙니다.
 - 도서는 제목·저자·출판사·표지만 읽습니다(`description` 제외).
 - 표지색이 없으면 `coverColor: null`로 두고 웹이 대체색을 고릅니다.
