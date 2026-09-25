@@ -65,6 +65,8 @@ book-sale/
 
 `root.tsx`가 Context를 제공하고 `parts.tsx`가 조각을 노출합니다. 리뷰의 `review-card`도 같은 패턴입니다.
 
+홈의 최근 판매 캔버스는 앵커가 없는 클릭 영역입니다. 판매글 상세로 `router.push`하기 직전에 `signalNavigationStart()`를 호출해 공통 이동 진행 표시기를 띄웁니다.
+
 ### 이미지 업로드
 
 ```

@@ -14,6 +14,7 @@ import {
 import { ArrowLeft, ArrowRight } from "@/shared/components/icons/iconsax";
 import { Link, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { signalNavigationStart } from "@/shared/utils/navigation-progress";
 
 import { RecentSaleCard } from "./recent-sale-card";
 import { RecentSalesSliderSkeleton } from "./skeleton";
@@ -104,9 +105,10 @@ export const RecentSalesSlider = () => {
             maxSpeed={4.5}
             smoothing={0.06}
             borderRadius={0}
-            onItemClick={(item) =>
-              router.push(PATHS.BOOK_SALES_DETAIL(String(item.id)))
-            }
+            onItemClick={(item) => {
+              signalNavigationStart();
+              router.push(PATHS.BOOK_SALES_DETAIL(String(item.id)));
+            }}
           />
 
           {/* 하단 안내 가이드 */}

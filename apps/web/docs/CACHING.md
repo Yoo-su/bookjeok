@@ -138,7 +138,13 @@ prefetch를 끄면 클릭 시점에 페이로드를 받아오므로 수백 ms의
 대신 라우트 밖에서 지연을 가립니다 — `shared/components/navigation-progress.tsx`가
 `[locale]/layout.tsx`에 상시 마운트돼 있습니다. 같은 출처 앵커 클릭을 듣고 막대를 띄우며,
 `usePathname()`이 바뀌면 내립니다. `useSearchParams()`는 정적 렌더링을 무효화하므로 쓰지
-않습니다. 라우트 트리 밖이라 Suspense 경계를 만들지 않고, 따라서 응답 상태에 관여하지 않습니다.
+않고, 쿼리만 바뀌는 이동은 진행 중 URL 변화를 확인합니다. Next `Link`는 정상적인
+클라이언트 이동에도 `preventDefault()`를 호출하므로 클릭 이벤트의 `defaultPrevented`
+여부로 이 클릭을 걸러서는 안 됩니다. 앵커가 없는 캔버스 클릭처럼 `router.push()`로
+직접 이동하는 곳은 `signalNavigationStart()`를 호출해 같은 표시기를 시작합니다.
+표시기가 라우트 트리 밖에 있어 Suspense 경계를 만들지 않고 응답 상태에 관여하지 않습니다.
+막대의 중간 값은 실제 네트워크 전송률이 아니라 대기 피드백이며, 경로 변경 시 완료됩니다.
+Swiper가 드래그 클릭을 취소한 경우에는 막대를 띄우지 않습니다.
 
 ## 크롤 표면
 
