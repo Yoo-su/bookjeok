@@ -819,7 +819,7 @@
       "fetch_error": "A problem occurred while loading data."
     },
     "tower": {
-      "kicker": "Book Tower · {year}",
+      "kicker": "Book tower",
       "count_unit": "{count, plural, one { book} other { books}}",
       "pages_unit": "p",
       "height_unit": "cm",
@@ -914,6 +914,7 @@
       },
       "share": {
         "title": "Share image",
+        "kicker": "Book tower · {year}",
         "story": "Story 9:16",
         "feed": "Feed 4:5",
         "share": "Share",

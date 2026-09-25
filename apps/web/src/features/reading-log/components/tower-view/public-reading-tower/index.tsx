@@ -72,7 +72,7 @@ export function PublicReadingTower({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="grid gap-1.5">
           <p className="flex items-center gap-2.5 text-[10.5px] font-bold uppercase tracking-[0.3em] text-stone-500 before:h-px before:w-6 before:bg-current">
-            {t("kicker", { year })}
+            {t("kicker")}
           </p>
           {books.length > 0 && (
             <p className="font-serif text-[clamp(28px,6vw,40px)] font-semibold leading-none tracking-tight text-stone-900 tabular-nums">

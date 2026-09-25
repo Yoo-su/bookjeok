@@ -819,7 +819,7 @@
       "fetch_error": "데이터를 불러오는 중 문제가 발생했습니다."
     },
     "tower": {
-      "kicker": "Book Tower · {year}",
+      "kicker": "책탑",
       "count_unit": "권",
       "pages_unit": "쪽",
       "height_unit": "cm",
@@ -914,6 +914,7 @@
       },
       "share": {
         "title": "공유 이미지",
+        "kicker": "{year} 책탑",
         "story": "스토리 9:16",
         "feed": "피드 4:5",
         "share": "공유하기",

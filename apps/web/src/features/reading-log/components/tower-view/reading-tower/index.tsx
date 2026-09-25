@@ -129,7 +129,7 @@ export function ReadingTower({ year }: { year: number }) {
     <div className="grid gap-6">
       <header className="grid gap-3">
         <p className="flex items-center gap-2.5 text-[10.5px] font-bold uppercase tracking-[0.3em] text-stone-500 before:h-px before:w-6 before:bg-current">
-          {t("kicker", { year })}
+          {t("kicker")}
         </p>
         {books.length > 0 ? (
           <h3 className="font-serif text-[clamp(34px,7.4vw,56px)] font-semibold leading-[1.05] tracking-tight text-stone-900">
@@ -283,7 +283,7 @@ export function ReadingTower({ year }: { year: number }) {
           status={status}
           labels={labelsFor(status, userMm)}
           texts={{
-            kicker: t("kicker", { year }).toUpperCase(),
+            kicker: t("share.kicker", { year }).toUpperCase(),
             count: String(books.length),
             countUnit: t("count_unit", { count: books.length }).trim(),
             height: cm1(totals.towerMm),
