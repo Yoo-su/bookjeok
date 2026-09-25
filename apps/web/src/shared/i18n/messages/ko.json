@@ -932,7 +932,13 @@
         "image_alt": "책탑 공유 이미지 미리보기",
         "rendering": "이미지를 그리는 중이에요",
         "render_failed": "이미지를 만들지 못했어요. 닫았다가 다시 열어 주세요.",
-        "format_label": "이미지 비율"
+        "format_label": "이미지 비율",
+        "legend_heading": "쌓은 책",
+        "legend_rest": "외 {count}권",
+        "legend_label": "제목 넣을 책",
+        "legend_edit": "바꾸기",
+        "legend_done": "완료",
+        "legend_hint": "최대 {max}권까지 넣을 수 있어요. 모두 빼면 제목 없이 만들어요."
       },
       "lede_past": "{year}년에 {cm}cm를 쌓았어요.",
       "lede_past_passed": "{year}년에 {cm}cm를 쌓아 내 {part} 넘었어요.",

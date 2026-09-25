@@ -1,7 +1,8 @@
 import type { ReadingTowerBook } from "@bookjeok/core";
 
 import { drawSceneItems } from "./draw-canvas";
-import { buildTowerScene, type SceneLabels } from "./scene";
+import { buildLegend } from "./legend";
+import { bookColor, buildTowerScene, type SceneLabels } from "./scene";
 import type { TowerStatus } from "./status";
 import type { FontRole, SceneColors, TowerCharacter } from "./types";
 
@@ -46,12 +47,15 @@ export async function renderTowerShareImage(o: {
   labels: SceneLabels;
   texts: ShareTexts;
   fonts: ShareFonts;
+  /** 바닥에 제목을 적을 책(logId)과 목록 머리말·나머지 한 줄("외 11권") */
+  legend?: { ids: string[]; heading: string; rest?: string };
 }): Promise<HTMLCanvasElement> {
   const { format, texts, fonts } = o;
   const sample =
     o.books.map((b) => b.title).join("") +
     Object.values(o.labels).flat().join("") +
-    Object.values(texts).join("");
+    Object.values(texts).join("") +
+    (o.legend ? o.legend.heading + (o.legend.rest ?? "") : "");
   await Promise.all(
     [
       `700 40px ${fonts.hand}`,
@@ -148,13 +152,39 @@ export async function renderTowerShareImage(o: {
   ctx.font = `500 ${story ? 36 : 32}px ${fonts.ui}`;
   ctx.fillText(texts.subline, M, y);
 
-  // 장면
-  const top = y + (story ? 40 : 24);
-  const bottom = H - (story ? 170 : 128);
+  const u = story ? 2.25 : 1.85;
   const measure = (t: string, size: number, weight: number, fam: FontRole) => {
     ctx.font = `${weight} ${size}px ${fonts[fam]}`;
     return ctx.measureText(t).width;
   };
+
+  // 쌓은 책 목록. 탑 안의 책은 너무 얇아 제목을 못 쓰니 바닥 아래 띠에 모아 적고,
+  // 그 높이만큼 장면을 줄인다. 탑 위에서부터의 순서로 적는다
+  const ids = new Set(o.legend?.ids ?? []);
+  const picked = o.books.filter((b) => ids.has(b.logId)).reverse();
+  const legend =
+    o.legend && picked.length
+      ? buildLegend({
+          books: picked.map((b) => ({
+            id: b.logId,
+            title: b.title,
+            color: bookColor(b),
+          })),
+          heading: o.legend.heading,
+          rest: o.legend.rest,
+          width: W - 2 * M,
+          colors: PALETTE,
+          u,
+          measure,
+        })
+      : null;
+
+  // 장면
+  const top = y + (story ? 40 : 24);
+  const footTop = H - (story ? 170 : 128);
+  const legendTop = legend ? footTop - legend.height + 4 * u : footTop;
+  // 장면 바닥 여백(30u) 안쪽으로 목록을 당겨 바닥선과 목록 사이를 18u로 맞춘다
+  const bottom = legend ? legendTop + 12 * u : footTop;
   const scene = buildTowerScene({
     width: W - 2 * M + 24,
     height: bottom - top,
@@ -166,13 +196,19 @@ export async function renderTowerShareImage(o: {
     labels: o.labels,
     colors: PALETTE,
     measure,
-    u: story ? 2.25 : 1.85,
+    u,
     boil: false,
   });
   ctx.save();
   ctx.translate(M - 12, top);
   drawSceneItems(ctx, scene.items, fonts);
   ctx.restore();
+  if (legend) {
+    ctx.save();
+    ctx.translate(M, legendTop);
+    drawSceneItems(ctx, legend.items, fonts);
+    ctx.restore();
+  }
 
   // 바닥글
   const fy = H - (story ? 84 : 60);
