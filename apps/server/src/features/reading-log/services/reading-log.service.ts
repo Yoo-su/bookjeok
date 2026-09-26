@@ -6,7 +6,7 @@ import {
   LoungePopularResponse,
   LoungeReader,
   ReadingLogBookStatus,
-  ReadingTowerResponse,
+  ReadingStackResponse,
 } from '@bookjeok/core';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -73,7 +73,7 @@ interface FeedGroupAccumulator {
 }
 
 /** 판형을 `leftJoinAndMapOne`으로 붙인 기록. 실측이 없으면 비어 있다 */
-type TowerLog = ReadingLog & { dimension?: BookDimension | null };
+type StackLog = ReadingLog & { dimension?: BookDimension | null };
 
 interface PopularGroupAccumulator {
   isbn: string;
@@ -623,13 +623,13 @@ export class ReadingLogService {
   }
 
   /**
-   * 책탑용 연간 기록. 완독일 오름차순(바닥부터 쌓는 순서)으로 크기와 표지색을 붙인다.
+   * 독서 키재기용 연간 기록. 완독일 오름차순(바닥부터 쌓는 순서)으로 크기와 표지색을 붙인다.
    * 실측 크기가 없는 책은 `estimateBookSize`로 채우고 `sizeSource`로 구분한다.
    */
-  async getTower(userId: number, year: number): Promise<ReadingTowerResponse> {
-    this.assertTowerYear(year);
+  async getStack(userId: number, year: number): Promise<ReadingStackResponse> {
+    this.assertStackYear(year);
 
-    const logs: TowerLog[] = await this.readingLogRepository
+    const logs: StackLog[] = await this.readingLogRepository
       .createQueryBuilder('log')
       // 소개글(text)은 쓰지 않으므로 필요한 열만
       .leftJoin('log.book', 'book')
@@ -684,14 +684,14 @@ export class ReadingLogService {
   }
 
   /**
-   * 공개 프로필의 책탑. 독서 기록이 비공개면 기록이 없는 것처럼 빈 목록을 돌려준다
+   * 공개 프로필의 독서 키재기. 독서 기록이 비공개면 기록이 없는 것처럼 빈 목록을 돌려준다
    * (공개 프로필의 `readingLogs`와 같은 규칙).
    */
-  async getPublicTower(
+  async getPublicStack(
     handle: string,
     year: number,
-  ): Promise<ReadingTowerResponse> {
-    this.assertTowerYear(year);
+  ): Promise<ReadingStackResponse> {
+    this.assertStackYear(year);
     const user = await this.userRepository.findOne({
       where: { handle },
       select: ['id', 'isReadingLogPublic', 'deletedAt'],
@@ -700,10 +700,10 @@ export class ReadingLogService {
       throw new BusinessException('USER_NOT_FOUND', HttpStatus.NOT_FOUND);
     }
     if (!user.isReadingLogPublic) return { year, items: [] };
-    return this.getTower(user.id, year);
+    return this.getStack(user.id, year);
   }
 
-  private assertTowerYear(year: number) {
+  private assertStackYear(year: number) {
     if (!Number.isInteger(year) || year < 2000 || year > 2100) {
       throw new BusinessException('VALIDATION_ERROR', HttpStatus.BAD_REQUEST);
     }

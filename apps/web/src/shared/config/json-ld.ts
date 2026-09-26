@@ -50,6 +50,11 @@ export const getJsonLd = (
         name: t("json_ld.nav.lounge"),
         url: `https://bookjeok.com/${locale}/lounge`,
       },
+      {
+        "@type": "SiteNavigationElement",
+        name: t("json_ld.nav.reading_height"),
+        url: `https://bookjeok.com/${locale}/reading-height`,
+      },
     ],
   };
 };

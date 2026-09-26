@@ -4,7 +4,7 @@
  */
 export const ANNOUNCEMENTS = [
   {
-    id: "reading-tower",
+    id: "reading-stack",
     from: "2026-09-26T00:00:00+09:00",
     until: "2026-10-26T00:00:00+09:00",
   },
@@ -24,7 +24,7 @@ export function pickAnnouncement(now: number, seen: readonly string[]) {
 
 /**
  * 공지를 띄울 수 있는 경로. 비로그인은 홈에서만 띄워 검색으로 들어온 첫 화면을 가리지 않는다.
- * 남의 공개 책탑(/users/*)은 이미 책탑을 보고 있으므로 뺀다.
+ * 남의 공개 독서 키재기(/users/*)는 이미 쌓은 책을 보고 있으므로 뺀다.
  */
 export function canAnnounceOn(pathname: string, loggedIn: boolean) {
   if (pathname.startsWith("/users/")) return false;

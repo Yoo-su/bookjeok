@@ -10,7 +10,7 @@ import {
   ReadingLogListResponse,
   ReadingLogSettings,
   ReadingLogStats,
-  ReadingTowerResponse,
+  ReadingStackResponse,
   UpdateReadingLogParams,
 } from "@bookjeok/core";
 
@@ -103,27 +103,27 @@ export const getReadingLogStats = async (params: {
 };
 
 /**
- * 책탑(한 해의 독서 기록을 책 크기와 함께) 조회합니다.
+ * 독서 키재기(한 해의 독서 기록을 책 크기와 함께) 조회합니다.
  */
-export const getReadingTower = async (
+export const getReadingStack = async (
   year: number,
-): Promise<ReadingTowerResponse> => {
-  const { data } = await privateApiClient.get<ReadingTowerResponse>(
-    API_PATHS.readingLog.tower,
+): Promise<ReadingStackResponse> => {
+  const { data } = await privateApiClient.get<ReadingStackResponse>(
+    API_PATHS.readingLog.stack,
     { params: { year } },
   );
   return data;
 };
 
 /**
- * 다른 사용자의 책탑을 조회합니다. 독서 기록이 비공개면 빈 목록입니다.
+ * 다른 사용자의 독서 키재기를 조회합니다. 독서 기록이 비공개면 빈 목록입니다.
  */
-export const getPublicReadingTower = async (
+export const getPublicReadingStack = async (
   handle: string,
   year: number,
-): Promise<ReadingTowerResponse> => {
-  const { data } = await publicApiClient.get<ReadingTowerResponse>(
-    API_PATHS.readingLog.publicTower(handle),
+): Promise<ReadingStackResponse> => {
+  const { data } = await publicApiClient.get<ReadingStackResponse>(
+    API_PATHS.readingLog.publicStack(handle),
     { params: { year } },
   );
   return data;

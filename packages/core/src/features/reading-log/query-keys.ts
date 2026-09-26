@@ -9,10 +9,10 @@ export const readingLogKeys = createQueryKeys("readingLog", {
   }),
   settings: null,
   infinite: null,
-  tower: (year: number) => ({
+  stack: (year: number) => ({
     queryKey: [year],
   }),
-  publicTower: (handle: string, year: number) => ({
+  publicStack: (handle: string, year: number) => ({
     queryKey: [handle, year],
   }),
   bookStatus: (isbn: string) => ({

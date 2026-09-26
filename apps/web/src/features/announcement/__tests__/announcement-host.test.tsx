@@ -43,8 +43,8 @@ describe("공지 기간과 경로", () => {
     expect(pickAnnouncement(at("2026-09-25T23:59:00+09:00"), [])).toBe(
       undefined,
     );
-    expect(pickAnnouncement(DURING.getTime(), [])?.id).toBe("reading-tower");
-    expect(pickAnnouncement(DURING.getTime(), ["reading-tower"])).toBe(
+    expect(pickAnnouncement(DURING.getTime(), [])?.id).toBe("reading-stack");
+    expect(pickAnnouncement(DURING.getTime(), ["reading-stack"])).toBe(
       undefined,
     );
     expect(pickAnnouncement(at("2026-10-26T00:00:00+09:00"), [])).toBe(
@@ -52,7 +52,7 @@ describe("공지 기간과 경로", () => {
     );
   });
 
-  it("비로그인은 홈에서만, 로그인은 어디서나 띄우고 남의 공개 책탑에서는 띄우지 않는다", () => {
+  it("비로그인은 홈에서만, 로그인은 어디서나 띄우고 남의 공개 독서 키재기에서는 띄우지 않는다", () => {
     expect(canAnnounceOn("/", false)).toBe(true);
     expect(canAnnounceOn("/book/9788932003979/detail", false)).toBe(false);
     expect(canAnnounceOn("/book/9788932003979/detail", true)).toBe(true);
@@ -100,7 +100,7 @@ describe("AnnouncementHost", () => {
     const { rerender } = render(<AnnouncementHost />);
     wait();
     fireEvent.click(screen.getByText("close"));
-    expect(useAnnouncementStore.getState().seen).toEqual(["reading-tower"]);
+    expect(useAnnouncementStore.getState().seen).toEqual(["reading-stack"]);
     expect(screen.getByTestId("intro")).toHaveAttribute("data-open", "false");
     rerender(<AnnouncementHost />);
     wait();
@@ -108,7 +108,7 @@ describe("AnnouncementHost", () => {
   });
 
   it("이미 봤거나 기간이 지났으면 열지 않는다", () => {
-    useAnnouncementStore.setState({ seen: ["reading-tower"] });
+    useAnnouncementStore.setState({ seen: ["reading-stack"] });
     const { unmount } = render(<AnnouncementHost />);
     wait();
     expect(screen.queryByTestId("intro")).toBeNull();

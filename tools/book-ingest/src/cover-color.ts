@@ -6,7 +6,7 @@ import sharp from "sharp";
  * 운영 적재분을 만든 `~/bookjeok-migration/scripts/cover-colors.mjs`와 같은 방법입니다.
  * 바꾸면 기존 5만여 행과 새 행의 색이 다른 기준이 되므로 함께 바꾸지 않는 한 그대로 둡니다.
  * 24×36으로 줄여 k-means 5군집 → 가장 큰 군집. 그것이 흰색이면 26% 이상인 유색 군집,
- * 그것도 없으면 종이색에 유색 군집을 7% 섞습니다(흰 표지가 탑에서 새하얗게 보이지 않게).
+ * 그것도 없으면 종이색에 유색 군집을 7% 섞습니다(흰 표지가 쌓은 책에서 새하얗게 보이지 않게).
  */
 export async function coverColor(image: Buffer): Promise<string> {
   const data = await sharp(image)

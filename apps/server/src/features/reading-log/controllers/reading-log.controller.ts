@@ -112,15 +112,17 @@ export class ReadingLogController {
     return this.readingLogService.getStats(req.user.id, year, month);
   }
 
-  @Get('tower')
+  // 'tower'는 이름을 바꾸기 전 경로. develop 푸시로 서버가 먼저 배포되는 동안 운영 웹(main)이 부른다.
+  // 웹이 main에 반영되면 지운다.
+  @Get(['stack', 'tower'])
   @ApiOperation({
-    summary: '책탑 조회',
+    summary: '독서 키재기 조회',
     description:
       '한 해의 독서 기록을 완독일 순으로, 책 크기(mm)·무게·표지색과 함께 반환합니다. 실측이 없는 책은 추정값이며 sizeSource로 구분합니다.',
   })
   @ApiQuery({ name: 'year', description: '조회할 연도 (YYYY)', example: 2026 })
-  getTower(@Request() req, @Query('year') year: string) {
-    return this.readingLogService.getTower(req.user.id, Number(year));
+  getStack(@Request() req, @Query('year') year: string) {
+    return this.readingLogService.getStack(req.user.id, Number(year));
   }
 
   @Get('settings')

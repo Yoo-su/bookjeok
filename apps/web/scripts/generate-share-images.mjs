@@ -39,6 +39,13 @@ const pages = [
     ko: ["독서 라운지", "함께 읽는 오늘의 책."],
     en: ["Reading lounge", "Discover what others are reading."],
   },
+  {
+    key: "reading-height",
+    ko: ["독서 키재기", "올해 읽은 책, 쌓으면 내 키만 할까?"],
+    en: ["Reading height", "Would your books reach your height?"],
+    // 심벌 대신 화면과 같은 장면 그림. scripts/generate-reading-height-art.ts로 만든다
+    art: "share-art/reading-height.svg",
+  },
 ];
 for (const page of pages) {
   for (const locale of ["ko", "en"]) {
@@ -60,7 +67,11 @@ for (const page of pages) {
     const svg = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
       <rect width="1200" height="630" fill="#ffffff"/>
       <image href="${wordmarks[locale]}" x="80" y="65" width="${locale === "ko" ? 220 : 320}" height="126" preserveAspectRatio="xMinYMid meet"/>
-      <image href="${symbol}" x="765" y="115" width="355" height="355"/>
+      ${
+        page.art
+          ? `<image href="data:image/svg+xml;base64,${(await readFile(new URL(`./${page.art}`, import.meta.url))).toString("base64")}" x="730" y="86" width="400" height="420"/>`
+          : `<image href="${symbol}" x="765" y="115" width="355" height="355"/>`
+      }
       <g font-family="Apple SD Gothic Neo, Pretendard, sans-serif" fill="#242424">
         ${titleMarkup}
         <text x="84" y="395" font-size="29" fill="#666666">${description}</text>

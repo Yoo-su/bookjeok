@@ -44,10 +44,10 @@ export interface UpdateReadingLogParams {
 export type BookSizeSource = "measured" | "estimated";
 
 /**
- * 책탑에 쌓이는 책 한 권(독서 기록 1건).
- * 크기는 mm, 무게는 g. 눕혀 쌓으므로 탑에서는 height가 가로, depth가 높이가 된다.
+ * 독서 키재기에 쌓이는 책 한 권(독서 기록 1건).
+ * 크기는 mm, 무게는 g. 눕혀 쌓으므로 쌓은 모습에서는 height가 가로, depth가 높이가 된다.
  */
-export interface ReadingTowerBook {
+export interface ReadingStackBook {
   logId: string;
   isbn: string;
   date: string; // YYYY-MM-DD
@@ -67,10 +67,10 @@ export interface ReadingTowerBook {
   sizeSource: BookSizeSource;
 }
 
-/** 책탑 API 응답. items는 완독일 오름차순(바닥부터 쌓는 순서) */
-export interface ReadingTowerResponse {
+/** 독서 키재기 API 응답. items는 완독일 오름차순(바닥부터 쌓는 순서) */
+export interface ReadingStackResponse {
   year: number;
-  items: ReadingTowerBook[];
+  items: ReadingStackBook[];
 }
 
 /**

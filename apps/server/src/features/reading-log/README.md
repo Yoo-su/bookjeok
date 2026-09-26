@@ -128,17 +128,18 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 `getStats(userId, year, month)` — 해당 월과 해당 연도의 완독 수를 반환합니다.
 
-### 책탑
+### 독서 키재기
 
-`getTower(userId, year)` — `GET /reading-logs/tower?year=`. 한 해의 기록을 완독일 오름차순(바닥부터 쌓는 순서)으로, 책 크기(mm)·무게·표지색과 함께 돌려줍니다.
+`getStack(userId, year)` — `GET /reading-logs/stack?year=`. 한 해의 기록을 완독일 오름차순(바닥부터 쌓는 순서)으로, 책 크기(mm)·무게·표지색과 함께 돌려줍니다.
 
 - 크기는 `book_dimensions`(알라딘 실측 수확본, 2026-10-30 이후 갱신 없음)를 기록 조회에 조인해 한 번에 읽습니다(`leftJoinAndMapOne`). 서버(Azure)와 DB(Supabase)가 다른 클라우드라 왕복을 줄이려는 것입니다. 이 조인 때문에 모듈의 `forFeature`에서 `BookDimension`을 빼면 안 됩니다(`autoLoadEntities`). 행이 없거나 값이 비정상이면 `estimateBookSize`(core)가 채우고 `sizeSource: "estimated"`로 표시합니다. **추정값은 저장하지 않습니다.**
 - 쪽수도 같은 범위(`BOOK_SIZE_PLAUSIBLE`)로 걸러 벗어나면 `pages: null`입니다. 원본에는 18,480쪽 같은 오기가 섞여 있어 그대로 내보내면 쪽수 합계와 공유 이미지에 찍힙니다.
 - 도서는 제목·저자·출판사·표지만 읽습니다(`description` 제외).
 - 표지색이 없으면 `coverColor: null`로 두고 웹이 대체색을 고릅니다.
 - 테이블은 `docs/manual-ddl-log.md` 11절. 이 테이블이 없는 DB에 배포하면 이 API가 500을 냅니다.
+- **옛 경로 `/tower`도 임시로 받습니다.** 2026-09-26 기능 이름을 「책탑」에서 「독서 키재기」로 바꾸며 경로를 `stack`으로 옮겼습니다. 서버는 develop 푸시에도 운영에 배포되는데 운영 웹은 main 기준이라, 웹이 main에 반영될 때까지 옛 웹이 `/reading-logs/tower`·`/users/:handle/tower`를 부릅니다. 웹 반영 후 두 컨트롤러의 `'tower'` 경로와 `reading-stack-routes.spec.ts`의 기대값을 함께 지우세요.
 
-`getPublicTower(handle, year)` — `GET /reading-logs/users/:handle/tower?year=`(`PublicReadingLogController`, **인증 없음**). 공개 프로필의 책탑입니다. 핸들이 정확히 일치해야 하고(공개 프로필 조회의 닉네임·ID 대체 검색은 하지 않음), 없거나 탈퇴한 사용자는 404(`USER_NOT_FOUND`)입니다. **독서 기록이 비공개면 기록이 없는 것처럼 빈 목록**을 돌려줍니다 — 공개 프로필 응답의 `readingLogs`와 같은 규칙입니다. 한줄평이 포함되는데, 공개 프로필 리스트·캘린더에서도 이미 보이던 정보입니다.
+`getPublicStack(handle, year)` — `GET /reading-logs/users/:handle/stack?year=`(`PublicReadingLogController`, **인증 없음**). 공개 프로필의 독서 키재기입니다. 핸들이 정확히 일치해야 하고(공개 프로필 조회의 닉네임·ID 대체 검색은 하지 않음), 없거나 탈퇴한 사용자는 404(`USER_NOT_FOUND`)입니다. **독서 기록이 비공개면 기록이 없는 것처럼 빈 목록**을 돌려줍니다 — 공개 프로필 응답의 `readingLogs`와 같은 규칙입니다. 한줄평이 포함되는데, 공개 프로필 리스트·캘린더에서도 이미 보이던 정보입니다.
 
 ### 공개 설정
 
@@ -151,4 +152,4 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 ## 6. 관련
 
 - 웹: [`features/reading-log`](../../../../web/src/features/reading-log/README.md)
-- 책탑 화면: `apps/web` `features/reading-log/components/tower-view`
+- 독서 키재기 화면: `apps/web` `features/reading-log/components/stack-view`

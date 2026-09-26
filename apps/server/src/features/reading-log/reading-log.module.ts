@@ -12,7 +12,7 @@ import { ReadingLogCleanupListener } from './listeners/reading-log-cleanup.liste
 import { ReadingLogService } from './services/reading-log.service';
 
 @Module({
-  // BookDimension은 책탑 조인용 등록. autoLoadEntities라 여기서 빼면 메타데이터가 없다
+  // BookDimension은 독서 키재기 조인용 등록. autoLoadEntities라 여기서 빼면 메타데이터가 없다
   imports: [TypeOrmModule.forFeature([ReadingLog, User, BookDimension])],
   controllers: [
     ReadingLogController,

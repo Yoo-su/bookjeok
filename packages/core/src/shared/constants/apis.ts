@@ -71,9 +71,9 @@ export const API_PATHS = {
     base: "/reading-logs",
     stats: "/reading-logs/stats",
     list: "/reading-logs/list",
-    tower: "/reading-logs/tower",
-    /** 공개 프로필의 책탑. 독서 기록이 비공개면 빈 목록 */
-    publicTower: (handle: string) => `/reading-logs/users/${handle}/tower`,
+    stack: "/reading-logs/stack",
+    /** 공개 프로필의 독서 키재기. 독서 기록이 비공개면 빈 목록 */
+    publicStack: (handle: string) => `/reading-logs/users/${handle}/stack`,
     settings: "/reading-logs/settings",
     /** 내가 이 책을 기록한 횟수와 마지막 날짜 */
     bookStatus: (isbn: string) => `/reading-logs/book/${isbn}/status`,

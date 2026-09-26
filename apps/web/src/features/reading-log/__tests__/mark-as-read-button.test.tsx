@@ -13,7 +13,7 @@ vi.mock("@bookjeok/api-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@bookjeok/api-client")>()),
   getReadingLogBookStatus: vi.fn(),
   createReadingLog: vi.fn(),
-  getReadingTower: vi.fn(),
+  getReadingStack: vi.fn(),
 }));
 
 vi.mock("@/shared/config/i18n/routing", () => ({
@@ -115,7 +115,7 @@ describe("MarkAsReadButton 기록 이력 안내", () => {
       count: 1,
       lastDate: "2026-03-12",
     });
-    vi.mocked(apis.getReadingTower).mockRejectedValue(new Error("offline"));
+    vi.mocked(apis.getReadingStack).mockRejectedValue(new Error("offline"));
     let resolveCreate!: (log: ReadingLog) => void;
     vi.mocked(apis.createReadingLog).mockReturnValue(
       new Promise((resolve) => {

@@ -11,6 +11,7 @@ const titles = {
   market: "중고책 마켓",
   reviews: "도서 리뷰",
   lounge: "독서 라운지",
+  "reading-height": "독서 키재기",
 };
 for (const [key, text] of Object.entries(titles)) {
   const outline = font.getPath(text, 0, 0, 86);

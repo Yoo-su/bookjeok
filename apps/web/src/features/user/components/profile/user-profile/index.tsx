@@ -34,12 +34,12 @@ import { PATHS } from "@/shared/constants/paths";
 import { formatDate, formatRelativeTime } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
-// 책탑은 브라우저에서만 그리고 코드가 커서 프로필 첫 로드에서 뺀다
-const PublicReadingTower = dynamic(
+// 독서 키재기는 브라우저에서만 그리고 코드가 커서 프로필 첫 로드에서 뺀다
+const PublicReadingStack = dynamic(
   () =>
     import(
-      "@/features/reading-log/components/tower-view/public-reading-tower"
-    ).then((m) => m.PublicReadingTower),
+      "@/features/reading-log/components/stack-view/public-reading-stack"
+    ).then((m) => m.PublicReadingStack),
   {
     ssr: false,
     loading: () => (
@@ -118,14 +118,14 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
       {/* 탭 콘텐츠: 독서 활동 */}
       {activeTab === "READING" && (
         <div className="space-y-10">
-          {/* 독서 기록 영역: 캐릭터 없는 책탑(주인의 키는 기기에만 있다) */}
+          {/* 독서 기록 영역: 캐릭터 없는 독서 키재기(주인의 키는 기기에만 있다) */}
           {Array.isArray(profile.readingLogs) &&
             profile.readingLogs.length > 0 && (
               <div className="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-xs sm:p-6 md:p-8">
                 <h3 className="mb-5 font-serif text-base font-semibold text-stone-900 break-keep sm:text-lg md:text-xl">
                   {t("reading_log_title", { name: profile.nickname })}
                 </h3>
-                <PublicReadingTower
+                <PublicReadingStack
                   handle={profile.handle}
                   nickname={profile.nickname}
                   initialYear={Math.min(

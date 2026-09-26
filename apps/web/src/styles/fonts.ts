@@ -50,7 +50,7 @@ export const diphylleia = Diphylleia({
   preload: false,
 });
 
-/** 독서기록 「책탑」의 손글씨 주석과 말풍선 */
+/** 독서기록 「독서 키재기」의 손글씨 주석과 말풍선 */
 export const gaegu = Gaegu({
   weight: ["400", "700"],
   variable: "--font-gaegu",
