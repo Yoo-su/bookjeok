@@ -1676,14 +1676,12 @@
     "feed_fetch_error": "A problem occurred while loading data."
   },
   "music": {
-    "title": "Bookjeok Turntable",
+    "title": "Background music player",
     "default_track": {
       "title": "Music for Reading",
       "artist": "Bookjeok Cozy BGM"
     },
     "header_button": {
-      "label": "BGM",
-      "title": "Bookjeok Turntable",
       "aria_label": "Open background music player"
     },
     "controls": {

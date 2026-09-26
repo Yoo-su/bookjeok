@@ -1676,14 +1676,12 @@
     "feed_fetch_error": "데이터를 불러오는 중 문제가 발생했습니다."
   },
   "music": {
-    "title": "북적 턴테이블",
+    "title": "배경 음악 플레이어",
     "default_track": {
       "title": "책 읽을 때 듣는 음악",
       "artist": "북적 BGM"
     },
     "header_button": {
-      "label": "BGM",
-      "title": "북적 턴테이블",
       "aria_label": "배경 음악 플레이어 열기"
     },
     "controls": {

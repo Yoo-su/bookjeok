@@ -332,22 +332,8 @@ export const DefaultHeader = () => {
 
         {/* 우측: 사용자 메뉴 & BGM */}
         <div className="flex shrink-0 items-center justify-end gap-2.5 sm:gap-3 lg:flex-1">
-          {/*
-            폰에서는 숨기고 모바일 시트에 진입점을 둔다. 데스크톱에서는 비확장
-            헤더와 1024~1279px 구간에 아이콘만 남긴다. 전체 컨트롤은 스크롤 뒤
-            헤더가 넓어지면서 실제 여유 폭도 생기는 xl 이상에서만 표시한다.
-          */}
-          <div className="hidden sm:flex lg:hidden">
-            <HeaderMusicButton />
-          </div>
-          <div className={cn("hidden lg:flex", isExpanded && "xl:hidden")}>
-            <HeaderMusicButton compact />
-          </div>
-          {isExpanded && (
-            <div className="hidden xl:flex">
-              <HeaderMusicButton />
-            </div>
-          )}
+          {/* 폰에서는 숨기고 모바일 시트 상단에 둔다 */}
+          <HeaderMusicButton className="hidden sm:inline-flex" />
           <LanguageSwitcher className="hidden lg:flex shrink-0" />
           {!mounted ? (
             <div className="flex items-center gap-3">
