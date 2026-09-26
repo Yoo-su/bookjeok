@@ -16,10 +16,10 @@ import type { AnnouncementProps } from "../../types";
 
 /** 공지 id별 소개 모달. 필요할 때만 불러온다. 공지를 추가하고 여기를 빠뜨리면 타입 오류가 난다 */
 const INTROS: Record<AnnouncementId, ComponentType<AnnouncementProps>> = {
-  "reading-tower": dynamic(
+  "reading-stack": dynamic(
     () =>
-      import("../reading-tower-intro").then((m) => ({
-        default: m.ReadingTowerIntro,
+      import("../reading-stack-intro").then((m) => ({
+        default: m.ReadingStackIntro,
       })),
     { ssr: false },
   ),

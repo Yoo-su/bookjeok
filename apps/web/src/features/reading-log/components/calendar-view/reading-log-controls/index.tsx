@@ -16,7 +16,7 @@ import { cn } from "@/shared/utils";
 
 import { READING_LOG_MIN_YEAR } from "../../../constants/ui";
 
-export type ReadingLogViewMode = "calendar" | "list" | "tower";
+export type ReadingLogViewMode = "calendar" | "list" | "stack";
 
 interface ReadingLogControlsProps {
   viewMode: ReadingLogViewMode;
@@ -162,7 +162,7 @@ export function ReadingLogControls({
               </button>
             </div>
           </>
-        ) : viewMode === "tower" ? (
+        ) : viewMode === "stack" ? (
           <div className="flex items-center gap-4">
             <button
               onClick={() => shiftYear(-1)}
@@ -231,16 +231,16 @@ export function ReadingLogControls({
           <div className="w-px h-3 bg-stone-200" />
 
           <button
-            onClick={() => onViewModeChange("tower")}
+            onClick={() => onViewModeChange("stack")}
             className={cn(
               "text-xs font-bold tracking-[0.2em] uppercase transition-all duration-300 relative py-1",
-              viewMode === "tower"
+              viewMode === "stack"
                 ? "text-stone-900"
                 : "text-stone-400 hover:text-stone-600",
             )}
           >
-            {t("view_tower")}
-            {viewMode === "tower" && (
+            {t("view_stack")}
+            {viewMode === "stack" && (
               <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
             )}
           </button>

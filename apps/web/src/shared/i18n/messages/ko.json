@@ -153,26 +153,27 @@
   },
   "json_ld": {
     "name": "북적",
-    "description": "솔직한 도서 리뷰를 공유하고, 중고책을 거래하고, 나만의 독서 기록을 관리하세요.",
+    "description": "읽은 책을 기록해 내 키와 재 보고, 솔직한 도서 리뷰를 나누고, 중고책을 거래하세요.",
     "nav": {
       "market": "중고마켓",
       "review": "도서리뷰",
       "search": "도서검색",
-      "lounge": "독서 라운지"
+      "lounge": "독서 라운지",
+      "reading_height": "독서 키재기"
     }
   },
   "meta": {
-    "default_title": "북적 - AI 도서 추천, 독서 기록, 리뷰, 중고책 거래",
+    "default_title": "북적 - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
     "template_title": "%s | 북적",
-    "description": "AI가 취향에 맞는 책을 추천하고, 핵심 내용을 요약해 드립니다. 독서 기록 관리, 도서 리뷰, 위치 기반 중고책 거래까지 북적 하나로.",
-    "keywords": "북적, bookjeok, Bookjeok, AI 책추천, AI 도서 추천, AI 도서 요약, 맞춤 책 추천, 도서 큐레이션, 도서리뷰, 책 리뷰, 중고책, 중고책 거래, 중고 서점, 중고책 팔기, 독서기록, 독서 기록 앱, 독서록, 독서 캘린더, 독서 라운지, 북클럽, 책 검색",
+    "description": "읽은 책을 기록하고 실제 두께로 쌓아 내 키와 재 보세요. 솔직한 도서 리뷰와 동네 중고책 거래까지, 책을 좋아하는 사람들의 공간 북적.",
+    "keywords": "북적, bookjeok, Bookjeok, 독서 기록, 독서 기록 앱, 독서록, 독서 키재기, 올해 읽은 책, 연간 독서 결산, 독서량, 독서 캘린더, 도서 리뷰, 책 리뷰, 중고책, 중고책 거래, 중고 서점, 중고책 팔기, 독서 라운지, 책 추천, 책 검색",
     "og": {
-      "title": "북적 - AI 도서 추천, 독서 기록, 리뷰, 중고책 거래",
-      "description": "AI 기반 맞춤 도서 추천과 핵심 요약, 독서 기록 관리, 중고책 거래까지. 북적에서 시작하세요."
+      "title": "북적 - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
+      "description": "읽은 책을 실제 두께로 쌓아 내 키와 재 보는 독서 기록, 솔직한 도서 리뷰, 동네 중고책 거래까지. 북적에서 시작하세요."
     },
     "twitter": {
-      "title": "북적 - AI 도서 추천, 독서 기록, 리뷰, 중고책 거래",
-      "description": "취향을 말하면 AI가 책을 찾아드립니다. 독서 기록, 리뷰, 중고 거래까지 한 곳에서."
+      "title": "북적 - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
+      "description": "읽은 책이 내 키만큼 쌓일 때까지. 독서 기록, 리뷰, 중고 거래를 한 곳에서."
     },
     "rss_title": "북적 RSS 피드"
   },
@@ -410,7 +411,8 @@
       "lounge": "독서 라운지",
       "menu_lounge": "라운지",
       "main_menu": "메인 메뉴",
-      "menu_open": "메뉴 열기"
+      "menu_open": "메뉴 열기",
+      "menu_reading_height": "독서 키재기"
     },
     "auth": {
       "login": "로그인",
@@ -460,8 +462,8 @@
       "popular_top": "인기 검색어 TOP {count}",
       "popular_label": "인기",
       "metadata": {
-        "title": "도서 검색 및 AI 맞춤 책 추천",
-        "description": "키워드 검색부터 대화형 AI 도서 큐레이션까지! 마음속 생각이나 독서 취향을 자유롭게 적어 맞춤 책을 추천받고 원하는 도서를 찾아보세요."
+        "title": "도서 검색 · 맞춤 책 추천",
+        "description": "제목·저자·ISBN으로 책을 찾고, 읽고 싶은 분위기나 독서 취향을 적어 맞춤 책을 추천받아 보세요."
       },
       "error": "오류가 발생했습니다: {message}"
     },
@@ -742,7 +744,7 @@
       "all_logs": "전체 기록",
       "view_calendar": "달력",
       "view_list": "리스트",
-      "view_tower": "책탑",
+      "view_stack": "키재기",
       "prev_year": "이전 연도",
       "next_year": "다음 연도"
     },
@@ -804,12 +806,12 @@
       "delete_error": "독서 기록 삭제에 실패했습니다.",
       "settings_updated": "독서 기록 설정이 변경되었습니다.",
       "already_added": "그날 이미 기록한 책입니다.",
-      "create_tower": "기록했어요. 책탑이 {cm}cm 높아졌어요",
-      "tower_passed": "{part} 넘었어요!",
-      "tower_over_passed": "책탑이 내 키를 넘었어요!",
-      "tower_over": "내 키보다 {cm}cm 높아요",
-      "tower_to_next": "{part}까지 {cm}cm 남았어요",
-      "view_tower": "책탑 보기"
+      "create_stack": "기록했어요. 쌓은 책이 {cm}cm 높아졌어요",
+      "stack_passed": "{part} 넘었어요!",
+      "stack_over_passed": "쌓은 책이 내 키를 넘었어요!",
+      "stack_over": "내 키보다 {cm}cm 높아요",
+      "stack_to_next": "{part}까지 {cm}cm 남았어요",
+      "view_stack": "키재기 보기"
     },
     "dialog": {
       "delete_title": "독서 기록 삭제",
@@ -820,16 +822,16 @@
     "feed": {
       "fetch_error": "데이터를 불러오는 중 문제가 발생했습니다."
     },
-    "tower": {
-      "kicker": "책탑",
+    "stack": {
+      "kicker": "독서 키재기",
       "count_unit": "권",
       "pages_unit": "쪽",
       "height_unit": "cm",
       "height_chip": "내 키 {cm}cm",
       "height_chip_default": "내 키 입력",
-      "lede_passed": "책탑이 내 {part} 넘었어요. {next}까지 {cm}cm, 지금 속도면 {eta}쯤 내 키에 닿아요.",
+      "lede_passed": "쌓은 책이 내 {part} 넘었어요. {next}까지 {cm}cm, 지금 속도면 {eta}쯤 내 키에 닿아요.",
       "lede_start": "{next}까지 {cm}cm, 지금 속도면 {eta}쯤 내 키에 닿아요.",
-      "lede_over": "책탑이 내 키보다 {cm}cm 높아요. 다음 목표는 키의 {times}배, {goal}cm예요.",
+      "lede_over": "쌓은 책이 내 키보다 {cm}cm 높아요. 다음 목표는 키의 {times}배, {goal}cm예요.",
       "lede_empty": "읽은 책을 기록하면 한 권씩 쌓여요.",
       "height_label": "내 키",
       "height_hint": "이 기기에만 저장돼요",
@@ -905,7 +907,7 @@
         }
       },
       "sheet": {
-        "tower_add": "탑 +{cm}cm",
+        "stack_add": "높이 +{cm}cm",
         "pages": "{count}쪽",
         "size": "{w}×{h}×{d}mm",
         "estimated": "크기 추정",
@@ -916,7 +918,7 @@
       },
       "share": {
         "title": "공유 이미지",
-        "kicker": "{year} 책탑",
+        "kicker": "{year} 독서 키재기",
         "story": "스토리 9:16",
         "feed": "피드 4:5",
         "share": "공유하기",
@@ -929,7 +931,7 @@
         "sub_over": "내 키보다 {cm}cm 높이 쌓았어요",
         "sub_passed": "{part} 넘어서 {next}까지 {cm}cm 남았어요",
         "sub_start": "{next}까지 {cm}cm 남았어요",
-        "image_alt": "책탑 공유 이미지 미리보기",
+        "image_alt": "독서 키재기 공유 이미지 미리보기",
         "rendering": "이미지를 그리는 중이에요",
         "render_failed": "이미지를 만들지 못했어요. 닫았다가 다시 열어 주세요.",
         "format_label": "이미지 비율",
@@ -943,14 +945,14 @@
       "lede_past": "{year}년에 {cm}cm를 쌓았어요.",
       "lede_past_passed": "{year}년에 {cm}cm를 쌓아 내 {part} 넘었어요.",
       "lede_past_over": "{year}년에 {cm}cm를 쌓아 내 키를 넘었어요.",
-      "error_title": "책탑을 불러오지 못했어요",
+      "error_title": "독서 키재기를 불러오지 못했어요",
       "retry": "다시 시도",
       "public": {
         "prev_year": "이전 연도",
         "next_year": "다음 연도",
         "empty": "{name}님이 {year}년에 완독한 책이 없어요",
         "stage_label": "{name}님이 {year}년에 읽은 책 {count}권을 쌓은 높이 {height}cm",
-        "cta": "나도 책탑 쌓아 보기"
+        "cta": "나도 독서 키재기 해 보기"
       },
       "authors": {
         "camus": "알베르 카뮈",
@@ -967,11 +969,11 @@
       "author_height_note": "작가의 키는 자료에 자주 등장하는 추정값이에요.",
       "author_source": "키 참고 자료",
       "author_bubble_ratio": "키의 {percent}%만큼 쌓았어요",
-      "author_lede": "{name}(약 {cm}cm)의 키와 비교하면, 내 책탑은 {percent}%만큼 자랐어요.",
+      "author_lede": "{name}(약 {cm}cm)의 키와 비교하면, 쌓은 책은 {percent}%만큼 자랐어요.",
       "progress_to_author": "{name}의 키까지",
       "progress_over_author": "{name}보다 높아졌어요!",
       "progress_double_author": "{name} 키의 {times}배까지 {cm}cm 남았어요.",
-      "author_stage_label": "{count}권을 쌓은 {height}cm 책탑과 {name}(약 {me}cm)의 키 비교",
+      "author_stage_label": "{count}권을 쌓은 {height}cm 높이와 {name}(약 {me}cm)의 키 비교",
       "author_share": "{name}(약 {cm}cm) 키의 {percent}%를 쌓았어요.",
       "author_short": {
         "camus": "카뮈",
@@ -2260,21 +2262,91 @@
     "prev": "이전",
     "next": "다음",
     "go_to_slide": "{index}번째 소개 보기",
-    "reading_tower": {
-      "s1_title": "올해 읽은 책, 쌓아 보면 얼마나 될까요?",
+    "reading_stack": {
+      "s1_title": "올해 읽은 책, 쌓으면 내 키만 할까요?",
       "s1_title_mine": "올해 읽은 책이 벌써 {cm}cm 쌓였어요",
-      "s1_body": "완독한 책을 실제 두께 그대로 한 권씩 쌓아 올려요. 두꺼운 책은 두껍게, 얇은 책은 얇게요.",
+      "s1_body": "새로 생긴 「독서 키재기」는 완독한 책을 실제 두께 그대로 한 권씩 쌓아 올려요. 두꺼운 책은 두껍게, 얇은 책은 얇게요.",
       "s2_title": "내 키와 나란히 세워 봐요",
-      "s2_body": "무릎, 허리, 어깨… 책탑이 어디까지 왔는지 캐릭터가 알려 줘요. 키는 이 기기에만 저장돼요.",
+      "s2_body": "무릎, 허리, 어깨… 쌓은 책이 어디까지 왔는지 캐릭터가 알려 줘요. 키는 이 기기에만 저장돼요.",
       "s3_title": "작가보다 높이 쌓을 수 있을까요?",
       "s3_body": "카뮈, 사르트르, 쿤데라, 울프, 카프카의 키와도 나란히 세워 볼 수 있어요.",
       "s4_title": "기록할 때마다 쌓이고, 이미지로 자랑해요",
-      "s4_body": "「읽었어요」를 누르면 책탑이 얼마나 높아졌는지 알려 드려요. 완성한 장면은 스토리·피드용 이미지로 저장할 수 있어요.",
+      "s4_body": "「읽었어요」를 누르면 쌓은 책이 얼마나 높아졌는지 알려 드려요. 완성한 장면은 스토리·피드용 이미지로 저장할 수 있어요.",
       "toast_title": "기록했어요",
-      "toast_body": "책탑이 {cm}cm 높아졌어요",
-      "cta_view": "내 책탑 보러 가기",
-      "cta_join": "가입하고 책탑 쌓기",
-      "stage_label": "책 {count}권을 쌓은 {height}cm 책탑"
+      "toast_body": "쌓은 책이 {cm}cm 높아졌어요",
+      "cta_view": "내 독서 키재기 보러 가기",
+      "cta_join": "가입하고 독서 키재기 시작하기",
+      "stage_label": "책 {count}권을 쌓은 {height}cm 높이"
+    }
+  },
+  "reading_height_page": {
+    "metadata": {
+      "title": "독서 키재기 - 올해 읽은 책을 쌓아 내 키와 비교해요",
+      "description": "읽은 책을 실제 두께 그대로 쌓아 내 키와 나란히 재 보세요. 무릎·허리·어깨 어디까지 왔는지, 카프카·사르트르보다 높은지 확인하고 이미지로 공유할 수 있어요."
+    },
+    "breadcrumb": "독서 키재기",
+    "kicker": "북적 독서 기록",
+    "title": "독서 키재기",
+    "lead": "올해 읽은 책을 실제 두께 그대로 쌓아, 내 키와 나란히 재 보세요.",
+    "demo_hint": "예시 46권이에요. 이름을 눌러 나란히 세울 사람을 바꿔 보세요.",
+    "cta": "내 독서 키재기 해 보기",
+    "cta_note": "북적 회원이면 누구나 무료로 쓸 수 있어요.",
+    "steps_title": "이렇게 재요",
+    "steps": {
+      "record": {
+        "title": "읽은 책을 기록해요",
+        "body": "독서 기록 달력이나 도서 상세에서 「읽었어요」를 누르면 한 권씩 쌓여요."
+      },
+      "thickness": {
+        "title": "실제 두께로 쌓아요",
+        "body": "책마다 실측 판형으로 쌓아요. 두꺼운 책은 두껍게, 얇은 책은 얇게요."
+      },
+      "compare": {
+        "title": "내 키와 비교해요",
+        "body": "발목, 무릎, 허리, 어깨… 쌓은 책이 어디까지 왔는지 캐릭터가 말해 줘요."
+      }
+    },
+    "features_title": "이런 것도 할 수 있어요",
+    "features": {
+      "authors": {
+        "title": "작가와 키 비교",
+        "body": "카뮈, 사르트르, 쿤데라, 울프, 카프카의 추정 키와 나란히 세워 볼 수 있어요."
+      },
+      "share": {
+        "title": "이미지로 공유",
+        "body": "스토리(9:16)·피드(4:5) 이미지로 저장하고, 쌓은 책 제목도 넣을 수 있어요."
+      },
+      "toast": {
+        "title": "기록할 때마다 알림",
+        "body": "기록하면 몇 cm 높아졌는지, 다음 부위까지 얼마 남았는지 바로 알려 줘요."
+      },
+      "profile": {
+        "title": "공개 프로필",
+        "body": "독서 기록을 공개하면 프로필에서 올해 쌓은 책을 보여 줄 수 있어요."
+      }
+    },
+    "faq_title": "자주 묻는 질문",
+    "faq": {
+      "thickness": {
+        "q": "책 두께는 어떻게 재나요?",
+        "a": "책마다 실측 판형(가로·세로·두께)으로 쌓아요. 크기 정보가 없는 책은 평균 판형으로 추정해 쌓고, 화면에 따로 표시해요."
+      },
+      "privacy": {
+        "q": "입력한 키는 어디에 저장되나요?",
+        "a": "키는 서버로 보내지 않고 쓰고 있는 기기에만 저장돼요. 입력하기 전에는 평균 키(남 173cm, 여 161cm)로 보여 줘요."
+      },
+      "authors": {
+        "q": "작가 키는 정확한가요?",
+        "a": "전기와 인터뷰 등에 자주 소개되는 추정값이에요. 화면에는 '약'을 붙여 표시하고 참고 자료 링크를 함께 둬요."
+      },
+      "years": {
+        "q": "지난해에 읽은 책도 볼 수 있나요?",
+        "a": "네. 연도를 옮겨 가며 해마다 쌓은 책을 따로 볼 수 있어요."
+      },
+      "price": {
+        "q": "무료인가요?",
+        "a": "네. 북적 회원이면 누구나 무료로 쓸 수 있어요."
+      }
     }
   }
 }

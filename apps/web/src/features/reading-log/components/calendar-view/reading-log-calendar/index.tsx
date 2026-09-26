@@ -24,8 +24,8 @@ import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { DayDetailsDialog } from "../../common/day-details-dialog";
 import { ReadingLogListView } from "../../list-view/reading-log-list-view";
+import { StackSkeleton } from "../../stack-view/stack-skeleton";
 import { ReadingLogStats } from "../../stats-view/reading-log-stats";
-import { TowerSkeleton } from "../../tower-view/tower-skeleton";
 import { ReadingLogCalendarSkeleton } from "../reading-log-calendar-skeleton";
 import {
   ReadingLogControls,
@@ -33,10 +33,10 @@ import {
 } from "../reading-log-controls";
 import { ReadingLogDayCell } from "../reading-log-day-cell";
 
-// 책탑은 누른 뒤에만 그리므로 공개 프로필(readOnly) 번들에서 뺀다
-const ReadingTower = dynamic(
-  () => import("../../tower-view/reading-tower").then((m) => m.ReadingTower),
-  { ssr: false, loading: () => <TowerSkeleton /> },
+// 독서 키재기는 누른 뒤에만 그리므로 공개 프로필(readOnly) 번들에서 뺀다
+const ReadingStack = dynamic(
+  () => import("../../stack-view/reading-stack").then((m) => m.ReadingStack),
+  { ssr: false, loading: () => <StackSkeleton /> },
 );
 
 interface ReadingLogCalendarProps {
@@ -135,9 +135,9 @@ export function ReadingLogCalendar({
         readOnly={readOnly}
       />
 
-      {viewMode === "tower" && !readOnly ? (
+      {viewMode === "stack" && !readOnly ? (
         // 연도마다 새로 마운트해 인트로·측정·선택 상태를 처음부터 시작한다
-        <ReadingTower
+        <ReadingStack
           key={currentDate.getFullYear()}
           year={currentDate.getFullYear()}
         />

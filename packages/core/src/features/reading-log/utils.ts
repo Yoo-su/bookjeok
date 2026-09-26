@@ -26,7 +26,7 @@ export interface PartialBookSize {
 
 /**
  * 실측값으로 믿을 범위. 벗어나면 결측으로 본다.
- * 알라딘 packing에는 세트 상자·오기(0, 9999 등)가 섞여 있어 그대로 쌓으면 탑이 튄다.
+ * 알라딘 packing에는 세트 상자·오기(0, 9999 등)가 섞여 있어 그대로 쌓으면 높이가 튄다.
  * `book_dimensions` 적재도 이 범위 밖 값은 NULL로 넣는다(docs/manual-ddl-log.md 11절).
  */
 export const BOOK_SIZE_PLAUSIBLE = {
@@ -95,7 +95,7 @@ export function estimateBookSize(isbn: string, raw: PartialBookSize): EstimatedB
 }
 
 /**
- * 표지색이 없는 책(10/30 이후 신간 등)에 쓰는 색. 전부 회색이면 탑이 밋밋해지므로
+ * 표지색이 없는 책(10/30 이후 신간 등)에 쓰는 색. 전부 회색이면 쌓은 책이 밋밋해지므로
  * 채도를 낮춘 색 중에서 ISBN으로 하나 고른다.
  */
 const FALLBACK_COVER_PALETTE = [

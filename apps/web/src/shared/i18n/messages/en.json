@@ -153,26 +153,27 @@
   },
   "json_ld": {
     "name": "Bookjeok",
-    "description": "Share honest book reviews, trade used books, and manage your reading log.",
+    "description": "Log your reading and measure it against your height, share honest book reviews, and trade used books.",
     "nav": {
       "market": "Used Market",
       "review": "Book Reviews",
       "search": "Book Search",
-      "lounge": "Reading Lounge"
+      "lounge": "Reading Lounge",
+      "reading_height": "Reading height"
     }
   },
   "meta": {
-    "default_title": "Bookjeok - AI Book Recommendations, Reading Log, Reviews & Used Book Trading",
+    "default_title": "Bookjeok - Reading Log, Reading Height, Book Reviews & Used Books",
     "template_title": "%s | Bookjeok",
-    "description": "AI recommends books based on your taste and summarizes key insights. Manage reading logs, write reviews, and trade used books — all in one place.",
-    "keywords": "Bookjeok, AI Book Recommendations, AI Book Summary, Book Curation, Book Reviews, Used Books, Used Book Trading, Reading Log, Reading Calendar, Reading Lounge, Book Club, Book Search",
+    "description": "Log the books you read and stack them at their real thickness against your height. Honest book reviews and local used book trading, all in one place.",
+    "keywords": "Bookjeok, Reading Log, Reading Tracker, Reading Height, Books Read This Year, Reading Stats, Reading Calendar, Book Reviews, Used Books, Used Book Trading, Reading Lounge, Book Recommendations, Book Search",
     "og": {
-      "title": "Bookjeok - AI Book Recommendations, Reading Log, Reviews & Used Book Trading",
-      "description": "AI-powered book recommendations and summaries, reading logs, reviews, and used book trading. Get started on Bookjeok."
+      "title": "Bookjeok - Reading Log, Reading Height, Book Reviews & Used Books",
+      "description": "A reading log that stacks your books against your height, honest reviews, and used book trading. Get started on Bookjeok."
     },
     "twitter": {
-      "title": "Bookjeok - AI Book Recommendations, Reading Log, Reviews & Used Book Trading",
-      "description": "Tell us your taste, and AI finds the right book for you. Reading logs, reviews, and used book trading in one place."
+      "title": "Bookjeok - Reading Log, Reading Height, Book Reviews & Used Books",
+      "description": "Stack your books until they reach your height. Reading logs, reviews and used books in one place."
     },
     "rss_title": "Bookjeok RSS Feed"
   },
@@ -410,7 +411,8 @@
       "menu_open": "Open Menu",
       "menu_login": "Login",
       "lounge": "Reading Lounge",
-      "menu_lounge": "Lounge"
+      "menu_lounge": "Lounge",
+      "menu_reading_height": "Reading height"
     },
     "auth": {
       "login": "Login",
@@ -460,8 +462,8 @@
       "popular_top": "Top {count} Keywords",
       "popular_label": "Popular",
       "metadata": {
-        "title": "Book Search & AI Book Curation",
-        "description": "Discover your next read with keyword search and conversational AI book curation. Describe your mood or reading preferences to get personalized book recommendations."
+        "title": "Book Search & Personalized Picks",
+        "description": "Find books by title, author or ISBN, or describe your mood and reading taste to get personalized recommendations."
       },
       "error": "An error occurred: {message}"
     },
@@ -742,7 +744,7 @@
       "all_logs": "All Logs",
       "view_calendar": "Calendar",
       "view_list": "List",
-      "view_tower": "Tower",
+      "view_stack": "Height",
       "prev_year": "Previous year",
       "next_year": "Next year"
     },
@@ -804,12 +806,12 @@
       "delete_error": "Failed to delete reading log.",
       "settings_updated": "Reading log settings updated successfully.",
       "already_added": "You've already logged this book for that day.",
-      "create_tower": "Logged. Your tower grew {cm}cm",
-      "tower_passed": "Past your {part}!",
-      "tower_over_passed": "Your tower is taller than you now!",
-      "tower_over": "{cm}cm taller than you",
-      "tower_to_next": "{cm}cm to your {part}",
-      "view_tower": "View tower"
+      "create_stack": "Logged. Your stack grew {cm}cm",
+      "stack_passed": "Past your {part}!",
+      "stack_over_passed": "Your stack is taller than you now!",
+      "stack_over": "{cm}cm taller than you",
+      "stack_to_next": "{cm}cm to your {part}",
+      "view_stack": "See reading height"
     },
     "dialog": {
       "delete_title": "Delete Reading Log",
@@ -820,16 +822,16 @@
     "feed": {
       "fetch_error": "A problem occurred while loading data."
     },
-    "tower": {
-      "kicker": "Book tower",
+    "stack": {
+      "kicker": "Reading height",
       "count_unit": "{count, plural, one { book} other { books}}",
       "pages_unit": "p",
       "height_unit": "cm",
       "height_chip": "My height {cm}cm",
       "height_chip_default": "Set my height",
-      "lede_passed": "Your tower is past your {part}. {cm}cm to your {next} — at this pace it reaches your height around {eta}.",
+      "lede_passed": "Your stack is past your {part}. {cm}cm to your {next} — at this pace it reaches your height around {eta}.",
       "lede_start": "{cm}cm to your {next} — at this pace it reaches your height around {eta}.",
-      "lede_over": "Your tower is {cm}cm taller than you. Next goal: {times}× your height, {goal}cm.",
+      "lede_over": "Your stack is {cm}cm taller than you. Next goal: {times}× your height, {goal}cm.",
       "lede_empty": "Log the books you finish and they stack up here.",
       "height_label": "My height",
       "height_hint": "Saved on this device only",
@@ -905,7 +907,7 @@
         }
       },
       "sheet": {
-        "tower_add": "Tower +{cm}cm",
+        "stack_add": "Height +{cm}cm",
         "pages": "{count, plural, one {# page} other {# pages}}",
         "size": "{w}×{h}×{d}mm",
         "estimated": "Estimated size",
@@ -916,7 +918,7 @@
       },
       "share": {
         "title": "Share image",
-        "kicker": "Book tower · {year}",
+        "kicker": "Reading height · {year}",
         "story": "Story 9:16",
         "feed": "Feed 4:5",
         "share": "Share",
@@ -929,7 +931,7 @@
         "sub_over": "Stacked {cm}cm taller than me",
         "sub_passed": "Past my {part}, {cm}cm to my {next}",
         "sub_start": "{cm}cm to my {next}",
-        "image_alt": "Book tower share image preview",
+        "image_alt": "Reading height share image preview",
         "rendering": "Drawing the image",
         "render_failed": "Couldn't create the image. Close and try again.",
         "format_label": "Image format",
@@ -943,14 +945,14 @@
       "lede_past": "You stacked {cm}cm in {year}.",
       "lede_past_passed": "You stacked {cm}cm in {year} — past your {part}.",
       "lede_past_over": "You stacked {cm}cm in {year} — taller than you.",
-      "error_title": "Couldn't load your book tower",
+      "error_title": "Couldn't load your reading height",
       "retry": "Try again",
       "public": {
         "prev_year": "Previous year",
         "next_year": "Next year",
         "empty": "{name} has no finished books in {year}",
         "stage_label": "{count, plural, one {# book} other {# books}} {name} read in {year}, stacked to {height}cm",
-        "cta": "Build my own book tower"
+        "cta": "Measure my own reading height"
       },
       "authors": {
         "camus": "Albert Camus",
@@ -966,12 +968,12 @@
       "approx_height": "Approx. {cm}cm",
       "author_height_note": "Author heights are commonly reported estimates.",
       "author_source": "Height reference",
-      "author_bubble_ratio": "Your tower is {percent}% as tall",
-      "author_lede": "Your tower is {percent}% of {name}’s approximate height ({cm}cm).",
+      "author_bubble_ratio": "Your stack is {percent}% as tall",
+      "author_lede": "Your stack is {percent}% of {name}’s approximate height ({cm}cm).",
       "progress_to_author": "Up to {name}’s height",
       "progress_over_author": "Taller than {name}!",
       "progress_double_author": "{cm}cm to reach {times} times {name}’s height.",
-      "author_stage_label": "A {height}cm tower of {count} books beside {name}, approximately {me}cm tall",
+      "author_stage_label": "A {height}cm stack of {count} books beside {name}, approximately {me}cm tall",
       "author_share": "{percent}% of {name}’s height (approx. {cm}cm).",
       "author_short": {
         "camus": "Camus",
@@ -2260,21 +2262,91 @@
     "prev": "Back",
     "next": "Next",
     "go_to_slide": "Go to slide {index}",
-    "reading_tower": {
-      "s1_title": "How tall would this year's books stack up?",
+    "reading_stack": {
+      "s1_title": "Would this year's books stack up to your height?",
       "s1_title_mine": "Your books this year already stack {cm}cm high",
-      "s1_body": "Every book you finish is stacked at its real thickness, one by one. Thick books stay thick, thin ones stay thin.",
+      "s1_body": "Our new Reading height stacks every book you finish at its real thickness, one by one. Thick books stay thick, thin ones stay thin.",
       "s2_title": "Stand it next to yourself",
-      "s2_body": "Knees, waist, shoulders… your character shows how far the tower has come. Your height stays on this device.",
+      "s2_body": "Knees, waist, shoulders… your character shows how far the stack has come. Your height stays on this device.",
       "s3_title": "Can you outstack a great author?",
-      "s3_body": "Compare your tower with Camus, Sartre, Kundera, Woolf and Kafka, too.",
+      "s3_body": "Compare your stack with Camus, Sartre, Kundera, Woolf and Kafka, too.",
       "s4_title": "It grows with every log, and you can show it off",
-      "s4_body": "Mark a book as read and we'll tell you how much taller your tower got. Save the scene as a story or feed image.",
+      "s4_body": "Mark a book as read and we'll tell you how much taller your stack got. Save the scene as a story or feed image.",
       "toast_title": "Logged",
-      "toast_body": "Your tower grew {cm}cm",
-      "cta_view": "See my book tower",
+      "toast_body": "Your stack grew {cm}cm",
+      "cta_view": "See my reading height",
       "cta_join": "Sign up and start stacking",
-      "stage_label": "A {height}cm tower of {count} books"
+      "stage_label": "A {height}cm stack of {count} books"
+    }
+  },
+  "reading_height_page": {
+    "metadata": {
+      "title": "Reading height - Stack this year's books against your height",
+      "description": "Stack the books you read at their real thickness and measure them against your own height. See how far up you've come, whether you've outstacked Kafka or Sartre, and share it as an image."
+    },
+    "breadcrumb": "Reading height",
+    "kicker": "Bookjeok reading log",
+    "title": "Reading height",
+    "lead": "Stack this year's books at their real thickness and stand them next to yourself.",
+    "demo_hint": "A sample of 46 books. Tap a name to change who stands beside them.",
+    "cta": "Try it with my books",
+    "cta_note": "Free for every Bookjeok member.",
+    "steps_title": "How it works",
+    "steps": {
+      "record": {
+        "title": "Log what you read",
+        "body": "Tap “Read it” in your reading calendar or on a book page, and it stacks up one by one."
+      },
+      "thickness": {
+        "title": "Real thickness",
+        "body": "Every book uses its measured size. Thick books stay thick, thin ones stay thin."
+      },
+      "compare": {
+        "title": "Against your height",
+        "body": "Ankles, knees, waist, shoulders… your character tells you how far the stack has come."
+      }
+    },
+    "features_title": "More you can do",
+    "features": {
+      "authors": {
+        "title": "Compare with authors",
+        "body": "Stand your stack next to the estimated heights of Camus, Sartre, Kundera, Woolf and Kafka."
+      },
+      "share": {
+        "title": "Share as an image",
+        "body": "Save it as a story (9:16) or feed (4:5) image, with the titles of your books."
+      },
+      "toast": {
+        "title": "Updates as you log",
+        "body": "Each log tells you how many centimeters you added and how far the next milestone is."
+      },
+      "profile": {
+        "title": "Public profile",
+        "body": "Make your reading log public to show this year's stack on your profile."
+      }
+    },
+    "faq_title": "FAQ",
+    "faq": {
+      "thickness": {
+        "q": "How is book thickness measured?",
+        "a": "Each book uses its measured size (width, height, thickness). Books without size data use an average size and are marked as estimates."
+      },
+      "privacy": {
+        "q": "Where is my height stored?",
+        "a": "Your height never leaves your device. Until you enter it, we show an average height (173cm men, 161cm women)."
+      },
+      "authors": {
+        "q": "Are the author heights accurate?",
+        "a": "They are estimates commonly cited in biographies and interviews, shown as approximate with a reference link."
+      },
+      "years": {
+        "q": "Can I see past years?",
+        "a": "Yes. Move between years to see each year's stack separately."
+      },
+      "price": {
+        "q": "Is it free?",
+        "a": "Yes, it's free for every Bookjeok member."
+      }
     }
   }
 }

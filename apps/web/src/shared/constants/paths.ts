@@ -30,6 +30,8 @@ export const PATHS = {
   SHARE_DECK: (handle: string) => `/share/deck/${handle}`,
   INSIGHTS: "/insights",
   READING_LOG: "/my-page/reading-log",
+  /** 독서 키재기 공개 소개(검색 유입용) */
+  READING_HEIGHT: "/reading-height",
   TERMS: "/terms",
   PRIVACY: "/privacy",
   ORDER_PAYMENT: (orderId: string | number) => `/order/payment/${orderId}`,

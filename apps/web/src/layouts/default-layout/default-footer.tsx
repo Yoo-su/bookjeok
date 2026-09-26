@@ -98,6 +98,14 @@ export const DefaultFooter = () => {
                   </li>
                   <li>
                     <Link
+                      href={PATHS.READING_HEIGHT}
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
+                    >
+                      {tNav("menu_reading_height")}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
                       href={PATHS.BOOK_MARKET}
                       className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >

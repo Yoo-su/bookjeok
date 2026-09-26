@@ -422,24 +422,24 @@ html::-webkit-scrollbar {
   }
 }
 
-/* 독서기록 책탑: 캐릭터 선을 세 벌 번갈아 보여 손그림처럼 살짝 떨리게 한다(line boil) */
-.tower-boil {
+/* 독서기록 독서 키재기: 캐릭터 선을 세 벌 번갈아 보여 손그림처럼 살짝 떨리게 한다(line boil) */
+.stack-boil {
   visibility: hidden;
 }
-.tower-boil-0 {
-  animation: tower-boil-0 0.6s infinite;
+.stack-boil-0 {
+  animation: stack-boil-0 0.6s infinite;
 }
-.tower-boil-1 {
-  animation: tower-boil-1 0.6s infinite;
+.stack-boil-1 {
+  animation: stack-boil-1 0.6s infinite;
 }
-.tower-boil-2 {
-  animation: tower-boil-2 0.6s infinite;
+.stack-boil-2 {
+  animation: stack-boil-2 0.6s infinite;
 }
-.tower-bubble {
+.stack-bubble {
   transform-box: fill-box;
   transform-origin: 40% 100%;
 }
-@keyframes tower-boil-0 {
+@keyframes stack-boil-0 {
   0%,
   33.3% {
     visibility: visible;
@@ -449,7 +449,7 @@ html::-webkit-scrollbar {
     visibility: hidden;
   }
 }
-@keyframes tower-boil-1 {
+@keyframes stack-boil-1 {
   0%,
   33.3% {
     visibility: hidden;
@@ -463,7 +463,7 @@ html::-webkit-scrollbar {
     visibility: hidden;
   }
 }
-@keyframes tower-boil-2 {
+@keyframes stack-boil-2 {
   0%,
   66.6% {
     visibility: hidden;
@@ -474,12 +474,12 @@ html::-webkit-scrollbar {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .tower-boil-0 {
+  .stack-boil-0 {
     animation: none;
     visibility: visible;
   }
-  .tower-boil-1,
-  .tower-boil-2 {
+  .stack-boil-1,
+  .stack-boil-2 {
     display: none;
   }
 }

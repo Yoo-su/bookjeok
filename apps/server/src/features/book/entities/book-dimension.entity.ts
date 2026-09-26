@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Book } from './book.entity';
 
 /**
- * 도서 실측 판형과 표지 대표색. 독서기록 「책탑」이 책을 쌓는 데 쓴다.
+ * 도서 실측 판형과 표지 대표색. 독서기록 「독서 키재기」가 책을 쌓는 데 쓴다.
  *
  * 알라딘 Open API 종료(2026-10-30) 전에 전량 수확한 스냅샷이라 갱신하지 않는다.
  * 값이 없는 책은 행이 없고, 조회 시 `estimateBookSize`(core)가 채운다.

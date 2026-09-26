@@ -16,7 +16,7 @@ vi.mock("@bookjeok/api-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@bookjeok/api-client")>()),
   createReadingLog: vi.fn(),
   updateReadingLog: vi.fn(),
-  getReadingTower: vi.fn(),
+  getReadingStack: vi.fn(),
 }));
 
 const push = vi.fn();
@@ -246,7 +246,7 @@ describe("기록 생성 알림", () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  const towerOf = (depths: number[]) => ({
+  const stackOf = (depths: number[]) => ({
     year,
     items: depths.map((depth, i) => ({
       logId: `log-${i}`,
@@ -279,16 +279,16 @@ describe("기록 생성 알림", () => {
     );
   };
 
-  it("쌓인 두께와 다음 부위까지 남은 높이를 알리고, 책탑 보기로 보낸다", async () => {
+  it("쌓인 두께와 다음 부위까지 남은 높이를 알리고, 독서 키재기 보기로 보낸다", async () => {
     // 기본 키 173cm: 100mm → 117mm는 발목을 이미 넘은 상태라 다음 부위(무릎)를 말한다
-    vi.mocked(apis.getReadingTower).mockResolvedValue(towerOf([100, 17]));
+    vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([100, 17]));
 
     await create("log-1");
 
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
     const [title, options] = vi.mocked(toast.success).mock.calls[0];
-    expect(title).toBe("create_tower");
-    expect(options).toMatchObject({ description: "tower_to_next" });
+    expect(title).toBe("create_stack");
+    expect(options).toMatchObject({ description: "stack_to_next" });
 
     const action = options?.action as Action;
     act(() => action.onClick({} as React.MouseEvent<HTMLButtonElement>));
@@ -296,23 +296,23 @@ describe("기록 생성 알림", () => {
     expect(
       JSON.parse(localStorage.getItem("reading-log-view") ?? "{}").state
         ?.viewMode,
-    ).toBe("tower");
+    ).toBe("stack");
   });
 
   it("이번 책으로 부위를 넘으면 넘었다고 알린다", async () => {
     // 173cm의 무릎(28%) = 484.4mm. 480 → 497
-    vi.mocked(apis.getReadingTower).mockResolvedValue(towerOf([480, 17]));
+    vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([480, 17]));
 
     await create("log-1");
 
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
     expect(vi.mocked(toast.success).mock.calls[0][1]).toMatchObject({
-      description: "tower_passed",
+      description: "stack_passed",
     });
   });
 
-  it("책탑을 못 받으면 평범한 완료 알림", async () => {
-    vi.mocked(apis.getReadingTower).mockRejectedValue(new Error("offline"));
+  it("쌓은 책을 못 받으면 평범한 완료 알림", async () => {
+    vi.mocked(apis.getReadingStack).mockRejectedValue(new Error("offline"));
 
     await create("log-1");
 

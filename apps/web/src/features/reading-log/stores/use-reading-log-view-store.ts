@@ -10,7 +10,7 @@ interface ReadingLogViewState {
 }
 
 /**
- * 내 독서기록 페이지의 보기 모드(달력·리스트·책탑). 기기에만 둔다.
+ * 내 독서기록 페이지의 보기 모드(달력·리스트·독서 키재기). 기기에만 둔다.
  * 마이페이지는 로그인 가드가 서버에서 비워 두므로 저장값으로 첫 렌더를 해도 하이드레이션이 어긋나지 않는다.
  */
 export const useReadingLogViewStore = create<ReadingLogViewState>()(
@@ -22,6 +22,16 @@ export const useReadingLogViewStore = create<ReadingLogViewState>()(
     {
       name: "reading-log-view",
       storage: createJSONStorage(() => localStorage),
+      // v0은 독서 키재기를 옛 이름 "tower"(책탑)로 저장했다
+      version: 1,
+      migrate: (persisted, version) => {
+        const state = persisted as { viewMode?: string };
+        return (
+          version < 1 && state.viewMode === "tower"
+            ? { ...state, viewMode: "stack" }
+            : state
+        ) as ReadingLogViewState;
+      },
     },
   ),
 );

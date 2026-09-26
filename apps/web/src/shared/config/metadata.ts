@@ -117,6 +117,7 @@ export const createPageMetadata = ({
       "/book/market": "market",
       "/book/reviews": "reviews",
       "/lounge": "lounge",
+      "/reading-height": "reading-height",
     } as Record<string, string>
   )[path ?? "__default"];
   const image =

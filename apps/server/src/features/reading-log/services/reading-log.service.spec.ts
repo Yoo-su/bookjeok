@@ -235,7 +235,7 @@ describe('ReadingLogService', () => {
     });
   });
 
-  describe('getTower', () => {
+  describe('getStack', () => {
     const log = (
       isbn: string,
       date: string,
@@ -275,7 +275,7 @@ describe('ReadingLogService', () => {
         }),
       );
 
-      const result = await service.getTower(1, 2026);
+      const result = await service.getStack(1, 2026);
 
       expect(result.year).toBe(2026);
       expect(result.items[0]).toMatchObject({
@@ -315,7 +315,7 @@ describe('ReadingLogService', () => {
         }),
       );
 
-      const result = await service.getTower(1, 2026);
+      const result = await service.getStack(1, 2026);
 
       expect(result.items[0]).toMatchObject({ pages: null, depth: 8 });
     });
@@ -326,7 +326,7 @@ describe('ReadingLogService', () => {
         qb,
       );
 
-      const result = await service.getTower(1, 2026);
+      const result = await service.getStack(1, 2026);
 
       expect(result.items).toEqual([]);
       expect(qb.leftJoinAndMapOne).toHaveBeenCalledWith(
@@ -338,16 +338,16 @@ describe('ReadingLogService', () => {
     });
 
     it('연도가 이상하면 400', async () => {
-      await expectInvalidCursor(service.getTower(1, Number('abc')));
-      await expectInvalidCursor(service.getTower(1, 1999));
+      await expectInvalidCursor(service.getStack(1, Number('abc')));
+      await expectInvalidCursor(service.getStack(1, 1999));
     });
   });
 
-  describe('getPublicTower', () => {
+  describe('getPublicStack', () => {
     it('없는 사용자와 탈퇴한 사용자는 404', async () => {
       (userRepository.findOne as jest.Mock).mockResolvedValueOnce(null);
       await expect(
-        service.getPublicTower('nobody', 2026),
+        service.getPublicStack('nobody', 2026),
       ).rejects.toMatchObject({ errorCode: 'USER_NOT_FOUND' });
 
       (userRepository.findOne as jest.Mock).mockResolvedValueOnce({
@@ -355,7 +355,7 @@ describe('ReadingLogService', () => {
         isReadingLogPublic: true,
         deletedAt: new Date(),
       });
-      await expect(service.getPublicTower('left', 2026)).rejects.toMatchObject({
+      await expect(service.getPublicStack('left', 2026)).rejects.toMatchObject({
         errorCode: 'USER_NOT_FOUND',
       });
     });
@@ -367,13 +367,13 @@ describe('ReadingLogService', () => {
         deletedAt: null,
       });
 
-      const result = await service.getPublicTower('private_user', 2026);
+      const result = await service.getPublicStack('private_user', 2026);
 
       expect(result).toEqual({ year: 2026, items: [] });
       expect(readingLogRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
-    it('공개면 그 사용자의 책탑', async () => {
+    it('공개면 그 사용자의 독서 키재기', async () => {
       (userRepository.findOne as jest.Mock).mockResolvedValue({
         id: 7,
         isReadingLogPublic: true,
@@ -384,7 +384,7 @@ describe('ReadingLogService', () => {
         qb,
       );
 
-      await service.getPublicTower('reader', 2026);
+      await service.getPublicStack('reader', 2026);
 
       expect(userRepository.findOne).toHaveBeenCalledWith(
         expect.objectContaining({ where: { handle: 'reader' } }),
@@ -395,7 +395,7 @@ describe('ReadingLogService', () => {
     });
 
     it('연도가 이상하면 사용자 조회 전에 400', async () => {
-      await expectInvalidCursor(service.getPublicTower('reader', 1999));
+      await expectInvalidCursor(service.getPublicStack('reader', 1999));
       expect(userRepository.findOne).not.toHaveBeenCalled();
     });
   });

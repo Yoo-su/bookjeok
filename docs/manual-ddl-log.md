@@ -47,7 +47,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-23 | `book_ingest` 역할 생성 + `books` RLS 정책 2개 (신간 적재 도구 전용)               | (미커밋)                |
 | 미상       | `books` 검색 키 표현식 인덱스 `IDX_books_search_key_trgm` (2026-09-23에 발견·기록) | (코드는 아래 10절)      |
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                      | `79b04b2f`, 10절        |
-| 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「책탑」용 실측 판형·표지색, 빈 테이블)    | (미커밋), 11절          |
+| 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「독서 키재기」용 실측 판형·표지색, 빈 테이블)    | (미커밋), 11절          |
 | 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)  | `532dfd31`, 12절        |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
@@ -1072,14 +1072,14 @@ DROP INDEX CONCURRENTLY IF EXISTS "IDX_books_publisher_trgm";
 
 ### 배경
 
-독서기록 「책탑」은 한 해에 읽은 책을 **실제 두께로** 쌓아 내 키와 나란히 세웁니다.
+독서기록 「독서 키재기」는 한 해에 읽은 책을 **실제 두께로** 쌓아 내 키와 나란히 세웁니다.
 `books`에는 판형·쪽수·무게가 없고, 알라딘 Open API가 2026-10-30에 종료되면 받을 곳도
 없습니다(카카오는 판형·쪽수를 주지 않습니다). 그래서 종료 전에 전량 수확해 이 테이블에
 넣습니다. 수확은 `~/bookjeok-migration/scripts/harvest-packing.mjs`, 표지 대표색은
 `cover-colors.mjs`가 만듭니다.
 
 **`books`에 컬럼을 늘리지 않고 떼어 둔 이유**: `books`는 검색·상세·중고거래가 다 쓰는
-핵심 테이블이고, 이 값은 책탑 하나만 씁니다. 값이 없는 책은 행을 만들지 않고, 조회 시
+핵심 테이블이고, 이 값은 독서 키재기 하나만 씁니다. 값이 없는 책은 행을 만들지 않고, 조회 시
 서버가 추정합니다(`estimateBookSize`, core). 추정값은 저장하지 않습니다.
 
 ### 실행한 SQL
@@ -1131,8 +1131,8 @@ COMMIT;
     56,850건이고, 전부 `books`에 있는지는 아직 확인하지 않았습니다.
   - **`outcome`이 `found`인 행만** 넣습니다(`title_mismatch` 130행은 다른 책의 값).
   - 판형 행과 표지색 행은 ISBN으로 합쳐 한 행으로 넣습니다. 한쪽만 있어도 행을 만듭니다.
-- **서버 배포 순서**: 이 테이블이 있어야 `GET /reading-logs/tower`가 동작합니다(적재 전에는
-  모든 책이 추정 크기). 웹은 서버보다 나중에 배포해야 책탑 탭이 에러를 내지 않습니다.
+- **서버 배포 순서**: 이 테이블이 있어야 `GET /reading-logs/stack`이 동작합니다(적재 전에는
+  모든 책이 추정 크기). 웹은 서버보다 나중에 배포해야 독서 키재기 탭이 에러를 내지 않습니다.
 
 ### 적재 결과 (2026-09-25)
 
@@ -1160,8 +1160,8 @@ smallint를 넘던 `9788954415415`는 쪽수·무게 NULL. `relrowsecurity = tru
 ### 되돌리기
 
 ```sql
-TRUNCATE public.book_dimensions;   -- 데이터만 비우기 (책탑은 전부 추정 크기로 돌아감)
-DROP TABLE public.book_dimensions; -- 테이블까지 제거 (서버 책탑 API가 500)
+TRUNCATE public.book_dimensions;   -- 데이터만 비우기 (독서 키재기는 전부 추정 크기로 돌아감)
+DROP TABLE public.book_dimensions; -- 테이블까지 제거 (서버 독서 키재기 API가 500)
 ```
 
 ---
