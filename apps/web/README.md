@@ -75,7 +75,8 @@ src/
 │   ├── insights/             # 서비스 통계 차트
 │   ├── intro/                # 홈 히어로 인트로
 │   ├── music/                # 전역 배경음악 플레이어
-│   └── confirm/              # 전역 확인 다이얼로그
+│   ├── confirm/              # 전역 확인 다이얼로그
+│   └── announcement/         # 새 기능 소개 모달 (접속 시 한 번)
 ├── shared/
 │   ├── components/           # shadcn · common · editor · map · ads · analytics · icons
 │   ├── providers/            # QueryProvider · UserProvider · SocketProvider

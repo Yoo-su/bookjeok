@@ -235,7 +235,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 - **리뷰** — Tiptap 리치 텍스트 에디터(이미지 리사이즈·하이라이트·정렬·링크·색상 확장), 제목 기반 반응형 목차·현재 절 강조·본문 읽기 진행률, 읽기 미리보기, 별점, 태그, 공개/비공개, 리액션(공감/인사이트/응원) 집계, 조회수 인터셉터, `sanitize-html` 기반 XSS 방어
 - **독서 기록** — 월별/연도별 독서 캘린더, 완독 도서·한줄평·감상문 기록, 개인 독서 통계와 공개 설정
-- **책탑** — 한 해에 읽은 책을 실제 두께로 쌓아 내 키만 한 손그림 캐릭터 또는 작가 5명(카뮈·사르트르·쿤데라·울프·카프카) 캐리커처의 추정 키와 비교하고, 그 장면을 이미지로 공유. 공개 프로필에서는 캐릭터 없이 탑만 보여 줌 (책 크기는 알라딘 종료 전 수확한 `book_dimensions`)
+- **책탑** — 한 해에 읽은 책을 실제 두께로 쌓아 내 키만 한 손그림 캐릭터 또는 작가 5명(카뮈·사르트르·쿤데라·울프·카프카) 캐리커처의 추정 키와 비교하고, 그 장면을 이미지로 공유. 공개 프로필에서는 캐릭터 없이 탑만 보여 줌 (책 크기는 알라딘 종료 전 수확한 `book_dimensions`). 출시 후 30일간 접속 시 한 번 넘겨 보는 소개 모달로 알림(`announcement`)
 - **독서 라운지** — `/lounge`에서 다른 독자들의 실시간 독서 기록, 인기 도서, 활동 중인 독자, 같은 책을 읽는 독자를 조회
 
 ---
@@ -631,7 +631,7 @@ pnpm test
 - **서버 도메인** — [auth](apps/server/src/features/auth/README.md) · [user](apps/server/src/features/user/README.md) · [book](apps/server/src/features/book/README.md) · [review](apps/server/src/features/review/README.md) · [comment](apps/server/src/features/comment/README.md) · [reading-log](apps/server/src/features/reading-log/README.md) · [wishlist](apps/server/src/features/wishlist/README.md) · [used-book-sale](apps/server/src/features/used-book-sale/README.md) · [order](apps/server/src/features/order/README.md) · [trade](apps/server/src/features/trade/README.md) · [chat](apps/server/src/features/chat/README.md) · [notification](apps/server/src/features/notification/README.md) · [llm](apps/server/src/features/llm/README.md) · [search](apps/server/src/features/search/README.md) · [search-keyword](apps/server/src/features/search-keyword/README.md) · [insights](apps/server/src/features/insights/README.md) · [health](apps/server/src/features/health/README.md)
 - **서버 횡단 관심사** — [src/shared](apps/server/src/shared/README.md) (SmartCache · 에러 체계 · 멱등성 · 활동 로그 · 메일 · 탈퇴 캐스케이드)
 - **웹 도메인** — [auth](apps/web/src/features/auth/README.md) · [user](apps/web/src/features/user/README.md) · [book](apps/web/src/features/book/README.md) · [book-sale](apps/web/src/features/book-sale/README.md) · [order](apps/web/src/features/order/README.md) · [trade](apps/web/src/features/trade/README.md) · [chat](apps/web/src/features/chat/README.md) · [notification](apps/web/src/features/notification/README.md) · [review](apps/web/src/features/review/README.md) · [comment](apps/web/src/features/comment/README.md) · [reading-log](apps/web/src/features/reading-log/README.md) · [insights](apps/web/src/features/insights/README.md)
-- **웹 공통 UX** — [intro](apps/web/src/features/intro/README.md) (홈 히어로) · [music](apps/web/src/features/music/README.md) (배경음악) · [confirm](apps/web/src/features/confirm/README.md) (전역 확인 다이얼로그)
+- **웹 공통 UX** — [intro](apps/web/src/features/intro/README.md) (홈 히어로) · [music](apps/web/src/features/music/README.md) (배경음악) · [confirm](apps/web/src/features/confirm/README.md) (전역 확인 다이얼로그) · [announcement](apps/web/src/features/announcement/README.md) (새 기능 소개 모달)
 
 ### 설계 · 운영
 

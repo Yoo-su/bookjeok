@@ -22,7 +22,7 @@ reading-log/
     │   ├── reading-log-controls/     # 월/연 이동, 뷰 전환
     │   └── reading-log-calendar-skeleton/
     ├── tower-view/                   # 책탑
-    │   ├── reading-tower/            # 내 책탑 조립 (+ stories, stories-data)
+    │   ├── reading-tower/            # 내 책탑 조립 (+ stories)
     │   ├── public-reading-tower/     # 공개 프로필 책탑: 캐릭터 없음 (+ stories)
     │   ├── tower-stage/              # 책탑과 캐릭터를 같은 축척으로 그리는 무대 (캐릭터 생략 가능)
     │   ├── tower-height-chip/        # 「내 키」 버튼 → 팝오버로 키 입력 카드
@@ -34,7 +34,7 @@ reading-log/
     │   ├── tower-skeleton/           # 코드 분할·데이터 로딩 공용 스켈레톤
     │   ├── hooks/use-tower-copy.ts   # 문구
     │   ├── hooks/use-tower-person.ts # 내 캐릭터·키 (저장값 없으면 프로필 성별·평균 키)
-    │   └── lib/                      # 장면 생성·손그림 선·캐릭터·SVG/Canvas 렌더러
+    │   └── lib/                      # 장면 생성·손그림 선·캐릭터·SVG/Canvas 렌더러, 예시 46권(sample-books: 스토리·테스트·신기능 소개)
     ├── list-view/
     │   └── reading-log-list-view/
     ├── stats-view/
@@ -100,6 +100,7 @@ reading-log/
 - **기록하면 알린다**: 기록을 만들면(달력·도서 상세 「읽었어요」) 그해 책탑을 받아 "기록했어요. 책탑이 1.7cm 높아졌어요"와 다음 부위까지 남은 높이(또는 "무릎을 넘었어요!")를 토스트로 띄웁니다(작가 선택과 무관하게 입력한 내 키 기준). 올해 기록이면 「책탑 보기」로 보냅니다. 책탑을 못 받으면 평범한 완료 알림입니다(`mutations/index.tsx`).
 - **공개 프로필**: `/users/[handle]`의 독서 기록은 캘린더·리스트 대신 `public-reading-tower`입니다. 주인의 키는 기기에만 있으므로 **캐릭터·말풍선·진행률 없이 탑만** 세우고, 축척을 탑 높이에 맞춥니다(최소 40cm). 공유·키 입력은 없고, 연도 이동과 쌓인 순서·책 다이얼로그만 둡니다. 데이터는 `GET /reading-logs/users/:handle/tower?year=`(인증 없음, 비공개면 빈 목록).
 - **쌓인 순서도 손그림**: 목록의 책도 무대 미니어처처럼 그립니다(`tower-stack-list`의 `SketchBook`). 색면을 윤곽에서 어긋나게 찍고, 진한 선과 흐린 선을 겹친 흔들린 윤곽, 책등 양끝 띠, 손글씨(Gaegu) 제목. 얇은 책은 제목 없이 색 띠만 보입니다.
+- **새 기능 소개**: 접속 시 한 번 뜨는 소개 모달이 이 무대를 그대로 씁니다([announcement](../announcement/README.md)). 무대 문구(`sceneLabels`)는 `authorName`으로 비교 작가를 호출하는 쪽에서 정할 수 있습니다.
 - **헤더 문구**: 화면은 「책탑」(영어 Book tower)만 두고 연도는 연도 이동에만 보입니다. 연도가 따로 필요한 공유 이미지만 `share.kicker`(「2026 책탑」)를 씁니다.
 - **표지색이 없는 책**(10/30 이후 신간 등)은 `fallbackCoverColor`(core)의 옅은 색으로 칠합니다.
 - **책이 많을 때**: 축척이 줄어 한 화면에 들어오고, 쌓는 애니메이션은 권수와 무관하게 약 2초로 묶었습니다. 키를 넘으면 다음 목표를 키의 N배로 올립니다.

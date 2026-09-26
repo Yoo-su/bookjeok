@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { gaegu } from "@/styles/fonts";
 
-import { SAMPLE_BOOKS } from "../reading-tower/stories-data";
+import { SAMPLE_BOOKS } from "../lib/sample-books";
 import { PublicReadingTower } from "./index";
 
 const HANDLE = "user_story01";

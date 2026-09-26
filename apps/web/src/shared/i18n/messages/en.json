@@ -2254,5 +2254,27 @@
       "error_desc": "Check your connection and try again.",
       "btn_retry": "Retry"
     }
+  },
+  "announcement": {
+    "badge": "New",
+    "prev": "Back",
+    "next": "Next",
+    "go_to_slide": "Go to slide {index}",
+    "reading_tower": {
+      "s1_title": "How tall would this year's books stack up?",
+      "s1_title_mine": "Your books this year already stack {cm}cm high",
+      "s1_body": "Every book you finish is stacked at its real thickness, one by one. Thick books stay thick, thin ones stay thin.",
+      "s2_title": "Stand it next to yourself",
+      "s2_body": "Knees, waist, shoulders… your character shows how far the tower has come. Your height stays on this device.",
+      "s3_title": "Can you outstack a great author?",
+      "s3_body": "Compare your tower with Camus, Sartre, Kundera, Woolf and Kafka, too.",
+      "s4_title": "It grows with every log, and you can show it off",
+      "s4_body": "Mark a book as read and we'll tell you how much taller your tower got. Save the scene as a story or feed image.",
+      "toast_title": "Logged",
+      "toast_body": "Your tower grew {cm}cm",
+      "cta_view": "See my book tower",
+      "cta_join": "Sign up and start stacking",
+      "stage_label": "A {height}cm tower of {count} books"
+    }
   }
 }
