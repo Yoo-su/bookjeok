@@ -1,10 +1,13 @@
 import { aladinSource } from "./aladin";
 import { kakaoSource } from "./kakao";
-import type { BookSource, SourceDefinition } from "./types";
+import type { BookSource, ListCatalog, SourceDefinition } from "./types";
 
 export type {
   BookSource,
   KeywordQuery,
+  ListCatalog,
+  ListQuery,
+  ListWeek,
   SearchField,
   SearchSort,
   SourceDefinition,
@@ -23,29 +26,34 @@ export interface SourceInfo {
   enrichNote: string | null;
   /** 이 공급처로 적재할 때 `book_dimensions`에 무엇이 들어가는지. */
   dimensionNote: string;
+  /** 베스트셀러 같은 목록을 주면 그 종류·분야. */
+  lists: ListCatalog | null;
 }
 
 export function describeSources(
   env: NodeJS.ProcessEnv = process.env,
 ): SourceInfo[] {
   const sources = createSources(env);
-  return SOURCES.map(({ id, label, maxPages, envKey, enrichNote }) => {
-    const own = sources.get(id)?.lookupDimensions;
-    const lender = dimensionLender(sources, id);
-    return {
-      id,
-      label,
-      maxPages,
-      envKey,
-      enrichNote: enrichNote ?? null,
-      available: sources.has(id),
-      dimensionNote: own
-        ? "판형·쪽수와 표지색을 book_dimensions에 넣습니다."
-        : lender
-          ? `판형·쪽수는 ${lender.label}에서 ISBN으로 찾아 넣고, 표지색은 표지에서 뽑습니다.`
-          : "판형·쪽수를 받을 곳이 없어 표지색만 넣습니다. 크기는 서버가 추정합니다.",
-    };
-  });
+  return SOURCES.map(
+    ({ id, label, maxPages, envKey, enrichNote, listCatalog }) => {
+      const own = sources.get(id)?.lookupDimensions;
+      const lender = dimensionLender(sources, id);
+      return {
+        id,
+        label,
+        maxPages,
+        envKey,
+        enrichNote: enrichNote ?? null,
+        available: sources.has(id),
+        lists: listCatalog ?? null,
+        dimensionNote: own
+          ? "판형·쪽수와 표지색을 book_dimensions에 넣습니다."
+          : lender
+            ? `판형·쪽수는 ${lender.label}에서 ISBN으로 찾아 넣고, 표지색은 표지에서 뽑습니다.`
+            : "판형·쪽수를 받을 곳이 없어 표지색만 넣습니다. 크기는 서버가 추정합니다.",
+      };
+    },
+  );
 }
 
 /** 키가 있는 공급처만 만듭니다. 키가 없는 공급처는 화면에서 비활성으로 보입니다. */

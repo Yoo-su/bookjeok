@@ -7,6 +7,7 @@ import { coverColor } from "./cover-color";
 import { type BookDb, createBookDb } from "./db";
 import { fetchWithRetry } from "./http";
 import type { IngestDeps } from "./ingest";
+import { withListCache } from "./list-cache";
 import { createR2Store } from "./r2";
 import type { ScanDeps } from "./scan";
 import { type BookSource, dimensionLender } from "./sources";
@@ -15,8 +16,12 @@ export function openDb(): BookDb {
   return createBookDb(requireEnv("INGEST_DATABASE_URL"));
 }
 
+/** 지난 주차 목록은 `.data/list-cache`에서 다시 씁니다(쿼터 절약·이어 하기). */
 export function createScanDeps(db: BookDb, source: BookSource): ScanDeps {
-  return { source, findExisting: (isbns) => db.findExisting(isbns) };
+  return {
+    source: withListCache(source, resolve(DATA_DIR, "list-cache")),
+    findExisting: (isbns) => db.findExisting(isbns),
+  };
 }
 
 /**

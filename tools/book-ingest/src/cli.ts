@@ -10,6 +10,9 @@ import { openJournal } from "./journal";
 import { localToday } from "./normalize";
 import { createIngestDeps, createScanDeps, openDb } from "./runtime";
 import {
+  buildListTarget,
+  LIST_INTERVALS,
+  type ListInterval,
   parseKeywordQuery,
   type ScanTarget,
   SEARCH_FIELDS,
@@ -20,6 +23,7 @@ import {
   createSources,
   describeSources,
   imageOrigins,
+  type ListCatalog,
   type SearchField,
   type SearchSort,
   SOURCES,
@@ -35,9 +39,13 @@ const USAGE = `사용법: pnpm ingest <명령> [옵션]   (저장소 루트에�
       --field <f>                ${SEARCH_FIELDS.join(" | ")} (기본 all, ISBN은 자동 인식)
       --sort <s>                 ${SEARCH_SORTS.join(" | ")} (기본 accuracy)
       --source <id>              공급처: ${SOURCES.map((s) => s.id).join(" | ")} (기본 ${SOURCES[0].id})
-      --max-pages <n>            최대 페이지(출판사 기본은 공급처 상한, 검색 기본은 1)
-  apply --publishers 민음사 --yes 찾은 책 전부를 적재합니다 (--query도 같음)
-      --isbn a,b                 이 ISBN만 적재
+  scan  --source aladin --list Bestseller   베스트셀러 등 목록에서 DB에 없는 책을 찾습니다
+      --categories 0,1,170       분야 ID(0=종합, all=전 분야). 기본 0
+      --months <n>               오늘부터 몇 개월 전까지(기본 1=이번 주만)
+      --interval <i>             ${LIST_INTERVALS.join(" | ")} (기본 month — 달마다 1주차 하나)
+      --max-pages <n>            최대 페이지(출판사·목록 기본은 공급처 상한, 검색 기본은 1)
+  apply --publishers 민음사 --yes 찾은 책 전부를 적재합니다 (--list도 같음)
+      --isbn a,b                 이 ISBN만 적재 (--query는 필수)
   publishers [--limit 50]        DB 보유 수 상위 출판사`;
 
 const FAVORITES = resolve(DATA_DIR, "favorites.json");
@@ -50,6 +58,10 @@ async function main() {
       publishers: { type: "string" },
       source: { type: "string" },
       query: { type: "string" },
+      list: { type: "string" },
+      categories: { type: "string" },
+      months: { type: "string" },
+      interval: { type: "string" },
       field: { type: "string" },
       sort: { type: "string" },
       "max-pages": { type: "string" },
@@ -74,6 +86,7 @@ async function main() {
     const server = createIngestServer({
       port,
       token,
+      today,
       imageOrigins: imageOrigins(),
       services: {
         target: describeDatabase(requireEnv("INGEST_DATABASE_URL")),
@@ -123,10 +136,10 @@ async function main() {
     }
 
     if (command === "scan" || command === "apply") {
-      const targets = parseTargets(values);
       const sourceId = values.source ?? SOURCES[0].id;
       const definition = SOURCES.find((s) => s.id === sourceId);
       if (!definition) throw new Error(`알 수 없는 공급처: ${sourceId}`);
+      const targets = parseTargets(values, definition.listCatalog, today);
       requireEnv(definition.envKey);
       const source = sources.get(sourceId)!;
       console.log(`공급처: ${source.label}`);
@@ -141,7 +154,7 @@ async function main() {
             ? Number(values["max-pages"])
             : values.query
               ? 1
-              : source.maxPages,
+              : undefined,
           today,
           onPage: (p) =>
             process.stdout.write(
@@ -190,6 +203,7 @@ async function main() {
           ` · 판형 행 ${summary.dimensionRows}(실측 ${summary.measured})` +
           (summary.colorFailed ? ` · 표지색 실패 ${summary.colorFailed}` : ""),
       );
+      if (summary.stopped) console.log(`⚠ 중단: ${summary.stopped}`);
       console.log(`적재 기록: ${journal.path}`);
       if (summary.failed > 0) process.exitCode = 1;
       return;
@@ -201,16 +215,54 @@ async function main() {
   }
 }
 
-function parseTargets(values: {
-  publishers?: string;
-  query?: string;
-  field?: string;
-  sort?: string;
-}): ScanTarget[] {
-  if (values.query !== undefined) {
-    if (values.publishers) {
-      throw new Error("--publishers와 --query는 함께 쓸 수 없습니다");
+function parseTargets(
+  values: {
+    publishers?: string;
+    query?: string;
+    field?: string;
+    sort?: string;
+    list?: string;
+    categories?: string;
+    months?: string;
+    interval?: string;
+  },
+  catalog: ListCatalog | undefined,
+  today: string,
+): ScanTarget[] {
+  const modes = [values.publishers, values.query, values.list].filter(
+    (v) => v !== undefined,
+  );
+  if (modes.length > 1) {
+    throw new Error("--publishers·--query·--list는 하나만 쓰세요");
+  }
+  if (values.list !== undefined) {
+    if (!catalog)
+      throw new Error("이 공급처는 목록을 주지 않습니다(--source aladin)");
+    const interval = (values.interval ?? "month") as ListInterval;
+    if (!LIST_INTERVALS.includes(interval))
+      throw new Error(`알 수 없는 --interval: ${interval}`);
+    const categories = values.categories ?? "0";
+    const target = buildListTarget(
+      catalog,
+      {
+        type: values.list,
+        categoryIds:
+          categories === "all"
+            ? catalog.categories.map((c) => c.id)
+            : categories.split(",").map((c) => c.trim()),
+        months: Math.max(1, Number(values.months ?? 1) || 1),
+        interval,
+      },
+      today,
+    );
+    if (typeof target === "string") {
+      throw new Error(
+        `${target}\n종류: ${catalog.types.map((t) => t.id).join(", ")}\n분야: ${catalog.categories.map((c) => `${c.id}=${c.label}`).join(", ")}`,
+      );
     }
+    return [target];
+  }
+  if (values.query !== undefined) {
     const field = (values.field ?? "all") as SearchField;
     const sort = (values.sort ?? "accuracy") as SearchSort;
     if (!SEARCH_FIELDS.includes(field))
@@ -226,7 +278,9 @@ function parseTargets(values: {
     .map((p) => p.trim())
     .filter(Boolean);
   if (publishers.length === 0) {
-    throw new Error("--publishers나 --query가 필요합니다\n\n" + USAGE);
+    throw new Error(
+      "--publishers·--query·--list 중 하나가 필요합니다\n\n" + USAGE,
+    );
   }
   return publishers.map((publisher) => ({ kind: "publisher", publisher }));
 }
@@ -249,9 +303,14 @@ function printSummary(s: ReturnType<typeof summarizeScan>) {
   const reasons = Object.entries(s.excludedByReason)
     .map(([label, n]) => `${label} ${n}`)
     .join(", ");
+  const scope =
+    s.lists !== undefined
+      ? `목록 ${s.lists}개 ${s.pages}페이지`
+      : `${s.totalCount}권 중 ${s.pages}페이지`;
   console.log(
-    `${s.label}: ${s.totalCount}권 중 ${s.pages}페이지 — 신규 ${s.fresh} (예약 ${s.preorder}, 저자 없음 ${s.emptyAuthor}) · 보유 ${s.known} · 제외 ${s.excluded}${reasons ? ` (${reasons})` : ""}`,
+    `${s.label}: ${scope} — 신규 ${s.fresh} (예약 ${s.preorder}, 저자 없음 ${s.emptyAuthor}) · 보유 ${s.known} · 제외 ${s.excluded}${reasons ? ` (${reasons})` : ""}`,
   );
+  if (s.incomplete) console.log(`  ⚠ 끝까지 훑지 못함: ${s.incomplete}`);
 }
 
 function readFavorites(): string[] {

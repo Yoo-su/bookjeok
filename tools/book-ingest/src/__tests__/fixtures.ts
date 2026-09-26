@@ -1,4 +1,5 @@
 import type { Candidate } from "../normalize";
+import type { ListCatalog } from "../sources";
 import type { KakaoBook } from "../sources/kakao";
 
 const COVER =
@@ -48,3 +49,20 @@ export function candidate(overrides: Partial<Candidate> = {}): Candidate {
     ...overrides,
   };
 }
+
+/** 목록 테스트용 카탈로그. 알라딘 카탈로그를 쓰지 않아 알라딘을 지워도 공통 테스트가 남습니다. */
+export const LIST_CATALOG: ListCatalog = {
+  maxPages: 20,
+  types: [
+    { id: "Bestseller", label: "베스트셀러", dated: true },
+    { id: "BlogBest", label: "블로거 베스트", dated: false },
+  ],
+  categories: [
+    { id: "0", label: "종합" },
+    { id: "1", label: "소설/시/희곡" },
+    { id: "74", label: "역사" },
+    { id: "170", label: "경제경영" },
+    { id: "336", label: "자기계발" },
+  ],
+  since: 2000,
+};

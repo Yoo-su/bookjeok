@@ -3,7 +3,7 @@ import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createIngestServer, type IngestServices } from "../server";
-import { candidate } from "./fixtures";
+import { candidate, LIST_CATALOG } from "./fixtures";
 
 const TOKEN = "t0ken";
 let close: (() => Promise<void>) | undefined;
@@ -25,6 +25,7 @@ async function start(overrides: Partial<IngestServices> = {}) {
         enrichNote: null,
         dimensionNote: "",
         available: true,
+        lists: null,
       },
       {
         id: "other",
@@ -34,6 +35,17 @@ async function start(overrides: Partial<IngestServices> = {}) {
         enrichNote: null,
         dimensionNote: "",
         available: false,
+        lists: null,
+      },
+      {
+        id: "aladin",
+        label: "알라딘",
+        maxPages: 4,
+        envKey: "ALADIN_TTB_KEY",
+        enrichNote: null,
+        dimensionNote: "",
+        available: true,
+        lists: LIST_CATALOG,
       },
     ],
     publisherStats: vi.fn(async () => [{ publisher: "민음사", count: 839 }]),
@@ -100,6 +112,7 @@ async function start(overrides: Partial<IngestServices> = {}) {
   const server = createIngestServer({
     port,
     token: TOKEN,
+    today: "2026-09-26",
     services,
     imageOrigins: ["https://search1.kakaocdn.net", "https://img.example"],
     html: "<p>__INGEST_TOKEN__</p>",
@@ -307,6 +320,95 @@ describe("createIngestServer", () => {
     const res = await call("/api/scan", {
       method: "POST",
       body: JSON.stringify({ source: "kakao", query }),
+    });
+    expect(res.status).toBe(400);
+    expect(services.scan).not.toHaveBeenCalled();
+  });
+
+  it("베스트셀러 목록 요청을 분야 × 주차로 펼치고 페이지는 목록 상한(20)까지 허용한다", async () => {
+    const { call, services } = await start();
+    await (
+      await call("/api/scan", {
+        method: "POST",
+        body: JSON.stringify({
+          source: "aladin",
+          list: {
+            type: "Bestseller",
+            categoryIds: ["0", "1"],
+            months: 3,
+            interval: "month",
+          },
+          maxPages: 99,
+        }),
+      })
+    ).text();
+    const [, targets, maxPages] = vi.mocked(services.scan).mock.calls[0];
+    expect(maxPages).toBe(20);
+    expect(targets).toHaveLength(1);
+    const target = targets[0];
+    expect(target.kind).toBe("lists");
+    if (target.kind !== "lists") return;
+    // 이번 주 + 8월·7월 1주차, 분야 2개
+    expect(target.lists.map((l) => l.query)).toEqual([
+      { type: "Bestseller", categoryId: "0", week: null },
+      { type: "Bestseller", categoryId: "1", week: null },
+      {
+        type: "Bestseller",
+        categoryId: "0",
+        week: { year: 2026, month: 8, week: 1 },
+      },
+      {
+        type: "Bestseller",
+        categoryId: "1",
+        week: { year: 2026, month: 8, week: 1 },
+      },
+      {
+        type: "Bestseller",
+        categoryId: "0",
+        week: { year: 2026, month: 7, week: 1 },
+      },
+      {
+        type: "Bestseller",
+        categoryId: "1",
+        week: { year: 2026, month: 7, week: 1 },
+      },
+    ]);
+  });
+
+  it.each([
+    [
+      "목록을 주지 않는 공급처",
+      { source: "kakao", list: { type: "Bestseller", categoryIds: ["0"] } },
+    ],
+    [
+      "모르는 종류",
+      { source: "aladin", list: { type: "Steady", categoryIds: ["0"] } },
+    ],
+    [
+      "모르는 분야",
+      { source: "aladin", list: { type: "Bestseller", categoryIds: ["999"] } },
+    ],
+    [
+      "분야 없음",
+      { source: "aladin", list: { type: "Bestseller", categoryIds: [] } },
+    ],
+    [
+      "목록 2,000개 초과",
+      {
+        source: "aladin",
+        list: {
+          type: "Bestseller",
+          categoryIds: LIST_CATALOG.categories.map((c) => c.id),
+          months: 300,
+          interval: "week",
+        },
+      },
+    ],
+  ])("%s면 조회하지 않는다", async (_name, body) => {
+    const { call, services } = await start();
+    const res = await call("/api/scan", {
+      method: "POST",
+      body: JSON.stringify(body),
     });
     expect(res.status).toBe(400);
     expect(services.scan).not.toHaveBeenCalled();

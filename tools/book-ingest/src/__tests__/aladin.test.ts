@@ -381,3 +381,84 @@ describe("알라딘 lookupDimensions", () => {
     ).rejects.toThrow("알라딘 오류 10");
   });
 });
+
+describe("알라딘 목록(ItemList)", () => {
+  it("베스트셀러 과거 주차를 ItemList로 요청한다", async () => {
+    const request = respond({
+      totalResults: 1000,
+      startIndex: 3,
+      item: Array.from({ length: 50 }, () => aladinItem()),
+    });
+    const page = await createAladinSource("key", request).lists!.search(
+      {
+        type: "Bestseller",
+        categoryId: "1",
+        week: { year: 2015, month: 6, week: 1 },
+      },
+      3,
+    );
+    const url = new URL(request.mock.calls[0][0]);
+    expect(url.pathname).toBe("/ttb/api/ItemList.aspx");
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      QueryType: "Bestseller",
+      CategoryId: "1",
+      Year: "2015",
+      Month: "6",
+      Week: "1",
+      SearchTarget: "Book",
+      MaxResults: "50",
+      Start: "3",
+    });
+    // 목록은 20페이지(1,000권)까지 — 검색의 4페이지 상한과 다르다
+    expect(page.isEnd).toBe(false);
+  });
+
+  it("이번 주는 주차를 보내지 않고, 20페이지에서 끝낸다", async () => {
+    const request = respond({
+      totalResults: 1000,
+      startIndex: 20,
+      item: Array.from({ length: 50 }, () => aladinItem()),
+    });
+    const page = await createAladinSource("key", request).lists!.search(
+      { type: "Bestseller", categoryId: "0", week: null },
+      20,
+    );
+    expect(new URL(request.mock.calls[0][0]).searchParams.has("Year")).toBe(
+      false,
+    );
+    expect(page.isEnd).toBe(true);
+  });
+
+  it("21페이지부터 1페이지를 다시 주면 끝으로 본다", async () => {
+    const request = respond({
+      totalResults: 1000,
+      startIndex: 1,
+      item: [aladinItem()],
+    });
+    const page = await createAladinSource("key", request).lists!.search(
+      { type: "Bestseller", categoryId: "0", week: null },
+      21,
+    );
+    expect(page).toEqual({ items: [], totalCount: 1000, isEnd: true });
+  });
+});
+
+describe("알라딘 오류의 fatal 표시", () => {
+  it("쿼터·키 오류는 fatal — 적재를 멈추게 한다", async () => {
+    const request = respond({ errorCode: 10, errorMessage: "쿼터 초과" });
+    await expect(
+      createAladinSource("key", request).enrich!(
+        candidate({ source: "aladin" }),
+      ),
+    ).rejects.toMatchObject({ fatal: true });
+  });
+
+  it("없는 상품(8)은 fatal이 아니다", async () => {
+    const request = respond({ errorCode: 8, errorMessage: "없음" });
+    await expect(
+      createAladinSource("key", request).enrich!(
+        candidate({ source: "aladin" }),
+      ),
+    ).rejects.toMatchObject({ fatal: false });
+  });
+});

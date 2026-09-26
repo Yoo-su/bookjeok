@@ -18,6 +18,37 @@ export interface KeywordQuery {
   sort: SearchSort;
 }
 
+/** 공급처가 매겨 주는 목록의 한 주. 없으면 이번 주입니다. */
+export interface ListWeek {
+  year: number;
+  month: number;
+  /** 그 달의 몇째 주(1~4). 없는 주차는 빈 목록이 옵니다. */
+  week: number;
+}
+
+/** 베스트셀러 같은 공급처 목록 하나. */
+export interface ListQuery {
+  /** 목록 종류(`ListCatalog.types`의 id). */
+  type: string;
+  /** 분야(`ListCatalog.categories`의 id). `"0"`은 전체. */
+  categoryId: string;
+  week: ListWeek | null;
+}
+
+/** 공급처가 주는 목록의 종류와 분야. 화면·CLI가 여기서 고릅니다. */
+export interface ListCatalog {
+  /** 목록 하나에서 받을 수 있는 페이지 상한. */
+  maxPages: number;
+  types: {
+    id: string;
+    label: string;
+    /** 과거 주차를 받을 수 있는지 */ dated: boolean;
+  }[];
+  categories: { id: string; label: string }[];
+  /** 과거 주차를 받을 수 있는 가장 이른 해. */
+  since: number;
+}
+
 /**
  * 도서 공급처. 스캔·적재 코어는 이 계약만 봅니다.
  * 공급처 고유의 응답 형태·정제 규칙·페이지 함정은 전부 구현 파일 안에 둡니다.
@@ -39,6 +70,11 @@ export interface BookSource<Raw = unknown> {
   ): Normalized;
   /** 적재 직전에 한 권씩 부르는 보강 조회. 검색 응답에 없는 값을 채웁니다. */
   enrich?(book: Candidate): Promise<Candidate>;
+  /** 베스트셀러 같은 목록. 주는 공급처만 있습니다. */
+  lists?: {
+    catalog: ListCatalog;
+    search(query: ListQuery, page: number): Promise<SourcePage<Raw>>;
+  };
   /**
    * ISBN으로 실측 판형을 찾습니다. 판형을 주지 않는 다른 공급처의 책에 빌려 줍니다.
    * 공급처에 없는 책이면 null, 조회 자체가 실패하면 던집니다.
@@ -56,5 +92,7 @@ export interface SourceDefinition {
   imageOrigins: string[];
   /** 적재 직전 보강 조회를 하는 공급처라면 화면에 보여 줄 안내. */
   enrichNote?: string;
+  /** 목록을 주는 공급처의 목록 종류·분야. */
+  listCatalog?: ListCatalog;
   create(apiKey: string): BookSource;
 }

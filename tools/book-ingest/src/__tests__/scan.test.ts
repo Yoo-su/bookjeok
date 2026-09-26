@@ -1,9 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { parseKeywordQuery, scanTarget } from "../scan";
+import {
+  buildListTarget,
+  listWeeks,
+  parseKeywordQuery,
+  scanTarget,
+} from "../scan";
 import type { BookSource, SourcePage } from "../sources";
 import { createKakaoSource, type KakaoBook } from "../sources/kakao";
-import { kakaoBook } from "./fixtures";
+import { kakaoBook, LIST_CATALOG } from "./fixtures";
 
 const book = (n: number, overrides: Partial<KakaoBook> = {}) =>
   kakaoBook({
@@ -206,5 +211,162 @@ describe("parseKeywordQuery", () => {
   it("비었거나 100자를 넘으면 null", () => {
     expect(parseKeywordQuery("   ")).toBeNull();
     expect(parseKeywordQuery("가".repeat(101))).toBeNull();
+  });
+});
+
+describe("scanTarget — 목록 여러 개", () => {
+  const query = (categoryId: string) => ({
+    type: "Bestseller",
+    categoryId,
+    week: null,
+  });
+  const target = {
+    kind: "lists" as const,
+    label: "베스트셀러",
+    lists: [
+      { label: "종합", query: query("0") },
+      { label: "소설", query: query("1") },
+      { label: "에세이", query: query("55889") },
+    ],
+  };
+  const withLists = (
+    search: (
+      q: { categoryId: string },
+      page: number,
+    ) => Promise<SourcePage<KakaoBook>>,
+  ) => ({
+    ...pages([]),
+    lists: {
+      catalog: { ...LIST_CATALOG, maxPages: 2 },
+      search: vi.fn(search),
+    },
+  });
+
+  it("목록을 차례로 훑어 한 결과로 합치고, 목록끼리 겹치는 책은 한 번만 센다", async () => {
+    const byCategory: Record<string, KakaoBook[]> = {
+      "0": [book(1), book(2)],
+      "1": [book(2), book(3)],
+      "55889": [book(4)],
+    };
+    const src = withLists(async (q) => ({
+      items: byCategory[q.categoryId],
+      totalCount: 1000,
+      isEnd: true,
+    }));
+    const findExisting = vi.fn(async () => new Set(["9788937477503"]));
+
+    const scan = await scanTarget(
+      target,
+      { source: src, findExisting },
+      { today: "2026-09-26" },
+    );
+
+    expect(scan.fresh.map((b) => b.title)).toEqual(["책 1", "책 2", "책 4"]);
+    expect(scan.known.map((b) => b.title)).toEqual(["책 3"]);
+    expect(scan).toMatchObject({ lists: 3, pages: 3, label: "베스트셀러" });
+    expect(scan.incomplete).toBeUndefined();
+  });
+
+  it("목록마다 페이지 상한(catalog.maxPages)까지 넘긴다", async () => {
+    const src = withLists(async () => ({
+      items: [book(1)],
+      totalCount: 1000,
+      isEnd: false,
+    }));
+    await scanTarget(
+      { ...target, lists: target.lists.slice(0, 1) },
+      { source: src, findExisting: async () => new Set() },
+      { today: "2026-09-26", maxPages: 99 },
+    );
+    expect(src.lists.search).toHaveBeenCalledTimes(2);
+  });
+
+  it("도중에 쿼터가 끊기면 받은 데까지 남기고 멈춘 이유를 적는다", async () => {
+    const src = withLists(async (q) => {
+      if (q.categoryId === "1") throw new Error("알라딘 오류 10: 쿼터 초과");
+      return { items: [book(1)], totalCount: 1000, isEnd: true };
+    });
+
+    const scan = await scanTarget(
+      target,
+      { source: src, findExisting: async () => new Set() },
+      { today: "2026-09-26" },
+    );
+
+    expect(scan.fresh.map((b) => b.title)).toEqual(["책 1"]);
+    expect(scan.lists).toBe(1);
+    expect(scan.incomplete).toBe("소설에서 멈춤 — 알라딘 오류 10: 쿼터 초과");
+    // 세 번째 목록은 부르지 않는다
+    expect(src.lists.search).toHaveBeenCalledTimes(2);
+  });
+
+  it("목록을 주지 않는 공급처면 던진다", async () => {
+    await expect(
+      scanTarget(
+        target,
+        { source: pages([]), findExisting: async () => new Set() },
+        { today: "2026-09-26" },
+      ),
+    ).rejects.toThrow("목록을 주지 않습니다");
+  });
+});
+
+describe("listWeeks", () => {
+  it("이번 주를 먼저, 지난달부터 거꾸로 달마다 1주차", () => {
+    expect(listWeeks(3, "month", "2026-02-10")).toEqual([
+      null,
+      { year: 2026, month: 1, week: 1 },
+      { year: 2025, month: 12, week: 1 },
+    ]);
+  });
+
+  it("매주면 1~4주차", () => {
+    expect(listWeeks(2, "week", "2026-09-26")).toEqual([
+      null,
+      { year: 2026, month: 8, week: 1 },
+      { year: 2026, month: 8, week: 2 },
+      { year: 2026, month: 8, week: 3 },
+      { year: 2026, month: 8, week: 4 },
+    ]);
+  });
+
+  it("받을 수 있는 해(since) 전으로는 가지 않는다", () => {
+    const weeks = listWeeks(999, "month", "2001-03-01", 2000);
+    expect(weeks).toHaveLength(1 + 14);
+    expect(weeks.at(-1)).toEqual({ year: 2000, month: 1, week: 1 });
+  });
+});
+
+describe("buildListTarget", () => {
+  it("과거 주차가 없는 목록은 기간과 관계없이 이번 것 하나", () => {
+    const target = buildListTarget(
+      LIST_CATALOG,
+      { type: "BlogBest", categoryIds: ["0"], months: 60, interval: "week" },
+      "2026-09-26",
+    );
+    expect(
+      typeof target !== "string" && target.kind === "lists" && target.lists,
+    ).toEqual([
+      {
+        label: "블로거 베스트 종합 이번 주",
+        query: { type: "BlogBest", categoryId: "0", week: null },
+      },
+    ]);
+  });
+
+  it("분야가 많으면 이름을 줄여 붙인다", () => {
+    const target = buildListTarget(
+      LIST_CATALOG,
+      {
+        type: "Bestseller",
+        categoryIds: ["0", "1", "74", "170", "336"],
+        months: 12,
+        interval: "month",
+      },
+      "2026-09-26",
+    );
+    expect(
+      typeof target !== "string" && target.kind === "lists" && target.label,
+    ).toBe("베스트셀러 · 종합·소설/시/희곡·역사 외 2개 · 최근 12개월·월 1회");
   });
 });

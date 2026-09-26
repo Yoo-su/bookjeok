@@ -9,8 +9,11 @@ import {
 
 import type { PublisherStat } from "./db";
 import type { IngestOutcome } from "./ingest";
-import type { Candidate } from "./normalize";
+import { type Candidate, localToday } from "./normalize";
 import {
+  buildListTarget,
+  LIST_INTERVALS,
+  type ListInterval,
   type PageProgress,
   parseKeywordQuery,
   type ScanResult,
@@ -47,10 +50,14 @@ export interface ServerOptions {
   /** 미리보기 표지를 불러올 출처. 공급처 정의에서 모읍니다. */
   imageOrigins?: string[];
   html?: string;
+  /** 목록의 기간을 셀 기준일. 기본은 오늘. */
+  today?: string;
 }
 
 const MAX_BODY = 1024 * 1024;
 const MAX_PUBLISHERS = 30;
+/** 2000년부터 매주·전 분야처럼 터무니없는 요청을 막는 상한. 2000년부터 월 1회 × 5개 분야 정도 */
+const MAX_LISTS = 2000;
 
 /**
  * 127.0.0.1에만 붙는 운영자용 화면입니다. 브라우저가 열어 둔 다른 사이트가
@@ -65,6 +72,7 @@ export function createIngestServer({
   services,
   imageOrigins = [],
   html,
+  today = localToday(),
 }: ServerOptions): Server {
   const page = (
     html ?? readFileSync(new URL("./ui.html", import.meta.url), "utf8")
@@ -128,12 +136,13 @@ export function createIngestServer({
         return sendJson(res, 200, services.getFavorites());
       }
 
-      // 출판사 신간(`publishers`)이나 자유 검색(`query`) 중 하나를 받습니다
+      // 출판사 신간(`publishers`), 자유 검색(`query`), 목록(`list`) 중 하나를 받습니다
       if (req.method === "POST" && url.pathname === "/api/scan") {
         const body = (await readJson(req)) as {
           source?: unknown;
           publishers?: unknown;
           query?: { text?: unknown; field?: unknown; sort?: unknown };
+          list?: ListBody;
           maxPages?: unknown;
         };
         const source = services.sources.find(
@@ -142,17 +151,21 @@ export function createIngestServer({
         if (!source) {
           return sendJson(res, 400, { error: "쓸 수 있는 공급처를 고르세요" });
         }
-        const targets = body.query
-          ? keywordTargets(body.query)
-          : publisherTargets(body.publishers);
+        if (body.list && !source.lists) {
+          return sendJson(res, 400, {
+            error: `${source.label}은(는) 목록을 주지 않습니다`,
+          });
+        }
+        const targets = body.list
+          ? listTargets(body.list, source.lists!, today)
+          : body.query
+            ? keywordTargets(body.query)
+            : publisherTargets(body.publishers);
         if (typeof targets === "string") {
           return sendJson(res, 400, { error: targets });
         }
-        const maxPages = clamp(
-          Number(body.maxPages ?? source.maxPages),
-          1,
-          source.maxPages,
-        );
+        const pageCap = body.list ? source.lists!.maxPages : source.maxPages;
+        const maxPages = clamp(Number(body.maxPages ?? pageCap), 1, pageCap);
         const emit = openStream(res);
         try {
           const result = await services.scan(
@@ -258,6 +271,42 @@ function keywordTargets(query: {
       : null;
   if (!parsed) return "검색어를 1~100자로 넣으세요";
   return [{ kind: "keyword", query: parsed }];
+}
+
+interface ListBody {
+  type?: unknown;
+  categoryIds?: unknown;
+  months?: unknown;
+  interval?: unknown;
+}
+
+function listTargets(
+  body: ListBody,
+  catalog: NonNullable<SourceInfo["lists"]>,
+  today: string,
+): ScanTarget[] | string {
+  if (typeof body.type !== "string" || !isStringArray(body.categoryIds)) {
+    return "목록 종류와 분야를 고르세요";
+  }
+  const interval = body.interval ?? "month";
+  if (!LIST_INTERVALS.includes(interval as ListInterval)) {
+    return "간격이 잘못됐습니다";
+  }
+  const target = buildListTarget(
+    catalog,
+    {
+      type: body.type,
+      categoryIds: body.categoryIds,
+      months: clamp(Number(body.months ?? 1), 1, 12 * 30),
+      interval: interval as ListInterval,
+    },
+    today,
+  );
+  if (typeof target === "string") return target;
+  if (target.kind === "lists" && target.lists.length > MAX_LISTS) {
+    return `목록이 ${target.lists.length.toLocaleString()}개라 너무 많습니다(최대 ${MAX_LISTS.toLocaleString()}). 기간이나 분야를 줄이세요`;
+  }
+  return [target];
 }
 
 /** 화면에 보낼 모양. 공급처 원본(`raw`)은 보내지 않습니다. */
