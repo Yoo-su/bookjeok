@@ -516,8 +516,25 @@ export class UserService implements OnModuleInit {
    * 회원 탈퇴를 처리합니다. 유저 정보를 익명화하고 관련 데이터를 정리합니다.
    * @param userId 유저 ID
    */
-  @Transactional()
   async withdraw(userId: number): Promise<void> {
+    const releasedSales = await this.persistWithdraw(userId);
+
+    // 커밋 후 발행. 같은 판매글의 다른 채팅방에 판매 재개 안내
+    for (const sale of releasedSales) {
+      this.eventEmitter.emit('trade.reservation_cancelled', {
+        saleId: sale.id,
+        sellerId: sale.user.id,
+        buyerId: userId,
+      });
+    }
+  }
+
+  /**
+   * 탈퇴의 상태 변경을 한 트랜잭션에서 수행합니다.
+   * @returns 구매자로 예약돼 있다가 판매중으로 되돌린 판매글
+   */
+  @Transactional()
+  private async persistWithdraw(userId: number): Promise<UsedBookSale[]> {
     const manager = this.txHost.tx;
 
     // 0. 활성 거래 여부 검증 (자신이 판매자 또는 구매자로 참여 중인 활성 주문이 있는 경우 탈퇴 불가)
@@ -531,6 +548,19 @@ export class UserService implements OnModuleInit {
     if (activeOrder) {
       throw new BusinessException(
         'USER_IN_TRADE_CANNOT_WITHDRAW',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // 판매자 예약은 본인이 취소·완료할 수 있으므로 차단
+    const reservedSale = await manager.findOne(UsedBookSale, {
+      where: { user: { id: userId }, status: SaleStatus.RESERVED },
+      select: { id: true },
+    });
+
+    if (reservedSale) {
+      throw new BusinessException(
+        'USER_HAS_RESERVED_SALE_CANNOT_WITHDRAW',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -553,11 +583,28 @@ export class UserService implements OnModuleInit {
 
     await manager.save(user);
 
-    // 2. 도메인 클린업 이벤트 동기식 발행 (EntityManager 주입)
+    // 2. 구매자로 예약된 남의 판매글을 판매중으로 해제 (판매자가 탈퇴자에게 묶이지 않게)
+    const releasedSales = await manager.find(UsedBookSale, {
+      where: { reservedForUserId: userId, status: SaleStatus.RESERVED },
+      relations: { user: true },
+      select: { id: true, user: { id: true } },
+    });
+
+    if (releasedSales.length > 0) {
+      await manager.update(
+        UsedBookSale,
+        { id: In(releasedSales.map((sale) => sale.id)) },
+        { status: SaleStatus.FOR_SALE, reservedForUserId: null },
+      );
+    }
+
+    // 3. 도메인 클린업 이벤트 동기식 발행 (EntityManager 주입)
     await this.eventEmitter.emitAsync('user.withdrawn', {
       userId,
       entityManager: manager,
     });
+
+    return releasedSales;
   }
 
   /**
