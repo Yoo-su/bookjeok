@@ -14,7 +14,8 @@ export class ChatCleanupListener {
    * 읽음 상태는 참여자 행의 워터마크(lastReadMessageId) 한 칸이라
    * 이 행을 비활성화하는 것으로 함께 정리됩니다. 따로 지울 기록이 없습니다.
    */
-  @OnEvent('user.withdrawn')
+  // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
+  @OnEvent('user.withdrawn', { suppressErrors: false })
   async handleUserWithdrawn(event: {
     userId: number;
     entityManager: EntityManager;

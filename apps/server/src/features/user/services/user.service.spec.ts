@@ -9,7 +9,10 @@ import { Order, OrderStatus } from '@/features/order/entities/order.entity';
 import { ReadingLog } from '@/features/reading-log/entities/reading-log.entity';
 import { Review } from '@/features/review/entities/review.entity';
 import { TradeCompletion } from '@/features/trade/entities/trade-completion.entity';
-import { UsedBookSale } from '@/features/used-book-sale/entities/used-book-sale.entity';
+import {
+  SaleStatus,
+  UsedBookSale,
+} from '@/features/used-book-sale/entities/used-book-sale.entity';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 import { MailService } from '@/shared/mail/mail.service';
 
@@ -37,12 +40,14 @@ describe('UserService', () => {
   let service: UserService;
   let mockManager: Partial<EntityManager>;
   let mockTxHost: { tx: Partial<EntityManager> };
-  let mockEventEmitter: { emitAsync: jest.Mock };
+  let mockEventEmitter: { emitAsync: jest.Mock; emit: jest.Mock };
 
   beforeEach(async () => {
     mockManager = {
       findOne: jest.fn(),
+      find: jest.fn().mockResolvedValue([]),
       save: jest.fn(),
+      update: jest.fn(),
     };
 
     mockTxHost = {
@@ -51,6 +56,7 @@ describe('UserService', () => {
 
     mockEventEmitter = {
       emitAsync: jest.fn().mockResolvedValue([]),
+      emit: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -85,6 +91,13 @@ describe('UserService', () => {
   });
 
   describe('withdraw', () => {
+    const user = () => ({
+      id: 1,
+      nickname: '기존유저',
+      email: 'test@example.com',
+      deletedAt: null,
+    });
+
     it('활성 주문(구매/판매)이 존재하는 경우 USER_IN_TRADE_CANNOT_WITHDRAW 예외를 던져야 합니다', async () => {
       // 0. 활성 주문 조회 결과 존재
       (mockManager.findOne as jest.Mock).mockResolvedValueOnce({
@@ -92,31 +105,68 @@ describe('UserService', () => {
         status: OrderStatus.AWAITING_PAYMENT,
       });
 
-      await expect(service.withdraw(1)).rejects.toThrow(BusinessException);
+      await expect(service.withdraw(1)).rejects.toMatchObject({
+        errorCode: 'USER_IN_TRADE_CANNOT_WITHDRAW',
+      });
+    });
+
+    it('판매자로서 예약 중인 판매글이 있으면 USER_HAS_RESERVED_SALE_CANNOT_WITHDRAW 예외를 던져야 합니다', async () => {
+      // 0. 활성 주문 없음
+      // 1. 예약 중인 판매글 존재
+      (mockManager.findOne as jest.Mock)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ id: 10 });
+
+      await expect(service.withdraw(1)).rejects.toMatchObject({
+        errorCode: 'USER_HAS_RESERVED_SALE_CANNOT_WITHDRAW',
+      });
+      expect(mockManager.save).not.toHaveBeenCalled();
+      expect(mockEventEmitter.emitAsync).not.toHaveBeenCalled();
     });
 
     it('활성 주문이 없는 경우 회원을 익명화하고 이벤트를 발행해야 합니다', async () => {
-      const user = {
-        id: 1,
-        nickname: '기존유저',
-        email: 'test@example.com',
-        deletedAt: null,
-      };
+      const target = user();
 
       // 0. 활성 주문 없음
-      // 1. 유저 조회
+      // 1. 예약 중인 판매글 없음
+      // 2. 유저 조회
       (mockManager.findOne as jest.Mock)
         .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(user);
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(target);
 
       await service.withdraw(1);
 
-      expect(user.nickname).toBe('(알수없음)');
-      expect(user.deletedAt).toBeDefined();
-      expect(mockManager.save).toHaveBeenCalledWith(user);
+      expect(target.nickname).toBe('(알수없음)');
+      expect(target.deletedAt).toBeDefined();
+      expect(mockManager.save).toHaveBeenCalledWith(target);
+      expect(mockManager.update).not.toHaveBeenCalled();
       expect(mockEventEmitter.emitAsync).toHaveBeenCalledWith(
         'user.withdrawn',
         expect.objectContaining({ userId: 1 }),
+      );
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it('구매자로 예약된 판매글은 판매중으로 되돌리고 커밋 후 예약 취소 이벤트를 발행해야 합니다', async () => {
+      (mockManager.findOne as jest.Mock)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(user());
+      (mockManager.find as jest.Mock).mockResolvedValueOnce([
+        { id: 20, user: { id: 7 } },
+      ]);
+
+      await service.withdraw(1);
+
+      expect(mockManager.update).toHaveBeenCalledWith(
+        UsedBookSale,
+        expect.anything(),
+        { status: SaleStatus.FOR_SALE, reservedForUserId: null },
+      );
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'trade.reservation_cancelled',
+        { saleId: 20, sellerId: 7, buyerId: 1 },
       );
     });
   });

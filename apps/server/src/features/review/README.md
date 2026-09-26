@@ -147,10 +147,10 @@ Tiptap 본문에서 이미지 URL을 추출해, 수정·삭제 시 더 이상 �
 
 ### 이벤트
 
-| 이벤트           | 리스너                       | 동작                                   |
-| ---------------- | ---------------------------- | -------------------------------------- |
-| `review.reacted` | `ReviewNotificationListener` | 리뷰 작성자에게 `REVIEW_REACTION` 알림 |
-| `user.withdrawn` | `ReviewCleanupListener`      | 탈퇴 회원의 리뷰·리액션 정리           |
+| 이벤트           | 리스너                       | 동작                                                          |
+| ---------------- | ---------------------------- | ------------------------------------------------------------- |
+| `review.reacted` | `ReviewNotificationListener` | 리뷰 작성자에게 `REVIEW_REACTION` 알림                        |
+| `user.withdrawn` | `ReviewCleanupListener`      | 탈퇴 회원의 리뷰·리액션 정리 (남의 리뷰 `reactionCount` 차감) |
 
 `review.reacted`의 `isAdded`는 새로 추가된 경우에만 `true`입니다. 종류 변경·취소·동시 요청으로 무시된 추가는 `false`입니다. 리스너는 같은 사람이 같은 리뷰로 이미 보낸 알림이 있으면 다시 보내지 않습니다. 껐다 켜기를 반복해도 작성자는 알림을 한 번만 받습니다.
 

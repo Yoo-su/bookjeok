@@ -65,7 +65,9 @@ comment/
 
 ### 탈퇴 처리
 
-`user.withdrawn` 이벤트를 받으면 `CommentCleanupListener`가 작성자 참조를 정리합니다. `userId`가 nullable인 이유는 **댓글 본문은 남기고 작성자만 익명 처리**하기 위해서입니다 — 대화 맥락이 통째로 사라지지 않습니다.
+`user.withdrawn` 이벤트를 받으면 `CommentCleanupListener`가 작성자 참조를 정리합니다. `userId`가 nullable인 이유는 **댓글 본문은 남기고 작성자만 익명 처리**하기 위해서입니다 — 대화 맥락이 통째로 사라지지 않습니다. 그래서 목록 응답의 `user`도 `null`일 수 있습니다(`@bookjeok/core`의 `Comment.user`).
+
+탈퇴 회원이 누른 좋아요는 지우면서 해당 댓글들의 `likeCount`도 1씩 줄입니다.
 
 ### 알림
 

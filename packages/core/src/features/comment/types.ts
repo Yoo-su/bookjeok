@@ -24,8 +24,10 @@ export interface Comment {
   content: string;
   targetType: CommentTargetType;
   targetId: string;
-  userId: number;
-  user: CommentUser;
+  /** 작성자가 탈퇴하면 null */
+  userId: number | null;
+  /** 작성자가 탈퇴하면 null */
+  user: CommentUser | null;
   likeCount: number;
   isLiked?: boolean;
   createdAt: string;

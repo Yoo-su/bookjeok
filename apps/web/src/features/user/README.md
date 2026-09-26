@@ -39,7 +39,7 @@ user/
 
 `withdrawal-modal` → `DELETE /user/me`. 서버는 `user.withdrawn` 이벤트를 발행하고 9개 리스너가 각 도메인 데이터를 정리합니다([shared 문서](../../../../server/src/shared/README.md#회원-탈퇴-캐스케이드)). 되돌릴 수 없으므로 모달에서 명시적으로 재확인합니다.
 
-> 진행 중인 거래가 있으면 서버가 탈퇴를 차단합니다.
+> 진행 중인 결제 거래나 판매자로서 예약 중인 판매글이 있으면 서버가 탈퇴를 차단합니다. 구매자로 예약된 판매글은 탈퇴와 함께 판매중으로 풀립니다.
 
 탈퇴는 소프트 삭제(`deletedAt`)라 `getPublicProfileByHandle`이 곧바로 404를 던지지만, **ISR에는 직전 200 HTML이 남습니다.** 그래서 홈으로 떠나기 전에 `revalidateUserProfile`을 먼저 기다립니다 — `window.location` 이동은 진행 중인 서버 액션을 끊습니다.
 

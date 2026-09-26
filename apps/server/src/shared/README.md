@@ -190,3 +190,6 @@ user.withdrawn
 ```
 
 새 도메인을 추가할 때 사용자 데이터를 보관한다면 이 이벤트를 구독하는 리스너를 함께 추가하세요.
+
+- **리스너는 반드시 `@OnEvent('user.withdrawn', { suppressErrors: false })`로 선언하세요.** `@nestjs/event-emitter`는 기본값으로 리스너 에러를 로그만 남기고 삼킵니다. 그러면 `emitAsync`가 성공으로 끝나 롤백이 일어나지 않고, DB 에러로 중단된 트랜잭션은 COMMIT이 조용히 ROLLBACK으로 바뀌어 "탈퇴 완료" 응답만 나갑니다. `user/listeners/user-withdrawn-listeners.spec.ts`가 9개 리스너 전부를 검사하니 새 리스너도 목록에 추가하세요.
+- 이벤트 발행 전에 `UserService`가 탈퇴를 막거나 직접 정리하는 것들: 활성 결제 주문(차단), 판매자로서 예약 중인 판매글(차단, `USER_HAS_RESERVED_SALE_CANNOT_WITHDRAW`), 구매자로 예약된 남의 판매글(판매중으로 해제하고 커밋 후 `trade.reservation_cancelled` 발행).
