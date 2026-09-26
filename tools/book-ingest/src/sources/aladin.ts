@@ -18,6 +18,7 @@ import {
 import type {
   BookSource,
   KeywordQuery,
+  ListCatalog,
   SourceDefinition,
   SourcePage,
 } from "./types";
@@ -86,6 +87,52 @@ export const ALADIN_MAX_PAGE = 4;
 
 /** ItemLookUp이 "없는 상품"에 주는 오류 코드(2026-09-25 실측). 쿼터·키 오류와 구분합니다. */
 const NOT_FOUND = 8;
+
+/**
+ * ItemList 목록. 목록 하나가 1,000권(50×20)이고 21페이지부터는 1페이지를 다시 줍니다.
+ * 베스트셀러는 2000년까지의 과거 주차를 받을 수 있고, 없는 주차(5주차·미래)는
+ * 오류 없이 빈 목록입니다. 분야 ID는 전부 응답의 분야명으로 확인했습니다(2026-09-26 실측).
+ */
+export const ALADIN_LISTS: ListCatalog = {
+  maxPages: 20,
+  types: [
+    { id: "Bestseller", label: "베스트셀러", dated: true },
+    { id: "ItemNewSpecial", label: "주목할 만한 신간", dated: false },
+    { id: "BlogBest", label: "블로거 베스트", dated: false },
+  ],
+  categories: [
+    { id: "0", label: "종합" },
+    { id: "1", label: "소설/시/희곡" },
+    { id: "55889", label: "에세이" },
+    { id: "656", label: "인문학" },
+    { id: "798", label: "사회과학" },
+    { id: "74", label: "역사" },
+    { id: "170", label: "경제경영" },
+    { id: "336", label: "자기계발" },
+    { id: "987", label: "과학" },
+    { id: "517", label: "예술/대중문화" },
+    { id: "1237", label: "종교/역학" },
+    { id: "1108", label: "어린이" },
+    { id: "1137", label: "청소년" },
+    { id: "13789", label: "유아" },
+    { id: "2030", label: "좋은부모" },
+    { id: "2551", label: "만화/라이트노벨" },
+    { id: "1230", label: "요리/살림" },
+    { id: "55890", label: "건강/취미" },
+    { id: "1196", label: "여행" },
+    { id: "1322", label: "외국어" },
+    { id: "351", label: "컴퓨터/모바일" },
+    { id: "1383", label: "수험서/자격증" },
+    { id: "8257", label: "대학교재/전문서적" },
+    { id: "50246", label: "초등학교참고서" },
+    { id: "76000", label: "중학교참고서" },
+    { id: "76001", label: "고등학교참고서" },
+    { id: "17195", label: "전집/중고전집" },
+    { id: "2913", label: "잡지" },
+    { id: "4395", label: "달력/기타" },
+  ],
+  since: 2000,
+};
 
 /** 자유 검색 필드 → `QueryType`. ISBN은 키워드 검색이 정확히 한 권으로 찾습니다. */
 const ALADIN_QUERY_TYPE: Record<KeywordQuery["field"], string> = {
@@ -186,11 +233,15 @@ export function aladinDimensions(item: AladinItem) {
 }
 
 class AladinError extends Error {
+  /** 다음 책도 똑같이 실패할 오류(쿼터·키). 적재를 멈추게 합니다. 없는 상품만 아닙니다. */
+  readonly fatal: boolean;
+
   constructor(
     readonly code: number,
     message: string,
   ) {
     super(`알라딘 오류 ${code}: ${message}`);
+    this.fatal = code !== NOT_FOUND;
   }
 }
 
@@ -220,6 +271,7 @@ export function createAladinSource(
   async function search(
     params: Record<string, string>,
     page: number,
+    { endpoint = "ItemSearch", maxPage = ALADIN_MAX_PAGE } = {},
   ): Promise<SourcePage<AladinItem>> {
     const query = new URLSearchParams({
       ...common,
@@ -229,7 +281,7 @@ export function createAladinSource(
       Start: String(page),
       Cover: "Big",
     });
-    const data = await call(request, `${API}/ItemSearch.aspx?${query}`);
+    const data = await call(request, `${API}/${endpoint}.aspx?${query}`);
     const totalCount = data.totalResults ?? 0;
     // 상한을 넘긴 요청은 1페이지를 다시 줍니다. 페이지 번호가 어긋나면 끝으로 봅니다.
     if (data.startIndex !== page) {
@@ -242,7 +294,7 @@ export function createAladinSource(
       isEnd:
         items.length < PAGE_SIZE ||
         page * PAGE_SIZE >= totalCount ||
-        page >= ALADIN_MAX_PAGE,
+        page >= maxPage,
     };
   }
 
@@ -282,6 +334,26 @@ export function createAladinSource(
         },
         page,
       ),
+
+    lists: {
+      catalog: ALADIN_LISTS,
+      search: ({ type, categoryId, week }, page) =>
+        search(
+          {
+            QueryType: type,
+            CategoryId: categoryId,
+            ...(week
+              ? {
+                  Year: String(week.year),
+                  Month: String(week.month),
+                  Week: String(week.week),
+                }
+              : {}),
+          },
+          page,
+          { endpoint: "ItemList", maxPage: ALADIN_LISTS.maxPages },
+        ),
+    },
 
     normalize: (item, publisher, today) =>
       screen(aladinSource.id, toAladinDraft(item), item, publisher, today),
@@ -331,5 +403,6 @@ export const aladinSource: SourceDefinition = {
   imageOrigins: ["https://image.aladin.co.kr"],
   enrichNote:
     "적재할 때 한 권씩 상세 조회해 긴 소개(출판사 제공)·판매지수·판형을 다시 받습니다. 여기 보이는 소개는 검색 응답의 요약입니다.",
+  listCatalog: ALADIN_LISTS,
   create: (apiKey) => createAladinSource(apiKey),
 };

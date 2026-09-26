@@ -495,6 +495,9 @@
             <label
               ><input type="radio" name="mode" value="keyword" />책 검색</label
             >
+            <label id="listModeLabel"
+              ><input type="radio" name="mode" value="list" />베스트셀러</label
+            >
           </div>
           <div class="row">
             <span class="small muted">공급처</span>
@@ -556,6 +559,37 @@
           </button>
         </form>
 
+        <form id="listMode" hidden>
+          <div class="row">
+            <select id="listType" aria-label="목록 종류"></select>
+            <label class="small muted"
+              >기간
+              <select id="listMonths"></select>
+            </label>
+            <label class="small muted"
+              >간격
+              <select id="listInterval">
+                <option value="month">월 1회</option>
+                <option value="week">매주</option>
+              </select>
+            </label>
+            <label class="small muted"
+              >목록마다
+              <select id="listPages"></select>
+            </label>
+            <button class="primary" id="listBtn" type="submit" disabled>
+              목록 훑기
+            </button>
+          </div>
+          <div class="row small" style="margin-top: 10px">
+            <span class="muted">분야</span>
+            <button type="button" id="listAll">전 분야</button>
+            <button type="button" id="listNone">종합만</button>
+          </div>
+          <div class="chips" id="listCats"></div>
+          <p class="small" id="listEstimate"></p>
+        </form>
+
         <p class="small muted" id="sourceNote"></p>
       </section>
 
@@ -568,8 +602,8 @@
         <input
           type="search"
           id="query"
-          placeholder="제목·저자로 거르기"
-          aria-label="결과를 제목·저자로 거르기"
+          placeholder="제목·저자·분야로 거르기"
+          aria-label="결과를 제목·저자·분야로 거르기"
         />
         <label class="small"
           ><input type="checkbox" id="hidePreorder" /> 예약판매 숨기기</label
@@ -655,6 +689,7 @@
 
       const state = {
         mode: "publisher",
+        listCats: new Set(["0"]),
         sources: [],
         source: null,
         publishers: [],
@@ -765,20 +800,144 @@
         renderMaxPages();
         renderChips();
         renderSearch();
+        renderList();
+        // 목록을 주지 않는 공급처로 바꾸면 베스트셀러 모드를 빠져나온다
+        if (state.mode === "list" && !sourceById(id)?.lists) {
+          selectMode("publisher");
+        }
       }
 
       // ── 찾는 방법 ─────────────────────────────────────────────
 
       function selectMode(mode) {
-        state.mode = mode === "keyword" ? "keyword" : "publisher";
+        const canList = Boolean(sourceById(state.source)?.lists);
+        state.mode =
+          mode === "keyword" || (mode === "list" && canList)
+            ? mode
+            : "publisher";
         store.set(MODE_KEY, state.mode);
         document.querySelector(
           `input[name="mode"][value="${state.mode}"]`,
         ).checked = true;
         $("publisherMode").hidden = state.mode !== "publisher";
         $("keywordMode").hidden = state.mode !== "keyword";
+        $("listMode").hidden = state.mode !== "list";
         if (state.mode === "keyword") $("searchText").focus();
       }
+
+      // ── 베스트셀러 목록 ───────────────────────────────────────
+
+      /** 공급처 쿼터. 알라딘 Open API는 하루 5,000회 */
+      const DAILY_QUOTA = 5000;
+
+      function listMonthOptions(since) {
+        const now = new Date();
+        const all = (now.getFullYear() - since) * 12 + now.getMonth() + 1;
+        return [
+          [1, "이번 주"],
+          [3, "최근 3개월"],
+          [12, "최근 1년"],
+          [36, "최근 3년"],
+          [60, "최근 5년"],
+          [120, "최근 10년"],
+          [all, `${since}년부터`],
+        ];
+      }
+
+      /** 서버 `listWeeks`와 같은 셈. 지난 주차는 캐시되므로 두 번째부터는 호출이 줄어든다 */
+      function countWeeks(months, interval, since) {
+        const now = new Date();
+        const back = Math.min(
+          months - 1,
+          (now.getFullYear() - since) * 12 + now.getMonth(),
+        );
+        return 1 + Math.max(0, back) * (interval === "week" ? 4 : 1);
+      }
+
+      function renderList() {
+        const catalog = sourceById(state.source)?.lists;
+        const label = $("listModeLabel");
+        label.querySelector("input").disabled = !catalog || state.busy;
+        label.title = catalog ? "" : "알라딘에서만 쓸 수 있습니다";
+        if (!catalog) {
+          $("listBtn").disabled = true;
+          return;
+        }
+        if (!$("listType").options.length) {
+          $("listType").replaceChildren(
+            ...catalog.types.map((t) =>
+              el("option", { value: t.id, text: t.label }),
+            ),
+          );
+          $("listMonths").replaceChildren(
+            ...listMonthOptions(catalog.since).map(([n, text]) =>
+              el("option", { value: String(n), text }),
+            ),
+          );
+          $("listPages").replaceChildren(
+            ...[1, 2, 4, 10, catalog.maxPages].map((n) =>
+              el("option", { value: String(n), text: `상위 ${n * 50}권` }),
+            ),
+          );
+          $("listPages").value = String(catalog.maxPages);
+        }
+        const type = catalog.types.find((t) => t.id === $("listType").value);
+        const months = type?.dated ? Number($("listMonths").value) : 1;
+        $("listMonths").disabled = !type?.dated;
+        $("listInterval").disabled = !type?.dated || months === 1;
+
+        $("listCats").replaceChildren(
+          ...catalog.categories.map((c) => {
+            const on = state.listCats.has(c.id);
+            return el("span", { class: "chip" + (on ? " on" : "") }, [
+              el("button", {
+                type: "button",
+                class: "pick",
+                "aria-pressed": String(on),
+                text: c.label,
+                style: "padding-right:8px",
+                onclick: () => {
+                  on ? state.listCats.delete(c.id) : state.listCats.add(c.id);
+                  renderList();
+                },
+              }),
+            ]);
+          }),
+        );
+
+        const lists =
+          countWeeks(months, $("listInterval").value, catalog.since) *
+          state.listCats.size;
+        const calls = lists * Number($("listPages").value);
+        const estimate = $("listEstimate");
+        estimate.className =
+          "small" + (calls > DAILY_QUOTA * 0.8 ? " error" : "");
+        estimate.textContent = state.listCats.size
+          ? `목록 ${lists.toLocaleString()}개 · 최대 ${calls.toLocaleString()}회 호출 (알라딘 하루 ${DAILY_QUOTA.toLocaleString()}회). ` +
+            (calls > DAILY_QUOTA * 0.8
+              ? "하루 쿼터를 넘길 수 있습니다. 끊기면 그때까지 찾은 책은 남고, 지난 주차는 캐시되어 내일 같은 조회가 이어집니다. 적재할 때도 권당 1회를 씁니다."
+              : "지난 주차 목록은 캐시되어 다시 부르지 않습니다. 적재할 때 권당 1회를 더 씁니다.")
+          : "분야를 1개 이상 고르세요.";
+        $("listBtn").disabled = state.busy || state.listCats.size === 0;
+      }
+
+      for (const id of [
+        "listType",
+        "listMonths",
+        "listInterval",
+        "listPages",
+      ]) {
+        $(id).addEventListener("change", renderList);
+      }
+      $("listAll").addEventListener("click", () => {
+        const catalog = sourceById(state.source)?.lists;
+        state.listCats = new Set(catalog?.categories.map((c) => c.id) ?? []);
+        renderList();
+      });
+      $("listNone").addEventListener("click", () => {
+        state.listCats = new Set(["0"]);
+        renderList();
+      });
 
       function renderSearch() {
         $("searchBtn").disabled =
@@ -872,6 +1031,7 @@
         renderSources();
         renderChips();
         renderSearch();
+        renderList();
         updateApplyBar();
       }
 
@@ -882,7 +1042,13 @@
         if (state.view.hidePreorder && book.preorder) return false;
         const q = state.view.query;
         if (!q) return true;
-        return [book.title, book.author, ...book.translators]
+        return [
+          book.title,
+          book.author,
+          book.publisher,
+          book.category ?? "",
+          ...book.translators,
+        ]
           .join(" ")
           .toLowerCase()
           .includes(q);
@@ -1123,13 +1289,22 @@
             el("span", {
               class: "small muted",
               text:
-                `${label} ${summary.totalCount.toLocaleString()}권 중 ${summary.pages}페이지 확인 · 신규 ${summary.fresh} · 보유 ${summary.known} · 제외 ${summary.excluded}` +
+                (summary.lists !== undefined
+                  ? `${label} 목록 ${summary.lists.toLocaleString()}개 · ${summary.pages.toLocaleString()}페이지 확인`
+                  : `${label} ${summary.totalCount.toLocaleString()}권 중 ${summary.pages}페이지 확인`) +
+                ` · 신규 ${summary.fresh} · 보유 ${summary.known} · 제외 ${summary.excluded}` +
                 (summary.preorder ? ` · 예약 ${summary.preorder}` : "") +
                 (summary.emptyAuthor
                   ? ` · 저자 없음 ${summary.emptyAuthor}`
                   : ""),
             }),
           ]);
+          const warning = summary.incomplete
+            ? el("p", {
+                class: "error small",
+                text: `끝까지 훑지 못했습니다: ${summary.incomplete}. 아래는 그때까지 찾은 책입니다.`,
+              })
+            : null;
           // 검색 결과에는 해외판·다른 판본이 섞이므로 고른 것만 적재한다
           const preselect = summary.kind !== "keyword";
           const entries = fresh.map((book, i) => bookCard(book, i, preselect));
@@ -1205,6 +1380,7 @@
             : null;
           return el("div", { class: "pub" }, [
             head,
+            warning,
             tools,
             grid,
             knownTable,
@@ -1265,6 +1441,20 @@
         });
       }
 
+      function listScan(event) {
+        event.preventDefault();
+        if (state.busy || state.listCats.size === 0) return;
+        return runScan([], {
+          list: {
+            type: $("listType").value,
+            categoryIds: [...state.listCats],
+            months: Number($("listMonths").value),
+            interval: $("listInterval").value,
+          },
+          maxPages: Number($("listPages").value),
+        });
+      }
+
       async function runScan(labels, body) {
         const source = state.source;
         setBusy(true);
@@ -1276,13 +1466,22 @@
             $("progress").textContent = `${label} · 조회 중`;
             return;
           }
-          $("progress").textContent = [...totals.entries()]
-            .map(([p, t]) =>
-              t
-                ? `${label} · ${p} · ${t.page}페이지 · 신규 ${t.fresh} · 보유 ${t.known} · 제외 ${t.excluded}`
-                : `${label} · ${p} · 대기`,
-            )
-            .join("\n");
+          const entries = [...totals.entries()];
+          const line = ([p, t]) =>
+            t
+              ? `${label} · ${p} · ${t.page}페이지 · 신규 ${t.fresh} · 보유 ${t.known} · 제외 ${t.excluded}`
+              : `${label} · ${p} · 대기`;
+          // 목록이 수백 개면 합계와 최근 몇 줄만 보인다
+          if (entries.length > 6) {
+            const sum = (k) =>
+              entries.reduce((n, [, t]) => n + (t?.[k] ?? 0), 0);
+            $("progress").textContent = [
+              `목록 ${entries.length.toLocaleString()}개째 · 누적 신규 ${sum("fresh").toLocaleString()} · 보유 ${sum("known").toLocaleString()} · 제외 ${sum("excluded").toLocaleString()}`,
+              ...entries.slice(-5).map(line),
+            ].join("\n");
+            return;
+          }
+          $("progress").textContent = entries.map(line).join("\n");
         };
         $("progress").style.whiteSpace = "pre-line";
         draw();
@@ -1323,10 +1522,15 @@
         const entries = selectedEntries().filter(isVisible);
         const isbns = entries.map((e) => e.book.isbn);
         if (!isbns.length) return;
-        const label = sourceById(state.scanSource)?.label ?? "";
+        const source = sourceById(state.scanSource);
+        const label = source?.label ?? "";
         if (
           !confirm(
-            `${label}에서 찾은 ${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books와 book_dimensions에 INSERT합니다. 진행할까요?`,
+            `${label}에서 찾은 ${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books와 book_dimensions에 INSERT합니다.` +
+              (source?.enrichNote
+                ? `\n${label} 상세 조회를 ${isbns.length}회 씁니다(하루 ${DAILY_QUOTA.toLocaleString()}회). 쿼터가 끊기면 거기서 멈추고 남은 책은 선택된 채로 둡니다.`
+                : "") +
+              "\n진행할까요?",
           )
         )
           return;
@@ -1359,6 +1563,7 @@
                 `끝 — 적재 ${s.inserted} · 이미 있음 ${s.alreadyExists} · 실패 ${s.failed} · 표지 재사용 ${s.reusedCovers} · 저자 없음 ${s.emptyAuthor}` +
                   ` · 판형 행 ${s.dimensionRows}(실측 ${s.measured})` +
                   (s.colorFailed ? ` · 표지색 실패 ${s.colorFailed}` : "") +
+                  (s.stopped ? `\n⚠ 중단: ${s.stopped}` : "") +
                   `\n기록: ${s.journal}`,
               );
             } else if (ev.type === "error") {
@@ -1405,6 +1610,7 @@
       $("filter").addEventListener("input", renderChips);
       $("scanBtn").addEventListener("click", scan);
       $("keywordMode").addEventListener("submit", search);
+      $("listMode").addEventListener("submit", listScan);
       $("searchText").addEventListener("input", renderSearch);
       $("applyBtn").addEventListener("click", apply);
 
@@ -1432,6 +1638,7 @@
           renderMaxPages();
           renderChips();
           renderSearch();
+          renderList();
           selectMode(store.get(MODE_KEY));
         } catch (error) {
           $("chips").replaceChildren(

@@ -25,6 +25,10 @@ export interface ScanSummary {
   /** 저자 배열이 비어 빈 문자열로 들어갈 후보 수. */
   emptyAuthor: number;
   preorder: number;
+  /** 훑은 목록 수(목록 대상만). */
+  lists?: number;
+  /** 끝까지 훑지 못한 이유. */
+  incomplete?: string;
 }
 
 export function summarizeScan(scan: ScanResult): ScanSummary {
@@ -44,6 +48,8 @@ export function summarizeScan(scan: ScanResult): ScanSummary {
     excludedByReason,
     emptyAuthor: scan.fresh.filter((b) => !b.author).length,
     preorder: scan.fresh.filter((b) => b.preorder).length,
+    ...(scan.lists !== undefined ? { lists: scan.lists } : {}),
+    ...(scan.incomplete ? { incomplete: scan.incomplete } : {}),
   };
 }
 
@@ -51,7 +57,9 @@ export function summarizeScan(scan: ScanResult): ScanSummary {
 const targetFields = (target: ScanTarget) =>
   target.kind === "publisher"
     ? { publisher: target.publisher }
-    : { query: target.query };
+    : target.kind === "keyword"
+      ? { query: target.query }
+      : { lists: target.label };
 
 export async function runScan(
   targets: ScanTarget[],
@@ -94,7 +102,15 @@ export async function runScan(
         raw: item.raw,
       });
     }
-    journal.write({ type: "scan_summary", ...where, ...summarizeScan(scan) });
+    journal.write({
+      type: "scan_summary",
+      ...where,
+      ...summarizeScan(scan),
+      // 어떤 목록을 훑었는지는 요약에만 남깁니다(목록이 수백 개일 수 있음)
+      ...(target.kind === "lists"
+        ? { queries: target.lists.slice(0, scan.lists).map((l) => l.query) }
+        : {}),
+    });
     scans.push(scan);
   }
   return scans;
@@ -113,6 +129,8 @@ export interface ApplySummary {
   measured: number;
   /** 표지색을 못 뽑은 책. 적재는 됐고 서버가 대체 색을 씁니다. */
   colorFailed: number;
+  /** 쿼터 소진처럼 다음 책도 실패할 오류로 멈췄으면 그 이유. 남은 책은 손대지 않습니다. */
+  stopped?: string;
 }
 
 /**
@@ -168,6 +186,10 @@ export async function runApply(
       raw: book.raw,
     });
     onBook?.(outcome, index, book);
+    if (outcome.status === "failed" && outcome.fatal) {
+      summary.stopped = `${outcome.isbn}에서 멈춤 — ${outcome.error}`;
+      break;
+    }
   }
   journal.write({ type: "apply_summary", ...summary });
   return summary;

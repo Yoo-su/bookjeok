@@ -56,7 +56,14 @@ export type IngestOutcome =
       cover: CoverReport;
       dimension: DimensionReport;
     }
-  | { isbn: string; status: "failed"; error: string; cover?: CoverReport };
+  | {
+      isbn: string;
+      status: "failed";
+      error: string;
+      /** 다음 책도 똑같이 실패할 오류(공급처 쿼터·키). 적재를 멈춥니다. */
+      fatal?: boolean;
+      cover?: CoverReport;
+    };
 
 export interface IngestResult {
   outcome: IngestOutcome;
@@ -87,6 +94,7 @@ export async function ingestBook(
       isbn: book.isbn,
       status: "failed",
       error: error instanceof Error ? error.message : String(error),
+      ...(isFatal(error) ? { fatal: true } : {}),
       cover,
     },
   });
@@ -165,6 +173,12 @@ export async function ingestBook(
     return fail(error);
   }
 }
+
+/** 공급처 어댑터가 `fatal: true`를 붙인 오류. */
+const isFatal = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { fatal?: unknown }).fatal === true;
 
 async function extractColor(
   original: Buffer | null,

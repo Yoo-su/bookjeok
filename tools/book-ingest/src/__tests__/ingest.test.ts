@@ -384,4 +384,46 @@ describe("runApply", () => {
       dimension: { dimensions: { width: 152 }, coverColor: "#2a4b7c" },
     });
   });
+
+  it("쿼터처럼 다음 책도 실패할 오류면 거기서 멈추고 남은 책은 건드리지 않는다", async () => {
+    const quota = Object.assign(new Error("알라딘 오류 10: 쿼터 초과"), {
+      fatal: true,
+    });
+    const { deps: d } = deps({
+      enrich: vi.fn(async (book) => {
+        if (book.isbn === "9788937465024") throw quota;
+        return book;
+      }),
+    });
+
+    const summary = await runApply(
+      [
+        candidate(),
+        candidate({ isbn: "9788937465024", isbn10: null }),
+        candidate({ isbn: "9788932027265", isbn10: null }),
+      ],
+      d,
+      journal(),
+    );
+
+    expect(summary).toMatchObject({ inserted: 1, failed: 1 });
+    expect(summary.stopped).toContain("9788937465024에서 멈춤");
+    expect(d.enrich).toHaveBeenCalledTimes(2);
+  });
+
+  it("없는 상품 같은 한 권짜리 실패는 다음 책으로 넘어간다", async () => {
+    const { deps: d } = deps({
+      enrich: vi.fn(async (book) => {
+        if (book.isbn === "9788937465024") throw new Error("표지 없음");
+        return book;
+      }),
+    });
+    const summary = await runApply(
+      [candidate({ isbn: "9788937465024", isbn10: null }), candidate()],
+      d,
+      journal(),
+    );
+    expect(summary).toMatchObject({ inserted: 1, failed: 1 });
+    expect(summary.stopped).toBeUndefined();
+  });
 });
