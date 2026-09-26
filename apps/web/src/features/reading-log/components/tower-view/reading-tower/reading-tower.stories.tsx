@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { gaegu } from "@/styles/fonts";
 
+import { SAMPLE_BOOKS as SAMPLE } from "../lib/sample-books";
 import { ReadingTower } from "./index";
-import { SAMPLE_BOOKS as SAMPLE } from "./stories-data";
 
 /** 10/30 이후 신간처럼 크기·표지색이 없는 책을 섞는다 */
 const WITH_ESTIMATED = SAMPLE.map((b, i) =>

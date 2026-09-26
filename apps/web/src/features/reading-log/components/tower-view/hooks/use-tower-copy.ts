@@ -44,8 +44,11 @@ export function useTowerCopy() {
       towerMm: number;
       userMm: number;
       avgDepthMm: number;
+      /** 비교 작가 이름. 생략하면 저장된 선택을 따르고 null이면 내 키로 쓴다 */
+      authorName?: string | null;
     }): SceneLabels => {
       const { status, towerMm, userMm, avgDepthMm } = o;
+      const name = o.authorName === undefined ? authorName : o.authorName;
       const remainMm = userMm - towerMm;
       let bubble: [string, string];
       if (status.ratio >= 1)
@@ -62,13 +65,13 @@ export function useTowerCopy() {
           next,
         ];
       }
-      if (authorName)
+      if (name)
         bubble = [
-          authorName,
+          name,
           t("author_bubble_ratio", { percent: Math.floor(status.ratio * 100) }),
         ];
       return {
-        myHeight: authorName
+        myHeight: name
           ? t("approx_height", { cm: Math.round(userMm / 10) })
           : t("my_height", { cm: Math.round(userMm / 10) }),
         remain: t("remain", { cm: Math.ceil(remainMm / 10) }),

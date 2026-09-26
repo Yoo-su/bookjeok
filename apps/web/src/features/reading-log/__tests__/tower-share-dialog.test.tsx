@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { SAMPLE_BOOKS } from "@/features/reading-log/components/tower-view/reading-tower/stories-data";
+import { SAMPLE_BOOKS } from "@/features/reading-log/components/tower-view/lib/sample-books";
 import { TowerShareDialog } from "@/features/reading-log/components/tower-view/tower-share-dialog";
 
 const renderImage = vi.hoisted(() => vi.fn());
