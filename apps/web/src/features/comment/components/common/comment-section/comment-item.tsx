@@ -68,6 +68,13 @@ export const CommentItem = ({
   const currentUser = mounted ? user : null;
   const isAuthenticated = !!currentUser;
   const isOwner = currentUser?.id === comment.userId;
+  // 탈퇴 회원 댓글은 user가 null
+  const author = comment.user ?? {
+    id: 0,
+    handle: null,
+    nickname: t("unknown_author"),
+    profileImageUrl: null,
+  };
 
   const { mutate: toggleLike, isPending: isLikePending } =
     useToggleCommentLikeMutation(targetType, targetId, page, user?.id);
@@ -125,7 +132,7 @@ export const CommentItem = ({
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <UserAvatarMenu
-            user={comment.user}
+            user={author}
             showNickname={false}
             size="sm"
             tooltipSide="bottom"
@@ -137,16 +144,16 @@ export const CommentItem = ({
           />
           <div className="flex flex-col justify-center">
             <div className="flex items-center gap-1.5">
-              {comment.user?.handle ? (
+              {author.handle ? (
                 <Link
-                  href={PATHS.USER_PROFILE(comment.user.handle)}
+                  href={PATHS.USER_PROFILE(author.handle)}
                   className="font-serif font-medium text-[15px] tracking-tight text-stone-900 dark:text-stone-100 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
                 >
-                  {comment.user.nickname}
+                  {author.nickname}
                 </Link>
               ) : (
                 <span className="font-serif font-medium text-[15px] tracking-tight text-stone-900 dark:text-stone-100">
-                  {comment.user.nickname}
+                  {author.nickname}
                 </span>
               )}
               {isOwner && (

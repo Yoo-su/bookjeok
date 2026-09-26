@@ -1570,6 +1570,7 @@
     },
     "item": {
       "me": "나",
+      "unknown_author": "(알수없음)",
       "edit": "수정",
       "delete": "삭제",
       "save": "저장",
