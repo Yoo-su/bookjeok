@@ -6,6 +6,7 @@ import { buildFigure } from "../lib/figure";
 import { HEART_CENTER, WAVE_ELBOW } from "../lib/figure-authors";
 import { SceneNodes } from "../lib/scene-svg";
 import type { SceneColors, StackAuthor } from "../lib/types";
+import { AUTHOR_SIGNATURES, SIGNATURE_SIZE } from "./signatures";
 
 export type PeekAction = "bow" | "wave" | "heart";
 export type PeekSide = "left" | "right";
@@ -23,6 +24,31 @@ const NECK: [number, number] = [150, 150];
 /** 허리(300×1000 단위). 인사할 때 여기서 접는다 */
 const WAIST_Y = 520;
 const FADE = "linear-gradient(to bottom, #000 50%, transparent 72%)";
+/** 서명 기준선 높이(300×1000 단위). 어깨께 */
+const SIGN_Y = 200;
+const SIGN_INK = "#57534E";
+/** 몸과 서명 사이(px). 이름이 떠 있는 동안 숙인 머리·흔드는 손이 가장자리에서 약 100px까지 들어온다 */
+const SIGN_GAP = 34;
+
+/** 자리를 잡으면 이름이 왼쪽부터 써지고, 들어가기 전에 흐려진다 */
+const SIGN: Keyframe[] = [
+  { opacity: 0, clipPath: "inset(-40% 100% -40% -10%)" },
+  {
+    opacity: 1,
+    clipPath: "inset(-40% 100% -40% -10%)",
+    offset: 0.24,
+    easing: "ease-in-out",
+  },
+  { opacity: 1, clipPath: "inset(-40% -10% -40% -10%)", offset: 0.4 },
+  {
+    opacity: 1,
+    clipPath: "inset(-40% -10% -40% -10%)",
+    offset: 0.74,
+    easing: "ease-in",
+  },
+  { opacity: 0, clipPath: "inset(-40% -10% -40% -10%)", offset: 0.82 },
+  { opacity: 0 },
+];
 
 /** 가장자리 너머에서 옆으로 쏙 나와 살짝 지나쳤다가 멈추고, 끝나면 다시 숨는다 */
 const SLIDE: Keyframe[] = [
@@ -165,6 +191,7 @@ export function AuthorPeek({
   const slideRef = useRef<HTMLDivElement>(null);
   const waistRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const signRef = useRef<SVGSVGElement>(null);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
@@ -172,7 +199,8 @@ export function AuthorPeek({
     const slide = slideRef.current;
     const waist = waistRef.current;
     const svg = svgRef.current;
-    if (!slide || !waist || !svg || playKey === 0) return;
+    const sign = signRef.current;
+    if (!slide || !waist || !svg || !sign || playKey === 0) return;
     const duration = { bow: 3400, wave: 4000, heart: 4200 }[action];
     const pivot = (g: SVGGElement, [x, y]: [number, number]) => {
       g.style.transformBox = "view-box";
@@ -183,6 +211,7 @@ export function AuthorPeek({
       Array.from(svg.querySelectorAll<SVGGElement>(`g.${cls}`));
     const all = [
       slide.animate(SLIDE, { duration }),
+      sign.animate(SIGN, { duration }),
       ...(action === "bow" ? [waist.animate(WAIST_BOW, { duration })] : []),
       ...groups("peek-head").map((g) =>
         pivot(g, NECK).animate(
@@ -209,6 +238,8 @@ export function AuthorPeek({
     return () => all.forEach((a) => a.cancel());
   }, [playKey, action, k, pad]);
 
+  const sig = AUTHOR_SIGNATURES[author];
+  const s = height / 270;
   return (
     <div
       aria-hidden="true"
@@ -218,35 +249,56 @@ export function AuthorPeek({
         [side]: -width * 0.24,
         width,
         height: height + pad * 2,
-        // 오른쪽은 좌우를 뒤집어 흔드는 팔과 고개가 가운데를 보게 한다
-        transform: side === "right" ? "scaleX(-1)" : undefined,
       }}
     >
       <div
-        ref={slideRef}
         className="h-full w-full"
-        style={{ translate: "-78% 0", transformOrigin: "50% 100%" }}
+        // 오른쪽은 좌우를 뒤집어 흔드는 팔과 고개가 가운데를 보게 한다
+        style={{ transform: side === "right" ? "scaleX(-1)" : undefined }}
       >
         <div
-          ref={waistRef}
+          ref={slideRef}
           className="h-full w-full"
-          style={{
-            transformOrigin: `50% ${pad + WAIST_Y * k}px`,
-            // 몸과 함께 돌아야 숙인 상체가 잘리지 않고 다리만 흐려진다
-            maskImage: FADE,
-            WebkitMaskImage: FADE,
-          }}
+          style={{ translate: "-78% 0", transformOrigin: "50% 100%" }}
         >
-          <svg
-            ref={svgRef}
-            width={width}
-            height={height + pad * 2}
-            className="overflow-visible"
+          <div
+            ref={waistRef}
+            className="h-full w-full"
+            style={{
+              transformOrigin: `50% ${pad + WAIST_Y * k}px`,
+              // 몸과 함께 돌아야 숙인 상체가 잘리지 않고 다리만 흐려진다
+              maskImage: FADE,
+              WebkitMaskImage: FADE,
+            }}
           >
-            <SceneNodes items={items} />
-          </svg>
+            <svg
+              ref={svgRef}
+              width={width}
+              height={height + pad * 2}
+              className="overflow-visible"
+            >
+              <SceneNodes items={items} />
+            </svg>
+          </div>
         </div>
       </div>
+      {/* 뒤집는 틀 밖에 둬야 오른쪽에서도 글자가 거울상이 되지 않는다 */}
+      <svg
+        ref={signRef}
+        width={(sig.w + 4) * s}
+        height={SIGNATURE_SIZE * 1.3 * s}
+        viewBox={`-2 ${-SIGNATURE_SIZE * 0.85} ${sig.w + 4} ${SIGNATURE_SIZE * 1.3}`}
+        className="absolute overflow-visible"
+        style={{
+          [side]: width + SIGN_GAP * s,
+          top: pad + SIGN_Y * k - SIGNATURE_SIZE * 0.85 * s,
+          rotate: "-5deg",
+          transformOrigin: side === "left" ? "0% 70%" : "100% 70%",
+          opacity: 0,
+        }}
+      >
+        <path d={sig.d} fill={SIGN_INK} />
+      </svg>
     </div>
   );
 }

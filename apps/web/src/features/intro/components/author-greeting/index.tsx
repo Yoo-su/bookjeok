@@ -19,13 +19,15 @@ const AuthorPeek = dynamic(
   { ssr: false },
 );
 
-/** 머리글 옆 여백이 캐릭터가 설 만큼 넉넉한 화면 폭(px). 좁으면 띄우지 않는다 */
-export const GREETING_MIN_WIDTH = 1024;
+/**
+ * 머리글 옆 여백이 캐릭터가 설 만큼 넉넉한 화면 폭(px). 좁으면 띄우지 않는다.
+ * 가장 기운 자세에서 몸이 출판사 칩(572px)과, 서명이 제목과 12px 이상 떨어지는 폭이
+ * 각각 약 804px·788px이다
+ */
+export const GREETING_MIN_WIDTH = 820;
 /** 첫 등장과 그 뒤 간격(ms). 자주 나오면 금방 거슬린다 */
 export const GREETING_FIRST_MS = 3500;
 const GAP_MS: [number, number] = [5000, 10000];
-/** 한 번 방문에 나오는 최대 횟수 */
-export const GREETING_MAX = 6;
 const FIGURE_HEIGHT = 270;
 
 const pick = <T,>(list: readonly T[]) =>
@@ -71,7 +73,7 @@ export function AuthorGreeting() {
 
   // 쉬었다가 조건이 맞으면 한 번 내보낸다. 보이지 않거나 다른 창이 떠 있으면 다음 차례로 넘긴다
   useEffect(() => {
-    if (reduce || !wide || playing || count.current >= GREETING_MAX) return;
+    if (reduce || !wide || playing) return;
     const wait =
       count.current === 0
         ? GREETING_FIRST_MS

@@ -12,13 +12,26 @@ vi.mock("@/shared/hooks/use-prefers-reduced-motion", () => ({
   usePrefersReducedMotion: () => reduce,
 }));
 
-// 실제 인사 대신 누가 어떤 동작으로 나왔는지만 남긴다
-vi.mock("next/dynamic", () => ({
-  default: () =>
-    function Peek(p: { author: string; action: string }) {
-      return <div data-testid="peek" data-action={p.action} />;
-    },
-}));
+// 실제 인사 대신 누가 어떤 동작으로 나왔는지만 남기고 1초 뒤 끝낸다
+vi.mock("next/dynamic", async () => {
+  const { useEffect } = await import("react");
+  return {
+    default: () =>
+      function Peek(p: {
+        action: string;
+        playKey: number;
+        onDone?: () => void;
+      }) {
+        useEffect(() => {
+          const id = setTimeout(() => p.onDone?.(), 1000);
+          return () => clearTimeout(id);
+        }, [p]);
+        return (
+          <div data-testid="peek" data-action={p.action} data-key={p.playKey} />
+        );
+      },
+  };
+});
 
 class IO {
   constructor(private cb: IntersectionObserverCallback) {}
@@ -71,6 +84,20 @@ describe("AuthorGreeting", () => {
     render(<AuthorGreeting />);
     act(() => vi.advanceTimersByTime(GREETING_FIRST_MS * 3));
     expect(screen.queryByTestId("peek")).toBeNull();
+  });
+
+  it("횟수 제한 없이 끝날 때마다 다음 작가를 내보낸다", () => {
+    render(<AuthorGreeting />);
+    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS));
+    const keys = new Set<string>();
+    for (let i = 0; i < 10; i++) {
+      keys.add(screen.getByTestId("peek").dataset.key ?? "");
+      // 끝나면 치우고, 다음 간격(최대 10초)을 기다린다
+      act(() => vi.advanceTimersByTime(1000));
+      expect(screen.queryByTestId("peek")).toBeNull();
+      act(() => vi.advanceTimersByTime(10000));
+    }
+    expect(keys.size).toBe(10);
   });
 
   it("다른 창이 떠 있으면 건너뛰었다가 닫히면 내보낸다", () => {
