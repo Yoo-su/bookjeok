@@ -13,32 +13,23 @@ describe("HeaderMusicButton", () => {
     useMusicStore.setState({ isPlaying: false, isModalOpen: false });
   });
 
-  it("renders the label and quick-play control in the full variant", () => {
+  it("renders a single icon button that opens the player", () => {
     render(<HeaderMusicButton />);
 
-    expect(screen.getByText("header_button.label")).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "controls.play" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "header_button.aria_label" }),
-    ).toHaveClass("w-21");
+    const buttons = screen.getAllByRole("button");
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveAccessibleName("header_button.aria_label");
+
+    fireEvent.click(buttons[0]);
+    expect(useMusicStore.getState().isModalOpen).toBe(true);
   });
 
-  it("keeps the player entry point while omitting wide controls when compact", () => {
-    render(<HeaderMusicButton compact />);
+  it("spins the disc only while playing", () => {
+    const { container, rerender } = render(<HeaderMusicButton />);
+    expect(container.querySelector("svg")).not.toHaveClass("animate-spin");
 
-    const openPlayer = screen.getByRole("button", {
-      name: "header_button.aria_label",
-    });
-
-    expect(screen.queryByText("header_button.label")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "controls.play" }),
-    ).not.toBeInTheDocument();
-    expect(openPlayer).toHaveClass("w-8.5");
-
-    fireEvent.click(openPlayer);
-    expect(useMusicStore.getState().isModalOpen).toBe(true);
+    useMusicStore.setState({ isPlaying: true });
+    rerender(<HeaderMusicButton />);
+    expect(container.querySelector("svg")).toHaveClass("animate-spin");
   });
 });

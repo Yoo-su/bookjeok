@@ -195,7 +195,7 @@ export const TiptapEditor = ({
       <BubbleMenu
         editor={editor}
         options={{ placement: "top", offset: 8 }}
-        className="z-30 flex items-center gap-1 rounded-md border bg-background p-1 shadow-md"
+        className="relative z-30 flex items-center gap-1 rounded-md border bg-background p-1 shadow-md"
       >
         {[
           {

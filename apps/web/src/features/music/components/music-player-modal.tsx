@@ -61,9 +61,7 @@ export function MusicPlayerModal() {
               className={`h-5 w-5 text-stone-900 ${isPlaying ? "animate-spin" : ""}`}
               style={{ animationDuration: "3s" }}
             />
-            <DialogTitle className="font-serif text-base font-bold tracking-tight text-stone-900">
-              {t("title")}
-            </DialogTitle>
+            <DialogTitle className="sr-only">{t("title")}</DialogTitle>
             {playlist.length > 1 && (
               <span className="ml-1 rounded-md bg-stone-100 px-1.5 py-0.5 font-mono text-[10.5px] font-semibold text-stone-600">
                 {currentIndex + 1} / {playlist.length}

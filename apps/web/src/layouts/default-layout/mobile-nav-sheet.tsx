@@ -36,7 +36,6 @@ interface NavSection {
 export const MobileNavSheet = () => {
   const t = useTranslations("header.nav");
   const tSheet = useTranslations("sheet.sections");
-  const tMusic = useTranslations("music");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
@@ -151,21 +150,14 @@ export const MobileNavSheet = () => {
               <Logo />
             </div>
           </SheetTitle>
-          <LanguageSwitcher className="mr-8" />
+          {/* 폰 헤더에는 음악 버튼이 없어 여기가 진입점 */}
+          <div className="mr-8 flex items-center gap-0.5">
+            <HeaderMusicButton />
+            <LanguageSwitcher />
+          </div>
         </SheetHeader>
 
         <nav className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100dvh-80px)] custom-scrollbar">
-          {/*
-            배경음악 진입점. 폰 헤더에서는 알약 폭이 모자라 버튼을 숨기므로
-            여기가 유일한 진입점이 된다 (재생 중에는 FloatingMusicPill도 뜬다).
-          */}
-          <div className="flex items-center justify-between rounded-md bg-stone-50/80 px-3 py-2.5">
-            <span className="font-[family-name:var(--font-nanum-gothic)] text-xs font-bold tracking-[0.04em] text-stone-500 select-none">
-              {tMusic("title")}
-            </span>
-            <HeaderMusicButton />
-          </div>
-
           {navSections.map((section) => (
             <div key={section.title} className="space-y-2">
               {/*
