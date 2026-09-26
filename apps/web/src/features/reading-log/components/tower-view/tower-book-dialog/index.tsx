@@ -62,7 +62,7 @@ export function TowerBookDialog({
               {book.author} · {book.publisher}
             </DialogDescription>
             <div className="flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-blue-600/10 px-2 py-1 text-[11.5px] font-medium tabular-nums text-blue-700">
+              <span className="rounded-full bg-emerald-700/10 px-2 py-1 text-[11.5px] font-medium tabular-nums text-emerald-700">
                 {t("tower_add", { cm: cm1(book.depth) })}
               </span>
               {book.pages != null && (

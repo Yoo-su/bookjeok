@@ -6,8 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { RotateCcw, Share2 } from "@/shared/components/icons/iconsax";
 
+import { useTowerComparison } from "../hooks/use-tower-comparison";
 import { cm1, useTowerCopy } from "../hooks/use-tower-copy";
-import { useTowerPerson } from "../hooks/use-tower-person";
 import { type TowerStatus, towerStatus } from "../lib/status";
 import { TowerBookDialog } from "../tower-book-dialog";
 import { TowerHeightChip } from "../tower-height-chip";
@@ -28,7 +28,8 @@ import {
 export function ReadingTower({ year }: { year: number }) {
   const { t, locale, sceneLabels, lede, shareSubline } = useTowerCopy();
   const { data, isLoading, isError, refetch } = useReadingTowerQuery(year);
-  const { character, heightCm } = useTowerPerson();
+  const { character, heightCm, author } = useTowerComparison();
+  const comparisonName = author ? t(`authors.${author}`) : undefined;
   const userMm = heightCm * 10;
 
   const books = useMemo(() => data?.items ?? [], [data]);
@@ -156,24 +157,25 @@ export function ReadingTower({ year }: { year: number }) {
                 viewBox="0 0 100 12"
                 preserveAspectRatio="none"
                 aria-hidden="true"
-                className="pointer-events-none absolute -bottom-[0.1em] left-[-3%] h-[0.24em] w-[106%] overflow-visible"
+                className="pointer-events-none absolute -bottom-[0.18em] left-[-3%] h-[0.24em] w-[106%] overflow-visible"
               >
+                {/* 한 번 긋고 바로 아래를 한 번 더 스친 밑줄. 덧선은 오른쪽 끝에서 모인다 */}
                 <path
-                  d="M2,7 C28,2 60,11 98,4"
+                  d="M2,6.4 C30,5.4 62,6.6 98,3.8"
                   fill="none"
-                  stroke="#2563EB"
+                  stroke="#292524"
                   strokeWidth={2.6}
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                 />
                 <path
-                  d="M10,10.5 C38,7.5 66,11.5 90,8.5"
+                  d="M8,10 C38,9.6 70,8.8 94,6.4"
                   fill="none"
-                  stroke="#2563EB"
-                  strokeWidth={2.6}
+                  stroke="#78716C"
+                  strokeWidth={1.5}
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
-                  opacity={0.55}
+                  opacity={0.75}
                 />
               </svg>
             </span>
@@ -196,17 +198,17 @@ export function ReadingTower({ year }: { year: number }) {
 
       <section className="grid gap-3.5 md:grid-cols-[minmax(0,1fr)_288px] md:items-start md:gap-x-5">
         <div className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white bg-[radial-gradient(#e2e0dd_1.1px,transparent_1.4px)] bg-[length:16px_16px] bg-[position:6px_6px] px-3 pb-1.5 pt-2.5">
-          <div className="relative z-[1] flex items-center justify-between gap-2 px-0.5 pb-1">
+          <div className="relative z-[1] flex flex-wrap items-center justify-between gap-2 px-0.5 pb-1">
             <span className="font-[family-name:var(--font-gaegu)] text-[15px] font-bold text-stone-400">
               {t("scale_hint")}
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <TowerHeightChip />
               {books.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setReplayKey((k) => k + 1)}
-                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-500 hover:text-stone-900 pointer-fine:h-7"
+                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-500 hover:text-stone-900 pointer-fine:h-7"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   {t("replay")}
@@ -227,7 +229,8 @@ export function ReadingTower({ year }: { year: number }) {
               })
             }
             towerClickLabel={t("view_stack")}
-            ariaLabel={t("stage_label", {
+            ariaLabel={t(author ? "author_stage_label" : "stage_label", {
+              name: comparisonName ?? "",
               count: books.length,
               height: cm1(totals.towerMm),
               me: heightCm,
@@ -242,6 +245,7 @@ export function ReadingTower({ year }: { year: number }) {
 
         <div className="grid content-start gap-3.5">
           <TowerProgress
+            comparisonName={comparisonName}
             status={status}
             towerMm={totals.towerMm}
             userMm={userMm}

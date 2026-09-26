@@ -5,6 +5,7 @@ import { useCallback } from "react";
 
 import type { SceneLabels } from "../lib/scene";
 import type { BodyPart, TowerStatus } from "../lib/status";
+import { useTowerComparison } from "./use-tower-comparison";
 
 export const cm1 = (mm: number) => (mm / 10).toFixed(1);
 
@@ -28,6 +29,8 @@ function etaDate(year: number, towerMm: number, remainMm: number) {
 export function useTowerCopy() {
   const t = useTranslations("reading_log.tower");
   const locale = useLocale();
+  const { author } = useTowerComparison();
+  const authorName = author ? t(`authors.${author}`) : null;
 
   const part = useCallback(
     (key: BodyPart, form: "name" | "topic" | "object") =>
@@ -59,8 +62,15 @@ export function useTowerCopy() {
           next,
         ];
       }
+      if (authorName)
+        bubble = [
+          authorName,
+          t("author_bubble_ratio", { percent: Math.floor(status.ratio * 100) }),
+        ];
       return {
-        myHeight: t("my_height", { cm: Math.round(userMm / 10) }),
+        myHeight: authorName
+          ? t("approx_height", { cm: Math.round(userMm / 10) })
+          : t("my_height", { cm: Math.round(userMm / 10) }),
         remain: t("remain", { cm: Math.ceil(remainMm / 10) }),
         approxBooks: t("approx_books", {
           count: Math.ceil(remainMm / Math.max(1, avgDepthMm)),
@@ -69,7 +79,7 @@ export function useTowerCopy() {
         bubble,
       };
     },
-    [t, part],
+    [t, part, authorName],
   );
 
   const lede = useCallback(
@@ -82,6 +92,12 @@ export function useTowerCopy() {
     }) => {
       const { status, towerMm, userMm, year, hasBooks } = o;
       if (!hasBooks) return t("lede_empty");
+      if (authorName)
+        return t("author_lede", {
+          name: authorName,
+          cm: Math.round(userMm / 10),
+          percent: Math.floor(status.ratio * 100),
+        });
       // 지난 연도는 속도로 도착 시점을 셈하지 않고 결과만 말한다
       if (year < new Date().getFullYear()) {
         if (status.ratio >= 1)
@@ -121,11 +137,17 @@ export function useTowerCopy() {
         ? t("lede_passed", { ...common, part: part(status.passed, "object") })
         : t("lede_start", common);
     },
-    [t, part, locale],
+    [t, part, locale, authorName],
   );
 
   const shareSubline = useCallback(
     (status: TowerStatus, towerMm: number, userMm: number) => {
+      if (authorName)
+        return t("author_share", {
+          name: authorName,
+          cm: Math.round(userMm / 10),
+          percent: Math.floor(status.ratio * 100),
+        });
       if (status.ratio >= 1)
         return t("share.sub_over", { cm: cm1(towerMm - userMm) });
       const common = {
@@ -139,7 +161,7 @@ export function useTowerCopy() {
           })
         : t("share.sub_start", common);
     },
-    [t, part],
+    [t, part, authorName],
   );
 
   return { t, locale, sceneLabels, lede, shareSubline };

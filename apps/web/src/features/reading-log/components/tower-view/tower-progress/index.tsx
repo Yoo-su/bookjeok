@@ -16,6 +16,7 @@ interface TowerProgressProps {
   pages: number;
   grams: number;
   className?: string;
+  comparisonName?: string;
 }
 
 /** 내 키까지 얼마나 쌓였는지와 올해 합계 */
@@ -28,11 +29,18 @@ export function TowerProgress({
   pages,
   grams,
   className,
+  comparisonName,
 }: TowerProgressProps) {
   const t = useTranslations("reading_log.tower");
   const locale = useLocale();
   const remain = userMm - towerMm;
   const over = status.ratio >= 1;
+  const markers = comparisonName
+    ? [0.25, 0.5, 0.75, 1].map((ratio) => ({ ratio, label: `${ratio * 100}%` }))
+    : TRACK_PARTS.map((key) => ({
+        ratio: BODY_PARTS.find((part) => part.key === key)?.ratio ?? 1,
+        label: t(`parts.${key}.name`),
+      }));
 
   return (
     <div
@@ -44,7 +52,13 @@ export function TowerProgress({
       <div className="grid gap-3 p-4 pb-3.5">
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-[13px] font-bold text-stone-900">
-            {over ? t("progress_over") : t("progress_to_height")}
+            {comparisonName
+              ? t(over ? "progress_over_author" : "progress_to_author", {
+                  name: comparisonName,
+                })
+              : over
+                ? t("progress_over")
+                : t("progress_to_height")}
           </span>
           <b className="text-xl font-semibold tabular-nums text-stone-900">
             {over ? `+${cm1(-remain)}` : `${Math.floor(status.ratio * 100)}%`}
@@ -53,18 +67,17 @@ export function TowerProgress({
         <div className="relative h-[34px]">
           <div className="absolute inset-x-0 top-1.5 h-1.5 overflow-hidden rounded-full bg-stone-200">
             <i
-              className="absolute inset-y-0 left-0 rounded-full bg-blue-600 transition-[width] duration-500"
+              className="absolute inset-y-0 left-0 rounded-full bg-emerald-700 transition-[width] duration-500"
               style={{
                 width: `${Math.min(100, status.ratio * 100).toFixed(1)}%`,
               }}
             />
           </div>
-          {TRACK_PARTS.map((key, i) => {
-            const ratio = BODY_PARTS.find((p) => p.key === key)?.ratio ?? 1;
-            const last = i === TRACK_PARTS.length - 1;
+          {markers.map(({ ratio, label }, i) => {
+            const last = i === markers.length - 1;
             return (
               <div
-                key={key}
+                key={ratio}
                 className="absolute top-0.5 h-3.5 border-l-[1.5px] border-white"
                 style={{ left: `${ratio * 100}%` }}
               >
@@ -75,7 +88,7 @@ export function TowerProgress({
                     ratio <= status.ratio ? "text-stone-900" : "text-stone-400",
                   )}
                 >
-                  {t(`parts.${key}.name`)}
+                  {label}
                 </span>
               </div>
             );
@@ -83,7 +96,8 @@ export function TowerProgress({
         </div>
         <p className="text-[12.5px] leading-relaxed text-stone-500">
           {over
-            ? t("progress_double", {
+            ? t(comparisonName ? "progress_double_author" : "progress_double", {
+                name: comparisonName ?? "",
                 times: nextGoalTimes(status.ratio),
                 cm: cm1(userMm * nextGoalTimes(status.ratio) - towerMm),
               })

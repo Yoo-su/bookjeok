@@ -27,7 +27,7 @@ export interface ShareFonts extends Record<FontRole, string> {
 const PALETTE: SceneColors & { dot: string } = {
   paper: "#FFFFFF",
   ink: "#1C1917",
-  pen: "#2563EB",
+  pen: "#047857",
   muted: "#78716C",
   faint: "#A8A29E",
   dot: "#E2E0DD",
@@ -114,43 +114,30 @@ export async function renderTowerShareImage(o: {
   const hw = seg(texts.height, big, PALETTE.ink);
   x += 4;
   const uw = seg(texts.heightUnit, big * 0.52, PALETTE.muted);
-  // 높이 숫자 아래 펜 밑줄
-  const ux = hx - 8;
+  // 높이 숫자 아래 펜 밑줄. 화면(reading-tower)과 같은 100×12 도형을 늘려 그린다
   const ul = hw + uw + 20;
-  const uy = y + 18;
-  ctx.strokeStyle = PALETTE.pen;
+  const X = (v: number) => hx - 8 + (ul * v) / 100;
+  const Y = (v: number) => y + big * (0.09 + v * 0.02);
   ctx.lineCap = "round";
-  ctx.lineWidth = 7;
+  ctx.strokeStyle = "#292524";
+  ctx.lineWidth = big * 0.046;
   ctx.beginPath();
-  ctx.moveTo(ux, uy);
-  ctx.bezierCurveTo(
-    ux + ul * 0.28,
-    uy - 9,
-    ux + ul * 0.6,
-    uy + 10,
-    ux + ul,
-    uy - 4,
-  );
+  ctx.moveTo(X(2), Y(6.4));
+  ctx.bezierCurveTo(X(30), Y(5.4), X(62), Y(6.6), X(98), Y(3.8));
   ctx.stroke();
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = 5;
+  ctx.strokeStyle = PALETTE.muted;
+  ctx.globalAlpha = 0.75;
+  ctx.lineWidth = big * 0.027;
   ctx.beginPath();
-  ctx.moveTo(ux + ul * 0.1, uy + 13);
-  ctx.bezierCurveTo(
-    ux + ul * 0.38,
-    uy + 7,
-    ux + ul * 0.66,
-    uy + 15,
-    ux + ul * 0.9,
-    uy + 9,
-  );
+  ctx.moveTo(X(8), Y(10));
+  ctx.bezierCurveTo(X(38), Y(9.6), X(70), Y(8.8), X(94), Y(6.4));
   ctx.stroke();
   ctx.globalAlpha = 1;
 
   y += story ? 84 : 70;
   ctx.fillStyle = PALETTE.muted;
   ctx.font = `500 ${story ? 36 : 32}px ${fonts.ui}`;
-  ctx.fillText(texts.subline, M, y);
+  ctx.fillText(texts.subline, M, y, W - 2 * M);
 
   const u = story ? 2.25 : 1.85;
   const measure = (t: string, size: number, weight: number, fam: FontRole) => {

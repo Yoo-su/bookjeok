@@ -6,13 +6,16 @@ import {
 
 import { buildFigure } from "./figure";
 import {
+  type Cmds,
   f1,
   hashSeed,
   lerp,
   poly,
   rectCorners,
   rng,
+  samplePath,
   sketchPoly,
+  wobble,
 } from "./sketch";
 import type { TowerStatus } from "./status";
 import type {
@@ -89,6 +92,7 @@ function bubbleItem(
   width: number,
   minX: number,
   measure: MeasureText,
+  boil: boolean,
 ): GroupItem {
   const size = 16 * u;
   const lh = 19 * u;
@@ -103,14 +107,82 @@ function bubbleItem(
   const r = 12 * u;
   const tx = Math.max(x + 16 * u, Math.min(x + w - 16 * u, cx - 6 * u));
   const B = y + h;
-  const d =
-    `M${f1(x + r)},${f1(y)} L${f1(x + w - r)},${f1(y)} Q${f1(x + w)},${f1(y)} ${f1(x + w)},${f1(y + r)} ` +
-    `L${f1(x + w)},${f1(B - r)} Q${f1(x + w)},${f1(B)} ${f1(x + w - r)},${f1(B)} ` +
-    `L${f1(tx + 7 * u)},${f1(B)} L${f1(tx + 2 * u)},${f1(B + 11 * u)} L${f1(tx - 5 * u)},${f1(B)} ` +
-    `L${f1(x + r)},${f1(B)} Q${f1(x)},${f1(B)} ${f1(x)},${f1(B - r)} L${f1(x)},${f1(y + r)} Q${f1(x)},${f1(y)} ${f1(x + r)},${f1(y)} Z`;
-  const children: SceneItem[] = [
-    { k: "p", d, fill: C.paper, stroke: C.ink, sw: 1.7 * u, join: "round" },
+  // 선만 연필로 긋는다. 캐릭터와 같이 세 벌을 번갈아 보여 떨리게 한다
+  const shape: Cmds = [
+    "M",
+    x + r,
+    y,
+    "L",
+    x + w - r,
+    y,
+    "Q",
+    x + w,
+    y,
+    x + w,
+    y + r,
+    "L",
+    x + w,
+    B - r,
+    "Q",
+    x + w,
+    B,
+    x + w - r,
+    B,
+    "L",
+    tx + 7 * u,
+    B,
+    "L",
+    tx + 2 * u,
+    B + 11 * u,
+    "L",
+    tx - 5 * u,
+    B,
+    "L",
+    x + r,
+    B,
+    "Q",
+    x,
+    B,
+    x,
+    B - r,
+    "L",
+    x,
+    y + r,
+    "Q",
+    x,
+    y,
+    x + r,
+    y,
   ];
+  const outline = samplePath(shape, (px, py) => [px, py]);
+  const children: SceneItem[] = [
+    { k: "p", d: wobble(outline, 41, 0.3 * u, true), fill: C.paper },
+  ];
+  for (const v of boil ? [0, 1, 2] : [0]) {
+    const seed = 41 + v * 53;
+    children.push({
+      k: "g",
+      cls: boil ? `tower-boil tower-boil-${v}` : "tower-bubble-line",
+      children: [
+        {
+          k: "p",
+          d: wobble(outline, seed, 0.55 * u, true),
+          stroke: C.ink,
+          sw: 1.7 * u,
+          join: "round",
+          op: 0.92,
+        },
+        {
+          k: "p",
+          d: wobble(outline, seed + 1, 0.95 * u, true),
+          stroke: C.ink,
+          sw: 0.8 * u,
+          join: "round",
+          op: 0.35,
+        },
+      ],
+    });
+  }
   lines.forEach((t, i) =>
     children.push({
       k: "t",
@@ -362,7 +434,7 @@ export function buildTowerScene(o: SceneOptions): SceneResult {
       k: "t",
       id: "my-height",
       x: rx + 6 * u,
-      y: fy - 11 * u,
+      y: fy + (W < 360 * u ? 13 : -11) * u,
       t: labels.myHeight,
       size: 16 * u,
       weight: 700,
@@ -471,6 +543,7 @@ export function buildTowerScene(o: SceneOptions): SceneResult {
         W,
         rulerW + 4 * u,
         measure,
+        o.boil ?? false,
       ),
     );
   }

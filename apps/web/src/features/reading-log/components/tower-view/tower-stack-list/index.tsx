@@ -222,7 +222,7 @@ export const TowerStackList = memo(
                       type="button"
                       onClick={() => onBookClick(b)}
                       aria-label={`${b.title}, ${b.author}`}
-                      className="relative isolate flex cursor-pointer items-center gap-2 rounded-[2px] text-left font-[family-name:var(--font-gaegu)] font-bold transition-transform duration-200 [transform:translateX(var(--jx))_rotate(var(--jr))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 pointer-fine:hover:[transform:translateX(calc(var(--jx)+10px))]"
+                      className="relative isolate flex cursor-pointer items-center gap-2 rounded-[2px] text-left font-[family-name:var(--font-gaegu)] font-bold transition-transform duration-200 [transform:translateX(var(--jx))_rotate(var(--jr))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 pointer-fine:hover:[transform:translateX(calc(var(--jx)+10px))]"
                       style={
                         {
                           color: inkColorFor(color),

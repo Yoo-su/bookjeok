@@ -27,7 +27,7 @@ export const towerIntroStepMs = (count: number) =>
 const COLORS: SceneColors = {
   paper: "#FFFFFF",
   ink: "#1C1917",
-  pen: "#2563EB",
+  pen: "#047857",
   muted: "#78716C",
   faint: "#A8A29E",
 };
@@ -295,7 +295,7 @@ export function TowerStage({
           type="button"
           onClick={onTowerClick}
           aria-label={towerClickLabel}
-          className="absolute cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-blue-600"
+          className="absolute cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-emerald-700"
           style={{
             left: scene.tower.left - 4,
             top: scene.tower.top - 4,
