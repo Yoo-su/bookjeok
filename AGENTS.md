@@ -48,6 +48,7 @@
 - [apps/server/README.md](apps/server/README.md) · [apps/server/src/shared/README.md](apps/server/src/shared/README.md) — 백엔드 모듈과 횡단 관심사
 - [apps/web/README.md](apps/web/README.md) · [apps/web/docs/ARCHITECTURE.md](apps/web/docs/ARCHITECTURE.md) — 프론트엔드 구조와 컴포넌트 규칙
 - 각 `apps/*/src/features/*/README.md` — 도메인별 상세 문서
+- [독서 키재기 캐릭터 그리기](apps/web/src/features/reading-log/components/stack-view/CHARACTERS.md) — 작가 캐리커처를 추가하거나 캐릭터를 고칠 때. 좌표·부품·기존 작가 레시피·겪은 문제·추가 절차
 
 ### 운영 주의사항
 

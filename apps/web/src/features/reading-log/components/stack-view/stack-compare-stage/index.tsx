@@ -6,18 +6,16 @@ import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/shared/utils";
 
-import { STACK_AUTHORS } from "../lib/authors";
+import { STACK_AUTHOR_IDS, STACK_AUTHORS } from "../lib/authors";
 import type { StackStatus } from "../lib/status";
 import type { StackAuthor } from "../lib/types";
 import { StackStage, type StackStagePerson } from "../stack-stage";
 
-/** 작가가 도는 순서 */
+/** 작가가 도는 순서. 여기 없는 작가는 뒤에 붙으므로 작가를 추가해도 빠지지 않는다 */
+const FIRST: StackAuthor[] = ["kafka", "sartre", "woolf", "camus", "kundera"];
 const AUTHOR_ORDER: StackAuthor[] = [
-  "kafka",
-  "sartre",
-  "woolf",
-  "camus",
-  "kundera",
+  ...FIRST,
+  ...STACK_AUTHOR_IDS.filter((id) => !FIRST.includes(id)),
 ];
 const CYCLE_MS = 2600;
 
