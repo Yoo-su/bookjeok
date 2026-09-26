@@ -11,7 +11,8 @@ export class UserCleanupListener {
   /**
    * 유저 탈퇴 시 해당 유저의 위시리스트 데이터를 일괄 삭제합니다.
    */
-  @OnEvent('user.withdrawn')
+  // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
+  @OnEvent('user.withdrawn', { suppressErrors: false })
   async handleUserWithdrawn(event: {
     userId: number;
     entityManager: EntityManager;
