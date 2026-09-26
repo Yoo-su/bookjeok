@@ -37,13 +37,7 @@ describe("독서 키재기 비교 대상", () => {
   it("작가를 번갈아 골라도 입력한 내 키와 캐릭터는 유지한다", () => {
     const { result } = renderHook(useStackComparison);
     expect(result.current.heightCm).toBe(168);
-    for (const author of [
-      "camus",
-      "sartre",
-      "kundera",
-      "woolf",
-      "kafka",
-    ] as const) {
+    for (const author of STACK_AUTHOR_IDS) {
       act(() => result.current.setAuthor(author));
       expect(result.current.character).toBe(author);
       expect(result.current.heightCm).toBe(STACK_AUTHORS[author].heightCm);
@@ -132,7 +126,7 @@ describe.each(["M", "F"] as const)(
 );
 
 describe("작가 캐리커처", () => {
-  it("다섯 명 모두 서로 다른 손그림 선으로 그린다", () => {
+  it("작가마다 서로 다른 손그림 선으로 그린다", () => {
     const drawings = STACK_AUTHOR_IDS.map((id) => figure(id));
     for (const items of drawings) {
       const [, body] = items;
@@ -140,7 +134,9 @@ describe("작가 캐리커처", () => {
       if (body.k !== "g") throw new Error("figure group");
       expect(body.children.every((it) => it.k === "p")).toBe(true);
     }
-    expect(new Set(drawings.map((d) => JSON.stringify(d))).size).toBe(5);
+    expect(new Set(drawings.map((d) => JSON.stringify(d))).size).toBe(
+      STACK_AUTHOR_IDS.length,
+    );
   });
 
   it("화면에서는 선을 세 벌 그려 떨리게 하고, 공유 이미지는 한 벌만 그린다", () => {
