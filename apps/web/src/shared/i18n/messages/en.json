@@ -951,6 +951,34 @@
         "empty": "{name} has no finished books in {year}",
         "stage_label": "{count, plural, one {# book} other {# books}} {name} read in {year}, stacked to {height}cm",
         "cta": "Build my own book tower"
+      },
+      "authors": {
+        "camus": "Albert Camus",
+        "sartre": "Jean-Paul Sartre",
+        "kundera": "Milan Kundera",
+        "woolf": "Virginia Woolf",
+        "kafka": "Franz Kafka"
+      },
+      "compare_title": "Who will stand beside your books?",
+      "compare_me": "My height",
+      "compare_authors": "Compare with an author",
+      "author_chip": "{name} · ~{cm}cm",
+      "approx_height": "Approx. {cm}cm",
+      "author_height_note": "Author heights are commonly reported estimates.",
+      "author_source": "Height reference",
+      "author_bubble_ratio": "Your tower is {percent}% as tall",
+      "author_lede": "Your tower is {percent}% of {name}’s approximate height ({cm}cm).",
+      "progress_to_author": "Up to {name}’s height",
+      "progress_over_author": "Taller than {name}!",
+      "progress_double_author": "{cm}cm to reach {times} times {name}’s height.",
+      "author_stage_label": "A {height}cm tower of {count} books beside {name}, approximately {me}cm tall",
+      "author_share": "{percent}% of {name}’s height (approx. {cm}cm).",
+      "author_short": {
+        "camus": "Camus",
+        "sartre": "Sartre",
+        "kundera": "Kundera",
+        "woolf": "Woolf",
+        "kafka": "Kafka"
       }
     }
   },

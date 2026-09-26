@@ -11,14 +11,14 @@ import {
   TOWER_HEIGHT_MAX,
   TOWER_HEIGHT_MIN,
 } from "../../../stores/use-tower-settings-store";
-import type { TowerCharacter } from "../lib/types";
+import type { TowerReaderCharacter } from "../lib/types";
 
 interface TowerHeightCardProps {
   heightCm: number;
   isDefaultHeight: boolean;
-  character: TowerCharacter;
+  character: TowerReaderCharacter;
   onHeightChange: (heightCm: number) => void;
-  onCharacterChange: (character: TowerCharacter) => void;
+  onCharacterChange: (character: TowerReaderCharacter) => void;
   className?: string;
 }
 
@@ -92,7 +92,7 @@ export function TowerHeightCard({
           >
             <Minus className="h-4 w-4" />
           </button>
-          <div className="flex items-baseline gap-1 rounded-xl border border-stone-300 bg-white px-3 py-1 focus-within:border-blue-600 focus-within:ring-3 focus-within:ring-blue-600/10">
+          <div className="flex items-baseline gap-1 rounded-xl border border-stone-300 bg-white px-3 py-1 focus-within:border-emerald-700 focus-within:ring-3 focus-within:ring-emerald-700/10">
             <input
               id="tower-height"
               type="number"

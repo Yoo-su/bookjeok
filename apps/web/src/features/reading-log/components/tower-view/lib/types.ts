@@ -57,7 +57,9 @@ export interface SceneColors {
 
 export type Mood = "calm" | "happy" | "yay" | "wow";
 
-export type TowerCharacter = "M" | "F";
+export type TowerReaderCharacter = "M" | "F";
+export type TowerAuthor = "camus" | "sartre" | "kundera" | "woolf" | "kafka";
+export type TowerCharacter = TowerReaderCharacter | TowerAuthor;
 
 /** 텍스트 폭 측정(px). 말풍선과 책 제목 줄임에 쓴다 */
 export type MeasureText = (

@@ -951,6 +951,34 @@
         "empty": "{name}님이 {year}년에 완독한 책이 없어요",
         "stage_label": "{name}님이 {year}년에 읽은 책 {count}권을 쌓은 높이 {height}cm",
         "cta": "나도 책탑 쌓아 보기"
+      },
+      "authors": {
+        "camus": "알베르 카뮈",
+        "sartre": "장폴 사르트르",
+        "kundera": "밀란 쿤데라",
+        "woolf": "버지니아 울프",
+        "kafka": "프란츠 카프카"
+      },
+      "compare_title": "누구와 나란히 세워볼까요?",
+      "compare_me": "내 키",
+      "compare_authors": "작가와 비교",
+      "author_chip": "{name} · 약 {cm}cm",
+      "approx_height": "약 {cm}cm",
+      "author_height_note": "작가의 키는 자료에 자주 등장하는 추정값이에요.",
+      "author_source": "키 참고 자료",
+      "author_bubble_ratio": "키의 {percent}%만큼 쌓았어요",
+      "author_lede": "{name}(약 {cm}cm)의 키와 비교하면, 내 책탑은 {percent}%만큼 자랐어요.",
+      "progress_to_author": "{name}의 키까지",
+      "progress_over_author": "{name}보다 높아졌어요!",
+      "progress_double_author": "{name} 키의 {times}배까지 {cm}cm 남았어요.",
+      "author_stage_label": "{count}권을 쌓은 {height}cm 책탑과 {name}(약 {me}cm)의 키 비교",
+      "author_share": "{name}(약 {cm}cm) 키의 {percent}%를 쌓았어요.",
+      "author_short": {
+        "camus": "카뮈",
+        "sartre": "사르트르",
+        "kundera": "쿤데라",
+        "woolf": "울프",
+        "kafka": "카프카"
       }
     }
   },
