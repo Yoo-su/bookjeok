@@ -92,10 +92,10 @@ describe("AuthorGreeting", () => {
     const keys = new Set<string>();
     for (let i = 0; i < 10; i++) {
       keys.add(screen.getByTestId("peek").dataset.key ?? "");
-      // 끝나면 치우고, 다음 간격(최대 10초)을 기다린다
+      // 끝나면 치우고, 다음 간격(최대 6초)을 기다린다
       act(() => vi.advanceTimersByTime(1000));
       expect(screen.queryByTestId("peek")).toBeNull();
-      act(() => vi.advanceTimersByTime(10000));
+      act(() => vi.advanceTimersByTime(6000));
     }
     expect(keys.size).toBe(10);
   });

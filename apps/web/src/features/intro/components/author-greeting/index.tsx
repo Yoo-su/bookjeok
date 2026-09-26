@@ -25,9 +25,9 @@ const AuthorPeek = dynamic(
  * 각각 약 804px·788px이다
  */
 export const GREETING_MIN_WIDTH = 820;
-/** 첫 등장과 그 뒤 간격(ms). 자주 나오면 금방 거슬린다 */
-export const GREETING_FIRST_MS = 3500;
-const GAP_MS: [number, number] = [5000, 10000];
+/** 첫 등장과, 들어간 뒤 다음 등장까지 간격(ms) */
+export const GREETING_FIRST_MS = 1500;
+const GAP_MS: [number, number] = [3000, 6000];
 const FIGURE_HEIGHT = 270;
 
 const pick = <T,>(list: readonly T[]) =>
@@ -70,6 +70,12 @@ export function AuthorGreeting() {
       io.disconnect();
     };
   }, []);
+
+  // 첫 등장 때 코드를 받기 시작하면 그만큼 늦게 나오므로 미리 받아 둔다
+  useEffect(() => {
+    if (wide && !reduce)
+      void import("@/features/reading-log/components/stack-view/author-peek");
+  }, [wide, reduce]);
 
   // 쉬었다가 조건이 맞으면 한 번 내보낸다. 보이지 않거나 다른 창이 떠 있으면 다음 차례로 넘긴다
   useEffect(() => {
