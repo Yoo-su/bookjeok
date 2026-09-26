@@ -18,6 +18,10 @@ export interface Pencil {
   fill: (cmds: Cmds, color?: string) => void;
   /** 흔들림 적은 가는 선 묶음. 해칭·주름에 쓴다 */
   hatch: (cmds: Cmds, o?: { w?: number; op?: number; color?: string }) => void;
+  /** split일 때만 머리 선을 `head`에 따로 모은다. 인사할 때 고개만 움직이려는 것 */
+  head: PathItem[];
+  headOn: () => void;
+  headOff: () => void;
 }
 
 export function createPencil(o: {
@@ -25,20 +29,30 @@ export function createPencil(o: {
   C: SceneColors;
   u: number;
   seed: number;
+  split?: boolean;
 }): Pencil {
   const { T, C, u, seed } = o;
   const items: PathItem[] = [];
+  const head: PathItem[] = [];
+  let target = items;
   let n = 0;
   const W = (cmds: Cmds, s: number, amp: number, closed: boolean) =>
     wobble(samplePath(cmds, T), s, amp, closed);
   return {
     items,
+    head,
     C,
+    headOn() {
+      if (o.split) target = head;
+    },
+    headOff() {
+      target = items;
+    },
     pen(cmds, p = {}) {
       const s = seed + (n += 3);
       const sw = (p.w ?? 1.9) * u;
       const amp = (p.a ?? 0.9) * u;
-      items.push({
+      target.push({
         k: "p",
         d: W(cmds, s, amp, !!p.closed),
         stroke: C.ink,
@@ -48,7 +62,7 @@ export function createPencil(o: {
         op: p.op ?? 0.92,
       });
       if (p.light !== false) {
-        items.push({
+        target.push({
           k: "p",
           d: W(cmds, s + 1, amp * 1.7, !!p.closed),
           stroke: C.ink,
@@ -60,14 +74,14 @@ export function createPencil(o: {
       }
     },
     fill(cmds, color = C.paper) {
-      items.push({
+      target.push({
         k: "p",
         d: W(cmds, seed + (n += 3), 0.35 * u, true),
         fill: color,
       });
     },
     hatch(cmds, p = {}) {
-      items.push({
+      target.push({
         k: "p",
         d: W(cmds, seed + (n += 3), 0.3 * u, false),
         stroke: p.color ?? C.ink,

@@ -295,8 +295,366 @@ function lapels(p: Pencil, vDepth: number, tone: string, endX = 150) {
   both(p, lapel, { w: 1.7 });
 }
 
-/** 팔과 손. 왼손(화면 왼쪽)에 가장 최근에 읽은 책을 든다 */
-function arms(p: Pencil, heldColor: string, tone: string, cuff = 474) {
+/** 들어 올린 오른팔. arm에 팔뚝·손을, heart에 손하트 위 하트를 따로 그린다 */
+export interface RaisedArm {
+  arm: Pencil;
+  hand: "open" | "heart";
+  heart?: Pencil;
+}
+
+/** 손 흔드는 팔의 팔꿈치. 팔뚝·손은 이 점을 축으로 흔든다 */
+export const WAVE_ELBOW: [number, number] = [282, 330];
+
+/**
+ * 들어 올린 오른팔(화면 오른쪽). 윗팔은 몸과 함께 그리고,
+ * 팔뚝·손은 따로 받은 연필에 그려 팔꿈치를 축으로 흔들 수 있게 한다.
+ */
+function raisedArm(p: Pencil, raise: RaisedArm, tone: string) {
+  const wave = raise.arm;
+  const [ex, ey] = WAVE_ELBOW;
+  // 어깨에서 바깥 아래로 뻗은 윗팔. 안쪽 끝은 몸판에 가려진다
+  const outer: Cmds = [
+    "M",
+    228,
+    190,
+    "Q",
+    252,
+    187,
+    259,
+    198,
+    "L",
+    ex + 21,
+    ey - 7,
+  ];
+  p.fill(
+    [
+      ...outer,
+      "C",
+      ex + 22,
+      ey + 16,
+      ex - 20,
+      ey + 20,
+      ex - 21,
+      ey + 7,
+      "L",
+      217,
+      212,
+      "L",
+      228,
+      190,
+    ],
+    tone,
+  );
+  // 어깨·안쪽 선. 몸판과 팔뚝 사이로 보이는 윗팔에 윤곽이 없으면 팔뚝이 떠 보인다
+  p.pen(outer);
+  p.pen(["M", 217, 212, "L", ex - 21, ey + 7]);
+  // 팔꿈치에서 위로 세운 팔뚝
+  const fore: Cmds = [
+    "M",
+    ex - 20,
+    ey - 1,
+    "L",
+    272,
+    207,
+    "L",
+    312,
+    209,
+    "L",
+    ex + 20,
+    ey + 1,
+    "C",
+    ex + 22,
+    ey + 24,
+    ex - 22,
+    ey + 24,
+    ex - 20,
+    ey - 1,
+  ];
+  wave.fill(fore, tone);
+  wave.pen(["M", ex - 20, ey - 1, "L", 272, 207]);
+  wave.pen(["M", ex + 20, ey + 1, "L", 312, 209]);
+  wave.pen([
+    "M",
+    ex + 20,
+    ey + 1,
+    "C",
+    ex + 22,
+    ey + 24,
+    ex - 22,
+    ey + 24,
+    ex - 20,
+    ey - 1,
+  ]);
+  wave.pen(["M", 272, 214, "L", 312, 216], { w: 1.2, light: false });
+  if (raise.hand === "heart") fingerHeart(wave, raise.heart);
+  else openHand(wave);
+}
+
+/** 편 손바닥과 엄지. 흔들면 인사가 된다 */
+function openHand(wave: Pencil) {
+  const palm: Cmds = [
+    "M",
+    276,
+    210,
+    "C",
+    271,
+    190,
+    271,
+    170,
+    277,
+    157,
+    "C",
+    282,
+    145,
+    300,
+    143,
+    306,
+    154,
+    "C",
+    311,
+    166,
+    312,
+    188,
+    309,
+    210,
+  ];
+  wave.fill([...palm, "L", 276, 210]);
+  wave.pen(palm, { w: 1.7 });
+  const thumb: Cmds = [
+    "M",
+    276,
+    190,
+    "C",
+    266,
+    186,
+    259,
+    177,
+    262,
+    170,
+    "C",
+    265,
+    165,
+    273,
+    170,
+    277,
+    176,
+  ];
+  wave.fill([...thumb, "L", 276, 190]);
+  wave.pen(thumb, { w: 1.6 });
+  wave.hatch(
+    [
+      "M",
+      285,
+      150,
+      "L",
+      286,
+      168,
+      "M",
+      293,
+      147,
+      "L",
+      293,
+      168,
+      "M",
+      300,
+      150,
+      "L",
+      299,
+      168,
+    ],
+    { w: 1.1, op: 0.55 },
+  );
+}
+
+/** 손하트 위로 떠오르는 하트. 작게 그리면 손 모양만으로는 알아보기 어렵다 */
+export const HEART_CENTER: [number, number] = [300, 88];
+const HEART_TONE = "#F2798A";
+
+/**
+ * 손하트. 주먹 위로 엄지와 검지를 X자로 교차해 세운다. 무대에서 손은 15px 안팎이라
+ * 두 손가락을 굵게 그리고, 하트 기호를 따로(heart) 그려 띄운다.
+ */
+function fingerHeart(wave: Pencil, heart?: Pencil) {
+  // 검지와 엄지는 주먹 윗선에서 엇갈리게 먼저 그려 둥근 두 손끝만 하트의 두 볼처럼 내민다.
+  // 엇갈린 선이 주먹 위로 길게 보이면 가위처럼 보인다
+  const index: Cmds = [
+    "M",
+    282,
+    188,
+    "C",
+    287,
+    177,
+    292,
+    167,
+    296,
+    158,
+    "C",
+    300,
+    147,
+    314,
+    148,
+    311,
+    160,
+    "C",
+    308,
+    170,
+    302,
+    181,
+    297,
+    191,
+  ];
+  wave.fill([...index, "L", 282, 188]);
+  wave.pen(index, { w: 1.7 });
+  const thumb: Cmds = [
+    "M",
+    309,
+    193,
+    "C",
+    305,
+    182,
+    300,
+    171,
+    295,
+    161,
+    "C",
+    290,
+    150,
+    275,
+    152,
+    280,
+    164,
+    "C",
+    284,
+    174,
+    289,
+    184,
+    293,
+    195,
+  ];
+  wave.fill([...thumb, "L", 309, 193]);
+  wave.pen(thumb, { w: 1.7 });
+  // 주먹은 나중에 그려 손가락 아랫부분을 덮는다
+  const fist: Cmds = [
+    "M",
+    275,
+    212,
+    "C",
+    271,
+    199,
+    272,
+    188,
+    279,
+    181,
+    "C",
+    288,
+    174,
+    302,
+    174,
+    309,
+    181,
+    "C",
+    314,
+    189,
+    313,
+    202,
+    309,
+    212,
+  ];
+  wave.fill([...fist, "L", 275, 212]);
+  wave.pen(fist, { w: 1.7 });
+  // 말아 쥔 손가락 마디
+  wave.hatch(
+    [
+      "M",
+      280,
+      192,
+      "Q",
+      294,
+      187,
+      308,
+      193,
+      "M",
+      279,
+      202,
+      "Q",
+      294,
+      198,
+      309,
+      204,
+    ],
+    { w: 1.1, op: 0.55 },
+  );
+  // 엄지손톱
+  wave.hatch(["M", 282, 162, "Q", 285, 155, 291, 157], { w: 1.1, op: 0.55 });
+  if (!heart) return;
+  const [hx, hy] = HEART_CENTER;
+  const shape: Cmds = [
+    "M",
+    hx,
+    hy + 30,
+    "C",
+    hx - 40,
+    hy + 4,
+    hx - 32,
+    hy - 28,
+    hx - 14,
+    hy - 28,
+    "C",
+    hx - 5,
+    hy - 28,
+    hx,
+    hy - 20,
+    hx,
+    hy - 14,
+    "C",
+    hx,
+    hy - 20,
+    hx + 5,
+    hy - 28,
+    hx + 14,
+    hy - 28,
+    "C",
+    hx + 32,
+    hy - 28,
+    hx + 40,
+    hy + 4,
+    hx,
+    hy + 30,
+  ];
+  heart.fill(shape, HEART_TONE);
+  heart.pen(shape, { w: 1.8, closed: true });
+  heart.hatch(
+    [
+      "M",
+      hx - 22,
+      hy - 12,
+      "C",
+      hx - 20,
+      hy - 18,
+      hx - 16,
+      hy - 21,
+      hx - 11,
+      hy - 21,
+    ],
+    {
+      w: 2,
+      op: 0.7,
+      color: "#FFFFFF",
+    },
+  );
+}
+
+/**
+ * 팔과 손. 왼손(화면 왼쪽)에 가장 최근에 읽은 책을 든다.
+ * raise가 있으면 오른팔을 들어 올리고 팔뚝·손은 따로 그린다.
+ */
+function arms(
+  p: Pencil,
+  heldColor: string,
+  tone: string,
+  cuff = 474,
+  raise?: RaisedArm,
+) {
   const sleeve: Cmds = [
     "M",
     60,
@@ -320,10 +678,14 @@ function arms(p: Pencil, heldColor: string, tone: string, cuff = 474) {
     252,
   ];
   p.fill([...sleeve, "L", 60, 196], tone);
-  p.fill([...mirror(sleeve), "L", 240, 196], tone);
-  both(p, sleeve);
+  if (!raise) p.fill([...mirror(sleeve), "L", 240, 196], tone);
+  // 평소 모습은 선 순서(흔들림 시드)를 바꾸지 않는다
+  if (raise) p.pen(sleeve);
+  else both(p, sleeve);
   // 셔츠 소맷부리
-  both(p, ["M", 34, cuff, "L", 72, cuff + 1], { w: 1.2, light: false });
+  const cuffLine: Cmds = ["M", 34, cuff, "L", 72, cuff + 1];
+  if (raise) p.pen(cuffLine, { w: 1.2, light: false });
+  else both(p, cuffLine, { w: 1.2, light: false });
   const bc = rectCorners(42, cuff + 48, 62, 86, 0.14);
   p.fill(
     ["M", ...bc[0], "L", ...bc[1], "L", ...bc[2], "L", ...bc[3], "L", ...bc[0]],
@@ -370,8 +732,11 @@ function arms(p: Pencil, heldColor: string, tone: string, cuff = 474) {
     cuff + 2,
   ];
   p.fill([...hand, "L", 36, cuff + 2]);
-  p.fill([...mirror(hand), "L", 264, cuff + 2]);
-  both(p, hand, { w: 1.7 });
+  if (!raise) p.fill([...mirror(hand), "L", 264, cuff + 2]);
+  if (raise) {
+    p.pen(hand, { w: 1.7 });
+    raisedArm(p, raise, tone);
+  } else both(p, hand, { w: 1.7 });
 }
 
 /** 목. 옷깃 위로 보이는 만큼만 */
@@ -466,11 +831,11 @@ function face(p: Pencil, o: { top: number; chin: number; half: number }) {
  * 카프카. 뾰족한 이마선의 검은 올백 머리, 튀어나온 큰 귀, 크고 검은 눈,
  * 빳빳한 흰 칼라에 짙은 쓰리피스.
  */
-function kafka(p: Pencil, heldColor: string) {
+function kafka(p: Pencil, heldColor: string, raise?: RaisedArm) {
   const v = 318;
   trousers(p, 560, TONE.suit);
   shoes(p);
-  arms(p, heldColor, TONE.suit);
+  arms(p, heldColor, TONE.suit, undefined, raise);
   jacket(p, { hem: 575, tone: TONE.suit, vDepth: v, buttons: [350, 410] });
   shirtAndTie(p, v, TONE.dark);
   // 조끼. 옷깃 안쪽으로 조끼 여밈과 단추가 보인다
@@ -500,6 +865,7 @@ function kafka(p: Pencil, heldColor: string) {
   p.fill([...mirror(collar), "Z"]);
   both(p, collar, { w: 1.5 });
 
+  p.headOn();
   // 큰 귀
   const ear: Cmds = [
     "M",
@@ -648,16 +1014,17 @@ function kafka(p: Pencil, heldColor: string) {
  * 사르트르. 두꺼운 동그란 뿔테, 입에 문 파이프, 벗겨진 이마로 넘긴 회색 머리,
  * 한쪽 눈이 바깥을 보는 사시. 작은 키는 축척이 알아서 보여 준다.
  */
-function sartre(p: Pencil, heldColor: string) {
+function sartre(p: Pencil, heldColor: string, raise?: RaisedArm) {
   const v = 310;
   trousers(p, 565, TONE.tweed);
   shoes(p);
-  arms(p, heldColor, TONE.tweed);
+  arms(p, heldColor, TONE.tweed, undefined, raise);
   jacket(p, { hem: 582, tone: TONE.tweed, vDepth: v, buttons: [345, 402] });
   shirtAndTie(p, v, TONE.dark);
   lapels(p, v, TONE.tweed);
   neck(p, 128, 176);
   shirtCollar(p);
+  p.headOn();
   ears(p);
   face(p, { top: 58, chin: 146, half: 48 });
 
@@ -848,12 +1215,16 @@ function sartre(p: Pencil, heldColor: string) {
  * 카뮈. 깃을 세운 트렌치코트(벨트·더블 단추), 입꼬리의 담배,
  * 옆가르마로 넘긴 검은 머리와 살짝 내리깐 눈.
  */
-function camus(p: Pencil, heldColor: string) {
+function camus(p: Pencil, heldColor: string, raise?: RaisedArm) {
   const hem = 718;
   trousers(p, 690, TONE.mid);
   shoes(p);
-  arms(p, heldColor, TONE.coat);
-  both(p, ["M", 32, 440, "L", 74, 443], { w: 1.2, light: false, op: 0.6 });
+  arms(p, heldColor, TONE.coat, undefined, raise);
+  // 팔을 들면 오른쪽 소매가 없어 선이 허공에 뜬다
+  const sleeveLine: Cmds = ["M", 32, 440, "L", 74, 443];
+  const sleeveStyle = { w: 1.2, light: false, op: 0.6 };
+  if (raise) p.pen(sleeveLine, sleeveStyle);
+  else both(p, sleeveLine, sleeveStyle);
 
   // 아래로 퍼지는 코트 몸판
   const body: Cmds = [
@@ -1011,6 +1382,7 @@ function camus(p: Pencil, heldColor: string) {
   p.fill([...collar, "Z"], TONE.coat);
   p.fill([...mirror(collar), "Z"], TONE.coat);
   both(p, collar, { w: 1.7 });
+  p.headOn();
   ears(p);
   face(p, { top: 62, chin: 148, half: 45 });
 
@@ -1163,9 +1535,10 @@ function camus(p: Pencil, heldColor: string) {
  * 울프. 가운데 가르마로 귀를 덮어 넘긴 머리와 뒤로 보이는 낮은 쪽머리,
  * 긴 얼굴·긴 코·내리깐 눈, 목이 올라온 발목까지의 원피스.
  */
-function woolf(p: Pencil, heldColor: string) {
+function woolf(p: Pencil, heldColor: string, raise?: RaisedArm) {
   shoes(p);
   // 뒤로 묶은 쪽머리와 뒷머리. 얼굴보다 먼저 그려 뒤에 놓는다
+  p.headOn();
   p.fill(ell(208, 136, 19, 17), TONE.brown);
   p.pen(ell(208, 136, 19, 17), { closed: true });
   p.hatch(
@@ -1196,8 +1569,9 @@ function woolf(p: Pencil, heldColor: string) {
       color: p.C.paper,
     },
   );
+  p.headOff();
   neck(p, 120, 180);
-  arms(p, heldColor, TONE.dress, 470);
+  arms(p, heldColor, TONE.dress, 470, raise);
 
   // 원피스. 허리를 잘록하게 잡고 발목까지 퍼진다
   const dress: Cmds = [
@@ -1343,6 +1717,7 @@ function woolf(p: Pencil, heldColor: string) {
   // 둥글게 올라온 목선
   p.pen(["M", 130, 174, "C", 138, 188, 162, 188, 170, 174], { w: 1.6 });
 
+  p.headOn();
   face(p, { top: 58, chin: 158, half: 40 });
   // 가운데 가르마로 귀를 덮어 넘긴 앞머리
   const hair: Cmds = [
@@ -1466,11 +1841,11 @@ function woolf(p: Pencil, heldColor: string) {
 /**
  * 쿤데라. 숱 많은 은발, 미간을 찌푸린 굵은 눈썹, 검은 터틀넥 위에 앞을 연 재킷.
  */
-function kundera(p: Pencil, heldColor: string) {
+function kundera(p: Pencil, heldColor: string, raise?: RaisedArm) {
   const hem = 590;
   trousers(p, 575, TONE.mid);
   shoes(p);
-  arms(p, heldColor, TONE.mid);
+  arms(p, heldColor, TONE.mid, undefined, raise);
   jacket(p, { hem, tone: TONE.mid, vDepth: hem, buttons: [], open: true });
   // 열린 앞섶 사이로 보이는 터틀넥
   p.fill(
@@ -1531,6 +1906,7 @@ function kundera(p: Pencil, heldColor: string) {
   const ribs: Cmds = [];
   for (let x = 136; x <= 164; x += 7) ribs.push("M", x, 160, "L", x, 182);
   p.hatch(ribs, { op: 0.3, color: p.C.paper });
+  p.headOn();
   ears(p);
   face(p, { top: 62, chin: 150, half: 46 });
 
@@ -1710,8 +2086,8 @@ function kundera(p: Pencil, heldColor: string) {
 /** 작가 캐리커처. 표정은 고정이고 들고 있는 책 색만 바뀐다 */
 export function drawAuthor(
   p: Pencil,
-  o: { author: StackAuthor; heldColor: string },
+  o: { author: StackAuthor; heldColor: string; raise?: RaisedArm },
 ) {
   const draw = { kafka, sartre, camus, woolf, kundera }[o.author];
-  draw(p, o.heldColor);
+  draw(p, o.heldColor, o.raise);
 }

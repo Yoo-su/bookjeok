@@ -20,6 +20,7 @@ export function GlobalMusicHost() {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const isIframeReadyRef = useRef<boolean>(false);
   const lastLoadedIdRef = useRef<string | null>(null);
+  const handshakeTimerRef = useRef<number | null>(null);
 
   // Extract YouTube ID if it's a YouTube URL
   const getYoutubeId = (url: string) => {
@@ -78,16 +79,42 @@ export function GlobalMusicHost() {
     [currentYoutubeId, sendYoutubeCommand],
   );
 
+  const stopHandshake = useCallback(() => {
+    if (handshakeTimerRef.current !== null) {
+      window.clearInterval(handshakeTimerRef.current);
+      handshakeTimerRef.current = null;
+    }
+  }, []);
+
+  // 플레이어 JS가 뜨기 전의 listening은 버려지므로 응답이 올 때까지 반복
+  const startHandshake = useCallback(() => {
+    stopHandshake();
+    isIframeReadyRef.current = false;
+    const post = () =>
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: "listening", id: 1, channel: "widget" }),
+        "*",
+      );
+    post();
+    handshakeTimerRef.current = window.setInterval(post, 250);
+  }, [stopHandshake]);
+
+  useEffect(() => stopHandshake, [stopHandshake]);
+
   // Initialize YouTube iframe message listener
   useEffect(() => {
     const handleWindowMessage = (event: MessageEvent) => {
       if (typeof event.data !== "string") return;
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      stopHandshake();
       try {
         const parsed = JSON.parse(event.data);
 
         // YouTube PlayerState: onReady
         if (parsed.event === "onReady") {
           isIframeReadyRef.current = true;
+          // 구독하지 않으면 onStateChange(곡 종료)가 오지 않음
+          sendYoutubeCommand("addEventListener", ["onStateChange"]);
           applyVolume(volume);
           if (isPlaying) {
             sendYoutubeCommand("playVideo");
@@ -117,6 +144,7 @@ export function GlobalMusicHost() {
     isPlaying,
     applyVolume,
     sendYoutubeCommand,
+    stopHandshake,
   ]);
 
   // Handle Track Changes (switch video without recreating iframe DOM node)
@@ -195,8 +223,7 @@ export function GlobalMusicHost() {
   };
 
   const handleIframeLoad = () => {
-    // Handshake with YouTube Iframe API
-    sendYoutubeCommand("listening");
+    startHandshake();
     applyVolume(volume);
     if (isPlaying) {
       sendYoutubeCommand("playVideo");

@@ -20,6 +20,13 @@ export function buildFigure(opts: {
   character: StackCharacter;
   heldColor: string;
   boil: boolean;
+  /**
+   * 작가만. 오른팔을 들고 팔뚝·손을 `peek-forearm` 묶음으로 따로 둔다.
+   * heart면 손하트를 하고 위에 뜨는 하트를 `peek-heart` 묶음으로 둔다
+   */
+  arm?: "wave" | "heart";
+  /** 작가만. 머리를 `peek-head` 묶음으로 따로 둬 고개만 움직일 수 있게 한다 */
+  peek?: boolean;
 }): SceneItem[] {
   const { fx, fy, k, colors: C, u, mood, character, heldColor, boil } = opts;
   const T = (x: number, y: number): [number, number] => [
@@ -46,15 +53,44 @@ export function buildFigure(opts: {
 
   const variants = boil ? [0, 1, 2] : [0];
   for (const v of variants) {
-    const p = createPencil({ T, C, u, seed: 211 + v * 53 });
+    const p = createPencil({ T, C, u, seed: 211 + v * 53, split: opts.peek });
+    const author = character !== "M" && character !== "F";
+    const arm =
+      opts.arm && author
+        ? createPencil({ T, C, u, seed: 911 + v * 53 })
+        : undefined;
+    const heart =
+      opts.arm === "heart" && author
+        ? createPencil({ T, C, u, seed: 977 + v * 53 })
+        : undefined;
     if (character === "M" || character === "F")
       drawReader(p, { character, mood, heldColor });
-    else drawAuthor(p, { author: character, heldColor });
+    else
+      drawAuthor(p, {
+        author: character,
+        heldColor,
+        raise: arm && {
+          arm,
+          hand: opts.arm === "heart" ? "heart" : "open",
+          heart,
+        },
+      });
     out.push({
       k: "g",
       id: `figure-${v}`,
       cls: boil ? `stack-boil stack-boil-${v}` : "stack-figure",
-      children: p.items,
+      children: [
+        ...p.items,
+        ...(p.head.length
+          ? [{ k: "g" as const, cls: "peek-head", children: p.head }]
+          : []),
+        ...(arm
+          ? [{ k: "g" as const, cls: "peek-forearm", children: arm.items }]
+          : []),
+        ...(heart
+          ? [{ k: "g" as const, cls: "peek-heart", children: heart.items }]
+          : []),
+      ],
     });
   }
   return out;
