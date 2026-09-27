@@ -112,9 +112,7 @@ export class ReadingLogController {
     return this.readingLogService.getStats(req.user.id, year, month);
   }
 
-  // 'tower'는 이름을 바꾸기 전 경로. develop 푸시로 서버가 먼저 배포되는 동안 운영 웹(main)이 부른다.
-  // 웹이 main에 반영되면 지운다.
-  @Get(['stack', 'tower'])
+  @Get('stack')
   @ApiOperation({
     summary: '독서 키재기 조회',
     description:

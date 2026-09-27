@@ -137,7 +137,6 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 - 도서는 제목·저자·출판사·표지만 읽습니다(`description` 제외).
 - 표지색이 없으면 `coverColor: null`로 두고 웹이 대체색을 고릅니다.
 - 테이블은 `docs/manual-ddl-log.md` 11절. 이 테이블이 없는 DB에 배포하면 이 API가 500을 냅니다.
-- **옛 경로 `/tower`도 임시로 받습니다.** 2026-09-26 기능 이름을 「책탑」에서 「독서 키재기」로 바꾸며 경로를 `stack`으로 옮겼습니다. 서버는 develop 푸시에도 운영에 배포되는데 운영 웹은 main 기준이라, 웹이 main에 반영될 때까지 옛 웹이 `/reading-logs/tower`·`/users/:handle/tower`를 부릅니다. 웹 반영 후 두 컨트롤러의 `'tower'` 경로와 `reading-stack-routes.spec.ts`의 기대값을 함께 지우세요.
 
 `getPublicStack(handle, year)` — `GET /reading-logs/users/:handle/stack?year=`(`PublicReadingLogController`, **인증 없음**). 공개 프로필의 독서 키재기입니다. 핸들이 정확히 일치해야 하고(공개 프로필 조회의 닉네임·ID 대체 검색은 하지 않음), 없거나 탈퇴한 사용자는 404(`USER_NOT_FOUND`)입니다. **독서 기록이 비공개면 기록이 없는 것처럼 빈 목록**을 돌려줍니다 — 공개 프로필 응답의 `readingLogs`와 같은 규칙입니다. 한줄평이 포함되는데, 공개 프로필 리스트·캘린더에서도 이미 보이던 정보입니다.
 

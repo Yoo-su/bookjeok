@@ -15,8 +15,7 @@ import { ReadingLogService } from '../services/reading-log.service';
 export class PublicReadingLogController {
   constructor(private readonly readingLogService: ReadingLogService) {}
 
-  // ':handle/tower'는 이름을 바꾸기 전 경로. 운영 웹이 main에 반영되면 지운다(reading-log.controller 참고).
-  @Get([':handle/stack', ':handle/tower'])
+  @Get(':handle/stack')
   @ApiOperation({
     summary: '공개 프로필 독서 키재기 조회',
     description:
