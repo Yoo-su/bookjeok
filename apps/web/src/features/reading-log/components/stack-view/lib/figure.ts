@@ -1,8 +1,16 @@
 import { drawAuthor } from "./figure-authors";
+import { drawObject } from "./figure-objects";
 import { drawReader } from "./figure-reader";
+import { OBJECT_ART } from "./objects";
 import { createPencil } from "./pencil";
 import { f1 } from "./sketch";
-import type { Mood, SceneColors, SceneItem, StackCharacter } from "./types";
+import type {
+  Mood,
+  SceneColors,
+  SceneItem,
+  StackCharacter,
+  StackObject,
+} from "./types";
 
 /**
  * 연필로 대충 그린 사람. 300×1000 단위로 그리고 (fx, fy)에서 k배로 늘린다.
@@ -91,6 +99,63 @@ export function buildFigure(opts: {
           ? [{ k: "g" as const, cls: "peek-heart", children: heart.items }]
           : []),
       ],
+    });
+  }
+  return out;
+}
+
+/**
+ * 사물 사다리의 사물. 캐릭터와 같은 연필로 그린다. 세로 0~1000 단위를 (fx, fy)에서 k배로 늘리고,
+ * 가로는 `OBJECT_ART`의 범위를 쓴다. boil이면 캐릭터처럼 세 벌을 번갈아 보인다.
+ */
+export function buildObject(opts: {
+  fx: number;
+  fy: number;
+  k: number;
+  colors: SceneColors;
+  u: number;
+  object: StackObject;
+  heldColor: string;
+  boil: boolean;
+}): SceneItem[] {
+  const { fx, fy, k, colors: C, u, object, heldColor, boil } = opts;
+  const T = (x: number, y: number): [number, number] => [
+    fx + x * k,
+    fy + y * k,
+  ];
+  const [x0, x1] = OBJECT_ART[object].x;
+  const out: SceneItem[] = [];
+
+  // 발밑 그림자. 사물이 작아도 몇 가닥은 보이게 간격을 px로 잡는다
+  const [left, floor] = T(x0, 1004);
+  const [right] = T(x1, 1004);
+  const half = (right - left) / 2;
+  const mid = left + half;
+  const step = Math.max(3.2 * u, Math.min(11 * k, half / 3));
+  let hatchShadow = "";
+  for (let x = -half * 0.95; x <= half * 0.95; x += step) {
+    const e = 1 - (x / (half * 1.05)) ** 2;
+    const len = Math.min(10 * k, 5 * u) * e + 2 * u;
+    hatchShadow += `M${f1(mid + x)},${f1(floor)} L${f1(mid + x + len * 0.8)},${f1(floor + len)} `;
+  }
+  out.push({
+    k: "p",
+    d: hatchShadow,
+    stroke: C.ink,
+    sw: 1 * u,
+    cap: "round",
+    op: 0.35,
+  });
+
+  const variants = boil ? [0, 1, 2] : [0];
+  for (const v of variants) {
+    const p = createPencil({ T, C, u, seed: 431 + v * 53 });
+    drawObject(p, { object, heldColor });
+    out.push({
+      k: "g",
+      id: `object-${v}`,
+      cls: boil ? `stack-boil stack-boil-${v}` : "stack-figure",
+      children: p.items,
     });
   }
   return out;

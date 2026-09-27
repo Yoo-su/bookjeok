@@ -17,10 +17,10 @@ import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
 import { READING_LOG_MIN_YEAR } from "../../../constants/ui";
-import { cm1 } from "../hooks/use-stack-copy";
+import { cm1, useStackCopy } from "../hooks/use-stack-copy";
 import { StackBookDialog } from "../stack-book-dialog";
 import { StackOrderList } from "../stack-order-list";
-import { StackStage } from "../stack-stage";
+import { StackStage, type StackStageObject } from "../stack-stage";
 
 interface PublicReadingStackProps {
   handle: string;
@@ -30,7 +30,7 @@ interface PublicReadingStackProps {
 }
 
 /**
- * 공개 프로필의 독서 키재기. 주인의 키는 기기에만 있으므로 캐릭터 없이 쌓은 책만 세운다.
+ * 공개 프로필의 독서 키재기. 주인의 키는 기기에만 있으므로 사람 대신 사물 사다리의 다음 사물을 세운다.
  * 공유·키 입력은 없다.
  */
 export function PublicReadingStack({
@@ -39,6 +39,7 @@ export function PublicReadingStack({
   initialYear,
 }: PublicReadingStackProps) {
   const t = useTranslations("reading_log.stack");
+  const { objectScene, objectName, len } = useStackCopy();
   const thisYear = new Date().getFullYear();
   const [year, setYear] = useState(initialYear);
   const { data, isLoading, isError, refetch } = usePublicReadingStackQuery(
@@ -53,6 +54,10 @@ export function PublicReadingStack({
     [books],
   );
   const estimated = books.filter((b) => b.sizeSource === "estimated").length;
+  const object = useMemo<StackStageObject>(() => {
+    const o = objectScene(stackMm, books.length ? stackMm / books.length : 20);
+    return { spec: o.object, labels: o.labels };
+  }, [objectScene, stackMm, books.length]);
 
   const [replayKey, setReplayKey] = useState(0);
   const [selected, setSelected] = useState<ReadingStackBook | null>(null);
@@ -113,7 +118,7 @@ export function PublicReadingStack({
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-[380px] w-full rounded-2xl md:h-[440px]" />
+        <Skeleton className="h-[300px] w-full rounded-2xl md:h-[420px]" />
       ) : isError ? (
         <div className="grid justify-items-center gap-3 rounded-2xl border border-stone-200 bg-stone-50 px-6 py-12 text-center">
           <p className="text-[15px] font-semibold text-stone-900">
@@ -133,10 +138,7 @@ export function PublicReadingStack({
         </p>
       ) : (
         <div className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white bg-[radial-gradient(#e2e0dd_1.1px,transparent_1.4px)] bg-[length:16px_16px] bg-[position:6px_6px] px-3 pb-1.5 pt-2.5">
-          <div className="relative z-[1] flex items-center justify-between px-0.5 pb-1">
-            <span className="font-[family-name:var(--font-gaegu)] text-[15px] font-bold text-stone-400">
-              {t("scale_hint")}
-            </span>
+          <div className="relative z-[1] flex items-center justify-end px-0.5 pb-1">
             <button
               type="button"
               onClick={() => setReplayKey((k) => k + 1)}
@@ -151,6 +153,8 @@ export function PublicReadingStack({
             key={year}
             books={books}
             stackMm={stackMm}
+            object={object}
+            objectMaxHeight={440}
             className="h-[380px] md:h-[440px]"
             replayKey={replayKey}
             onStackClick={() =>
@@ -160,12 +164,12 @@ export function PublicReadingStack({
               })
             }
             stackClickLabel={t("view_stack")}
-            ariaLabel={t("public.stage_label", {
+            ariaLabel={`${t("public.stage_label", {
               name: nickname,
               year,
               count: books.length,
               height: cm1(stackMm),
-            })}
+            })}, ${objectName(object.spec.id, "name")} ${len(object.spec.heightMm)}`}
           />
           {estimated > 0 && (
             <p className="px-1 pb-1 text-[11.5px] text-stone-400">

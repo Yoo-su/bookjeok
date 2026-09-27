@@ -41,7 +41,13 @@ beforeEach(() => {
 
 const books = SAMPLE_BOOKS.slice(0, 8);
 
-function setup() {
+const OBJECT = {
+  spec: { id: "dachshund" as const, heightMm: 300 },
+  labels: { myHeight: "object" } as never,
+  subline: "object-subline",
+};
+
+function setup(initialMode: "object" | "person" = "person") {
   return render(
     <StackShareDialog
       open
@@ -52,8 +58,10 @@ function setup() {
       userMm={1730}
       character="M"
       status={{} as never}
-      labels={{} as never}
-      texts={{} as never}
+      labels={{ myHeight: "person" } as never}
+      texts={{ subline: "person-subline" } as never}
+      initialMode={initialMode}
+      object={OBJECT}
     />,
   );
 }
@@ -97,5 +105,26 @@ describe("StackShareDialog 제목 넣을 책", () => {
       .filter((b) => (b as HTMLInputElement).checked)
       .forEach((b) => fireEvent.click(b));
     await waitFor(() => expect(lastLegend()).toBeUndefined());
+  });
+});
+
+describe("StackShareDialog 비교 대상", () => {
+  const lastCall = () => renderImage.mock.calls.at(-1)?.[0];
+
+  it("화면에서 보던 사물 탭으로 열고 사물 장면과 부제를 넘긴다", async () => {
+    setup("object");
+    await waitFor(() => expect(renderImage).toHaveBeenCalled());
+    expect(lastCall().object).toEqual(OBJECT.spec);
+    expect(lastCall().labels).toEqual(OBJECT.labels);
+    expect(lastCall().texts.subline).toBe("object-subline");
+  });
+
+  it("사람으로 바꾸면 사물 없이 다시 그린다", async () => {
+    setup("object");
+    await waitFor(() => expect(renderImage).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "mode_person" }));
+    await waitFor(() => expect(lastCall().object).toBeUndefined());
+    expect(lastCall().labels).toEqual({ myHeight: "person" });
+    expect(lastCall().texts.subline).toBe("person-subline");
   });
 });

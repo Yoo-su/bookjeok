@@ -15,6 +15,7 @@ import {
 import { cn } from "@/shared/utils";
 import { gaegu, gowun_batang } from "@/styles/fonts";
 
+import type { StackCompareMode } from "../../../stores/use-stack-settings-store";
 import { LEGEND_MAX } from "../lib/legend";
 import { bookColor, type SceneLabels } from "../lib/scene";
 import {
@@ -25,6 +26,7 @@ import {
 import type { StackStatus } from "../lib/status";
 import type { StackCharacter } from "../lib/types";
 import { StackHeightChip } from "../stack-height-chip";
+import type { StackStageObject } from "../stack-stage";
 
 interface StackShareDialogProps {
   open: boolean;
@@ -37,6 +39,10 @@ interface StackShareDialogProps {
   status: StackStatus;
   labels: SceneLabels;
   texts: ShareTexts;
+  /** 열 때 고를 비교 대상. 화면에서 보던 탭 */
+  initialMode: StackCompareMode;
+  /** 사물 무대와 그 부제 */
+  object: StackStageObject & { subline: string };
 }
 
 function download(blob: Blob, filename: string) {
@@ -55,10 +61,20 @@ export function StackShareDialog({
   open,
   onOpenChange,
   year,
+  initialMode,
+  object,
   ...scene
 }: StackShareDialogProps) {
   const t = useTranslations("reading_log.stack.share");
+  const tStack = useTranslations("reading_log.stack");
   const [format, setFormat] = useState<ShareFormat>("story");
+  const [mode, setMode] = useState(initialMode);
+  // 열 때마다 화면에서 보던 탭으로 시작한다
+  useEffect(() => {
+    if (open) setMode(initialMode);
+  }, [open, initialMode]);
+  const objectRef = useRef(object);
+  objectRef.current = object;
   const [image, setImage] = useState<{ url: string; blob: Blob } | null>(null);
   const [failed, setFailed] = useState(false);
   const [rendering, setRendering] = useState(false);
@@ -109,9 +125,15 @@ export function StackShareDialog({
     // 키 슬라이더를 끄는 동안 매번 다시 그리지 않게 잠깐 기다린다
     const timer = setTimeout(async () => {
       try {
+        const o = objectRef.current;
         const canvas = await renderStackShareImage({
           format,
           ...sceneRef.current,
+          ...(mode === "object" && {
+            object: o.spec,
+            labels: o.labels,
+            texts: { ...sceneRef.current.texts, subline: o.subline },
+          }),
           legend: legendRef.current,
           fonts: {
             hand: gaegu.style.fontFamily,
@@ -137,7 +159,15 @@ export function StackShareDialog({
       clearTimeout(timer);
       if (url) URL.revokeObjectURL(url);
     };
-  }, [open, format, scene.userMm, scene.character, legendKey]);
+  }, [
+    open,
+    format,
+    mode,
+    scene.userMm,
+    scene.character,
+    object.spec.id,
+    legendKey,
+  ]);
 
   const filename = `bookjeok-reading-height-${year}.png`;
 
@@ -188,6 +218,28 @@ export function StackShareDialog({
         <div className="flex flex-wrap items-center justify-center gap-2">
           <div
             role="group"
+            aria-label={t("mode_label")}
+            className="inline-flex gap-0.5 rounded-full bg-stone-100 p-[3px]"
+          >
+            {(["object", "person"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={mode === m}
+                onClick={() => setMode(m)}
+                className={cn(
+                  "cursor-pointer rounded-full px-3 py-1.5 text-[12.5px] font-semibold",
+                  mode === m
+                    ? "bg-white text-stone-900 shadow-sm"
+                    : "text-stone-500",
+                )}
+              >
+                {tStack(m === "object" ? "mode_object" : "mode_person")}
+              </button>
+            ))}
+          </div>
+          <div
+            role="group"
             aria-label={t("format_label")}
             className="inline-flex gap-0.5 rounded-full bg-stone-100 p-[3px]"
           >
@@ -208,7 +260,7 @@ export function StackShareDialog({
               </button>
             ))}
           </div>
-          <StackHeightChip />
+          {mode === "person" && <StackHeightChip />}
         </div>
         <div className="rounded-2xl border border-stone-200 px-3.5 py-2.5">
           <div className="flex items-center justify-between gap-2">

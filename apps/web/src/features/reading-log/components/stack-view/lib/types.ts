@@ -60,6 +60,21 @@ export type Mood = "calm" | "happy" | "yay" | "wow";
 export type StackReaderCharacter = "M" | "F";
 export type StackAuthor = "camus" | "sartre" | "kundera" | "woolf" | "kafka";
 export type StackCharacter = StackReaderCharacter | StackAuthor;
+/** 사물 사다리의 사물. 쌓은 높이에 따라 자동으로 다음 목표가 된다 */
+export type StackObject =
+  | "sugar"
+  | "eraser"
+  | "egg"
+  | "hamster"
+  | "pencil"
+  | "soju"
+  | "dachshund"
+  | "bowlingPin"
+  | "extinguisher"
+  | "adelie"
+  | "emperor"
+  | "hoop"
+  | "giraffe";
 
 /** 텍스트 폭 측정(px). 말풍선과 책 제목 줄임에 쓴다 */
 export type MeasureText = (

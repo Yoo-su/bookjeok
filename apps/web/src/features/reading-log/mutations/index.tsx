@@ -18,6 +18,10 @@ import { API_ERROR_CODES, getErrorCode } from "@/shared/utils/error-handler";
 
 import { cm1 } from "../components/stack-view/hooks/use-stack-copy";
 import { useStackPerson } from "../components/stack-view/hooks/use-stack-person";
+import {
+  objectLadder,
+  objectsPassedBetween,
+} from "../components/stack-view/lib/objects";
 import { stackStatus } from "../components/stack-view/lib/status";
 import { useReadingLogViewStore } from "../stores/use-reading-log-view-store";
 
@@ -27,6 +31,7 @@ const isDuplicateError = (error: unknown) =>
 
 /**
  * 기록한 책이 쌓은 책을 얼마나 높였는지 알린다. 쌓은 책을 못 받으면 평범한 완료 알림을 띄운다.
+ * 새로 넘은 사물 → 새로 넘은 몸 부위(내 키) → 다음 사물까지 남은 높이 순으로 하나만 말한다.
  */
 function useAnnounceStackGrowth() {
   const t = useTranslations("reading_log.toast");
@@ -48,23 +53,29 @@ function useAnnounceStackGrowth() {
 
       const userMm = heightCm * 10;
       const stackMm = stack.items.reduce((a, b) => a + b.depth, 0);
-      const before = stackStatus(stackMm - book.depth, userMm);
+      const beforeMm = stackMm - book.depth;
+      const before = stackStatus(beforeMm, userMm);
       const after = stackStatus(stackMm, userMm);
+      // 두꺼운 책은 사물 둘을 한 번에 넘기도 한다. 높은 쪽을 말한다
+      const passedObject = objectsPassedBetween(beforeMm, stackMm).at(-1);
+      const nextObject = objectLadder(stackMm).next;
       let description: string;
-      if (after.ratio >= 1)
-        description =
-          before.ratio < 1
-            ? t("stack_over_passed")
-            : t("stack_over", { cm: after.overCm });
+      if (passedObject)
+        description = t("stack_object_passed", {
+          name: tStack(`objects.${passedObject.id}.object`),
+        });
+      else if (after.ratio >= 1 && before.ratio < 1)
+        description = t("stack_over_passed");
       else if (after.passed && after.passed !== before.passed)
         description = t("stack_passed", {
           part: tStack(`parts.${after.passed}.object`),
         });
-      else
-        description = t("stack_to_next", {
-          part: tStack(`parts.${after.next ?? "head"}.name`),
-          cm: after.toNextCm,
+      else if (nextObject)
+        description = t("stack_object_to_next", {
+          name: tStack(`objects.${nextObject.id}.name`),
+          cm: cm1(nextObject.heightMm - stackMm),
         });
+      else description = t("stack_over", { cm: after.overCm });
 
       toast.success(t("create_stack", { cm: cm1(book.depth) }), {
         description,

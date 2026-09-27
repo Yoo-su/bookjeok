@@ -16,15 +16,21 @@ export const STACK_DEFAULT_HEIGHT: Record<StackReaderCharacter, number> = {
   F: 161,
 };
 
+/** 쌓은 책 옆에 세울 것. 사물은 높이에 따라 자동으로 바뀌고, 사람은 나 또는 작가 */
+export type StackCompareMode = "object" | "person";
+
 interface StackSettingsState {
   /** 사용자가 입력한 키. 입력 전에는 null이고 평균 키로 보여준다 */
   heightCm: number | null;
   /** 사용자가 고른 캐릭터. 고르기 전에는 null이고 프로필 성별을 따른다 */
   character: StackReaderCharacter | null;
   author: StackAuthor | null;
+  /** 사용자가 고른 비교 대상. 고르기 전에는 null이고 쌓은 높이로 정한다 */
+  compareMode: StackCompareMode | null;
   setHeightCm: (heightCm: number) => void;
   setCharacter: (character: StackReaderCharacter) => void;
   setAuthor: (author: StackAuthor | null) => void;
+  setCompareMode: (mode: StackCompareMode) => void;
 }
 
 const STORAGE_KEY = "reading-stack-settings";
@@ -52,6 +58,7 @@ export const useStackSettingsStore = create<StackSettingsState>()(
       heightCm: null,
       character: null,
       author: null,
+      compareMode: null,
       setHeightCm: (heightCm) =>
         set({
           heightCm: Math.min(
@@ -61,6 +68,7 @@ export const useStackSettingsStore = create<StackSettingsState>()(
         }),
       setCharacter: (character) => set({ character }),
       setAuthor: (author) => set({ author }),
+      setCompareMode: (compareMode) => set({ compareMode }),
     }),
     {
       name: STORAGE_KEY,

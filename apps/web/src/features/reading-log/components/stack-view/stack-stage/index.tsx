@@ -1,15 +1,23 @@
 "use client";
 
 import type { ReadingStackBook } from "@bookjeok/core";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { cn } from "@/shared/utils";
 import { gaegu } from "@/styles/fonts";
 
 import { cm1 } from "../hooks/use-stack-copy";
+import type { StackObjectSpec } from "../lib/objects";
 import type { SceneLabels } from "../lib/scene";
-import { buildStackScene } from "../lib/scene";
+import { buildStackScene, objectSceneHeight } from "../lib/scene";
 import { SceneNodes } from "../lib/scene-svg";
 import { type StackStatus, stackStatus } from "../lib/status";
 import type { FontRole, SceneColors, StackCharacter } from "../lib/types";
@@ -39,10 +47,23 @@ export interface StackStagePerson {
   labelsFor: (status: StackStatus, userMm: number) => SceneLabels;
 }
 
+/** 쌓은 책 옆에 세울 사물과 그 무대의 문구 */
+export interface StackStageObject {
+  spec: StackObjectSpec;
+  labels: SceneLabels;
+}
+
+/** 사물 무대의 높이 범위(px). 폭이 축척을 정하므로 그 안에서 내용만큼 줄인다 */
+const OBJECT_STAGE = { min: 200, max: 600 };
+
 interface StackStageProps {
   books: ReadingStackBook[];
   stackMm: number;
   person?: StackStagePerson;
+  /** 있으면 캐릭터 대신 사물을 세운다 */
+  object?: StackStageObject;
+  /** 사물 무대의 최대 높이(px) */
+  objectMaxHeight?: number;
   /** 무대 높이 등을 덮어쓴다 */
   className?: string;
   /** 바뀔 때마다 책을 다시 떨어뜨린다 */
@@ -96,6 +117,8 @@ export function StackStage({
   books,
   stackMm,
   person,
+  object,
+  objectMaxHeight = OBJECT_STAGE.max,
   className,
   replayKey,
   onIntroStart,
@@ -113,6 +136,19 @@ export function StackStage({
   const [displayMm, setDisplayMm] = useState(userMm);
   const measure = useCanvasMeasure();
 
+  // 사물 무대는 폭에 맞춘 축척만큼만 높인다. 좁은 화면에서 위가 텅 비지 않게
+  const objectHeight =
+    object && size.width
+      ? objectSceneHeight({
+          width: size.width,
+          books,
+          stackMm,
+          object: object.spec,
+          minHeight: Math.min(OBJECT_STAGE.min, objectMaxHeight),
+          maxHeight: objectMaxHeight,
+        })
+      : undefined;
+
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -122,6 +158,21 @@ export function StackStage({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // 관찰자는 그린 뒤에 알려 주므로, 처음 띄울 때와 사물↔사람을 바꿀 때는 그리기 전에 잰다.
+  // 그러지 않으면 사물 무대가 기본 높이로 한 번 그려졌다 줄어든다
+  const isObject = Boolean(object);
+  const [animateHeight, setAnimateHeight] = useState(false);
+  const prevIsObjectRef = useRef<boolean | null>(null);
+  useLayoutEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    setSize({ width: el.clientWidth, height: el.clientHeight });
+    // 높이 트윈은 사용자가 바꿀 때만. 처음 띄울 때 줄어드는 모습이 보이면 안 된다
+    const prev = prevIsObjectRef.current;
+    if (prev !== null && prev !== isObject) setAnimateHeight(true);
+    prevIsObjectRef.current = isObject;
+  }, [isObject]);
 
   // 키가 바뀌면 캐릭터와 눈금이 튀지 않고 따라가게 한다
   const displayRef = useRef(displayMm);
@@ -157,12 +208,29 @@ export function StackStage({
     };
   }, [userMm, reducedMotion]);
 
+  // 사물 무대는 높이가 바뀌는 동안에도 목표 높이로 그려 장면을 매 프레임 다시 만들지 않는다
+  const height = objectHeight ?? size.height;
   const scene = useMemo(() => {
-    if (!size.width || !size.height) return null;
+    if (!size.width || !height) return null;
     const status = stackStatus(stackMm, displayMm);
+    if (object)
+      return buildStackScene({
+        width: size.width,
+        height,
+        books,
+        stackMm,
+        userMm: displayMm,
+        character,
+        status,
+        labels: object.labels,
+        colors: COLORS,
+        measure,
+        boil: !reducedMotion,
+        object: object.spec,
+      });
     return buildStackScene({
       width: size.width,
-      height: size.height,
+      height,
       books,
       stackMm,
       userMm: displayMm,
@@ -183,7 +251,9 @@ export function StackStage({
       figure: Boolean(labelsFor),
     });
   }, [
-    size,
+    size.width,
+    height,
+    object,
     books,
     stackMm,
     displayMm,
@@ -275,17 +345,28 @@ export function StackStage({
   return (
     <div
       ref={wrapRef}
-      className={cn("relative h-[520px] w-full md:h-[600px]", className)}
+      className={cn(
+        "relative h-[520px] w-full md:h-[600px]",
+        className,
+        object &&
+          animateHeight &&
+          "motion-safe:transition-[height] motion-safe:duration-300",
+      )}
+      style={objectHeight ? { height: objectHeight } : undefined}
     >
       {scene && (
         <svg
           ref={svgRef}
           width={size.width}
-          height={size.height}
-          viewBox={`0 0 ${size.width} ${size.height}`}
+          height={height}
+          viewBox={`0 0 ${size.width} ${height}`}
           role="img"
           aria-label={ariaLabel}
-          className="block overflow-visible"
+          // 사물 무대는 가까이 찍느라 쌓은 책 왼쪽이 무대 밖으로 나가므로 자른다
+          className={cn(
+            "block",
+            object ? "overflow-hidden" : "overflow-visible",
+          )}
         >
           <SceneNodes items={scene.items} />
         </svg>

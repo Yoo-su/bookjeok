@@ -32,7 +32,6 @@ export function StackProgress({
   comparisonName,
 }: StackProgressProps) {
   const t = useTranslations("reading_log.stack");
-  const locale = useLocale();
   const remain = userMm - stackMm;
   const over = status.ratio >= 1;
   const markers = comparisonName
@@ -107,41 +106,58 @@ export function StackProgress({
               })}
         </p>
       </div>
-      <dl className="grid grid-cols-3 border-t border-stone-200">
-        {[
-          {
-            label: t("stat_count"),
-            value: count.toLocaleString(locale),
-            unit: t("count_unit", { count }),
-          },
-          {
-            label: t("stat_pages"),
-            value: pages.toLocaleString(locale),
-            unit: t("pages_unit"),
-          },
-          {
-            label: t("stat_weight"),
-            value: (grams / 1000).toFixed(1),
-            unit: "kg",
-          },
-        ].map((s, i) => (
-          <div
-            key={s.label}
-            className={cn(
-              "grid min-w-0 gap-1 py-3 pl-3.5 pr-2.5",
-              i > 0 && "border-l border-stone-200",
-            )}
-          >
-            <dt className="text-[11px] text-stone-500">{s.label}</dt>
-            <dd className="whitespace-nowrap text-[15px] font-semibold tabular-nums tracking-tight text-stone-900">
-              {s.value}
-              <small className="ml-0.5 text-[11px] font-semibold text-stone-500">
-                {s.unit.trim()}
-              </small>
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <StackStats count={count} pages={pages} grams={grams} />
     </div>
+  );
+}
+
+/** 올해 합계(권수·쪽수·무게). 진행률 카드 아래에 붙인다 */
+export function StackStats({
+  count,
+  pages,
+  grams,
+}: {
+  count: number;
+  pages: number;
+  grams: number;
+}) {
+  const t = useTranslations("reading_log.stack");
+  const locale = useLocale();
+  return (
+    <dl className="grid grid-cols-3 border-t border-stone-200">
+      {[
+        {
+          label: t("stat_count"),
+          value: count.toLocaleString(locale),
+          unit: t("count_unit", { count }),
+        },
+        {
+          label: t("stat_pages"),
+          value: pages.toLocaleString(locale),
+          unit: t("pages_unit"),
+        },
+        {
+          label: t("stat_weight"),
+          value: (grams / 1000).toFixed(1),
+          unit: "kg",
+        },
+      ].map((s, i) => (
+        <div
+          key={s.label}
+          className={cn(
+            "grid min-w-0 gap-1 py-3 pl-3.5 pr-2.5",
+            i > 0 && "border-l border-stone-200",
+          )}
+        >
+          <dt className="text-[11px] text-stone-500">{s.label}</dt>
+          <dd className="whitespace-nowrap text-[15px] font-semibold tabular-nums tracking-tight text-stone-900">
+            {s.value}
+            <small className="ml-0.5 text-[11px] font-semibold text-stone-500">
+              {s.unit.trim()}
+            </small>
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
