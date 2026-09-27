@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { useStackCopy } from "@/features/reading-log/components/stack-view/hooks/use-stack-copy";
 import { buildObject } from "@/features/reading-log/components/stack-view/lib/figure";
 import {
+  ladderSteps,
   objectLadder,
   objectsPassedBetween,
   STACK_OBJECTS,
@@ -221,5 +222,21 @@ describe("사물 문구", () => {
         hasBooks: true,
       }),
     ).toBe("쌓은 책이 기린보다 1.15m 높아요.");
+  });
+});
+
+describe("소개용 사물 장면", () => {
+  it("목표가 바뀌는 권수에서 최대 4장면을 고르고, 마지막은 쌓은 책 전부다", () => {
+    const steps = ladderSteps(SAMPLE_BOOKS);
+    expect(steps.length).toBeLessThanOrEqual(4);
+    expect(steps.at(-1)).toBe(SAMPLE_BOOKS.length);
+    expect(steps).toEqual([...steps].sort((a, b) => a - b));
+    // 장면마다 세우는 사물이 다르다
+    const ids = steps.map((n) => stageObject(mmOf(n)).id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("한 권이면 그 한 장면뿐이다", () => {
+    expect(ladderSteps(stackOf(1))).toEqual([1]);
   });
 });

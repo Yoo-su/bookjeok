@@ -1,3 +1,5 @@
+import type { ReadingStackBook } from "@bookjeok/core";
+
 import type { StackObject } from "./types";
 
 /**
@@ -84,4 +86,32 @@ export function objectsPassedBetween(beforeMm: number, afterMm: number) {
   return STACK_OBJECTS.filter(
     (o) => o.heightMm > beforeMm && o.heightMm <= afterMm,
   );
+}
+
+/** 넘겨 보여 줄 장면 수(마지막은 쌓은 책 전부) */
+const LADDER_MAX_STEPS = 4;
+
+/**
+ * 쌓은 책이 자라며 다음 목표 사물이 바뀌는 장면들. 목표가 바뀌는 권수마다 한 장면이고,
+ * 너무 많으면 고르게 추리되 마지막은 늘 쌓은 책 전부다
+ */
+export function ladderSteps(books: ReadingStackBook[]): number[] {
+  const changes: number[] = [];
+  let mm = 0;
+  let prev: string | null = null;
+  books.forEach((b, i) => {
+    mm += b.depth;
+    const id = stageObject(mm).id;
+    if (id !== prev) changes.push(i + 1);
+    prev = id;
+  });
+  // 마지막 장면(전부)과 목표가 같은 앞 장면은 뺀다
+  const last = changes.at(-1);
+  const before = changes.filter((n) => n !== last && n < books.length);
+  const picks = Math.min(LADDER_MAX_STEPS - 1, before.length);
+  const chosen = Array.from(
+    { length: picks },
+    (_, k) => before[Math.round(((k + 1) * before.length) / (picks + 1)) - 1],
+  );
+  return [...new Set([...chosen, books.length])].filter((n) => n > 0);
 }

@@ -30,7 +30,8 @@ reading-log/
     │   ├── stack-progress/           # 키까지 진행률·합계(StackStats)
     │   ├── stack-object-progress/    # 다음 사물까지 진행률·넘은 사물 점 사다리
     │   ├── stack-order-list/         # 쌓인 순서 (월별 지층)
-    │   ├── stack-compare-stage/      # 같은 쌓은 책 옆에 나·작가를 바꿔 세우는 무대 (소개 모달·소개 페이지 공용)
+    │   ├── stack-compare-stage/      # 같은 쌓은 책 옆에 나·작가를 바꿔 세우는 무대 (소개 모달·소개 페이지 공용, 이름 칩은 숨길 수 있음)
+    │   ├── stack-ladder-stage/       # 쌓은 책을 몇 장면으로 키우며 다음 사물이 바뀌는 무대 (소개 모달)
     │   ├── stack-demo/               # 공개 소개 페이지의 체험 무대(예시 46권)와 시작 버튼
     │   ├── stack-book-dialog/
     │   ├── stack-share-dialog/       # 공유 이미지 (Canvas), 제목 넣을 책 고르기

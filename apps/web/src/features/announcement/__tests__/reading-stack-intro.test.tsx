@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -26,11 +32,16 @@ vi.mock("@bookjeok/react-query", () => ({
 
 // 무대는 ResizeObserver와 SVG 측정이 필요해 누가 서는지만 남긴다
 vi.mock("@/features/reading-log/components/stack-view/stack-stage", () => ({
-  StackStage: (p: { books: unknown[]; person?: { character: string } }) => (
+  StackStage: (p: {
+    books: unknown[];
+    person?: { character: string };
+    object?: { spec: { id: string } };
+  }) => (
     <div
       data-testid="stage"
       data-books={p.books.length}
       data-character={p.person?.character ?? "none"}
+      data-object={p.object?.spec.id ?? "none"}
     />
   ),
 }));
@@ -47,7 +58,7 @@ function renderIntro() {
 
 const toLast = async () => {
   fireEvent.click(
-    await screen.findByRole("button", { name: "4번째 소개 보기" }),
+    await screen.findByRole("button", { name: "5번째 소개 보기" }),
   );
   return screen.findByText("기록할 때마다 쌓이고, 이미지로 자랑해요");
 };
@@ -100,21 +111,42 @@ describe("ReadingStackIntro", () => {
     expect(push).toHaveBeenCalledWith("/my-page/reading-log");
   });
 
-  it("화살표 키로 넘기고 셋째 장에서 작가와 비교한다", async () => {
+  it("둘째 장은 사물과 나란히 세우고, 쌓은 책이 자라며 다음 사물이 바뀐다", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderIntro();
+      const dialog = await screen.findByRole("dialog");
+      fireEvent.keyDown(dialog, { key: "ArrowRight" });
+      expect(
+        await screen.findByText("지우개부터 기린까지, 무엇을 넘었을까요?"),
+      ).toBeInTheDocument();
+      const stage = screen.getByTestId("stage");
+      const first = stage.getAttribute("data-object");
+      expect(first).not.toBe("none");
+      // 예시 46권을 몇 장면에 나눠 키운다
+      expect(Number(stage.getAttribute("data-books"))).toBeLessThan(
+        SAMPLE_BOOKS.length,
+      );
+      await act(() => vi.advanceTimersByTimeAsync(2700));
+      expect(screen.getByTestId("stage").getAttribute("data-object")).not.toBe(
+        first,
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("넷째 장에서 작가와 비교하고, 말풍선과 겹치는 이름 칩은 두지 않는다", async () => {
     renderIntro();
     const dialog = await screen.findByRole("dialog");
-    fireEvent.keyDown(dialog, { key: "ArrowRight" });
-    fireEvent.keyDown(dialog, { key: "ArrowRight" });
+    for (let k = 0; k < 3; k++)
+      fireEvent.keyDown(dialog, { key: "ArrowRight" });
     await waitFor(() =>
       expect(screen.getByTestId("stage")).toHaveAttribute(
         "data-character",
         "kafka",
       ),
     );
-    fireEvent.click(screen.getByRole("button", { name: "울프" }));
-    expect(screen.getByTestId("stage")).toHaveAttribute(
-      "data-character",
-      "woolf",
-    );
+    expect(screen.queryByRole("button", { name: "울프" })).toBeNull();
   });
 });

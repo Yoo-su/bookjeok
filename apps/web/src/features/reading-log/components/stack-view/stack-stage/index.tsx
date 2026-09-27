@@ -64,6 +64,8 @@ interface StackStageProps {
   object?: StackStageObject;
   /** 사물 무대의 최대 높이(px) */
   objectMaxHeight?: number;
+  /** false면 사물 무대도 높이를 줄이지 않고 부모 높이를 그대로 쓴다(소개 모달처럼 틀이 정해진 곳) */
+  fitObjectHeight?: boolean;
   /** 무대 높이 등을 덮어쓴다 */
   className?: string;
   /** 바뀔 때마다 책을 다시 떨어뜨린다 */
@@ -119,6 +121,7 @@ export function StackStage({
   person,
   object,
   objectMaxHeight = OBJECT_STAGE.max,
+  fitObjectHeight = true,
   className,
   replayKey,
   onIntroStart,
@@ -138,7 +141,7 @@ export function StackStage({
 
   // 사물 무대는 폭에 맞춘 축척만큼만 높인다. 좁은 화면에서 위가 텅 비지 않게
   const objectHeight =
-    object && size.width
+    object && fitObjectHeight && size.width
       ? objectSceneHeight({
           width: size.width,
           books,
