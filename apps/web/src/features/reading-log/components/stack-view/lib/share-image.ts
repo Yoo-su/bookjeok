@@ -211,12 +211,6 @@ export async function renderStackShareImage(o: {
   });
   ctx.save();
   ctx.translate(M - 12, sceneTop);
-  if (o.object) {
-    // 가까이 찍은 사물 무대는 쌓은 책 왼쪽이 장면 밖으로 나간다
-    ctx.beginPath();
-    ctx.rect(0, -top, sceneW, sceneH + top);
-    ctx.clip();
-  }
   drawSceneItems(ctx, scene.items, fonts);
   ctx.restore();
   if (legend) {

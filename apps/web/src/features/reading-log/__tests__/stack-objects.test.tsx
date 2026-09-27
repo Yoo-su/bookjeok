@@ -137,43 +137,30 @@ describe("사물 무대", () => {
     expect(label(620)).toMatchObject({ t: "연필 한 자루 약 17.5cm" });
   });
 
-  it("사물이 너무 작게 보이면 쌓은 책을 잘라 가까이 찍고 눈금자를 위에 얹는다", () => {
-    // 한 권(각설탕 1.6cm)을 모바일 폭에서
-    const s = scene(1, 330, 200);
-    const ids = s.items.map((it) => it.id);
-    expect(ids).toContain("ruler-band");
-    // 눈금자가 책보다 뒤에 그려진다(위에 보인다)
-    expect(ids.indexOf("ruler")).toBeGreaterThan(
-      ids.findIndex((id) => id?.startsWith("book-")),
-    );
-    // 잘려도 클릭 영역은 무대 안에서 시작한다
-    expect(s.stack.left).toBe(0);
-  });
-
-  it("쌓은 책이 없으면 자리를 비워 두지 않고 사물을 가운데쯤 세운다", () => {
-    const width = 650;
-    const s = scene(0, width, 260);
-    const items = flat(s.items);
-    expect(items.map((it) => it.id)).not.toContain("stack-shadow");
-    // 사물 그림의 가로 범위가 무대 가운데를 지난다
-    const xs = flat(items.filter((it) => it.id === "object"))
-      .filter((it) => it.k === "p")
-      .flatMap((it) =>
-        it.k === "p"
-          ? [...it.d.matchAll(/[ML](-?[\d.]+),/g)].map((m) => Number(m[1]))
-          : [],
-      );
-    expect(Math.min(...xs)).toBeLessThan(width / 2 + 40);
-    expect(Math.max(...xs)).toBeGreaterThan(width / 2 - 40);
-    // 남은 높이 글자는 눈금자(46px) 오른쪽에 있다
-    const remain = items.find((it) => it.k === "t" && it.t === LABELS.remain);
-    expect(remain && remain.k === "t" && remain.x).toBeGreaterThan(46);
-  });
-
-  it("쌓은 책이 다 들어가면 자르지 않는다", () => {
-    const ids = scene(46, 620).items.map((it) => it.id);
-    expect(ids).not.toContain("ruler-band");
-  });
+  it.each([310, 340, 620])(
+    "폭 %ipx: 쌓은 높이 이름표는 눈금자에 걸치지 않고, 사물은 오른쪽 끝에 붙지 않는다",
+    (width) => {
+      for (const n of [1, 2, 6, 14, 46]) {
+        const s = scene(n, width, 600);
+        const items = flat(s.items);
+        const label = items.find(
+          (it) => it.k === "t" && it.t === LABELS.stackHeight,
+        );
+        if (label?.k === "t")
+          expect(label.x - measure(label.t, label.size)).toBeGreaterThan(46);
+        expect(s.stack.left).toBeGreaterThan(46);
+        const xs = items
+          .filter((it) => it.id?.startsWith("object-"))
+          .flatMap((g) => flat([g]))
+          .flatMap((it) =>
+            it.k === "p"
+              ? [...it.d.matchAll(/[ML](-?[\d.]+),/g)].map((m) => Number(m[1]))
+              : [],
+          );
+        expect(Math.max(...xs)).toBeLessThan(width - 12);
+      }
+    },
+  );
 
   it("무대 높이는 폭에 맞춘 내용만큼이고 범위를 넘지 않는다", () => {
     const h = (n: number, width: number) =>

@@ -63,7 +63,7 @@ function ObjectStage({
         books,
         stackMm,
         object: next,
-        minHeight: 240,
+        minHeight: 200,
         maxHeight: height,
       })
     : height;

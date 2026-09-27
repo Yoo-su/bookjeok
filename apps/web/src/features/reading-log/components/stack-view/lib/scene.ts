@@ -223,15 +223,23 @@ function bubbleItem(
 /** 사물 모드 위아래 여백(px, u=1). 말풍선 자리와 바닥 아래 */
 const OBJECT_PAD = { top: 74, floor: 30 };
 
-/** 사물이 이보다 작게 보이면(px, u=1) 쌓은 책 왼쪽을 무대 밖으로 밀어 확대한다 */
-const OBJECT_MIN_PX = 64;
-/** 그때도 쌓은 책은 이만큼(가로 비율)은 보이게 둔다 */
-const STACK_MIN_VISIBLE = 0.25;
+/** 빈 무대(쌓은 책 없음)에서 사물을 키우는 한도(px, u=1). 폭이 남아도 무대만 하게 키우지 않는다 */
+const OBJECT_EMPTY_MAX_PX = 128;
+/**
+ * 사물 무대의 가로 여백(px, u=1)과 폭을 채우는 비율. 넓은 화면은 사람 무대처럼 좌우를 넉넉히 비우고,
+ * 좁은 화면은 폭이 귀해 여백을 줄인다. 작은 사물이라 사람 무대보다는 조금 더 확대돼 보인다
+ */
+const OBJECT_SPACING = {
+  wide: { right: 32, gap: 40, fill: 0.84 },
+  narrow: { right: 18, gap: 18, fill: 0.96 },
+};
+/** 사물 무대의 말풍선이 무대 오른쪽 끝에서 떨어지는 거리(px, u=1) */
+const OBJECT_BUBBLE_PAD = 12;
 
 /**
- * 사물 모드의 폭 기준 축척. 쌓은 책은 눕혀 쌓아 가로가 책의 세로(약 21cm)라
- * 좁은 화면에서는 높이가 아니라 폭이 축척을 정한다. 그러면 각설탕·지우개처럼 작은 사물이
- * 몇 px로 줄어드니, 그때는 쌓은 책 왼쪽을 무대 밖으로 밀어 가까이 찍은 것처럼 확대한다.
+ * 사물 모드의 축척과 가로 배치. 사람 무대처럼 눈금자 · (쌓은 높이 이름표) · 쌓은 책 · 사물 · 여백 순으로
+ * 자리를 나누고, 폭을 다 채우지 않고 좌우에 숨 쉴 자리를 둔다. 쌓은 책은 눕혀 쌓아 가로가 책의 세로
+ * (약 21cm)라 좁은 화면에서는 높이보다 폭이 축척을 정한다.
  */
 function objectFit(o: {
   width: number;
@@ -240,7 +248,7 @@ function objectFit(o: {
   object: StackObjectSpec;
   u: number;
 }) {
-  const { u } = o;
+  const { u, width } = o;
   const box = OBJECT_ART[o.object.id].x;
   const artMm = objectArtHeightMm(o.object);
   const objWmm = (artMm * (box[1] - box[0])) / 1000;
@@ -249,24 +257,27 @@ function objectFit(o: {
   const stackWmm = empty
     ? 0
     : Math.max(210, ...o.books.map((b) => b.height)) * 1.12;
-  const gap = 22 * u;
-  const inner = o.width - 46 * u - 16 * u;
-  const whole = (inner - gap) / (stackWmm + objWmm);
-  const closeUp = Math.min(
-    (OBJECT_MIN_PX * u) / artMm,
-    (inner - gap) / (stackWmm * STACK_MIN_VISIBLE + objWmm),
-  );
+  // 쌓은 높이("26.4cm")를 쌓은 책 왼쪽에 적을 자리. 눈금자에 겹치지 않게 미리 비워 둔다
+  const labelPad = empty
+    ? 0
+    : (`${(o.stackMm / 10).toFixed(1)}cm`.length * 8.5 + 12) * u;
+  const sp = OBJECT_SPACING[width < 480 * u ? "narrow" : "wide"];
+  const gap = sp.gap * u;
+  const start = 46 * u + labelPad;
+  const inner = width - start - sp.right * u;
+  const fill = sp.fill;
+  const s = empty
+    ? Math.min((inner - gap) / objWmm, (OBJECT_EMPTY_MAX_PX * u) / artMm)
+    : (inner * fill - gap) / (stackWmm + objWmm);
   return {
     box,
     artMm,
     objWmm,
     stackWmm,
     gap,
+    start,
     inner,
-    // 빈 무대는 폭이 남아도 사물을 무대만 하게 키우지 않는다
-    s: empty
-      ? Math.min(whole, (OBJECT_MIN_PX * 2 * u) / artMm)
-      : Math.max(whole, closeUp),
+    s,
     maxMm: Math.max(o.stackMm, artMm) * 1.08,
   };
 }
@@ -328,7 +339,6 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   let box: [number, number] = [0, 300];
   let targetMm = userMm;
   let artMm = userMm;
-  let cropped = false;
   if (obj) {
     const f = objectFit({ width: W, books, stackMm, object: obj, u });
     box = f.box;
@@ -336,17 +346,11 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     artMm = f.artMm;
     s = Math.min(f.s, (H - padTop - floorPad) / f.maxMm);
     maxMm = (H - padTop - floorPad) / s;
-    // 쌓은 책 가로 중 무대에 보이는 비율. 1보다 작으면 왼쪽이 눈금자 뒤로 잘린다
-    const visible = f.stackWmm
-      ? Math.min(1, ((f.inner - f.gap) / s - f.objWmm) / f.stackWmm)
-      : 1;
-    cropped = visible < 1;
-    // 다 보이면 쌓은 책과 사물을 한 묶음으로 남는 폭 가운데에 둔다
-    const groupW = (f.stackWmm * visible + f.objWmm) * s + f.gap;
-    const x0 = rulerW + 8 * u + Math.max(0, (f.inner - groupW) / 2);
-    const stackRight = x0 + f.stackWmm * visible * s;
-    tcx = stackRight - (f.stackWmm * s) / 2;
-    fcx = stackRight + f.gap + (f.objWmm * s) / 2;
+    // 쌓은 책과 사물을 한 묶음으로 남는 폭 가운데에 둔다
+    const groupW = (f.stackWmm + f.objWmm) * s + f.gap;
+    const x0 = f.start + Math.max(0, (f.inner - groupW) / 2);
+    tcx = x0 + (f.stackWmm * s) / 2;
+    fcx = x0 + f.stackWmm * s + f.gap + (f.objWmm * s) / 2;
     k = (artMm * s) / 1000;
   } else {
     // 캐릭터가 없으면 몇 권만 쌓아도 바닥에 붙지 않게 쌓은 높이로 잡는다
@@ -359,6 +363,8 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     fcx = Math.min(rulerW + aW * 0.72, W - (300 * k) / 2 - 4 * u);
   }
   const fx = fcx - ((box[0] + box[1]) / 2) * k;
+  // 말풍선이 넘지 않을 오른쪽 끝. 사물 무대는 끝에서 조금 띄운다(캐릭터 무대는 그대로)
+  const bubbleW = obj ? W - (OBJECT_BUBBLE_PAD - 3) * u : W;
   const fy = floorY - targetMm * s;
   // 그림 꼭대기. 농구 골대처럼 재는 곳 위로 더 있으면 fy보다 위다
   const artTop = floorY - artMm * s;
@@ -370,8 +376,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     out.push({ k: "p", d, ...a });
   const T = (item: Omit<TextItem, "k">) => out.push({ k: "t", ...item });
 
-  // 눈금자. 쌓은 책이 잘리면 책 위에 다시 얹는다
-  const rulerStart = out.length;
+  // 눈금자
   const rx = rulerW - 12 * u;
   P(`M${f1(rx)},${f1(floorY)} L${f1(rx)},${f1(floorY - maxMm * s)}`, {
     id: "ruler",
@@ -416,8 +421,6 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     }
   }
 
-  const rulerItems = cropped ? out.splice(rulerStart) : [];
-
   // 바닥
   P(
     `M0,${f1(floorY)} Q${f1(W * 0.5)},${f1(floorY + 1.4 * u)} ${f1(W)},${f1(floorY - 0.4 * u)}`,
@@ -449,13 +452,16 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   let y = floorY;
   let left = W;
   let right = 0;
+  // 한 권이 1px보다 얇으면 1px로 올려 보이게 하되, 그러면 쌓은 높이가 눈금보다 커지는
+  // 다독(한 권 평균 1px 미만)일 때는 실제 두께 그대로 그린다
+  const minBookPx = stackMm * s >= books.length ? 1 : 0;
   books.forEach((b) => {
     const r = rng(hashSeed(`${b.isbn}:${b.logId}`));
     const jx = r() - 0.5;
     const jr = r() - 0.5;
     const jj = Array.from({ length: 8 }, r);
     const w = b.height * s;
-    const h = Math.max(1, b.depth * s);
+    const h = Math.max(minBookPx, b.depth * s);
     y -= h;
     const cx = tcx + jx * 12 * s;
     const cy = y + h / 2;
@@ -531,18 +537,6 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     });
   });
   const topY = y;
-  if (cropped) {
-    // 잘린 쌓은 책 위에 종이 띠를 깔고 눈금자를 다시 얹는다. 눈금자를 앞에 대고 찍은 것처럼
-    out.push(
-      {
-        k: "p",
-        id: "ruler-band",
-        d: `M0,0 H${f1(rulerW - 2 * u)} V${f1(floorY)} H0 Z`,
-        fill: C.paper,
-      },
-      ...rulerItems,
-    );
-  }
   if (!books.length) {
     left = tcx - 20 * u;
     right = tcx + 20 * u;
@@ -595,6 +589,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     ann.push({ k: "p", d, ...a });
   const AT = (item: Omit<TextItem, "k" | "halo" | "hw">) =>
     ann.push({ k: "t", halo: C.paper, hw: 5 * u, ...item });
+  let heightLabel = labels.myHeight;
   if (target) {
     const lineEnd = figure ? fx + 92 * k : targetLeft + 4 * u;
     A(`M${f1(rx)},${f1(fy)} L${f1(lineEnd)},${f1(fy)}`, {
@@ -604,13 +599,12 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       cap: "round",
     });
     // 사물은 쌓은 책과 겹치지 않게 늘 점선 위에 두고, 말풍선과 부딪히면 짧은 이름표로 바꾼다
-    let heightLabel = labels.myHeight;
     if (obj && labels.myHeightShort) {
       const bubble = bubbleSpan(
         fcx,
         labels.bubble,
         u,
-        W,
+        bubbleW,
         rulerW + 4 * u,
         measure,
       );
@@ -635,33 +629,33 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   }
 
   if (books.length) {
-    // 목표 이름표와 겹치면 아래로 비킨다. 바닥 밑으로 내려가게 되면 이름표 위로 올린다
-    let ly = topY;
-    if (target && Math.abs(topY - fy) < 20 * u)
-      ly = topY + 20 * u <= floorY - 8 * u ? topY + 20 * u : fy - 32 * u;
-    // 잘린 쌓은 책은 왼쪽 끝이 무대 밖이라 눈금자 옆, 쌓은 책 바로 위에 적는다.
-    // 목표 이름표와 부딪히면 적지 않는다(제목의 큰 숫자가 같은 값을 말한다)
-    if (cropped) ly = topY - 12 * u;
-    const hidden = cropped && Math.abs(ly - (fy - 11 * u)) < 18 * u;
-    // 좁은 쌓은 책이 눈금자에 붙어 있으면 글자가 왼쪽으로 잘리지 않게 민다
+    // 쌓은 책 왼쪽에 적되, 눈금자에 걸치지 않게 눈금자 오른쪽으로 민다
     const labelW = measure(labels.stackHeight, 16 * u, 700, "hand");
-    if (!hidden)
+    const lx = Math.max(left - 9 * u, rulerW + 4 * u + labelW);
+    // 목표 이름표와 가까우면 아래로 비킨다. 사물 무대는 가로로도 겹칠 때만 비키고,
+    // 비킬 자리가 없으면 적지 않는다(제목의 큰 숫자가 같은 값을 말한다)
+    const targetRight = rx + 6 * u + measure(heightLabel, 16 * u, 700, "hand");
+    const clash =
+      target &&
+      Math.abs(topY - fy) < 20 * u &&
+      (!obj || lx - labelW < targetRight + 6 * u);
+    const ly = clash ? topY + 20 * u : topY;
+    if (!obj || !clash || ly <= floorY - 8 * u)
       AT({
-        x: cropped ? rulerW + 2 * u : Math.max(left - 9 * u, labelW + 3 * u),
+        x: lx,
         y: ly,
         t: labels.stackHeight,
         size: 16 * u,
         weight: 700,
         fam: "hand",
         fill: C.ink,
-        anchor: cropped ? "start" : "end",
+        anchor: "end",
       });
-    if (!cropped)
-      A(`M${f1(left - 7 * u)},${f1(topY)} L${f1(left - 2 * u)},${f1(topY)}`, {
-        stroke: C.ink,
-        sw: 1.4 * u,
-        cap: "round",
-      });
+    A(`M${f1(left - 7 * u)},${f1(topY)} L${f1(left - 2 * u)},${f1(topY)}`, {
+      stroke: C.ink,
+      sw: 1.4 * u,
+      cap: "round",
+    });
   }
   const gap = topY - fy;
   if (target && gap > 34 * u) {
@@ -672,12 +666,8 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         two ? measure(labels.approxBooks, 14 * u, 700, "hand") : 0,
       ) +
       10 * u;
-    // 잘린 쌓은 책은 가운데가 무대 밖일 수 있어 보이는 부분의 가운데에 긋는다.
     // 글자 상자(종이색)가 눈금자를 덮지 않게 눈금자 오른쪽으로 민다
-    const x = Math.max(
-      cropped ? (rulerW + right) / 2 : tcx,
-      rulerW + 6 * u + bw / 2,
-    );
+    const x = Math.max(tcx, rulerW + 6 * u + bw / 2);
     const y1 = topY - 6 * u;
     const y2 = fy + 6 * u;
     A(`M${f1(x)},${f1(y1)} L${f1(x)},${f1(y2)}`, {
@@ -744,7 +734,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         labels.bubble,
         C,
         u,
-        W,
+        bubbleW,
         rulerW + 4 * u,
         measure,
         o.boil ?? false,

@@ -362,11 +362,7 @@ export function StackStage({
           viewBox={`0 0 ${size.width} ${height}`}
           role="img"
           aria-label={ariaLabel}
-          // 사물 무대는 가까이 찍느라 쌓은 책 왼쪽이 무대 밖으로 나가므로 자른다
-          className={cn(
-            "block",
-            object ? "overflow-hidden" : "overflow-visible",
-          )}
+          className="block overflow-visible"
         >
           <SceneNodes items={scene.items} />
         </svg>
