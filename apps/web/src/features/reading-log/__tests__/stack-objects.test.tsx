@@ -39,7 +39,7 @@ const LABELS: SceneLabels = {
   remain: "9cm 남음",
   approxBooks: "약 6권",
   stackHeight: "8.7cm",
-  bubble: ["9cm만 더!", "지우개는 넘었다!"],
+  bubble: ["9cm만 더!", "연필 한 자루를 넘어 보자!"],
 };
 
 const flat = (items: SceneItem[]): SceneItem[] =>
@@ -192,14 +192,27 @@ describe("사물 문구", () => {
   const copy = () =>
     renderHook(() => useStackCopy(), { wrapper }).result.current;
 
-  it("말풍선은 남은 높이와 넘은 사물을, 이름표는 사물 이름과 높이를 적는다", () => {
+  it("말풍선은 남은 높이와 지금 목표를 넘자는 말을, 이름표는 사물 이름과 높이를 적는다", () => {
     const { objectScene } = copy();
     // 8.7cm: 달걀(7.5cm)을 넘었고 다음은 햄스터(11cm)
     const { object, labels } = objectScene(87, 15);
     expect(object.id).toBe("hamster");
-    expect(labels.bubble).toEqual(["2.3cm만 더!", "달걀은 넘었다!"]);
+    // 지난 사물(달걀)은 말하지 않는다. 한꺼번에 기록하면 넘는 모습을 못 봤을 수 있다
+    expect(labels.bubble).toEqual(["2.3cm만 더!", "햄스터를 넘어 보자!"]);
     expect(labels.myHeight).toBe("햄스터 약 11cm");
     expect(labels.myHeightShort).toBe("약 11cm");
+  });
+
+  it("첫 문장·공유 부제는 다음 목표만 말하고, 첫 문장은 올해 넘은 개수를 붙인다", () => {
+    const { objectLede, objectShareSubline } = copy();
+    const year = new Date().getFullYear();
+    expect(objectLede({ stackMm: 87, year, hasBooks: true })).toBe(
+      "다음 목표는 햄스터, 2.3cm 남았어요. 올해 넘은 사물은 3개예요.",
+    );
+    expect(objectLede({ stackMm: 7, year, hasBooks: true })).toBe(
+      "다음 목표는 각설탕, 0.9cm 남았어요.",
+    );
+    expect(objectShareSubline(87)).toBe("햄스터까지 2.3cm 남았어요");
   });
 
   it("1m가 넘는 사물은 m로 적는다", () => {
