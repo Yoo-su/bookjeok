@@ -632,25 +632,30 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     // 쌓은 책 왼쪽에 적되, 눈금자에 걸치지 않게 눈금자 오른쪽으로 민다
     const labelW = measure(labels.stackHeight, 16 * u, 700, "hand");
     const lx = Math.max(left - 9 * u, rulerW + 4 * u + labelW);
-    // 목표 이름표와 가까우면 아래로 비킨다. 사물 무대는 가로로도 겹칠 때만 비키고,
-    // 비킬 자리가 없으면 적지 않는다(제목의 큰 숫자가 같은 값을 말한다)
+    // 쌓은 책 꼭대기 눈금 옆에 적는다. 목표 이름표와 겹칠 때만 비키되,
+    // 이름표가 점선 위에 있으면 그 아래로 딱 비킬 만큼만 내린다(멀리 떨어지면 어느 높이인지 헷갈린다).
+    // 점선 아래에 이름표를 두는 좁은 화면의 캐릭터 무대는 전처럼 20px 내린다
     const targetRight = rx + 6 * u + measure(heightLabel, 16 * u, 700, "hand");
     const clash =
       target &&
       Math.abs(topY - fy) < 20 * u &&
       (!obj || lx - labelW < targetRight + 6 * u);
-    const ly = clash ? topY + 20 * u : topY;
-    if (!obj || !clash || ly <= floorY - 8 * u)
-      AT({
-        x: lx,
-        y: ly,
-        t: labels.stackHeight,
-        size: 16 * u,
-        weight: 700,
-        fam: "hand",
-        fill: C.ink,
-        anchor: "end",
-      });
+    const targetBelow = figure && W < 360 * u;
+    const ly = !clash
+      ? topY
+      : targetBelow
+        ? topY + 20 * u
+        : Math.min(Math.max(topY, fy + 6 * u), floorY - 4 * u);
+    AT({
+      x: lx,
+      y: ly,
+      t: labels.stackHeight,
+      size: 16 * u,
+      weight: 700,
+      fam: "hand",
+      fill: C.ink,
+      anchor: "end",
+    });
     A(`M${f1(left - 7 * u)},${f1(topY)} L${f1(left - 2 * u)},${f1(topY)}`, {
       stroke: C.ink,
       sw: 1.4 * u,

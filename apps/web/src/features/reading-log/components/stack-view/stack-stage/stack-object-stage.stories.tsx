@@ -3,13 +3,13 @@ import { useMemo } from "react";
 
 import { gaegu } from "@/styles/fonts";
 
-import { cm1 } from "../hooks/use-stack-copy";
+import { useStackCopy } from "../hooks/use-stack-copy";
 import { objectLadder } from "../lib/objects";
 import { SAMPLE_BOOKS } from "../lib/sample-books";
 import { buildStackScene, objectSceneHeight } from "../lib/scene";
 import { SceneNodes } from "../lib/scene-svg";
 import { stackStatus } from "../lib/status";
-import type { FontRole, SceneColors, StackObject } from "../lib/types";
+import type { FontRole, SceneColors } from "../lib/types";
 
 const COLORS: SceneColors = {
   paper: "#FFFFFF",
@@ -17,22 +17,6 @@ const COLORS: SceneColors = {
   pen: "#047857",
   muted: "#78716C",
   faint: "#A8A29E",
-};
-
-const NAMES: Record<StackObject, string> = {
-  sugar: "각설탕",
-  eraser: "지우개",
-  egg: "달걀",
-  hamster: "햄스터",
-  pencil: "연필 한 자루",
-  soju: "소주병",
-  dachshund: "닥스훈트",
-  bowlingPin: "볼링핀",
-  extinguisher: "소화기",
-  adelie: "아델리펭귄",
-  emperor: "황제펭귄",
-  hoop: "농구 골대",
-  giraffe: "기린",
 };
 
 let ctx: CanvasRenderingContext2D | null = null;
@@ -55,7 +39,9 @@ function ObjectStage({
 }) {
   const books = SAMPLE_BOOKS.slice(0, count);
   const stackMm = books.reduce((a, b) => a + b.depth, 0);
-  const { next, passed } = objectLadder(stackMm);
+  const { next } = objectLadder(stackMm);
+  // 서비스와 같은 문구로 그린다
+  const { objectScene } = useStackCopy();
   // 무대는 폭에 맞춘 축척만큼만 높인다
   const h = next
     ? objectSceneHeight({
@@ -69,7 +55,7 @@ function ObjectStage({
     : height;
   const scene = useMemo(() => {
     if (!next) return null;
-    const remain = Math.max(1, Math.ceil((next.heightMm - stackMm) / 10));
+    const { labels } = objectScene(stackMm, stackMm / books.length);
     return buildStackScene({
       width,
       height: h,
@@ -78,23 +64,13 @@ function ObjectStage({
       userMm: 1700,
       character: "M",
       status: stackStatus(stackMm, 1700),
-      labels: {
-        myHeight: `${NAMES[next.id]} 약 ${next.heightMm / 10}cm`,
-        myHeightShort: `약 ${next.heightMm / 10}cm`,
-        remain: `${remain}cm 남음`,
-        approxBooks: `약 ${Math.ceil((next.heightMm - stackMm) / 15)}권`,
-        stackHeight: `${cm1(stackMm)}cm`,
-        bubble: [
-          `${remain}cm만 더!`,
-          passed ? `${NAMES[passed.id]}는 넘었다!` : "이제 시작!",
-        ],
-      },
+      labels,
       colors: COLORS,
       measure,
       boil: true,
       object: next,
     });
-  }, [books, stackMm, next, passed, width, h]);
+  }, [books, stackMm, next, objectScene, width, h]);
   return (
     <figure className={`m-0 grid gap-1 ${gaegu.variable}`}>
       <div
@@ -108,16 +84,25 @@ function ObjectStage({
         )}
       </div>
       <figcaption className="text-xs text-stone-500">
-        {count}권 · {cm1(stackMm)}cm · {width}×{h}
+        {count}권 · {(stackMm / 10).toFixed(1)}cm · {width}×{h}
       </figcaption>
     </figure>
   );
 }
 
-function Stages({ width, height }: { width: number; height: number }) {
+/** counts: 보여 줄 권수들. 목표 바로 아래처럼 겹치기 쉬운 경우를 URL 인자로 넣어 본다 */
+function Stages({
+  width,
+  height,
+  counts = [2, 6, 14],
+}: {
+  width: number;
+  height: number;
+  counts?: number[];
+}) {
   return (
     <div className="flex flex-wrap items-start gap-6 bg-stone-50 p-4">
-      {[2, 6, 14].map((n) => (
+      {counts.map((n) => (
         <ObjectStage key={n} count={n} width={width} height={height} />
       ))}
     </div>
@@ -137,3 +122,11 @@ export const Phone360: Story = { args: { width: 310, height: 520 } };
 export const Phone390: Story = { args: { width: 340, height: 520 } };
 /** 데스크톱 무대(오른쪽 진행률 칸을 뺀 폭) */
 export const Desktop: Story = { args: { width: 620, height: 600 } };
+/** 목표 바로 아래(0.1~1.1cm 남음)라 쌓은 높이 이름표와 목표 이름표가 부딪히기 쉬운 권수 */
+const NEAR_TARGET = [5, 10, 19, 25, 35];
+export const NearTargetPhone: Story = {
+  args: { width: 340, height: 520, counts: NEAR_TARGET },
+};
+export const NearTargetDesktop: Story = {
+  args: { width: 620, height: 600, counts: NEAR_TARGET },
+};
