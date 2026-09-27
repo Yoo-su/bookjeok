@@ -34,10 +34,12 @@ interface StackCompareStageProps {
   me?: StackStagePerson;
   /** 누르기 전까지 몇 초마다 다음 사람으로 넘긴다 */
   autoCycle?: boolean;
+  /** false면 이름 칩을 숨긴다. 말풍선이 칩과 겹치는 좁은 틀(소개 모달)에서 자동으로만 넘긴다 */
+  chips?: boolean;
   className?: string;
 }
 
-/** 같은 쌓은 책 옆에 나 또는 작가를 바꿔 세운다. 이름 칩을 누르면 그 사람에서 멈춘다 */
+/** 같은 쌓은 책 옆에 나 또는 작가를 바꿔 세운다. 이름 칩을 누르면 그 사람에서 멈춘다(칩은 숨길 수 있다) */
 export function StackCompareStage({
   books,
   stackMm,
@@ -45,6 +47,7 @@ export function StackCompareStage({
   ariaLabel,
   me,
   autoCycle = true,
+  chips = true,
   className,
 }: StackCompareStageProps) {
   const t = useTranslations("reading_log.stack");
@@ -75,27 +78,29 @@ export function StackCompareStage({
 
   return (
     <>
-      <div className="absolute left-3 top-2.5 z-[1] flex max-w-[calc(100%-56px)] flex-wrap gap-1">
-        {ids.map((id, k) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={k === i}
-            onClick={() => {
-              setAuto(false);
-              setI(k);
-            }}
-            className={cn(
-              "cursor-pointer rounded-full border px-2 py-0.5 text-[11.5px] font-semibold",
-              k === i
-                ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                : "border-stone-200 bg-white text-stone-500",
-            )}
-          >
-            {id === "me" ? t("compare_me") : t(`author_short.${id}`)}
-          </button>
-        ))}
-      </div>
+      {chips && (
+        <div className="absolute left-3 top-2.5 z-[1] flex max-w-[calc(100%-56px)] flex-wrap gap-1">
+          {ids.map((id, k) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={k === i}
+              onClick={() => {
+                setAuto(false);
+                setI(k);
+              }}
+              className={cn(
+                "cursor-pointer rounded-full border px-2 py-0.5 text-[11.5px] font-semibold",
+                k === i
+                  ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                  : "border-stone-200 bg-white text-stone-500",
+              )}
+            >
+              {id === "me" ? t("compare_me") : t(`author_short.${id}`)}
+            </button>
+          ))}
+        </div>
+      )}
       <StackStage
         books={books}
         stackMm={stackMm}

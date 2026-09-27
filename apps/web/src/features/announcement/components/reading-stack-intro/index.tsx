@@ -16,6 +16,7 @@ import {
   type CompareLabelsFor,
   StackCompareStage,
 } from "@/features/reading-log/components/stack-view/stack-compare-stage";
+import { StackLadderStage } from "@/features/reading-log/components/stack-view/stack-ladder-stage";
 import {
   StackStage,
   type StackStagePerson,
@@ -27,7 +28,8 @@ import { PATHS } from "@/shared/constants/paths";
 import type { AnnouncementProps } from "../../types";
 import { FeatureCarousel, type FeatureSlide } from "../feature-carousel";
 
-const STAGE = "h-full md:h-full";
+// 오른쪽 위 닫기 버튼과 말풍선이 겹치지 않게 무대를 조금 내린다
+const STAGE = "mt-6 h-[calc(100%-1.5rem)] md:h-[calc(100%-1.5rem)]";
 
 /** 독서 키재기 새 기능 소개. 로그인했고 올해 기록이 있으면 내가 쌓은 책, 아니면 예시 46권으로 보여 준다 */
 export function ReadingStackIntro({ open, onOpenChange }: AnnouncementProps) {
@@ -92,6 +94,18 @@ export function ReadingStackIntro({ open, onOpenChange }: AnnouncementProps) {
       body: t("s1_body"),
     },
     {
+      id: "objects",
+      visual: (
+        <StackLadderStage
+          books={books}
+          ariaLabel={stageLabel}
+          className={STAGE}
+        />
+      ),
+      title: t("objects_title"),
+      body: t("objects_body"),
+    },
+    {
       id: "me",
       visual: (
         <StackStage
@@ -110,11 +124,14 @@ export function ReadingStackIntro({ open, onOpenChange }: AnnouncementProps) {
     {
       id: "authors",
       visual: (
+        // 좁은 틀이라 이름 칩이 말풍선과 겹친다. 칩 없이 작가가 저절로 바뀐다
         <StackCompareStage
           books={books}
           stackMm={stackMm}
           labelsFor={labelsFor}
           ariaLabel={stageLabel}
+          chips={false}
+          className={STAGE}
         />
       ),
       title: t("s3_title"),

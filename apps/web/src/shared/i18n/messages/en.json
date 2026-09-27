@@ -811,6 +811,8 @@
       "stack_over_passed": "Your stack is taller than you now!",
       "stack_over": "{cm}cm taller than you",
       "stack_to_next": "{cm}cm to your {part}",
+      "stack_object_passed": "Past the {name}!",
+      "stack_object_to_next": "{cm}cm to the {name}",
       "view_stack": "See reading height"
     },
     "dialog": {
@@ -940,7 +942,11 @@
         "legend_label": "Titles on the image",
         "legend_edit": "Change",
         "legend_done": "Done",
-        "legend_hint": "Pick up to {max} books. Clear them all for an image without titles."
+        "legend_hint": "Pick up to {max} books. Clear them all for an image without titles.",
+        "sub_object_start": "{cm}cm to the {next}",
+        "sub_object_passed": "Past the {passed}, {cm}cm to the {next}",
+        "sub_object_over": "{len} taller than the {name}",
+        "mode_label": "Compare with"
       },
       "lede_past": "You stacked {cm}cm in {year}.",
       "lede_past_passed": "You stacked {cm}cm in {year} — past your {part}.",
@@ -981,6 +987,93 @@
         "kundera": "Kundera",
         "woolf": "Woolf",
         "kafka": "Kafka"
+      },
+      "mode_label": "Compare with",
+      "mode_object": "Things",
+      "mode_person": "People",
+      "len_cm": "{v}cm",
+      "len_m": "{v}m",
+      "object_height": "{name} ~{len}",
+      "object_height_short": "~{len}",
+      "object_bubble_more": "{cm}cm to go!",
+      "object_bubble_passed": "Past the {name}!",
+      "object_bubble_over": "Taller than the {name}!",
+      "object_lede_start": "{cm}cm to the {next}. Stack one book at a time to pass it.",
+      "object_lede_passed": "Your stack is past the {passed}. Next up: the {next}, {cm}cm to go.",
+      "object_lede_over": "Your stack is {len} taller than the {name}.",
+      "object_lede_past": "In {year} you stacked {cm}cm, past the {passed}.",
+      "object_progress_to": "To the {name}",
+      "object_progress_over": "Taller than the {name}",
+      "object_progress_over_note": "You passed every thing on the ladder — {len} taller than the {name}.",
+      "object_collected": "Passed",
+      "object_collected_count": "{count}/{total}",
+      "object_stage_label": "A {height}cm stack of {count} books next to a {name} (~{len})",
+      "objects": {
+        "sugar": {
+          "name": "sugar cube",
+          "topic": "sugar cube",
+          "object": "sugar cube"
+        },
+        "eraser": {
+          "name": "eraser",
+          "topic": "eraser",
+          "object": "eraser"
+        },
+        "egg": {
+          "name": "egg",
+          "topic": "egg",
+          "object": "egg"
+        },
+        "hamster": {
+          "name": "hamster",
+          "topic": "hamster",
+          "object": "hamster"
+        },
+        "pencil": {
+          "name": "pencil",
+          "topic": "pencil",
+          "object": "pencil"
+        },
+        "soju": {
+          "name": "soju bottle",
+          "topic": "soju bottle",
+          "object": "soju bottle"
+        },
+        "dachshund": {
+          "name": "dachshund",
+          "topic": "dachshund",
+          "object": "dachshund"
+        },
+        "bowlingPin": {
+          "name": "bowling pin",
+          "topic": "bowling pin",
+          "object": "bowling pin"
+        },
+        "extinguisher": {
+          "name": "fire extinguisher",
+          "topic": "fire extinguisher",
+          "object": "fire extinguisher"
+        },
+        "adelie": {
+          "name": "Adélie penguin",
+          "topic": "Adélie penguin",
+          "object": "Adélie penguin"
+        },
+        "emperor": {
+          "name": "emperor penguin",
+          "topic": "emperor penguin",
+          "object": "emperor penguin"
+        },
+        "hoop": {
+          "name": "basketball hoop",
+          "topic": "basketball hoop",
+          "object": "basketball hoop"
+        },
+        "giraffe": {
+          "name": "giraffe",
+          "topic": "giraffe",
+          "object": "giraffe"
+        }
       }
     }
   },
@@ -2265,12 +2358,14 @@
       "s1_title": "Would this year's books stack up to your height?",
       "s1_title_mine": "Your books this year already stack {cm}cm high",
       "s1_body": "Our new Reading height stacks every book you finish at its real thickness, one by one. Thick books stay thick, thin ones stay thin.",
-      "s2_title": "Stand it next to yourself",
+      "objects_title": "From an eraser to a giraffe — what have you passed?",
+      "objects_body": "The thing just above your stack becomes your next goal. A hamster, a dachshund, an emperor penguin… pass them one by one as you stack.",
+      "s2_title": "Stand it next to yourself, too",
       "s2_body": "Knees, waist, shoulders… your character shows how far the stack has come. Your height stays on this device.",
       "s3_title": "Can you outstack a great author?",
       "s3_body": "Compare your stack with Camus, Sartre, Kundera, Woolf and Kafka, too.",
       "s4_title": "It grows with every log, and you can show it off",
-      "s4_body": "Mark a book as read and we'll tell you how much taller your stack got. Save the scene as a story or feed image.",
+      "s4_body": "Mark a book as read and we'll tell you how much taller your stack got and what it just passed. Save the scene as a story or feed image.",
       "toast_title": "Logged",
       "toast_body": "Your stack grew {cm}cm",
       "cta_view": "See my reading height",
@@ -2302,11 +2397,15 @@
       },
       "compare": {
         "title": "Against your height",
-        "body": "Ankles, knees, waist, shoulders… your character tells you how far the stack has come."
+        "body": "An eraser, a dachshund, an emperor penguin… see what your stack has passed and how far up your own height it reaches."
       }
     },
     "features_title": "More you can do",
     "features": {
+      "objects": {
+        "title": "Object ladder",
+        "body": "From a sugar cube and an eraser to a dachshund, an emperor penguin and a giraffe. The next goal steps up as your stack grows, and you hear about it each time you pass one."
+      },
       "authors": {
         "title": "Compare with authors",
         "body": "Stand your stack next to the estimated heights of Camus, Sartre, Kundera, Woolf and Kafka."
@@ -2321,7 +2420,7 @@
       },
       "profile": {
         "title": "Public profile",
-        "body": "Make your reading log public to show this year's stack on your profile."
+        "body": "Make your reading log public and your profile shows this year's stack next to the thing it's closing in on."
       }
     },
     "faq_title": "FAQ",

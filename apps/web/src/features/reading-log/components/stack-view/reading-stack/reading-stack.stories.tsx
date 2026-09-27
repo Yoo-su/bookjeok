@@ -59,6 +59,9 @@ export default meta;
 type Story = StoryObj<typeof ReadingStack>;
 
 export const Default: Story = { decorators: [withStack(SAMPLE)] };
+/** 무릎 아래라 사물 탭으로 연다 */
+export const FewBooks: Story = { decorators: [withStack(SAMPLE.slice(0, 6))] };
+export const FirstBook: Story = { decorators: [withStack(SAMPLE.slice(0, 1))] };
 export const EstimatedSizes: Story = {
   decorators: [withStack(WITH_ESTIMATED)],
 };

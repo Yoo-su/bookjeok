@@ -2,7 +2,13 @@ import type { ReadingStackBook } from "@bookjeok/core";
 
 import { drawSceneItems } from "./draw-canvas";
 import { buildLegend } from "./legend";
-import { bookColor, buildStackScene, type SceneLabels } from "./scene";
+import type { StackObjectSpec } from "./objects";
+import {
+  bookColor,
+  buildStackScene,
+  objectSceneHeight,
+  type SceneLabels,
+} from "./scene";
 import type { StackStatus } from "./status";
 import type { FontRole, SceneColors, StackCharacter } from "./types";
 
@@ -47,6 +53,8 @@ export async function renderStackShareImage(o: {
   labels: SceneLabels;
   texts: ShareTexts;
   fonts: ShareFonts;
+  /** 있으면 캐릭터 대신 이 사물을 세운다 */
+  object?: StackObjectSpec;
   /** 바닥에 제목을 적을 책(logId)과 목록 머리말·나머지 한 줄("외 11권") */
   legend?: { ids: string[]; heading: string; rest?: string };
 }): Promise<HTMLCanvasElement> {
@@ -172,9 +180,23 @@ export async function renderStackShareImage(o: {
   const legendTop = legend ? footTop - legend.height + 4 * u : footTop;
   // 장면 바닥 여백(30u) 안쪽으로 목록을 당겨 바닥선과 목록 사이를 18u로 맞춘다
   const bottom = legend ? legendTop + 12 * u : footTop;
+  const sceneW = W - 2 * M + 24;
+  // 사물 무대는 폭이 축척을 정해 위가 남으므로 내용만큼만 그리고 남는 자리의 가운데에 둔다
+  const sceneH = o.object
+    ? objectSceneHeight({
+        width: sceneW,
+        books: o.books,
+        stackMm: o.stackMm,
+        object: o.object,
+        minHeight: 0,
+        maxHeight: bottom - top,
+        u,
+      })
+    : bottom - top;
+  const sceneTop = top + Math.round((bottom - top - sceneH) / 2);
   const scene = buildStackScene({
-    width: W - 2 * M + 24,
-    height: bottom - top,
+    width: sceneW,
+    height: sceneH,
     books: o.books,
     stackMm: o.stackMm,
     userMm: o.userMm,
@@ -185,9 +207,10 @@ export async function renderStackShareImage(o: {
     measure,
     u,
     boil: false,
+    object: o.object,
   });
   ctx.save();
-  ctx.translate(M - 12, top);
+  ctx.translate(M - 12, sceneTop);
   drawSceneItems(ctx, scene.items, fonts);
   ctx.restore();
   if (legend) {

@@ -279,16 +279,16 @@ describe("기록 생성 알림", () => {
     );
   };
 
-  it("쌓인 두께와 다음 부위까지 남은 높이를 알리고, 독서 키재기 보기로 보낸다", async () => {
-    // 기본 키 173cm: 100mm → 117mm는 발목을 이미 넘은 상태라 다음 부위(무릎)를 말한다
-    vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([100, 17]));
+  it("쌓인 두께와 다음 사물까지 남은 높이를 알리고, 독서 키재기 보기로 보낸다", async () => {
+    // 100mm → 105mm: 발목은 이미 넘었고 넘은 사물도 없어 다음 사물(햄스터 110mm)을 말한다
+    vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([100, 5]));
 
     await create("log-1");
 
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
     const [title, options] = vi.mocked(toast.success).mock.calls[0];
     expect(title).toBe("create_stack");
-    expect(options).toMatchObject({ description: "stack_to_next" });
+    expect(options).toMatchObject({ description: "stack_object_to_next" });
 
     const action = options?.action as Action;
     act(() => action.onClick({} as React.MouseEvent<HTMLButtonElement>));
@@ -308,6 +308,18 @@ describe("기록 생성 알림", () => {
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
     expect(vi.mocked(toast.success).mock.calls[0][1]).toMatchObject({
       description: "stack_passed",
+    });
+  });
+
+  it("이번 책으로 사물을 넘으면 부위보다 먼저 알린다", async () => {
+    // 290 → 307: 닥스훈트(300mm)를 넘는다
+    vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([290, 17]));
+
+    await create("log-1");
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+    expect(vi.mocked(toast.success).mock.calls[0][1]).toMatchObject({
+      description: "stack_object_passed",
     });
   });
 

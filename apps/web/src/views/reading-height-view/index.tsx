@@ -4,9 +4,11 @@ import {
   StackDemo,
   StackStartLink,
 } from "@/features/reading-log/components/stack-view/stack-demo";
+import { cn } from "@/shared/utils";
 
 export const READING_HEIGHT_STEPS = ["record", "thickness", "compare"] as const;
 export const READING_HEIGHT_FEATURES = [
+  "objects",
   "authors",
   "share",
   "toast",
@@ -79,7 +81,11 @@ export function ReadingHeightView() {
           {READING_HEIGHT_FEATURES.map((key) => (
             <li
               key={key}
-              className="grid content-start gap-1.5 rounded-2xl bg-stone-50 p-5"
+              // 다섯 개라 대표 기능인 사물 사다리를 한 줄 전체로 둔다
+              className={cn(
+                "grid content-start gap-1.5 rounded-2xl bg-stone-50 p-5",
+                key === "objects" && "sm:col-span-2",
+              )}
             >
               <h3 className="text-[15px] font-semibold text-stone-900">
                 {t(`features.${key}.title`)}

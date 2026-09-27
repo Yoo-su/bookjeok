@@ -5,12 +5,15 @@ import { useReadingStackQuery } from "@bookjeok/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { RotateCcw, Share2 } from "@/shared/components/icons/iconsax";
+import { cn } from "@/shared/utils";
 
+import { useStackSettingsStore } from "../../../stores/use-stack-settings-store";
 import { useStackComparison } from "../hooks/use-stack-comparison";
 import { cm1, useStackCopy } from "../hooks/use-stack-copy";
-import { type StackStatus, stackStatus } from "../lib/status";
+import { BODY_PARTS, type StackStatus, stackStatus } from "../lib/status";
 import { StackBookDialog } from "../stack-book-dialog";
 import { StackHeightChip } from "../stack-height-chip";
+import { StackObjectProgress } from "../stack-object-progress";
 import { StackOrderList } from "../stack-order-list";
 import { StackProgress } from "../stack-progress";
 import { StackShareDialog } from "../stack-share-dialog";
@@ -19,14 +22,30 @@ import {
   STACK_INTRO_LAND_MS,
   stackIntroStepMs,
   StackStage,
+  type StackStageObject,
   type StackStagePerson,
 } from "../stack-stage";
+
+/** 쌓은 책이 무릎 아래면 사람 옆에서는 티가 안 나므로 사물부터 보여 준다 */
+const OBJECT_FIRST_RATIO =
+  BODY_PARTS.find((p) => p.key === "knee")?.ratio ?? 0.28;
 
 /**
  * 독서 키재기. 한 해 동안 읽은 책을 실제 두께로 쌓고, 내 키만 한 캐릭터와 나란히 세운다.
  */
 export function ReadingStack({ year }: { year: number }) {
-  const { t, locale, sceneLabels, lede, shareSubline } = useStackCopy();
+  const {
+    t,
+    locale,
+    sceneLabels,
+    lede,
+    shareSubline,
+    objectName,
+    len,
+    objectScene,
+    objectLede,
+    objectShareSubline,
+  } = useStackCopy();
   const { data, isLoading, isError, refetch } = useReadingStackQuery(year);
   const { character, heightCm, author } = useStackComparison();
   const comparisonName = author ? t(`authors.${author}`) : undefined;
@@ -44,6 +63,14 @@ export function ReadingStack({ year }: { year: number }) {
     };
   }, [books]);
   const status = stackStatus(totals.stackMm, userMm);
+  const savedMode = useStackSettingsStore((s) => s.compareMode);
+  const setMode = useStackSettingsStore((s) => s.setCompareMode);
+  const mode =
+    savedMode ?? (status.ratio < OBJECT_FIRST_RATIO ? "object" : "person");
+  const objectStage = useMemo<StackStageObject>(() => {
+    const o = objectScene(totals.stackMm, totals.avgDepthMm);
+    return { spec: o.object, labels: o.labels };
+  }, [objectScene, totals]);
 
   const labelsFor = useCallback(
     (s: StackStatus, mm: number) =>
@@ -186,32 +213,59 @@ export function ReadingStack({ year }: { year: number }) {
           </h3>
         )}
         <p className="max-w-[48ch] text-[15px] leading-relaxed text-stone-500">
-          {lede({
-            status,
-            stackMm: totals.stackMm,
-            userMm,
-            year,
-            hasBooks: books.length > 0,
-          })}
+          {mode === "object"
+            ? objectLede({
+                stackMm: totals.stackMm,
+                year,
+                hasBooks: books.length > 0,
+              })
+            : lede({
+                status,
+                stackMm: totals.stackMm,
+                userMm,
+                year,
+                hasBooks: books.length > 0,
+              })}
         </p>
       </header>
 
       <section className="grid gap-3.5 md:grid-cols-[minmax(0,1fr)_288px] md:items-start md:gap-x-5">
         <div className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white bg-[radial-gradient(#e2e0dd_1.1px,transparent_1.4px)] bg-[length:16px_16px] bg-[position:6px_6px] px-3 pb-1.5 pt-2.5">
           <div className="relative z-[1] flex flex-wrap items-center justify-between gap-2 px-0.5 pb-1">
-            <span className="font-[family-name:var(--font-gaegu)] text-[15px] font-bold text-stone-400">
-              {t("scale_hint")}
-            </span>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <StackHeightChip />
+            <div
+              role="group"
+              aria-label={t("mode_label")}
+              className="inline-flex shrink-0 gap-0.5 rounded-full bg-stone-100 p-[3px]"
+            >
+              {(["object", "person"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={mode === m}
+                  onClick={() => setMode(m)}
+                  className={cn(
+                    "min-h-8 cursor-pointer whitespace-nowrap rounded-full px-3.5 text-[12.5px] font-semibold transition-colors pointer-fine:min-h-6",
+                    mode === m
+                      ? "bg-white text-stone-900 shadow-sm"
+                      : "text-stone-500 hover:text-stone-700",
+                  )}
+                >
+                  {t(m === "object" ? "mode_object" : "mode_person")}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5">
+              {mode === "person" && <StackHeightChip />}
               {books.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setReplayKey((k) => k + 1)}
-                  className="inline-flex h-9 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border border-stone-200 bg-white px-3 text-xs font-semibold text-stone-500 hover:text-stone-900 pointer-fine:h-7"
+                  aria-label={t("replay")}
+                  className="inline-flex h-9 min-w-9 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-stone-200 bg-white px-2.5 text-xs font-semibold text-stone-500 hover:text-stone-900 pointer-fine:h-7 pointer-fine:min-w-7 sm:px-3"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
-                  {t("replay")}
+                  {/* 좁은 화면은 아이콘만. 탭·키 버튼과 한 줄에 두려는 것 */}
+                  <span className="hidden sm:inline">{t("replay")}</span>
                 </button>
               )}
             </div>
@@ -220,6 +274,7 @@ export function ReadingStack({ year }: { year: number }) {
             books={books}
             stackMm={totals.stackMm}
             person={person}
+            object={mode === "object" ? objectStage : undefined}
             replayKey={replayKey}
             onIntroStart={handleIntroStart}
             onStackClick={() =>
@@ -229,31 +284,54 @@ export function ReadingStack({ year }: { year: number }) {
               })
             }
             stackClickLabel={t("view_stack")}
-            ariaLabel={t(author ? "author_stage_label" : "stage_label", {
-              name: comparisonName ?? "",
-              count: books.length,
-              height: cm1(totals.stackMm),
-              me: heightCm,
-            })}
+            ariaLabel={
+              mode === "object"
+                ? t("object_stage_label", {
+                    count: books.length,
+                    height: cm1(totals.stackMm),
+                    name: objectName(objectStage.spec.id, "name"),
+                    len: len(objectStage.spec.heightMm),
+                  })
+                : t(author ? "author_stage_label" : "stage_label", {
+                    name: comparisonName ?? "",
+                    count: books.length,
+                    height: cm1(totals.stackMm),
+                    me: heightCm,
+                  })
+            }
           />
-          {totals.estimated > 0 && (
-            <p className="px-1 pb-1 text-[11.5px] text-stone-400">
-              {t("estimated_note", { count: totals.estimated })}
+          {(mode === "person" || totals.estimated > 0) && (
+            <p className="flex flex-wrap gap-x-2 px-1 pb-1 text-[11.5px] text-stone-400">
+              {/* 사물 무대는 축척이 사물마다 달라 눈금 간격을 적지 않는다 */}
+              {mode === "person" && <span>{t("scale_hint")}</span>}
+              {totals.estimated > 0 && (
+                <span>{t("estimated_note", { count: totals.estimated })}</span>
+              )}
             </p>
           )}
         </div>
 
         <div className="grid content-start gap-3.5">
-          <StackProgress
-            comparisonName={comparisonName}
-            status={status}
-            stackMm={totals.stackMm}
-            userMm={userMm}
-            avgDepthMm={totals.avgDepthMm}
-            count={books.length}
-            pages={totals.pages}
-            grams={totals.grams}
-          />
+          {mode === "object" ? (
+            <StackObjectProgress
+              stackMm={totals.stackMm}
+              avgDepthMm={totals.avgDepthMm}
+              count={books.length}
+              pages={totals.pages}
+              grams={totals.grams}
+            />
+          ) : (
+            <StackProgress
+              comparisonName={comparisonName}
+              status={status}
+              stackMm={totals.stackMm}
+              userMm={userMm}
+              avgDepthMm={totals.avgDepthMm}
+              count={books.length}
+              pages={totals.pages}
+              grams={totals.grams}
+            />
+          )}
           {books.length > 0 && (
             <button
               type="button"
@@ -292,6 +370,11 @@ export function ReadingStack({ year }: { year: number }) {
           character={character}
           status={status}
           labels={labelsFor(status, userMm)}
+          initialMode={mode}
+          object={{
+            ...objectStage,
+            subline: objectShareSubline(totals.stackMm),
+          }}
           texts={{
             kicker: t("share.kicker", { year }).toUpperCase(),
             count: String(books.length),
