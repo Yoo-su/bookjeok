@@ -189,23 +189,22 @@ export function useStackCopy() {
     [t],
   );
 
-  /** 사물 무대. 다음 사물을 세우고, 말풍선은 그 사물이 말한다 */
+  /**
+   * 사물 무대. 다음 사물을 세우고 말풍선은 남은 높이와 그 사물을 넘자는 말을 한다.
+   * 지난 사물은 말하지 않는다. 한꺼번에 기록하면 넘는 모습을 못 본 사물이 나와서다
+   */
   const objectScene = useCallback(
     (
       stackMm: number,
       avgDepthMm: number,
     ): { object: StackObjectSpec; labels: SceneLabels } => {
       const object = stageObject(stackMm);
-      const { passed, next } = objectLadder(stackMm);
+      const { next } = objectLadder(stackMm);
       const remainMm = object.heightMm - stackMm;
       const bubble: [string, string] = next
         ? [
             t("object_bubble_more", { cm: cm1(remainMm) }),
-            passed
-              ? t("object_bubble_passed", {
-                  name: objectName(passed.id, "topic"),
-                })
-              : t("bubble_start"),
+            t("object_bubble_goal", { name: objectName(next.id, "object") }),
           ]
         : [
             t("object_bubble_over", { name: objectName(object.id, "name") }),
@@ -253,21 +252,22 @@ export function useStackCopy() {
           len: len(stackMm - top.heightMm),
         });
       }
-      const cm = cm1(next.heightMm - stackMm);
-      return passed
-        ? t("object_lede_passed", {
-            passed: objectName(passed.id, "object"),
-            next: objectName(next.id, "name"),
-            cm,
-          })
-        : t("object_lede_start", { next: objectName(next.id, "name"), cm });
+      const common = {
+        next: objectName(next.id, "name"),
+        cm: cm1(next.heightMm - stackMm),
+      };
+      // 지난 사물 이름 대신 올해 넘은 개수만 말한다
+      const count = STACK_OBJECTS.filter((x) => x.heightMm <= stackMm).length;
+      return count
+        ? t("object_lede_next", { ...common, count })
+        : t("object_lede_start", common);
     },
     [t, objectName, len],
   );
 
   const objectShareSubline = useCallback(
     (stackMm: number) => {
-      const { passed, next } = objectLadder(stackMm);
+      const { next } = objectLadder(stackMm);
       if (!next) {
         const top = STACK_OBJECTS[STACK_OBJECTS.length - 1];
         return t("share.sub_object_over", {
@@ -275,16 +275,10 @@ export function useStackCopy() {
           len: len(stackMm - top.heightMm),
         });
       }
-      const common = {
+      return t("share.sub_object_start", {
         next: objectName(next.id, "name"),
         cm: cm1(next.heightMm - stackMm),
-      };
-      return passed
-        ? t("share.sub_object_passed", {
-            ...common,
-            passed: objectName(passed.id, "object"),
-          })
-        : t("share.sub_object_start", common);
+      });
     },
     [t, objectName, len],
   );
