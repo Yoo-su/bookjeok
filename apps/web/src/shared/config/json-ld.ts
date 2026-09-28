@@ -52,6 +52,11 @@ export const getJsonLd = (
       },
       {
         "@type": "SiteNavigationElement",
+        name: t("json_ld.nav.reading_log"),
+        url: `https://bookjeok.com/${locale}/reading-log`,
+      },
+      {
+        "@type": "SiteNavigationElement",
         name: t("json_ld.nav.reading_height"),
         url: `https://bookjeok.com/${locale}/reading-height`,
       },

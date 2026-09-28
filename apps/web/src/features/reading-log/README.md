@@ -20,6 +20,7 @@ reading-log/
     │   ├── reading-log-calendar/     # 월별 캘린더 본체
     │   ├── reading-log-day-cell/     # 날짜 셀 (완독 표시)
     │   ├── reading-log-controls/     # 월/연 이동, 뷰 전환
+    │   ├── reading-log-demo/         # 공개 소개 페이지의 예시 달력(예시 46권, 읽기 전용)
     │   └── reading-log-calendar-skeleton/
     ├── stack-view/                   # 독서 키재기
     │   ├── reading-stack/            # 내 독서 키재기 조립 (+ stories)
@@ -54,6 +55,7 @@ reading-log/
     │   └── lounge-empty-state/
     └── common/
         ├── reading-log-hero/
+        ├── reading-log-start-link/   # 소개 페이지 시작 버튼: 고른 보기로 내 독서 기록을 연다
         ├── reading-log-form-dialog/  # 기록 작성·수정 (날짜·메모)
         ├── mark-as-read-button/      # 도서 상세의 「읽었어요」
         └── day-details-dialog/       # 특정 날짜의 기록 상세
@@ -77,6 +79,16 @@ reading-log/
 ### 캘린더
 
 `reading-log-calendar`가 월 단위로 기록을 조회해 `reading-log-day-cell`에 배치하고, 셀을 클릭하면 `day-details-dialog`가 그날의 완독 도서와 한 줄 메모를 보여줍니다. 작성·수정은 `reading-log-form-dialog`에서 처리합니다. `use-seasonal-theme`이 월에 따라 배색을 바꿉니다.
+
+### 공개 소개 페이지 `/reading-log`
+
+독서 기록은 로그인 뒤(`/my-page/reading-log`, noindex)에 있어 검색엔진이 볼 수 있는 페이지가 없었습니다(2026-09-28 추가). 구성은 `/reading-height`와 같습니다. 소개 글·이용 방법·FAQ는 서버에서 렌더링하고(FAQPage·BreadcrumbList JSON-LD), 예시 달력(`reading-log-demo`)만 브라우저에서 움직입니다.
+
+- 예시 달력은 `ReadingLogCalendar`의 `readOnly`에 예시 46권(`sample-books`)을 기록으로 바꿔 넘깁니다. 조회·통계·보기 전환이 없고, 날짜를 누르면 읽기 전용 상세가 열립니다. 예시가 있는 2026년 1~9월 밖으로는 넘어가지 않습니다.
+- 시작 버튼(`reading-log-start-link`)은 보기를 달력으로 바꿔 독서 기록으로 보내고, 비로그인이면 마이페이지 가드가 로그인 뒤 돌려보냅니다. 독서 키재기 소개의 시작 버튼도 같은 컴포넌트에 `view="stack"`을 넘깁니다.
+- 기능 목록의 「독서 키재기」 칸이 `/reading-height`로 잇습니다. 독서 기록이 상위, 독서 키재기는 그 안의 한 보기입니다.
+- 사이트맵·푸터·사이트 내비게이션 JSON-LD에 넣었습니다. 링크 미리보기는 전용 카드가 없어 기본 로고 카드입니다.
+- 메모 글자 수는 문구에 박지 않고 `MAX_MEMO_LENGTH`(core)를 `{max}`로 넣습니다.
 
 ### 기록 진입 경로
 

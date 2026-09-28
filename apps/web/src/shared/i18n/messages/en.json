@@ -159,6 +159,7 @@
       "review": "Book Reviews",
       "search": "Book Search",
       "lounge": "Reading Lounge",
+      "reading_log": "Reading log",
       "reading_height": "Reading height"
     }
   },
@@ -2439,6 +2440,81 @@
       "years": {
         "q": "Can I see past years?",
         "a": "Yes. Move between years to see each year's stack separately."
+      },
+      "price": {
+        "q": "Is it free?",
+        "a": "Yes, it's free for every Bookjeok member."
+      }
+    }
+  },
+  "reading_log_page": {
+    "metadata": {
+      "title": "Reading log - Keep the books you read on a calendar",
+      "description": "Log each book with the date you read it and a one-line note. A calendar filled with covers, monthly and yearly counts, and a reading height that stacks your books at real thickness. Free to use."
+    },
+    "breadcrumb": "Reading log",
+    "kicker": "Reading calendar",
+    "title": "Reading log",
+    "lead": "Keep each book you read with a date and a one-line note. Look back on a month as a calendar of covers, and on a year as a stack of books.",
+    "demo_hint": "These are sample logs. Tap a date to see that day's books and notes, and use the arrows to flip through months.",
+    "cta": "Start my reading log",
+    "cta_note": "Free for every Bookjeok member.",
+    "steps_title": "How it works",
+    "steps": {
+      "find": {
+        "title": "Find the book",
+        "body": "Tap a date on the calendar and search, or tap “Read it” on a book page."
+      },
+      "note": {
+        "title": "A date and a note",
+        "body": "Pick the day you read it and leave a short note of up to {max} characters. Past dates work too."
+      },
+      "review": {
+        "title": "Look back on the calendar",
+        "body": "Covers fill each day, with how many books you read this month and this year."
+      }
+    },
+    "features_title": "More you can do",
+    "features": {
+      "stack": {
+        "title": "Reading height",
+        "body": "Stack this year's books at their real thickness and measure them against a sugar cube, an emperor penguin, a giraffe or your own height.",
+        "link": "About reading height"
+      },
+      "list": {
+        "title": "List view",
+        "body": "Skim everything you've logged, grouped by month."
+      },
+      "season": {
+        "title": "Seasonal calendar",
+        "body": "The calendar changes color with the seasons."
+      },
+      "toast": {
+        "title": "Updates as you log",
+        "body": "Each log tells you how many centimeters your stack grew and how far the next goal is."
+      },
+      "lounge": {
+        "title": "Lounge and profile",
+        "body": "Public logs appear in the reading lounge and on your profile, so others can see what you're reading."
+      }
+    },
+    "faq_title": "FAQ",
+    "faq": {
+      "public": {
+        "q": "Who can see my logs?",
+        "a": "Logs start public and appear in the reading lounge and on your profile. Turn off “Public Log” on your reading log page to keep them to yourself."
+      },
+      "past": {
+        "q": "Can I log past dates?",
+        "a": "Yes. Tap any past date on the calendar. Future dates can't be logged."
+      },
+      "reread": {
+        "q": "What if I reread a book?",
+        "a": "Log it again on another date. We'll tell you how many times you've logged it. The same book can be logged once per day."
+      },
+      "memo": {
+        "q": "Do I have to write a note?",
+        "a": "No, notes are optional. You can write up to {max} characters when you want to."
       },
       "price": {
         "q": "Is it free?",
