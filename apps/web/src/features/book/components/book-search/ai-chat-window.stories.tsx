@@ -48,8 +48,7 @@ const mockMessages = [
         publisher: "나무옆의의자",
         description:
           "청파동 골목길 작은 편의점에서 일어나는 따뜻하고 유쾌한 인간 삶의 위로와 감동 스토리.",
-        image:
-          "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+        image: "https://cdn.bookjeok.com/covers/9788932912363.webp",
         pubdate: "20210420",
         similarity: 0.88,
       },
@@ -60,8 +59,7 @@ const mockMessages = [
         publisher: "클레이하우스",
         description:
           "평범한 동네 서점을 배경으로 일상의 번민을 안고 살아가는 사람들의 연대와 치유 이야기.",
-        image:
-          "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+        image: "https://cdn.bookjeok.com/covers/9788932912363.webp",
         pubdate: "20220117",
         similarity: 0.84,
       },

@@ -1,20 +1,3 @@
-/**
- * 알라딘 도서 표지 이미지 URL을 고화질(cover500) 이미지 URL로 변환합니다.
- * @param url 알라딘 API에서 전달받은 커버 이미지 URL
- * @returns 500px 고화질 커버 이미지 URL
- */
-export function formatAladinCoverImage(url?: string | null): string {
-  if (!url) return "";
-
-  // HTTP -> HTTPS 프로토콜 변환
-  let formattedUrl = url.replace(/^http:\/\//i, "https://");
-
-  // coversum, cover200, cover150, cover 등 표지 경로를 cover500으로 교체
-  formattedUrl = formattedUrl.replace(/\/cover(sum|\d+)?\//i, "/cover500/");
-
-  return formattedUrl;
-}
-
 /** 이름 있는 HTML 엔티티 표. `&amp;`는 여기 두지 않는다 (마지막에 따로 처리). */
 const NAMED_ENTITIES: Record<string, string> = {
   lt: "<",

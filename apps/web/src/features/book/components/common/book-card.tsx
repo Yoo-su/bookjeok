@@ -1,6 +1,6 @@
 "use client";
 
-import { BaseBookInfo, BookInfo, formatAladinCoverImage } from "@bookjeok/core";
+import { BaseBookInfo, BookInfo } from "@bookjeok/core";
 import Image from "next/image";
 import React, { createContext, ReactNode, useContext } from "react";
 
@@ -71,7 +71,7 @@ function BookCardCover({ className, children }: BookCardCoverProps) {
       )}
     >
       <Image
-        src={formatAladinCoverImage(book.image)}
+        src={book.image || ""}
         alt={book.title}
         fill
         sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"

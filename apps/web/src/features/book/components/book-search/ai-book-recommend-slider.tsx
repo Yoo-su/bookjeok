@@ -1,6 +1,6 @@
 "use client";
 
-import { AiSearchBookItem, formatAladinCoverImage } from "@bookjeok/core";
+import { AiSearchBookItem } from "@bookjeok/core";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { memo } from "react";
@@ -56,7 +56,7 @@ export const AiBookRecommendSlider = memo(function AiBookRecommendSlider({
                 className="relative w-20 sm:w-24 shrink-0 aspect-3/4 overflow-hidden rounded-lg bg-stone-100 shadow-xs group block"
               >
                 <Image
-                  src={formatAladinCoverImage(book.image)}
+                  src={book.image || ""}
                   alt={book.title}
                   fill
                   sizes="(max-width: 640px) 80px, 96px"

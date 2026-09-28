@@ -19,6 +19,13 @@ const nextConfig: NextConfig = {
       ? "standalone"
       : undefined,
   images: {
+    /**
+     * 최적화(/_next/image)를 거치는 이미지 호스트. DB 이미지 컬럼 실측(2026-09-28)
+     * - 도서 표지: 전량 `cdn.bookjeok.com`
+     * - 판매글·리뷰 본문·채팅·업로드 프로필: 전량 Vercel Blob
+     * 초기 소셜 가입자의 네이버·카카오 프로필 주소가 남아 있지만, 아바타는 전부
+     * `unoptimized`로 원본을 그대로 써서 여기 등록할 필요가 없다.
+     */
     remotePatterns: [
       /**
        * 표지 자체 호스팅(Cloudflare R2). `books.image`가 이 호스트로 넘어가기 전에
@@ -34,43 +41,6 @@ const nextConfig: NextConfig = {
         hostname: "*.blob.vercel-storage.com",
         port: "",
         pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "http",
-        hostname: "www.kopis.or.kr",
-      },
-      {
-        protocol: "https",
-        hostname: "img1.kakaocdn.net",
-      },
-      {
-        protocol: "http",
-        hostname: "img1.kakaocdn.net",
-      },
-      {
-        protocol: "http",
-        hostname: "k.kakaocdn.net",
-      },
-      {
-        protocol: "https",
-        hostname: "phinf.pstatic.net",
-      },
-      {
-        protocol: "https",
-        hostname: "shopping-phinf.pstatic.net",
-      },
-      {
-        protocol: "https",
-        hostname: "image.aladin.co.kr",
-      },
-      {
-        protocol: "http",
-        hostname: "image.aladin.co.kr",
       },
     ],
   },

@@ -47,9 +47,9 @@ export * from "./features/user/types";
 export * from "./shared/types/api";
 
 // Shared Utils
-export * from "./shared/utils/cover-image";
 export * from "./shared/utils/date";
 export * from "./shared/utils/format-price";
+export * from "./shared/utils/html-text";
 
 // Shared Constants
 export * from "./shared/constants/apis";
