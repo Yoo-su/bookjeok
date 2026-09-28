@@ -28,11 +28,14 @@ vi.mock("@/shared/actions/revalidate", () => ({
 const clearAuth = vi.fn();
 
 vi.mock("@/features/auth/stores/use-auth-store", () => ({
-  useAuthStore: vi.fn((selector) =>
-    selector({
-      clearAuth: () => clearAuth(),
-      user: { id: 1, handle: "user_abc12345" },
-    }),
+  useAuthStore: Object.assign(
+    vi.fn((selector) =>
+      selector({
+        clearAuth: () => clearAuth(),
+        user: { id: 1, handle: "user_abc12345" },
+      }),
+    ),
+    { getState: () => ({ accessToken: "token-before-withdraw" }) },
   ),
 }));
 
@@ -66,6 +69,7 @@ describe("useWithdrawMutation", () => {
     // 남은 200 HTML이 만료 시각까지 그대로 나간다
     expect(revalidateUserProfile).toHaveBeenCalledWith({
       handle: "user_abc12345",
+      accessToken: "token-before-withdraw",
     });
   });
 

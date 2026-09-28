@@ -57,8 +57,12 @@ export const useUpdateUserMutation = () => {
     // 핸들은 수정 대상이 아니므로(UpdateUserDto에 없다) 옛 경로를 따로 좇을 필요가 없다.
     onSuccess: (data) => {
       toast.success(t("update_success"));
-      void purgeRouteCache(revalidateUserProfile({ handle: data.handle }), () =>
-        router.refresh(),
+      void purgeRouteCache(
+        revalidateUserProfile({
+          handle: data.handle,
+          accessToken: useAuthStore.getState().accessToken,
+        }),
+        () => router.refresh(),
       );
     },
     onError: (error: unknown) => {
@@ -85,7 +89,11 @@ export const useWithdrawMutation = () => {
 
       if (handle) {
         try {
-          await revalidateUserProfile({ handle });
+          await revalidateUserProfile({
+            handle,
+            // 탈퇴 뒤라 무효인 토큰이다. 서버 액션은 프로필이 404인지로 판단한다
+            accessToken: useAuthStore.getState().accessToken,
+          });
         } catch {
           // 재검증 실패는 만료 시각에 어차피 해소된다. 탈퇴 흐름을 막지 않는다.
         }

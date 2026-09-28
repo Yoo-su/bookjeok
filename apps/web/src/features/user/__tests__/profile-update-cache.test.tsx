@@ -5,6 +5,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { useUpdateUserMutation } from "@/features/user/mutations";
 import { revalidateUserProfile } from "@/shared/actions/revalidate";
 
@@ -85,7 +86,11 @@ describe("프로필 수정 후 캐시 정리", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     await waitFor(() =>
-      expect(revalidateUserProfile).toHaveBeenCalledWith({ handle: HANDLE }),
+      expect(revalidateUserProfile).toHaveBeenCalledWith({
+        handle: HANDLE,
+        // 서버 액션이 본인 호출인지 확인하도록 현재 토큰을 함께 넘긴다
+        accessToken: useAuthStore.getState().accessToken,
+      }),
     );
   });
 

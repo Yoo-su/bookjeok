@@ -15,6 +15,7 @@ import { Server, Socket } from 'socket.io';
 import { User } from '@/features/user/entities/user.entity';
 import { UserService } from '@/features/user/services/user.service';
 import { authenticateSocket } from '@/shared/websocket/authenticate-socket';
+import { toSocketPayload } from '@/shared/websocket/to-socket-payload';
 
 import { ChatMessage } from '../entities/chat-message.entity';
 import { ChatRoom } from '../entities/chat-room.entity';
@@ -109,7 +110,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitUserRejoined(roomId: number, message: ChatMessage) {
     this.server.to(String(roomId)).emit('userRejoined', {
       roomId,
-      message,
+      message: toSocketPayload(message),
     });
   }
 
@@ -119,7 +120,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param room - 생성된 채팅방의 정보
    */
   notifyNewRoom(userId: number, room: ChatRoom) {
-    this.server.to(`user:${userId}`).emit('newChatRoom', room);
+    this.server.to(`user:${userId}`).emit('newChatRoom', toSocketPayload(room));
     this.logger.log(`Notified user ${userId} of new room ${room.id}`);
   }
 
@@ -146,9 +147,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       // 낙관적 메시지 교체를 위해 상관 ID를 그대로 반환 (저장하지 않는 일회성 필드)
+      const serialized = toSocketPayload(message);
       const payload = isValidClientMessageId(clientMessageId)
-        ? { ...message, clientMessageId }
-        : message;
+        ? { ...serialized, clientMessageId }
+        : serialized;
 
       this.server.to(String(roomId)).emit('newMessage', payload);
       return { status: 'ok', message: payload };
@@ -215,7 +217,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const systemMessage = await this.chatService.leaveRoom(roomId, user.id);
       this.server.to(String(roomId)).emit('userLeft', {
         roomId,
-        message: systemMessage,
+        message: toSocketPayload(systemMessage),
       });
       await client.leave(String(roomId));
       this.logger.log(`User ${user.id} left room ${roomId}`);

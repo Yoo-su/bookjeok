@@ -1,6 +1,5 @@
 "use client";
 
-import { ReviewFormValues } from "@bookjeok/core";
 import {
   useCreateReviewMutation as useSharedCreateReviewMutation,
   useDeleteReviewMutation as useSharedDeleteReviewMutation,
@@ -10,10 +9,9 @@ import {
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { deleteImages } from "@/features/book-sale/actions/delete-action";
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { revalidateReview } from "@/shared/actions/revalidate";
 import { useRouter } from "@/shared/config/i18n/routing";
-import { handleMutationError } from "@/shared/utils/error-handler";
 import { purgeRouteCache } from "@/shared/utils/purge-route-cache";
 
 /**
@@ -55,43 +53,19 @@ export const useUpdateReviewMutation = () => {
   const sharedMutation = useSharedUpdateReviewMutation({
     onSuccess: (data) => {
       toast.success(t("update_success"));
-      void purgeRouteCache(revalidateReview({ reviewId: data.id }), () =>
-        router.refresh(),
+      void purgeRouteCache(
+        revalidateReview({
+          reviewId: data.id,
+          accessToken: useAuthStore.getState().accessToken,
+        }),
+        () => router.refresh(),
       );
     },
   });
 
-  return {
-    ...sharedMutation,
-    mutate: async ({
-      id,
-      data,
-      deletedImageUrls,
-    }: {
-      id: number;
-      data: ReviewFormValues;
-      deletedImageUrls?: string[];
-    }) => {
-      if (deletedImageUrls && deletedImageUrls.length > 0) {
-        await deleteImages(deletedImageUrls);
-      }
-      return sharedMutation.mutate({ id, data });
-    },
-    mutateAsync: async ({
-      id,
-      data,
-      deletedImageUrls,
-    }: {
-      id: number;
-      data: ReviewFormValues;
-      deletedImageUrls?: string[];
-    }) => {
-      if (deletedImageUrls && deletedImageUrls.length > 0) {
-        await deleteImages(deletedImageUrls);
-      }
-      return sharedMutation.mutateAsync({ id, data });
-    },
-  };
+  // 본문에서 빠진 이미지는 서버가 수정을 커밋한 뒤 지운다(review.service update).
+  // 여기서 먼저 지우면 수정이 실패했을 때 본문은 그대로인데 이미지만 사라진다.
+  return sharedMutation;
 };
 
 /**
@@ -107,7 +81,11 @@ export const useDeleteReviewMutation = () => {
       // 상세가 ISR에 200으로 남으면 다른 방문자·크롤러에게 계속 노출되고,
       // 목록·홈에 남은 링크는 404로 이어진다.
       void purgeRouteCache(
-        revalidateReview({ reviewId: id, deleted: true }),
+        revalidateReview({
+          reviewId: id,
+          deleted: true,
+          accessToken: useAuthStore.getState().accessToken,
+        }),
         () => router.refresh(),
       );
     },
