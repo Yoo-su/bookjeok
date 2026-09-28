@@ -123,6 +123,7 @@ describe("middleware 경로 게이트", () => {
       "/en",
       "/ko/lounge",
       "/ko/insights",
+      "/ko/reading-log",
       "/ko/book/market",
       "/ko/book/reviews",
       "/ko/book/reviews/77",
