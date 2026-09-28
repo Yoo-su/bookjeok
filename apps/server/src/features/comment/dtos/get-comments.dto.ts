@@ -1,6 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
+import { COMMENT_PAGE_SIZE_MAX } from '../constants';
 import { CommentTargetType } from '../entities/comment.entity';
 
 /**
@@ -16,13 +25,21 @@ export class GetCommentsDto {
 
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   page?: number = 1;
 
+  // 0은 TypeORM take(0)이라 LIMIT 없이 전량 조회가 된다
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(COMMENT_PAGE_SIZE_MAX)
   limit?: number = 10;
 
   @IsOptional()
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
   cursorId?: number;
 }

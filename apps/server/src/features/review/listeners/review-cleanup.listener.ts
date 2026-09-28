@@ -1,6 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EntityManager, In } from 'typeorm';
+import { In } from 'typeorm';
+
+import { CommentTargetType } from '@/features/comment/entities/comment.entity';
+import { deleteTargetComments } from '@/features/comment/utils/delete-target-comments';
+import {
+  USER_WITHDRAWN_EVENT,
+  UserWithdrawnEvent,
+} from '@/shared/events/user-withdrawn.event';
 
 import { Review } from '../entities/review.entity';
 import { ReviewReaction } from '../entities/review-reaction.entity';
@@ -10,15 +17,12 @@ export class ReviewCleanupListener {
   private readonly logger = new Logger(ReviewCleanupListener.name);
 
   /**
-   * 유저 탈퇴 시 해당 유저가 작성한 리뷰(Review)와 남긴 리액션(ReviewReaction)을 일괄 삭제합니다.
+   * 유저 탈퇴 시 해당 유저가 작성한 리뷰(Review)와 거기 달린 댓글, 남긴 리액션(ReviewReaction)을 일괄 삭제합니다.
    * 남의 리뷰에 남긴 리액션은 reactionCount도 되돌립니다.
    */
   // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
-  @OnEvent('user.withdrawn', { suppressErrors: false })
-  async handleUserWithdrawn(event: {
-    userId: number;
-    entityManager: EntityManager;
-  }) {
+  @OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })
+  async handleUserWithdrawn(event: UserWithdrawnEvent) {
     const { userId, entityManager } = event;
 
     try {
@@ -41,7 +45,16 @@ export class ReviewCleanupListener {
         );
       }
 
-      // 2. 유저가 작성한 리뷰 삭제
+      // 2. 유저가 작성한 리뷰와 거기 달린 댓글 삭제
+      const reviews = await entityManager.find(Review, {
+        where: { user: { id: userId } },
+        select: ['id'],
+      });
+      await deleteTargetComments(
+        entityManager,
+        CommentTargetType.REVIEW,
+        reviews.map((review) => String(review.id)),
+      );
       await entityManager.delete(Review, {
         user: { id: userId },
       });

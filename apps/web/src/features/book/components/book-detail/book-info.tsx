@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 
 import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { Link } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
 
 interface BookInfoProps {
   title: string;
@@ -31,7 +32,7 @@ export const BookInfo = ({
         </h1>
         <p className="flex flex-wrap items-center gap-2 mt-3 text-sm text-stone-500">
           <Link
-            href={`/book/search?q=${author}`}
+            href={{ pathname: PATHS.BOOK_SEARCH, query: { q: author } }}
             className="border-b border-stone-200 pb-0.5 hover:border-stone-500 hover:text-stone-700 transition-colors"
           >
             {author}
@@ -39,7 +40,7 @@ export const BookInfo = ({
           <span>{t("author_suffix")}</span>
           <span className="text-stone-300">·</span>
           <Link
-            href={`/book/search?q=${publisher}`}
+            href={{ pathname: PATHS.BOOK_SEARCH, query: { q: publisher } }}
             className="border-b border-stone-200 pb-0.5 hover:border-stone-500 hover:text-stone-700 transition-colors"
           >
             {publisher}

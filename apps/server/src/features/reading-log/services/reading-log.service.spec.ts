@@ -193,6 +193,70 @@ describe('ReadingLogService', () => {
     });
   });
 
+  describe('미래 날짜', () => {
+    beforeEach(() => {
+      // 로컬 기준 2026-09-28 정오
+      jest.useFakeTimers().setSystemTime(new Date(2026, 8, 28, 12));
+      (readingLogRepository.create as jest.Mock).mockImplementation(
+        (log: ReadingLog) => log,
+      );
+      (readingLogRepository.save as jest.Mock).mockImplementation(
+        (log: ReadingLog) => Promise.resolve({ ...log, id: VALID_UUID }),
+      );
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('모레 이후 날짜는 400으로 막는다', async () => {
+      await expect(
+        service.create(1, { isbn: '9788937460449', date: '2099-12-31' }),
+      ).rejects.toMatchObject({
+        errorCode: 'READING_LOG_FUTURE_DATE',
+        status: HttpStatus.BAD_REQUEST,
+      });
+      await expect(
+        service.create(1, { isbn: '9788937460449', date: '2026-09-30' }),
+      ).rejects.toMatchObject({ errorCode: 'READING_LOG_FUTURE_DATE' });
+      expect(readingLogRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('시차로 하루 앞선 지역의 오늘(서버 기준 내일)까지는 받는다', async () => {
+      await service.create(1, { isbn: '9788937460449', date: '2026-09-28' });
+      await service.create(1, { isbn: '9788937460449', date: '2026-09-29' });
+
+      expect(readingLogRepository.save).toHaveBeenCalledTimes(2);
+    });
+
+    it('수정으로 미래 날짜로 옮기는 것도 막는다', async () => {
+      (readingLogRepository.findOne as jest.Mock).mockResolvedValueOnce({
+        id: VALID_UUID,
+        userId: 1,
+        isbn: '9788937460449',
+        date: '2026-09-10',
+      } as ReadingLog);
+
+      await expect(
+        service.update(1, VALID_UUID, { date: '2099-01-01' }),
+      ).rejects.toMatchObject({ errorCode: 'READING_LOG_FUTURE_DATE' });
+      expect(readingLogRepository.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getStats 파라미터', () => {
+    it.each([
+      ['연도 없음', undefined, 9],
+      ['월 없음', 2026, undefined],
+      ['월 범위 밖', 2026, 13],
+    ])('%s이면 DB를 보기 전에 400', async (_, year, month) => {
+      await expect(
+        service.getStats(1, year as number, month as number),
+      ).rejects.toMatchObject({ status: HttpStatus.BAD_REQUEST });
+      expect(readingLogRepository.createQueryBuilder).not.toHaveBeenCalled();
+    });
+  });
+
   describe('getBookStatus', () => {
     const isbn = '9788937460449';
 

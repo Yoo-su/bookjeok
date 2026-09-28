@@ -1,5 +1,6 @@
 import {
   ActiveReadersResponse,
+  BookInfo,
   estimateBookSize,
   LoungeBookReadersResponse,
   LoungeFeedResponse,
@@ -16,6 +17,7 @@ import { Book } from '@/features/book/entities/book.entity';
 import { BookDimension } from '@/features/book/entities/book-dimension.entity';
 import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions/business.exception';
+import { clampNumber } from '@/shared/utils/clamp-number';
 
 import {
   ACTIVE_READER_DAYS,
@@ -63,6 +65,40 @@ function dateStringDaysAgo(daysAgo: number): string {
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/**
+ * 라운지 응답의 도서 요약. 공급처 전용 필드(link·discount·pubdate)는 비운다.
+ * 도서가 없으면(삭제 등) ISBN만 채운 빈 요약을 돌려준다.
+ */
+function toLoungeBook(
+  book: Pick<
+    Book,
+    'isbn' | 'title' | 'author' | 'publisher' | 'image' | 'description'
+  > | null,
+  isbn: string,
+): BookInfo {
+  const vendorFields = { link: '', discount: '', pubdate: '' };
+  if (!book) {
+    return {
+      isbn,
+      title: '',
+      author: '',
+      publisher: '',
+      image: '',
+      description: '',
+      ...vendorFields,
+    };
+  }
+  return {
+    isbn: book.isbn,
+    title: book.title,
+    author: book.author,
+    publisher: book.publisher,
+    image: book.image,
+    description: book.description,
+    ...vendorFields,
+  };
 }
 
 interface FeedGroupAccumulator {
@@ -168,17 +204,7 @@ export class ReadingLogService {
       if (!group) continue;
 
       if (!group.book && log.book) {
-        group.book = {
-          isbn: log.book.isbn,
-          title: log.book.title,
-          author: log.book.author,
-          publisher: log.book.publisher,
-          image: log.book.image,
-          description: log.book.description,
-          link: '',
-          discount: '',
-          pubdate: '',
-        };
+        group.book = toLoungeBook(log.book, log.isbn);
       }
 
       // 사용자별 최신 기록만 유지 (이미 있으면 skip - 이미 date DESC 정렬됨)
@@ -280,17 +306,7 @@ export class ReadingLogService {
       if (!entry) continue;
 
       if (!entry.book && log.book) {
-        entry.book = {
-          isbn: log.book.isbn,
-          title: log.book.title,
-          author: log.book.author,
-          publisher: log.book.publisher,
-          image: log.book.image,
-          description: log.book.description,
-          link: '',
-          discount: '',
-          pubdate: '',
-        };
+        entry.book = toLoungeBook(log.book, log.isbn);
       }
 
       if (
@@ -407,29 +423,7 @@ export class ReadingLogService {
       .getRepository(Book)
       .findOne({ where: { isbn } });
 
-    const book = bookEntity
-      ? {
-          isbn: bookEntity.isbn,
-          title: bookEntity.title,
-          author: bookEntity.author,
-          publisher: bookEntity.publisher,
-          image: bookEntity.image,
-          description: bookEntity.description,
-          link: '',
-          discount: '',
-          pubdate: '',
-        }
-      : {
-          isbn,
-          title: '',
-          author: '',
-          publisher: '',
-          image: '',
-          description: '',
-          link: '',
-          discount: '',
-          pubdate: '',
-        };
+    const book = toLoungeBook(bookEntity, isbn);
 
     // 전체 독자 수 (고유 사용자)
     const totalCountResult = await this.readingLogRepository
@@ -560,6 +554,7 @@ export class ReadingLogService {
    */
   async create(userId: number, createReadingLogDto: CreateReadingLogDto) {
     const { isbn, ...data } = createReadingLogDto;
+    this.assertNotFuture(data.date);
     await this.assertNotDuplicate(userId, isbn, data.date);
     const log = this.readingLogRepository.create({
       userId,
@@ -584,7 +579,8 @@ export class ReadingLogService {
     userId: number,
     params: { year?: number; month?: number; limit?: number },
   ) {
-    const { year, month, limit } = params;
+    const { year, month } = params;
+    const limit = clampNumber(params.limit, 50, 1, 100);
 
     // 1. 연도 및 월 지정 시 월별 기록 조회
     if (year && month) {
@@ -618,7 +614,7 @@ export class ReadingLogService {
       .where('log.userId = :userId', { userId })
       .orderBy('log.date', 'DESC')
       .addOrderBy('log.createdAt', 'DESC')
-      .take(limit || 50)
+      .take(limit)
       .getMany();
   }
 
@@ -627,7 +623,7 @@ export class ReadingLogService {
    * 실측 크기가 없는 책은 `estimateBookSize`로 채우고 `sizeSource`로 구분한다.
    */
   async getStack(userId: number, year: number): Promise<ReadingStackResponse> {
-    this.assertStackYear(year);
+    this.assertYear(year);
 
     const logs: StackLog[] = await this.readingLogRepository
       .createQueryBuilder('log')
@@ -691,7 +687,7 @@ export class ReadingLogService {
     handle: string,
     year: number,
   ): Promise<ReadingStackResponse> {
-    this.assertStackYear(year);
+    this.assertYear(year);
     const user = await this.userRepository.findOne({
       where: { handle },
       select: ['id', 'isReadingLogPublic', 'deletedAt'],
@@ -703,7 +699,7 @@ export class ReadingLogService {
     return this.getStack(user.id, year);
   }
 
-  private assertStackYear(year: number) {
+  private assertYear(year: number) {
     if (!Number.isInteger(year) || year < 2000 || year > 2100) {
       throw new BusinessException('VALIDATION_ERROR', HttpStatus.BAD_REQUEST);
     }
@@ -726,6 +722,11 @@ export class ReadingLogService {
    * @param month 월
    */
   async getStats(userId: number, year: number, month: number) {
+    this.assertYear(year);
+    if (!Number.isInteger(month) || month < 1 || month > 12) {
+      throw new BusinessException('VALIDATION_ERROR', HttpStatus.BAD_REQUEST);
+    }
+
     const qb = this.readingLogRepository.createQueryBuilder('log');
 
     // 1. 이번 달 시작일/종료일 계산
@@ -764,6 +765,7 @@ export class ReadingLogService {
    * @param limit 가져올 개수
    */
   async findAllInfinite(userId: number, cursorId?: string, limit = 10) {
+    limit = clampNumber(limit, 10, 1, 50);
     const query = this.readingLogRepository
       .createQueryBuilder('log')
       .leftJoinAndSelect('log.book', 'book')
@@ -849,6 +851,7 @@ export class ReadingLogService {
       updateReadingLogDto.date !== undefined &&
       updateReadingLogDto.date !== log.date
     ) {
+      this.assertNotFuture(updateReadingLogDto.date);
       await this.assertNotDuplicate(
         userId,
         log.isbn,
@@ -887,6 +890,20 @@ export class ReadingLogService {
       count: parseInt(row?.count ?? '0', 10),
       lastDate: row?.lastDate ?? null,
     };
+  }
+
+  /**
+   * 미래 날짜 기록을 막는다. 폼도 막지만 API는 직접 호출된다. 라운지 피드가
+   * 최근 날짜순이라 미래 날짜 하나가 모두의 피드 맨 위에 계속 남는다.
+   * 한국보다 날짜가 앞선 지역의 "오늘"을 막지 않도록 서버 기준 내일까지는 받는다.
+   */
+  private assertNotFuture(date: string) {
+    if (date.slice(0, 10) > dateStringDaysAgo(-1)) {
+      throw new BusinessException(
+        'READING_LOG_FUTURE_DATE',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   /**

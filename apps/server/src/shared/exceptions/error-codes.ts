@@ -177,6 +177,10 @@ export const ERROR_CODES = {
     code: 'READING_LOG_002',
     message: '그날 이미 기록한 책입니다.',
   },
+  READING_LOG_FUTURE_DATE: {
+    code: 'READING_LOG_003',
+    message: '미래 날짜로는 기록할 수 없습니다.',
+  },
 
   // ============================================
   // 채팅 관련 에러 (CHAT)

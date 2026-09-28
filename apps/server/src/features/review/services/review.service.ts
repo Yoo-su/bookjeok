@@ -11,6 +11,8 @@ import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { Brackets, EntityManager, In, Repository } from 'typeorm';
 
+import { CommentTargetType } from '@/features/comment/entities/comment.entity';
+import { deleteTargetComments } from '@/features/comment/utils/delete-target-comments';
 import { Review } from '@/features/review/entities/review.entity';
 import {
   ReviewReaction,
@@ -871,6 +873,9 @@ export class ReviewService {
     // 삭제 전 태그 정보 백업 (반환용)
     const tags = review.tagEntities?.map((t) => t.name) || [];
 
+    await deleteTargetComments(manager, CommentTargetType.REVIEW, [
+      String(review.id),
+    ]);
     const deletedReview = await manager.remove(Review, review);
 
     return {

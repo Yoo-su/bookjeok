@@ -49,7 +49,7 @@ export class ReviewController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(IdempotencyInterceptor)
-  @InvalidateCache('reviews', 'reviews-popular', 'review-tags')
+  @InvalidateCache('reviews-popular', 'review-tags')
   @TrackActivity(ActivityType.REVIEW_CREATE, (req) => ({ isbn: req.body.isbn }))
   @ApiOperation({
     summary: '리뷰 작성',
@@ -261,7 +261,7 @@ export class ReviewController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
-  @InvalidateCache('reviews', 'reviews-popular', 'review-tags')
+  @InvalidateCache('reviews-popular', 'review-tags')
   @TrackActivity(ActivityType.REVIEW_UPDATE, (req) => ({ id: req.params.id }))
   @ApiOperation({
     summary: '리뷰 수정',
@@ -291,7 +291,7 @@ export class ReviewController {
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  @InvalidateCache('reviews', 'reviews-popular', 'review-tags')
+  @InvalidateCache('reviews-popular', 'review-tags')
   @TrackActivity(ActivityType.REVIEW_DELETE, (req) => ({ id: req.params.id }))
   @ApiOperation({
     summary: '리뷰 삭제',

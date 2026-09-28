@@ -8,6 +8,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 
 import { BookCard } from "@/features/book/components/common/book-card";
 import { Link } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
 
 interface RelatedBooksSectionProps {
   title: string;
@@ -23,9 +24,6 @@ export const RelatedBooksSection = ({
   queryType = "Keyword",
 }: RelatedBooksSectionProps) => {
   const t = useTranslations("book.detail");
-  const seed = currentIsbn
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
   const { data: books, isLoading } = useBookListQuery({
     query,
@@ -34,8 +32,11 @@ export const RelatedBooksSection = ({
     queryType,
   });
 
-  const filteredBooks =
-    books?.filter((book) => book.isbn !== currentIsbn) || [];
+  // 매 렌더 새 배열이면 아래 useMemo가 매번 다시 섞는다
+  const filteredBooks = useMemo(
+    () => books?.filter((book) => book.isbn !== currentIsbn) || [],
+    [books, currentIsbn],
+  );
 
   // ISBN을 기반으로 한 결정론적 셔플 (Fisher-Yates with LCG)
   const displayBooks = useMemo(() => {
@@ -74,7 +75,7 @@ export const RelatedBooksSection = ({
           {title}
         </h2>
         <Link
-          href={`/book/search?q=${query}`}
+          href={{ pathname: PATHS.BOOK_SEARCH, query: { q: query } }}
           className="text-sm font-medium text-gray-500 hover:text-primary"
         >
           {t("more_books")}

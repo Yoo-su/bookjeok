@@ -53,17 +53,22 @@ export async function streamAiChat(
     const refreshToken = useAuthStore.getState().refreshToken;
     if (refreshToken) {
       try {
-        const refreshRes = await fetch(`${apiBaseURL}/auth/refresh`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${refreshToken}`,
+        const refreshRes = await fetch(
+          `${apiBaseURL}${API_PATHS.auth.refresh}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${refreshToken}`,
+            },
           },
-        });
+        );
 
         if (refreshRes.ok) {
+          // 서버 응답은 { success, data } 봉투다. axios 인터셉터처럼 벗겨서 읽는다
+          const body = await refreshRes.json();
           const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-            await refreshRes.json();
+            body?.data ?? {};
 
           if (newAccessToken) {
             useAuthStore.getState().setTokens({
