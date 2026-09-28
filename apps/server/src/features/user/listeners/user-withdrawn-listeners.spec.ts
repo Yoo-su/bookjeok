@@ -11,6 +11,7 @@ import { ReadingLogCleanupListener } from '@/features/reading-log/listeners/read
 import { ReviewCleanupListener } from '@/features/review/listeners/review-cleanup.listener';
 import { UsedBookSaleCleanupListener } from '@/features/used-book-sale/listeners/used-book-sale-cleanup.listener';
 import { ActivityCleanupListener } from '@/shared/activity/listeners/activity-cleanup.listener';
+import { USER_WITHDRAWN_EVENT } from '@/shared/events/user-withdrawn.event';
 
 import { UserCleanupListener } from './user-cleanup.listener';
 
@@ -54,7 +55,7 @@ describe('user.withdrawn 리스너', () => {
       await expect(
         module
           .get(EventEmitter2)
-          .emitAsync('user.withdrawn', { userId: 1, entityManager }),
+          .emitAsync(USER_WITHDRAWN_EVENT, { userId: 1, entityManager }),
       ).rejects.toThrow('db down');
 
       await module.close();

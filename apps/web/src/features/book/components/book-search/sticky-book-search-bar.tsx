@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 import { Search, X } from "@/shared/components/icons/iconsax";
 import { Input } from "@/shared/components/shadcn/input";

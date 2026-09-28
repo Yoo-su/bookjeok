@@ -90,8 +90,8 @@ export const useUpdateBookSaleStatusMutation = (options?: {
  * 중고책 판매글 삭제를 위한 순수 뮤테이션 훅
  */
 export const useDeleteBookSaleMutation = (options?: {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
+  onSuccess?: (data: void, saleId: number) => void;
+  onError?: (error: Error, saleId: number) => void;
 }) => {
   return useMutation({
     mutationFn: (saleId: number) => deleteBookSale(saleId),

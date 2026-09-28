@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Map, MapMarker, useKakaoLoader } from "react-kakao-maps-sdk";
+import { toast } from "sonner";
 
 import { Button } from "@/shared/components/shadcn/button";
 import { config } from "@/shared/config/env";
@@ -96,11 +97,11 @@ export const MapLocationSelector = ({
         },
         (err) => {
           console.error(err);
-          alert(t("geolocation_unavailable"));
+          toast.error(t("geolocation_unavailable"));
         },
       );
     } else {
-      alert(t("geolocation_unsupported"));
+      toast.error(t("geolocation_unsupported"));
     }
   };
 

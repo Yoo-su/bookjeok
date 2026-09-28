@@ -69,8 +69,7 @@ export class AuthService {
     gender?: string;
     ageRange?: string;
   }) {
-    const { provider, providerId, name, email, gender, ageRange } =
-      socialLoginDto;
+    const { provider, providerId, email } = socialLoginDto;
     const user = await this.userService.findByProviderId(provider, providerId);
 
     // 탈퇴 계정이면 여기서 끊는다. 지금은 withdraw()가 providerId를

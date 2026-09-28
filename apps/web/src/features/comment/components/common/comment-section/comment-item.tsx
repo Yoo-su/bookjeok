@@ -8,7 +8,6 @@ import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { useConfirm } from "@/features/confirm";
 import { AnimatedHeart } from "@/shared/components/icons/animated";
 import {
-  Heart,
   Loader2,
   MoreVertical,
   Pencil,

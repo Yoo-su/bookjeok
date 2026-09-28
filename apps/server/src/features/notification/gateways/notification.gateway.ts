@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { Notification } from '@/features/notification/entities/notification.entity';
 import { UserService } from '@/features/user/services/user.service';
 import { authenticateSocket } from '@/shared/websocket/authenticate-socket';
+import { toSocketPayload } from '@/shared/websocket/to-socket-payload';
 
 @WebSocketGateway({
   cors: {
@@ -85,7 +86,9 @@ export class NotificationGateway
     recipientId: number,
     payload: Notification | Record<string, unknown>,
   ) {
-    this.server?.to(`user:${recipientId}`).emit('newNotification', payload);
+    this.server
+      ?.to(`user:${recipientId}`)
+      .emit('newNotification', toSocketPayload(payload));
     this.logger.log(`Sent notification to User ${recipientId}`);
   }
 }

@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { User } from "@/shared/components/icons/iconsax";
 import {
   Avatar,
   AvatarFallback,

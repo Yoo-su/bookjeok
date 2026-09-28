@@ -9,7 +9,6 @@ import {
   SaleStatus,
   SearchBookSalesParams,
   SortBy,
-  SortOption,
   SortOrder,
   VALID_SALE_STATUSES,
   VALID_SORT_BY,

@@ -14,6 +14,8 @@ import { UsedBookSaleService } from '@/features/used-book-sale/services/used-boo
 import { User } from '@/features/user/entities/user.entity';
 import { isPaymentEnabled } from '@/shared/config/feature-flags';
 import { BusinessException } from '@/shared/exceptions/business.exception';
+import { clampNumber } from '@/shared/utils/clamp-number';
+import { toSocketPayload } from '@/shared/websocket/to-socket-payload';
 
 import { ChatMessage, ChatMessageType } from '../entities/chat-message.entity';
 import { ChatParticipant } from '../entities/chat-participant.entity';
@@ -346,6 +348,9 @@ export class ChatService {
     limit: number,
     cursorId?: number,
   ) {
+    page = clampNumber(page, 1, 1, Number.MAX_SAFE_INTEGER);
+    limit = clampNumber(limit, 20, 1, 100);
+
     // 채팅방 참여자 검증
     const participant = await this.chatParticipantRepository.findOne({
       where: { chatRoom: { id: roomId }, user: { id: userId } },
@@ -643,7 +648,7 @@ export class ChatService {
     if (this.chatGateway?.server) {
       this.chatGateway.server
         .to(String(roomId))
-        .emit('newMessage', savedMessage);
+        .emit('newMessage', toSocketPayload(savedMessage));
     }
 
     return savedMessage;

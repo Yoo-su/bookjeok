@@ -1,13 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager } from 'typeorm';
 
-import { Book } from '@/features/book/entities/book.entity';
-import {
-  SaleStatus,
-  UsedBookSale,
-} from '@/features/used-book-sale/entities/used-book-sale.entity';
+import { SaleStatus } from '@/features/used-book-sale/entities/used-book-sale.entity';
 import { Wishlist } from '@/features/user/entities/wishlist.entity';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 

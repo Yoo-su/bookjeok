@@ -11,12 +11,14 @@ import {
 
 interface UseEditorImageHandlerOptions {
   uploadPath: (file: File) => string;
-  initialContent?: string;
 }
 
+/**
+ * 에디터에 넣은 이미지를 저장 시점에 업로드하고 본문의 임시 URL을 교체합니다.
+ * 본문에서 빠진 기존 이미지는 서버가 저장을 커밋한 뒤 지우므로 여기서 다루지 않습니다.
+ */
 export const useEditorImageHandler = ({
   uploadPath,
-  initialContent = "",
 }: UseEditorImageHandlerOptions) => {
   const t = useTranslations("common");
   const [isUploading, setIsUploading] = useState(false);
@@ -82,24 +84,7 @@ export const useEditorImageHandler = ({
       imageMapRef.current.forEach((_, url) => URL.revokeObjectURL(url));
       imageMapRef.current.clear();
 
-      // 초기 콘텐츠에 있었지만 최종 콘텐츠에는 없는 이미지 URL 찾기 (삭제된 이미지)
-      const extractImageUrls = (html: string) => {
-        const regex = /<img[^>]+src="([^">]+)"/g;
-        const urls: string[] = [];
-        let match;
-        while ((match = regex.exec(html)) !== null) {
-          urls.push(match[1]);
-        }
-        return urls;
-      };
-
-      const initialUrls = extractImageUrls(initialContent);
-      const finalUrls = extractImageUrls(newContent);
-      const deletedImageUrls = initialUrls.filter(
-        (url) => !finalUrls.includes(url),
-      );
-
-      return { content: newContent, deletedImageUrls };
+      return { content: newContent };
     } catch (error) {
       console.error("Image upload error:", error);
       throw error;

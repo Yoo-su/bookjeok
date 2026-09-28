@@ -2,6 +2,13 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 
+/**
+ * prefix 하나가 들고 있을 수 있는 키 수 상한.
+ * 검색어처럼 키가 입력마다 새로 생기는 캐시는, 기본 메모리 저장소가 만료 항목을
+ * 조회될 때만 지우므로 쓰기가 없으면 끝없이 쌓인다. 넘으면 그 prefix를 비우고 다시 채운다.
+ */
+const MAX_KEYS_PER_PREFIX = 1000;
+
 @Injectable()
 export class SmartCacheStore {
   private readonly logger = new Logger(SmartCacheStore.name);
@@ -17,6 +24,11 @@ export class SmartCacheStore {
     value: T,
     ttl?: number,
   ): Promise<void> {
+    const keys = this.prefixKeyMap.get(prefix);
+    if (keys && !keys.has(key) && keys.size >= MAX_KEYS_PER_PREFIX) {
+      await this.invalidateByPrefix(prefix);
+    }
+
     await this.cacheManager.set(key, value, ttl);
 
     if (!this.prefixKeyMap.has(prefix)) {

@@ -44,11 +44,9 @@ export const ReviewEdit = ({ id }: ReviewEditProps) => {
     }
   }, [error, router, tToast]);
 
-  const handleSubmit = async (
-    data: ReviewFormValues,
-    deletedImageUrls?: string[],
-  ) => {
-    await updateReview({ id, data, deletedImageUrls });
+  // 본문에서 빠진 이미지는 서버가 수정을 커밋한 뒤 지운다
+  const handleSubmit = async (data: ReviewFormValues) => {
+    await updateReview({ id, data });
     router.push(PATHS.REVIEW_DETAIL(id));
   };
 

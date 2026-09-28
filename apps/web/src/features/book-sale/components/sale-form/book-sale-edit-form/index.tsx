@@ -1,12 +1,9 @@
-import { TradeMethod, UsedBookSale } from "@bookjeok/core";
+import { UsedBookSale } from "@bookjeok/core";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { StatefulButton } from "@/shared/components/aceternityui/stateful-button";
-import { BoxIcon, TruckFastIcon } from "@/shared/components/icons";
-import { Handshake, Loader2 } from "@/shared/components/icons/iconsax";
-import { Button } from "@/shared/components/shadcn/button";
 import {
   Card,
   CardContent,
@@ -23,13 +20,12 @@ import {
   FormMessage,
 } from "@/shared/components/shadcn/form";
 import { Input } from "@/shared/components/shadcn/input";
-import { Textarea } from "@/shared/components/shadcn/textarea";
 import { ImageUploader } from "@/shared/components/ui/image-uploader";
 
 import { useBookSaleEditForm } from "../../../hooks/use-book-sale-edit-form";
 import { UploadProgressModal } from "../../common/upload-progress-modal";
 import { RegionDisplayCard } from "../region-display-card";
-import { TradeMethodField } from "../trade-method-field";
+import { SaleBasicFields, SaleContentField } from "../sale-common-fields";
 
 // 카카오맵 SDK가 무거우므로 지연 로딩
 const MapLocationSelector = dynamic(
@@ -102,56 +98,7 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
         <Form {...form}>
           <form onSubmit={onSubmit} className="space-y-6">
             <fieldset disabled={isSubmitDisabled} className="space-y-6">
-              <div className="grid grid-cols-1 gap-3 sm:gap-6 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center justify-between">
-                        <FormLabel>{t("fields.title")}</FormLabel>
-                        <span className="text-xs text-muted-foreground">
-                          {field.value?.length || 0} / 50{t("char_unit")}
-                        </span>
-                      </div>
-                      <FormControl>
-                        <Input
-                          placeholder={t("fields.title_placeholder")}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="mt-1" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("fields.price")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-semibold">
-                            ₩
-                          </span>
-                          <Input
-                            type="number"
-                            placeholder={t("fields.price_placeholder")}
-                            className="pl-8"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="mt-1" />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {/* 거래 방식 선택 (택배 옵션은 PG 승인 전까지 비활성) */}
-              <TradeMethodField control={form.control} name="tradeMethod" />
+              <SaleBasicFields />
 
               <div className="space-y-6">
                 <div className="border rounded-xl p-4 sm:p-6 bg-muted/20 space-y-4 col-span-1 md:col-span-2">
@@ -244,59 +191,7 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>{t("fields.content")}</FormLabel>
-                      <span className="text-xs text-muted-foreground">
-                        {field.value?.length || 0} / 1000{t("char_unit")}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {((t.raw("suggested_tags") as string[]) || []).map(
-                        (tag) => (
-                          <button
-                            key={tag}
-                            type="button"
-                            onClick={() => {
-                              const currentContent =
-                                form.getValues("content") || "";
-                              if (!currentContent.includes(tag)) {
-                                form.setValue(
-                                  "content",
-                                  currentContent
-                                    ? `${currentContent}\n${tag}`
-                                    : tag,
-                                  { shouldValidate: true },
-                                );
-                              }
-                            }}
-                            className="text-xs px-2.5 py-1 rounded-md border border-stone-200 dark:border-stone-800 bg-stone-100/70 dark:bg-stone-800/50 text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-                          >
-                            + {tag}
-                          </button>
-                        ),
-                      )}
-                    </div>
-
-                    <FormControl>
-                      <Textarea
-                        placeholder={t("fields.content_placeholder")}
-                        className="resize-none"
-                        rows={8}
-                        {...field}
-                      />
-                    </FormControl>
-                    <div className="mt-1 min-h-5">
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
+              <SaleContentField />
             </fieldset>
 
             <StatefulButton

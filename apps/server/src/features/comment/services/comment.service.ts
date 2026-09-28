@@ -8,7 +8,9 @@ import { Repository } from 'typeorm';
 import { BookService } from '@/features/book/services/book.service';
 import { ReviewService } from '@/features/review/services/review.service';
 import { BusinessException } from '@/shared/exceptions';
+import { clampNumber } from '@/shared/utils/clamp-number';
 
+import { COMMENT_PAGE_SIZE_MAX } from '../constants';
 import { CreateCommentDto } from '../dtos/create-comment.dto';
 import { GetCommentsDto } from '../dtos/get-comments.dto';
 import { UpdateCommentDto } from '../dtos/update-comment.dto';
@@ -112,6 +114,9 @@ export class CommentService {
     limit: number = 10,
     cursorId?: number,
   ) {
+    page = clampNumber(page, 1, 1, Number.MAX_SAFE_INTEGER);
+    limit = clampNumber(limit, 10, 1, COMMENT_PAGE_SIZE_MAX);
+
     const qb = this.commentRepository.createQueryBuilder('comment');
     qb.where('comment.userId = :userId', { userId });
 

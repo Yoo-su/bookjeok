@@ -11,7 +11,6 @@ import {
 import {
   AiBookSummaryData,
   bookKeys,
-  BookStats,
   DEFAULT_DISPLAY,
   GetBookListParams,
 } from "@bookjeok/core";

@@ -30,12 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/shadcn/select";
+import { MAX_PROFILE_IMAGE_SIZE } from "@/shared/constants/upload";
 import { compressImage } from "@/shared/utils/compress-image";
 import { API_ERROR_CODES, getErrorCode } from "@/shared/utils/error-handler";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
-
-// 프로필 이미지 업로드 최대 용량 (20MB)
-const MAX_PROFILE_IMAGE_SIZE = 20 * 1024 * 1024;
 
 // 기본 프로필 이미지 목록
 const DEFAULT_PROFILE_IMAGES = [

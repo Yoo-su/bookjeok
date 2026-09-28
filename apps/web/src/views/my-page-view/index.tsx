@@ -17,8 +17,6 @@ import {
   CheckCircle2,
   Handshake,
   Heart,
-  Loader2,
-  Mail,
   MessageSquare,
   PackageCheck,
   Pencil,

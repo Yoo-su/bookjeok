@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EntityManager, In } from 'typeorm';
+import { In } from 'typeorm';
+
+import {
+  USER_WITHDRAWN_EVENT,
+  UserWithdrawnEvent,
+} from '@/shared/events/user-withdrawn.event';
 
 import { SaleStatus, UsedBookSale } from '../entities/used-book-sale.entity';
 
@@ -13,11 +18,8 @@ export class UsedBookSaleCleanupListener {
    * 이미 판매 완료(SOLD)된 내역은 구매자의 거래 기록 및 통계 보존을 위해 유지합니다.
    */
   // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
-  @OnEvent('user.withdrawn', { suppressErrors: false })
-  async handleUserWithdrawn(event: {
-    userId: number;
-    entityManager: EntityManager;
-  }) {
+  @OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })
+  async handleUserWithdrawn(event: UserWithdrawnEvent) {
     const { userId, entityManager } = event;
 
     try {

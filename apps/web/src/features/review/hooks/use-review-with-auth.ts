@@ -1,7 +1,7 @@
 "use client";
 
 import { getReviewAuthenticated } from "@bookjeok/api-client";
-import { Review, reviewKeys } from "@bookjeok/core";
+import { reviewKeys } from "@bookjeok/core";
 import { useReviewDetailQuery } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";

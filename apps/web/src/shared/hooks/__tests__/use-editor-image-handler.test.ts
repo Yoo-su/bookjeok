@@ -96,24 +96,20 @@ describe("useEditorImageHandler", () => {
   });
 
   describe("uploadImages", () => {
-    it("업로드할 이미지가 없어도 content와 삭제된 목록을 정상적으로 반환해야 한다", async () => {
+    it("업로드할 이미지가 없으면 content를 그대로 반환해야 한다", async () => {
+      const { upload } = await import("@vercel/blob/client");
       const { result } = renderHook(() =>
-        useEditorImageHandler({
-          uploadPath: mockUploadPath,
-          initialContent: '<img src="https://old.url" />',
-        }),
+        useEditorImageHandler({ uploadPath: mockUploadPath }),
       );
 
-      let uploadResult:
-        | { content: string; deletedImageUrls: string[] }
-        | undefined;
+      let uploadResult: { content: string } | undefined;
       await act(async () => {
         uploadResult =
           await result.current.uploadImages("새로운 컨텐츠 (이미지 없음)");
       });
 
       expect(uploadResult?.content).toBe("새로운 컨텐츠 (이미지 없음)");
-      expect(uploadResult?.deletedImageUrls).toEqual(["https://old.url"]);
+      expect(upload).not.toHaveBeenCalled();
     });
 
     it("handleImageAdd를 통해 추가된 이미지가 컨텐츠에 포함될 경우 Vercel Blob에 업로드하고 URL을 교체해야 한다", async () => {
@@ -143,9 +139,7 @@ describe("useEditorImageHandler", () => {
 
       const contentHtml = `<p>Test content <img src="${blobUrl}" /></p>`;
 
-      let uploadResult:
-        | { content: string; deletedImageUrls: string[] }
-        | undefined;
+      let uploadResult: { content: string } | undefined;
       await act(async () => {
         uploadResult = await result.current.uploadImages(contentHtml);
       });
@@ -178,10 +172,7 @@ describe("useEditorImageHandler", () => {
 
       const contentHtml = `<p><img src="blob:test-url-1" /></p>`;
 
-      let uploadPromise: Promise<{
-        content: string;
-        deletedImageUrls: string[];
-      }>;
+      let uploadPromise: Promise<{ content: string }>;
       act(() => {
         uploadPromise = result.current.uploadImages(contentHtml);
       });

@@ -3,9 +3,6 @@
  * 기본 프로필 이미지 식별자(default_profile1~5)를 실제 경로로 변환합니다.
  */
 
-// 기본 프로필 이미지 개수
-const DEFAULT_PROFILE_COUNT = 10;
-
 /**
  * 기본 프로필 이미지 식별자인지 확인합니다.
  * @param url 프로필 이미지 URL 또는 식별자

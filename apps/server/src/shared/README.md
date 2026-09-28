@@ -29,6 +29,20 @@ GlobalExceptionFilter         모든 예외를 표준 에러 응답으로 변환
 
 인터셉터는 등록 순서대로 요청을 감싸므로, **캐시 히트 시 활동 로그와 무효화 로직을 건너뛰도록** 캐시 인터셉터를 앞쪽에 두었습니다.
 
+### 사용자 직렬화
+
+`User` 엔티티는 판매글·리뷰·댓글·채팅에 작성자로 실려 **남에게 보입니다.** 그래서 필드를 셋으로 나눕니다(2026-09-28, 그 전에는 `password`만 숨겨 공개 페이지에 판매자 이메일·실명이 실렸음).
+
+| 구분      | 필드                                                                               | 규칙                                     |
+| --------- | ---------------------------------------------------------------------------------- | ---------------------------------------- |
+| 항상 숨김 | `password`, `emailVerificationToken`, `emailVerificationExpiresAt`, `tokenVersion` | `@Exclude()`                             |
+| 본인만    | `email`, `provider`, `providerId`, `name`, `gender`, `ageRange`                    | `@Expose({ groups: [USER_SELF_GROUP] })` |
+| 공개      | 그 외 (`nickname`, `handle`, `deletedAt` 등)                                       | 기본 노출                                |
+
+- 응답의 `User`가 요청자 본인이면 핸들러에 `@SerializeOptions({ groups: [USER_SELF_GROUP] })`를 붙입니다(로그인·회원가입). 내 프로필은 `MyProfileResponseDto`가 필드를 직접 고릅니다.
+- **소켓 emit은 이 인터셉터를 거치지 않습니다.** 엔티티를 보낼 때는 `websocket/to-socket-payload.ts`의 `toSocketPayload()`를 거치세요. 안 그러면 비밀번호 해시까지 상대에게 갑니다.
+- `IdempotencyInterceptor`는 응답을 캐시(JSON)에 저장했다가 재생하므로 저장 전에 같은 규칙으로 직렬화합니다.
+
 ---
 
 ## `cache/` — SmartCache
@@ -73,6 +87,8 @@ async create() { ... }
 **응답이 요청자에 따라 달라지지 않으면 반드시 `global`을 쓰세요.** 공용 데이터에 `ip`를 걸면
 IP마다 캐시가 갈라져 히트율이 무너지고, prefix→key 맵에 IP 수만큼 키가 쌓입니다(만료돼도 맵에는
 남습니다). `ip`·`user`는 응답에 실제로 요청자별 정보가 섞일 때만 씁니다.
+
+prefix 하나의 키가 1,000개에 닿으면 그 prefix를 비우고 다시 채웁니다. 기본 메모리 저장소(Keyv `Map`)는 만료 항목을 조회될 때만 지우므로, 검색어처럼 입력마다 새 키가 생기는 캐시가 쓰기 없이 끝없이 쌓이는 것을 막습니다.
 
 > **주의**: `SmartCacheStore`의 prefix→key 맵은 **프로세스 인메모리**입니다. 인스턴스를 수평 확장하면 각 인스턴스가 자기 캐시만 무효화합니다. 다중 인스턴스 운영 시에는 공유 저장소(Redis 등) 기반으로 교체해야 합니다.
 
@@ -170,11 +186,18 @@ mail/
 - `logger.middleware.ts` — 요청 진입 시점 로깅
 - `types/express.d.ts` — `Request`에 인증 사용자 등을 얹기 위한 타입 확장
 
+## `websocket/` · `events/` · `utils/`
+
+- `websocket/authenticate-socket.ts` — 소켓 핸드셰이크 JWT 검증(게이트웨이 공용)
+- `websocket/to-socket-payload.ts` — 소켓으로 보낼 엔티티를 HTTP와 같은 규칙으로 직렬화
+- `events/user-withdrawn.event.ts` — 탈퇴 이벤트 이름과 페이로드 타입
+- `utils/clamp-number.ts` — 클라이언트가 보낸 개수·페이지 값을 범위 안으로 가둠(`take(0)`·음수 OFFSET 방지)
+
 ---
 
 ## 회원 탈퇴 캐스케이드
 
-탈퇴는 각 모듈을 직접 호출하지 않고 `user.withdrawn` 이벤트 하나만 발행합니다. 아래 리스너들이 각자 자기 데이터를 정리합니다.
+탈퇴는 각 모듈을 직접 호출하지 않고 `user.withdrawn` 이벤트 하나만 발행합니다. 이름과 페이로드 타입은 `events/user-withdrawn.event.ts`(`USER_WITHDRAWN_EVENT`, `UserWithdrawnEvent`)에 있습니다. 아래 리스너들이 각자 자기 데이터를 정리합니다.
 
 ```
 user.withdrawn
@@ -191,5 +214,5 @@ user.withdrawn
 
 새 도메인을 추가할 때 사용자 데이터를 보관한다면 이 이벤트를 구독하는 리스너를 함께 추가하세요.
 
-- **리스너는 반드시 `@OnEvent('user.withdrawn', { suppressErrors: false })`로 선언하세요.** `@nestjs/event-emitter`는 기본값으로 리스너 에러를 로그만 남기고 삼킵니다. 그러면 `emitAsync`가 성공으로 끝나 롤백이 일어나지 않고, DB 에러로 중단된 트랜잭션은 COMMIT이 조용히 ROLLBACK으로 바뀌어 "탈퇴 완료" 응답만 나갑니다. `user/listeners/user-withdrawn-listeners.spec.ts`가 9개 리스너 전부를 검사하니 새 리스너도 목록에 추가하세요.
+- **리스너는 반드시 `@OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })`로 선언하세요.** `@nestjs/event-emitter`는 기본값으로 리스너 에러를 로그만 남기고 삼킵니다. 그러면 `emitAsync`가 성공으로 끝나 롤백이 일어나지 않고, DB 에러로 중단된 트랜잭션은 COMMIT이 조용히 ROLLBACK으로 바뀌어 "탈퇴 완료" 응답만 나갑니다. `user/listeners/user-withdrawn-listeners.spec.ts`가 9개 리스너 전부를 검사하니 새 리스너도 목록에 추가하세요.
 - 이벤트 발행 전에 `UserService`가 탈퇴를 막거나 직접 정리하는 것들: 활성 결제 주문(차단), 판매자로서 예약 중인 판매글(차단, `USER_HAS_RESERVED_SALE_CANNOT_WITHDRAW`), 구매자로 예약된 남의 판매글(판매중으로 해제하고 커밋 후 `trade.reservation_cancelled` 발행).

@@ -5,13 +5,7 @@ import {
   toggleCommentLike,
   updateComment,
 } from "@bookjeok/api-client";
-import {
-  Comment,
-  commentKeys,
-  CommentTargetType,
-  CreateCommentParams,
-  UpdateCommentParams,
-} from "@bookjeok/core";
+import { Comment, commentKeys, CommentTargetType } from "@bookjeok/core";
 import {
   QueryClient,
   useMutation,

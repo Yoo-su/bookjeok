@@ -21,7 +21,7 @@ interface NaverProfileJson {
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
   constructor(
     private readonly authService: AuthService,
-    private configService: ConfigService,
+    configService: ConfigService,
   ) {
     super({
       clientID: configService.get('NAVER_CLIENT_ID') ?? '',

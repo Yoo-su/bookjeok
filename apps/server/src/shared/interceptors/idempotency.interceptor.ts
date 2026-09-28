@@ -9,6 +9,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Cache } from 'cache-manager';
+import { instanceToPlain } from 'class-transformer';
 import { Request } from 'express';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -79,7 +80,9 @@ export class IdempotencyInterceptor implements NestInterceptor {
               cacheKey,
               {
                 status: 'completed',
-                response: data,
+                // 캐시는 JSON으로 저장돼 클래스 정보가 사라진다. 재생 응답이
+                // 직렬화 규칙(@Exclude)을 벗어나지 않게 저장 전에 적용해 둔다.
+                response: instanceToPlain(data),
               } satisfies IdempotencyRecord,
               IDEMPOTENCY_TTL_MS,
             )

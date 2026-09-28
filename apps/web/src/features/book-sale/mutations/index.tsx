@@ -14,18 +14,17 @@ import {
 } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { revalidateBookSale } from "@/shared/actions/revalidate";
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
-import { compressImages } from "@/shared/utils/compress-image";
 import { handleMutationError } from "@/shared/utils/error-handler";
 import { purgeRouteCache } from "@/shared/utils/purge-route-cache";
 
 import { deleteImages } from "../actions/delete-action";
-import { uploadImages } from "../actions/upload-action";
 import { uploadSaleImages } from "../services/image-upload-service";
 
 interface CreateSaleVariables {
@@ -51,6 +50,25 @@ const ensureFreshAuthToken = async (loginRequiredMsg: string) => {
     user: authState.user,
     accessToken: authState.accessToken,
   };
+};
+
+/**
+ * 판매글에서 빠진 이미지를 스토리지에서 지웁니다.
+ * 저장이 성공한 뒤에만 부릅니다. 먼저 지우면 저장이 실패했을 때 글은 남고 이미지만 사라집니다.
+ * 실패해도 저장 결과에는 영향이 없어 에러를 삼킵니다.
+ */
+const removeSaleImages = async (urls: string[]) => {
+  const accessToken = useAuthStore.getState().accessToken;
+  if (urls.length === 0 || !accessToken) return;
+
+  try {
+    const result = await deleteImages(urls, accessToken);
+    if (!result.success) {
+      console.error("판매글 이미지 삭제 실패:", result.error);
+    }
+  } catch (error) {
+    console.error("판매글 이미지 삭제 실패:", error);
+  }
 };
 
 /**
@@ -136,8 +154,12 @@ export const useUpdateBookSaleStatusMutation = () => {
     // 판매 상태(판매중 · 예약중 · 판매완료)는 마켓 목록과 상세의 배지로 노출되므로
     // 클라이언트 캐시(공유 훅의 onSettled)뿐 아니라 ISR 캐시도 함께 비운다.
     onSuccess: (data: UsedBookSale) => {
-      void purgeRouteCache(revalidateBookSale({ saleId: data.id }), () =>
-        router.refresh(),
+      void purgeRouteCache(
+        revalidateBookSale({
+          saleId: data.id,
+          accessToken: useAuthStore.getState().accessToken,
+        }),
+        () => router.refresh(),
       );
     },
   });
@@ -169,8 +191,12 @@ export const useUpdateBookSaleMutation = () => {
       // 전부 낡는다. mySales/saleDetail만 지우면 나머지가 옛 가격·상태로 남으므로
       // 도메인 루트 접두사로 일괄 무효화한다. (생성 · 삭제와 동일한 규칙)
       queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
-      await purgeRouteCache(revalidateBookSale({ saleId: data.id }), () =>
-        router.refresh(),
+      await purgeRouteCache(
+        revalidateBookSale({
+          saleId: data.id,
+          accessToken: useAuthStore.getState().accessToken,
+        }),
+        () => router.refresh(),
       );
       router.push(PATHS.MY_PAGE_SALES);
     },
@@ -183,17 +209,12 @@ export const useUpdateBookSaleMutation = () => {
     saleId,
     payload,
     newImageFiles = [],
-    deletedImageUrls = [],
     onProgressState,
   }: UpdateSaleVariables) => {
     onProgressState?.("compressing", 15);
     const { user, accessToken } = await ensureFreshAuthToken(
       t("login_required"),
     );
-
-    if (deletedImageUrls.length > 0) {
-      await deleteImages(deletedImageUrls);
-    }
 
     let newImageUrls: string[] = [];
     if (newImageFiles.length > 0) {
@@ -223,11 +244,17 @@ export const useUpdateBookSaleMutation = () => {
     ...sharedMutation,
     mutate: async (variables: UpdateSaleVariables) => {
       const params = await processUpdate(variables);
-      return sharedMutation.mutate(params);
+      // 실패는 공유 훅의 onError가 알린다. 여기서는 처리되지 않은 거부만 막는다
+      await sharedMutation
+        .mutateAsync(params)
+        .then(() => removeSaleImages(variables.deletedImageUrls ?? []))
+        .catch(() => undefined);
     },
     mutateAsync: async (variables: UpdateSaleVariables) => {
       const params = await processUpdate(variables);
-      return sharedMutation.mutateAsync(params);
+      const updated = await sharedMutation.mutateAsync(params);
+      await removeSaleImages(variables.deletedImageUrls ?? []);
+      return updated;
     },
   };
 };
@@ -239,13 +266,21 @@ export const useDeleteBookSaleMutation = () => {
   const t = useTranslations("market.toast");
   const queryClient = useQueryClient();
   const router = useRouter();
+  // 삭제가 성공한 판매글의 이미지만 지운다. 훅 수준 콜백은 목록에서 항목이
+  // 사라져 컴포넌트가 언마운트돼도 실행되므로 여기서 처리한다.
+  const pendingImagesRef = useRef(new Map<number, string[]>());
 
   const sharedMutation = useSharedDeleteBookSaleMutation({
-    onSuccess: () => {
+    onSuccess: (_data, saleId) => {
       toast.success(t("delete_success"));
       queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
+
+      const imageUrls = pendingImagesRef.current.get(saleId) ?? [];
+      pendingImagesRef.current.delete(saleId);
+      void removeSaleImages(imageUrls);
     },
-    onError: (error: Error) => {
+    onError: (error: Error, saleId) => {
+      pendingImagesRef.current.delete(saleId);
       handleMutationError(error, "판매글 삭제");
     },
   });
@@ -259,13 +294,15 @@ export const useDeleteBookSaleMutation = () => {
       saleId: number;
       imageUrls: string[];
     }) => {
-      if (imageUrls.length > 0) {
-        await deleteImages(imageUrls);
-      }
+      pendingImagesRef.current.set(saleId, imageUrls);
       return sharedMutation.mutate(saleId, {
         onSuccess: async () => {
           await purgeRouteCache(
-            revalidateBookSale({ saleId, deleted: true }),
+            revalidateBookSale({
+              saleId,
+              deleted: true,
+              accessToken: useAuthStore.getState().accessToken,
+            }),
             () => router.refresh(),
           );
           if (
@@ -284,12 +321,14 @@ export const useDeleteBookSaleMutation = () => {
       saleId: number;
       imageUrls: string[];
     }) => {
-      if (imageUrls.length > 0) {
-        await deleteImages(imageUrls);
-      }
+      pendingImagesRef.current.set(saleId, imageUrls);
       return sharedMutation.mutateAsync(saleId).then(async (res: void) => {
         await purgeRouteCache(
-          revalidateBookSale({ saleId, deleted: true }),
+          revalidateBookSale({
+            saleId,
+            deleted: true,
+            accessToken: useAuthStore.getState().accessToken,
+          }),
           () => router.refresh(),
         );
         if (

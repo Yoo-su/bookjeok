@@ -1,6 +1,13 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 
+import { MAX_BLOB_UPLOAD_SIZE } from "@/shared/constants/upload";
+import {
+  type BlobOwner,
+  blobOwnerPrefix,
+  resolveBlobOwner,
+} from "@/shared/libs/blob-owner";
+
 /**
  * 업로드를 허용할 카테고리 목록.
  * 경로는 항상 `{provider}-{userId}/{카테고리}/{파일명}` 형태여야 합니다.
@@ -19,39 +26,12 @@ const ALLOWED_CONTENT_TYPES = [
   "image/webp",
 ];
 
-interface AuthenticatedUser {
-  id: number;
-  provider: string;
-}
-
-/** 액세스 토큰으로 사용자를 식별합니다. 토큰이 유효하지 않으면 예외를 던집니다. */
-async function resolveUser(token: string): Promise<AuthenticatedUser> {
-  // 서버 통신용 API_URL을 우선 적용하고, 없을 경우 NEXT_PUBLIC_API_URL로 폴백
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "";
-  const response = await fetch(`${apiUrl}/user/profile`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  if (!response.ok) {
-    throw new Error("Unauthorized: Invalid token");
-  }
-
-  const body = await response.json();
-  const user = body?.data;
-
-  if (!user || typeof user.id !== "number" || !user.provider) {
-    throw new Error("Unauthorized: Malformed profile response");
-  }
-
-  return { id: user.id, provider: user.provider };
-}
-
 /**
  * 업로드 경로가 요청자 본인의 소유인지 검증합니다.
  * 클라이언트가 보낸 경로를 신뢰하면 타 사용자 디렉터리에 업로드할 수 있으므로
  * 접두사와 카테고리를 서버에서 강제합니다.
  */
-function assertOwnedPathname(pathname: string, user: AuthenticatedUser): void {
+function assertOwnedPathname(pathname: string, user: BlobOwner): void {
   // 상위 경로 탈출 및 절대 경로 차단
   if (pathname.includes("..") || pathname.startsWith("/")) {
     throw new Error("Forbidden: Invalid pathname");
@@ -64,7 +44,7 @@ function assertOwnedPathname(pathname: string, user: AuthenticatedUser): void {
 
   const [prefix, category, ...rest] = segments;
 
-  if (prefix !== `${user.provider}-${user.id}`) {
+  if (prefix !== blobOwnerPrefix(user)) {
     throw new Error("Forbidden: Pathname does not belong to the current user");
   }
 
@@ -96,11 +76,12 @@ export async function POST(request: Request): Promise<NextResponse> {
           throw new Error("Unauthorized: No token provided");
         }
 
-        const user = await resolveUser(token);
+        const user = await resolveBlobOwner(token);
         assertOwnedPathname(pathname, user);
 
         return {
           allowedContentTypes: ALLOWED_CONTENT_TYPES,
+          maximumSizeInBytes: MAX_BLOB_UPLOAD_SIZE,
           pathname,
           tokenPayload: JSON.stringify({
             uploadedBy: user.id,

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { EmailVerificationModal } from "@/features/auth/components/email-verification-alert";
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { useChatStore } from "@/features/chat/stores/use-chat-store";
 import {
@@ -37,7 +36,6 @@ export const TradeMessageCard = ({
   currentUserId,
 }: TradeMessageCardProps) => {
   const t = useTranslations("chat.trade.message_card");
-  const tCommon = useTranslations("common");
   const authUser = useAuthStore((state) => state.user);
 
   const effectiveUserId = currentUserId ?? authUser?.id;

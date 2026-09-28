@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { routing } from "@/shared/config/i18n/routing";
+import { findRequester, isPublicProfileGone } from "@/shared/libs/requester";
 
 /**
  * ISR(Full Route Cache)을 즉시 파괴하는 서버 액션
@@ -21,6 +22,9 @@ import { routing } from "@/shared/config/i18n/routing";
  * - 삭제만 예외로 집계까지 비운다. 목록에 남은 링크가 404로 이어지기 때문.
  * - 생성은 대상이 없다. 방금 만든 id의 상세는 아직 ISR에 없어 비울 것이 없다.
  * - 200을 404로 바꾸는 쓰기(회원 탈퇴)는 삭제와 같이 취급한다.
+ *
+ * 서버 액션은 누구나 호출할 수 있는 공개 엔드포인트다. 익명 반복 호출로 홈·목록
+ * ISR을 계속 비우지 못하게, 로그인한 회원의 호출만 받는다(아니면 조용히 무시).
  */
 
 /** 모든 로케일에 대해 같은 경로를 재검증 (localePrefix: "always") */
@@ -39,8 +43,10 @@ const revalidateAllLocales = (path: string) => {
 export async function revalidateBookSale(params: {
   saleId?: number;
   deleted?: boolean;
+  accessToken?: string | null;
 }) {
-  const { saleId, deleted } = params;
+  const { saleId, deleted, accessToken } = params;
+  if (!(await findRequester(accessToken))) return;
 
   if (saleId) revalidateAllLocales(`/book/sales/${saleId}`);
 
@@ -58,11 +64,21 @@ export async function revalidateBookSale(params: {
  *   만료 시각까지 탈퇴 회원의 프로필을 계속 내보낸다
  * - 핸들은 수정 대상이 아니라(UpdateUserDto에 없다) 옛 경로를 좇을 필요가 없다.
  *   바꿀 수 있게 만든다면 이전 핸들 경로도 함께 비워야 한다
+ * - 본인만 호출할 수 있다. 탈퇴 직후에는 토큰이 이미 무효이므로, 그 프로필이
+ *   실제로 404가 된 경우도 받는다
  */
-export async function revalidateUserProfile(params: { handle: string }) {
-  const { handle } = params;
+export async function revalidateUserProfile(params: {
+  handle: string;
+  accessToken?: string | null;
+}) {
+  const { handle, accessToken } = params;
 
   if (!handle) return;
+  const requester = await findRequester(accessToken);
+  const allowed =
+    requester?.handle === handle || (await isPublicProfileGone(handle));
+  if (!allowed) return;
+
   revalidateAllLocales(`/users/${handle}`);
 }
 
@@ -74,8 +90,10 @@ export async function revalidateUserProfile(params: { handle: string }) {
 export async function revalidateReview(params: {
   reviewId?: number;
   deleted?: boolean;
+  accessToken?: string | null;
 }) {
-  const { reviewId, deleted } = params;
+  const { reviewId, deleted, accessToken } = params;
+  if (!(await findRequester(accessToken))) return;
 
   if (reviewId) revalidateAllLocales(`/book/reviews/${reviewId}`);
 

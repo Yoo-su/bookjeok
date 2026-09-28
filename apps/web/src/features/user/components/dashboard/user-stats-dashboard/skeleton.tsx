@@ -1,10 +1,5 @@
 import { MessageCircle } from "@/shared/components/icons/iconsax";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/shadcn/card";
+import { Card, CardContent, CardHeader } from "@/shared/components/shadcn/card";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 
 export const UserStatsDashboardSkeleton = () => {

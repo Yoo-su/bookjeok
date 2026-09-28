@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EntityManager } from 'typeorm';
+
+import {
+  USER_WITHDRAWN_EVENT,
+  UserWithdrawnEvent,
+} from '@/shared/events/user-withdrawn.event';
 
 import { ChatParticipant } from '../entities/chat-participant.entity';
 
@@ -15,11 +19,8 @@ export class ChatCleanupListener {
    * 이 행을 비활성화하는 것으로 함께 정리됩니다. 따로 지울 기록이 없습니다.
    */
   // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
-  @OnEvent('user.withdrawn', { suppressErrors: false })
-  async handleUserWithdrawn(event: {
-    userId: number;
-    entityManager: EntityManager;
-  }) {
+  @OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })
+  async handleUserWithdrawn(event: UserWithdrawnEvent) {
     const { userId, entityManager } = event;
 
     try {

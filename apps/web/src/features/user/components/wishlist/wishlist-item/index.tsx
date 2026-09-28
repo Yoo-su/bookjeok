@@ -24,7 +24,6 @@ interface WishlistItemProps {
 
 export const WishlistItem = ({ item }: WishlistItemProps) => {
   const t = useTranslations("wishlist.item");
-  const tCommon = useTranslations("common");
   const locale = useLocale();
 
   // 1. 책 찜하기인 경우

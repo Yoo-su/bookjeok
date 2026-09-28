@@ -1,10 +1,19 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Res,
+  SerializeOptions,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Response } from 'express';
 
+import { USER_SELF_GROUP } from '@/features/user/constants';
 import { CurrentUser } from '@/features/user/decorators/current-user.decorator';
 import { User } from '@/features/user/entities/user.entity';
 import { ActivityType } from '@/shared/activity/activity-type.enum';
@@ -183,6 +192,8 @@ export class AuthController {
   }
 
   @Post('signup')
+  // 응답의 user가 요청자 본인이라 이메일 등 본인용 필드를 함께 내보낸다
+  @SerializeOptions({ groups: [USER_SELF_GROUP] })
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @TrackActivity(ActivityType.REGISTER)
   @ApiOperation({
@@ -194,6 +205,8 @@ export class AuthController {
   }
 
   @Post('login')
+  // 응답의 user가 요청자 본인이라 이메일 등 본인용 필드를 함께 내보낸다
+  @SerializeOptions({ groups: [USER_SELF_GROUP] })
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @TrackActivity(ActivityType.LOGIN)
   @ApiOperation({

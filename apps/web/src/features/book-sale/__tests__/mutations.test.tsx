@@ -25,12 +25,15 @@ vi.mock("@/shared/actions/revalidate", () => ({
   revalidateReview: vi.fn().mockResolvedValue(undefined),
 }));
 // AuthStore 모킹 (다른 훅들에서 접근할 수 있으므로)
-vi.mock("@/features/auth/stores/use-auth-store", () => ({
-  useAuthStore: vi.fn((selector) => {
-    const state = { user: { id: 1, provider: "KAKAO" }, accessToken: "token" };
-    return selector(state);
-  }),
-}));
+vi.mock("@/features/auth/stores/use-auth-store", () => {
+  const state = { user: { id: 1, provider: "KAKAO" }, accessToken: "token" };
+  return {
+    useAuthStore: Object.assign(
+      vi.fn((selector) => selector(state)),
+      { getState: () => state },
+    ),
+  };
+});
 
 const mockSales: UsedBookSale[] = [
   {

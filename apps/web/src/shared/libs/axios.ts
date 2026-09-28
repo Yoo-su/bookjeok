@@ -1,4 +1,5 @@
 import { privateApiClient, publicApiClient } from "@bookjeok/api-client";
+import { API_PATHS } from "@bookjeok/core";
 import axios, {
   AxiosError,
   AxiosResponse,
@@ -77,7 +78,7 @@ privateApiClient.interceptors.response.use(
     };
 
     // refresh 요청 자체가 실패한 경우 (refresh 토큰 만료)
-    if (originalRequest.url?.includes("/auth/refresh")) {
+    if (originalRequest.url?.includes(API_PATHS.auth.refresh)) {
       // 401이면 토큰이 완전히 만료된 것이므로 로그아웃 처리
       if (error.response?.status === 401) {
         useAuthStore.getState().clearAuth();
@@ -118,7 +119,7 @@ privateApiClient.interceptors.response.use(
           accessToken: string;
           refreshToken?: string;
         }>(
-          `/auth/refresh`,
+          API_PATHS.auth.refresh,
           {},
           {
             headers: {

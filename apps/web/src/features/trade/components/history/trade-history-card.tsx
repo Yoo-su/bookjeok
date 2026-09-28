@@ -24,7 +24,6 @@ interface TradeHistoryCardProps {
 /** 완료된 거래 한 건. 후기 작성·수정 진입점을 겸한다. */
 export const TradeHistoryCard = ({ completion }: TradeHistoryCardProps) => {
   const t = useTranslations("trade.history");
-  const tCommon = useTranslations("common");
   const locale = useLocale();
 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);

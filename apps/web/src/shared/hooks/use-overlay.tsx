@@ -81,10 +81,7 @@ export function useOverlay() {
 
   const open = useCallback(
     (render: OverlayRenderFn) => {
-      let isOpen = true;
-
       const handleClose = () => {
-        isOpen = false;
         // 닫힘 상태로 재마운트하여 exit 애니메이션 트리거
         mount(
           id,

@@ -16,6 +16,15 @@ import {
 } from "@bookjeok/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+/** 기록 날짜(`YYYY-MM-DD`)가 속한 달의 목록 쿼리 키 */
+const monthListKey = (date: string) => {
+  const [yearStr, monthStr] = date.split("-");
+  return readingLogKeys.list({
+    year: parseInt(yearStr, 10),
+    month: parseInt(monthStr, 10),
+  }).queryKey;
+};
+
 /**
  * 독서 기록 설정 수정 뮤테이션
  */
@@ -101,17 +110,12 @@ export const useCreateReadingLogMutation = (options?: {
       }),
     onSuccess: (data) => {
       if (data.date) {
-        const [yearStr, monthStr] = data.date.split("-");
-        const year = parseInt(yearStr, 10);
-        const month = parseInt(monthStr, 10);
-
         // 캐시가 없는 달에 [data]를 심으면 그 달이 한 권짜리로 먼저 그려진다.
         // 도서 상세처럼 캘린더 밖에서 기록하면 흔하다.
         queryClient.setQueryData<ReadingLog[]>(
-          readingLogKeys.list({ year, month }).queryKey,
+          monthListKey(data.date),
           (old) =>
-            old &&
-            [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
+            old && [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
         );
       }
       // 동기화를 위해 백그라운드로 캐시 전체 무효화
@@ -135,20 +139,15 @@ export const useUpdateReadingLogMutation = (options?: {
     mutationFn: (params: UpdateReadingLogParams) => updateReadingLog(params),
     onSuccess: (data) => {
       if (data.date) {
-        const [yearStr, monthStr] = data.date.split("-");
-        const year = parseInt(yearStr, 10);
-        const month = parseInt(monthStr, 10);
-
         // 날짜가 바뀌면 다른 달로 옮겨 가므로 모든 목록에서 빼고 새 달에만 넣는다.
         queryClient.setQueriesData<ReadingLog[]>(
           { queryKey: readingLogKeys.list._def },
           (old) => old?.filter((log) => log.id !== data.id),
         );
         queryClient.setQueryData<ReadingLog[]>(
-          readingLogKeys.list({ year, month }).queryKey,
+          monthListKey(data.date),
           (old) =>
-            old &&
-            [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
+            old && [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
         );
       }
       queryClient.invalidateQueries({ queryKey: readingLogKeys._def });
@@ -172,12 +171,8 @@ export const useDeleteReadingLogMutation = (options?: {
       deleteReadingLog(params.id),
     onSuccess: (_, variables) => {
       if (variables.date) {
-        const [yearStr, monthStr] = variables.date.split("-");
-        const year = parseInt(yearStr, 10);
-        const month = parseInt(monthStr, 10);
-
         queryClient.setQueryData<ReadingLog[]>(
-          readingLogKeys.list({ year, month }).queryKey,
+          monthListKey(variables.date),
           (old) => {
             if (!old) return old;
             return old.filter((log) => log.id !== variables.id);

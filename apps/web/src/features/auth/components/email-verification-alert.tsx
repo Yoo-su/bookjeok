@@ -7,12 +7,7 @@ import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { ShieldSecurityIcon } from "@/shared/components/icons";
-import {
-  CheckCircle2,
-  Loader2,
-  Mail,
-  ShieldAlert,
-} from "@/shared/components/icons/iconsax";
+import { CheckCircle2, Loader2, Mail } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
 import {
   Dialog,

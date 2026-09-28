@@ -1,4 +1,4 @@
-import { CommentTargetType, Review } from "@bookjeok/core";
+import { CommentTargetType } from "@bookjeok/core";
 import { useTranslations } from "next-intl";
 
 import { CommentSection } from "@/features/comment/components/common/comment-section";

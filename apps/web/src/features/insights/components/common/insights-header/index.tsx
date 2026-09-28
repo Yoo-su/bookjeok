@@ -1,7 +1,6 @@
 import { useTranslations } from "next-intl";
 
 import {
-  BarChart3,
   BookOpen,
   Heart,
   ShoppingBag,

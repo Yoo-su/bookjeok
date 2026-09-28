@@ -12,7 +12,7 @@ import { JwtPayload } from '../types/jwt-payload.type';
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private userService: UserService,
-    private configService: ConfigService,
+    configService: ConfigService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

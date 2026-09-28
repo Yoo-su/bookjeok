@@ -4,10 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Order } from '@/features/order/entities/order.entity';
-import {
-  SaleStatus,
-  UsedBookSale,
-} from '@/features/used-book-sale/entities/used-book-sale.entity';
+import { SaleStatus } from '@/features/used-book-sale/entities/used-book-sale.entity';
 import { UsedBookSaleService } from '@/features/used-book-sale/services/used-book-sale.service';
 import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions/business.exception';
