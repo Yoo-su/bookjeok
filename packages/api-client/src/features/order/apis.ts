@@ -10,7 +10,7 @@ import {
   RegisterShippingParams,
 } from "@bookjeok/core";
 
-import { privateApiClient, publicApiClient } from "../../client";
+import { privateApiClient } from "../../client";
 import {
   IdempotencyOptions,
   withIdempotencyKey,

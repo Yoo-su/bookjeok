@@ -37,7 +37,6 @@ import {
   RotateCcw,
   XCircle,
 } from "@/shared/components/icons/iconsax";
-import { Badge } from "@/shared/components/shadcn/badge";
 import { Button } from "@/shared/components/shadcn/button";
 import { PriceDisplay } from "@/shared/components/ui/price-display";
 import { PATHS } from "@/shared/constants/paths";

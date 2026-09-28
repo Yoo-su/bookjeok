@@ -2,7 +2,6 @@ import {
   ChatMessage,
   ChatMessageType,
   ChatRoom,
-  Order,
   orderKeys,
   OrderStatus,
   SaleAuthor,

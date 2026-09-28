@@ -31,7 +31,7 @@ interface KakaoProfileJson {
 export class KakaoStrategy extends PassportStrategy(Strategy, 'kakao') {
   constructor(
     private readonly authService: AuthService,
-    private configService: ConfigService,
+    configService: ConfigService,
   ) {
     super({
       clientID: configService.get('KAKAO_CLIENT_ID') ?? '',

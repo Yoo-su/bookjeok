@@ -5,7 +5,6 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { useUpdateReadingLogSettingsMutation } from "@/features/reading-log/mutations";
 
 vi.mock("@bookjeok/api-client", () => ({

@@ -1,10 +1,8 @@
 "use client";
 
-import { BookInfo } from "@bookjeok/core";
 import { useWishlistStatusQuery } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import {

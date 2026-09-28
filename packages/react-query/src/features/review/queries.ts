@@ -13,7 +13,6 @@ import {
   CACHE_TIME,
   GetReviewsParams,
   GetReviewsResponse,
-  Review,
   reviewKeys,
   TagSuggestion,
 } from "@bookjeok/core";

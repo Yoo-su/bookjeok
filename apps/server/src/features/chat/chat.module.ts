@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AuthModule } from '@/features/auth/auth.module';
+import { BookModule } from '@/features/book/book.module';
+import { Order } from '@/features/order/entities/order.entity';
 import { UsedBookSaleModule } from '@/features/used-book-sale/used-book-sale.module';
+import { UserModule } from '@/features/user/user.module';
 
-import { AuthModule } from '../auth/auth.module';
-import { BookModule } from '../book/book.module';
-import { Order } from '../order/entities/order.entity';
-import { UserModule } from '../user/user.module';
 import { ChatController } from './controllers/chat.controller';
 import { ChatMessage } from './entities/chat-message.entity';
 import { ChatParticipant } from './entities/chat-participant.entity';

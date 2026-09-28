@@ -2,7 +2,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager } from 'typeorm';
 
 import { ChatParticipant } from '@/features/chat/entities/chat-participant.entity';
 import { Order, OrderStatus } from '@/features/order/entities/order.entity';
@@ -13,7 +13,6 @@ import {
   SaleStatus,
   UsedBookSale,
 } from '@/features/used-book-sale/entities/used-book-sale.entity';
-import { BusinessException } from '@/shared/exceptions/business.exception';
 import { MailService } from '@/shared/mail/mail.service';
 
 import { User } from '../entities/user.entity';

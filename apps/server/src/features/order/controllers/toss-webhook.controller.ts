@@ -52,7 +52,7 @@ export class TossWebhookController {
       return { status: 'INVALID_PAYLOAD' };
     }
 
-    const { eventType, data } = payload;
+    const { data } = payload;
     const paymentData = data || payload;
     const orderId = paymentData.orderId;
     const tossStatus = paymentData.status;

@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { BookDimension } from '@/features/book/entities/book-dimension.entity';
+import { User } from '@/features/user/entities/user.entity';
 
-import { User } from '../user/entities/user.entity';
 import { LoungeController } from './controllers/lounge.controller';
 import { PublicReadingLogController } from './controllers/public-reading-log.controller';
 import { ReadingLogController } from './controllers/reading-log.controller';

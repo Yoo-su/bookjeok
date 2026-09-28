@@ -13,7 +13,6 @@ export * from "./features/book-sale";
 export * from "./features/chat";
 export * from "./features/comment";
 export * from "./features/insights";
-export * from "./features/llm";
 export * from "./features/notification";
 export * from "./features/order";
 export * from "./features/reading-log";

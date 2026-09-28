@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const clientEnvSchema = z.object({
+const _clientEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url(),
   NEXT_PUBLIC_KAKAO_APP_KEY: z.string().min(1),
   NEXT_PUBLIC_GOOGLE_ADSENSE_ID: z.string().optional(),
@@ -8,7 +8,7 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
 });
 
-const serverEnvSchema = z.object({
+const _serverEnvSchema = z.object({
   NAVER_CLIENT_ID: z.string().min(1),
   NAVER_CLIENT_SECRET: z.string().min(1),
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
@@ -29,7 +29,7 @@ const _serverEnv = {
 };
 
 // [주석 처리된 엄격한 검증 로직]
-// const parsedClientEnv = clientEnvSchema.safeParse(_clientEnv);
+// const parsedClientEnv = _clientEnvSchema.safeParse(_clientEnv);
 // if (!parsedClientEnv.success) {
 //   console.error("❌ Invalid client environment variables:", parsedClientEnv.error.flatten().fieldErrors);
 //   throw new Error("Invalid client environment variables");
@@ -37,7 +37,7 @@ const _serverEnv = {
 
 // let parsedServerEnv = { success: true, data: _serverEnv } as any;
 // if (typeof window === "undefined") {
-//   parsedServerEnv = serverEnvSchema.safeParse(_serverEnv);
+//   parsedServerEnv = _serverEnvSchema.safeParse(_serverEnv);
 //   if (!parsedServerEnv.success) {
 //     console.error("❌ Invalid server environment variables:", parsedServerEnv.error.flatten().fieldErrors);
 //     throw new Error("Invalid server environment variables");
@@ -49,5 +49,5 @@ export const config = {
   ..._serverEnv,
   isDev: process.env.NODE_ENV === "development",
   isProd: process.env.NODE_ENV === "production",
-} as unknown as z.infer<typeof clientEnvSchema> &
-  z.infer<typeof serverEnvSchema> & { isDev: boolean; isProd: boolean };
+} as unknown as z.infer<typeof _clientEnvSchema> &
+  z.infer<typeof _serverEnvSchema> & { isDev: boolean; isProd: boolean };

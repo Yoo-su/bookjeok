@@ -2,10 +2,11 @@ import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
-import { BookModule } from '../book/book.module';
-import { Order } from '../order/entities/order.entity';
-import { TradeCompletion } from '../trade/entities/trade-completion.entity';
-import { UserModule } from '../user/user.module';
+import { BookModule } from '@/features/book/book.module';
+import { Order } from '@/features/order/entities/order.entity';
+import { TradeCompletion } from '@/features/trade/entities/trade-completion.entity';
+import { UserModule } from '@/features/user/user.module';
+
 import { UsedBookSaleController } from './controllers/used-book-sale.controller';
 import { UsedBookSale } from './entities/used-book-sale.entity';
 import { UsedBookViewCountInterceptor } from './interceptors/used-book-view-count.interceptor';

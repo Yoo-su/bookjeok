@@ -47,7 +47,6 @@ export const PopularTagsList = ({ data }: PopularTagsListProps) => {
             // 미묘한 명도 차이로 리듬감 부여 (홀/짝)
             const isEven = index % 2 === 0;
             const bgColor = isEven ? COLORS.stone[100] : COLORS.stone[50];
-            const hoverColor = COLORS.stone[200];
 
             return (
               <Link

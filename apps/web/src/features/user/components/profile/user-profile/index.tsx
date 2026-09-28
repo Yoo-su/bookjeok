@@ -17,7 +17,6 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  MessageSquare,
   ShoppingBag,
   User,
 } from "@/shared/components/icons/iconsax";

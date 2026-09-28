@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { BookModule } from '../book/book.module';
+import { BookModule } from '@/features/book/book.module';
+
 import { LlmController } from './controllers/llm.controller';
 import { AiBookSummary } from './entities/ai-book-summary.entity';
 import { AiRequestLog } from './entities/ai-request-log.entity';

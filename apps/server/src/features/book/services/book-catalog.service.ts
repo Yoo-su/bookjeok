@@ -1,6 +1,8 @@
 import { BookInfo } from '@bookjeok/core';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
+import { clampNumber } from '@/shared/utils/clamp-number';
+
 import {
   BOOK_DETAIL_PROVIDERS,
   BOOK_SEARCH_PROVIDERS,
@@ -17,24 +19,6 @@ const DEFAULT_START = 1;
  * 상한이 없으면 한 요청이 수만 행을 힙에 올린다.
  */
 const MAX_DISPLAY = 100;
-
-/**
- * 숫자 파라미터를 허용 범위 안으로 가둔다.
- * @param raw 클라이언트가 보낸 값
- * @param fallback 값이 없거나 숫자가 아닐 때 쓸 기본값
- * @param min 하한
- * @param max 상한
- */
-function clamp(
-  raw: unknown,
-  fallback: number,
-  min: number,
-  max: number,
-): number {
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n === 0) return fallback;
-  return Math.min(Math.max(Math.trunc(n), min), max);
-}
 
 /**
  * 도서 서지 조회의 단일 진입점.
@@ -64,8 +48,13 @@ export class BookCatalogService {
   ): Promise<BookCatalogSearchResult & { lastBuildDate: string }> {
     const normalized: BookCatalogSearchParams = {
       query: params.query,
-      display: clamp(params.display, DEFAULT_DISPLAY, 1, MAX_DISPLAY),
-      start: clamp(params.start, DEFAULT_START, 1, Number.MAX_SAFE_INTEGER),
+      display: clampNumber(params.display, DEFAULT_DISPLAY, 1, MAX_DISPLAY),
+      start: clampNumber(
+        params.start,
+        DEFAULT_START,
+        1,
+        Number.MAX_SAFE_INTEGER,
+      ),
       sort: params.sort ?? 'sim',
       field: params.field ?? 'Keyword',
     };

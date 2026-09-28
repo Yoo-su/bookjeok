@@ -1,4 +1,3 @@
-import { OBJECT_ART } from "./objects";
 import { ell, type Pencil } from "./pencil";
 import { type Cmds, lerp, rectCorners } from "./sketch";
 import type { StackObject } from "./types";

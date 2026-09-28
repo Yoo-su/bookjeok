@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EntityManager } from 'typeorm';
+
+import {
+  USER_WITHDRAWN_EVENT,
+  UserWithdrawnEvent,
+} from '@/shared/events/user-withdrawn.event';
 
 import { Wishlist } from '../entities/wishlist.entity';
 
@@ -12,11 +16,8 @@ export class UserCleanupListener {
    * 유저 탈퇴 시 해당 유저의 위시리스트 데이터를 일괄 삭제합니다.
    */
   // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
-  @OnEvent('user.withdrawn', { suppressErrors: false })
-  async handleUserWithdrawn(event: {
-    userId: number;
-    entityManager: EntityManager;
-  }) {
+  @OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })
+  async handleUserWithdrawn(event: UserWithdrawnEvent) {
     const { userId, entityManager } = event;
 
     try {

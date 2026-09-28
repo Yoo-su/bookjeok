@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { BookModule } from '@/features/book/book.module';
 import { Book } from '@/features/book/entities/book.entity';
 import { NotificationModule } from '@/features/notification/notification.module';
 
-import { BookModule } from '../book/book.module';
 import { ReviewController } from './controllers/review.controller';
 import { Review } from './entities/review.entity';
 import { ReviewReaction } from './entities/review-reaction.entity';

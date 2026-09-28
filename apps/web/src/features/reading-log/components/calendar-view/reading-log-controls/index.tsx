@@ -40,7 +40,6 @@ export function ReadingLogControls({
   readOnly = false,
 }: ReadingLogControlsProps) {
   const t = useTranslations("reading_log.controls");
-  const tCalendar = useTranslations("reading_log.calendar");
   // 연도 선택 옵션 생성 (현재 연도 + 1 년 동안 2020년까지)
   const currentYear = new Date().getFullYear();
   const years = Array.from(

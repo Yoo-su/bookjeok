@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { ChevronDown } from "@/shared/components/icons/iconsax";
-import { usePathname, useRouter } from "@/shared/config/i18n/routing";
+import { usePathname } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils";
 
 /**
@@ -19,7 +19,6 @@ import { cn } from "@/shared/utils";
  */
 export const PopularKeywords = () => {
   const t = useTranslations("book.search");
-  const router = useRouter();
   const pathname = usePathname();
   const { data, isLoading } = usePopularKeywordsQuery();
   // 기본값은 undefined에만 걸린다. 형태가 어긋난 200은 그대로 통과해 아래 map에서 터진다.

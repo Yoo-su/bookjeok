@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
 import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
-import { DataSource, In, MoreThanOrEqual, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { SocialLoginDto } from '@/features/auth/dtos/social-login.dto';
 import { ChatParticipant } from '@/features/chat/entities/chat-participant.entity';
@@ -16,6 +16,10 @@ import {
   SaleStatus,
   UsedBookSale,
 } from '@/features/used-book-sale/entities/used-book-sale.entity';
+import {
+  USER_WITHDRAWN_EVENT,
+  UserWithdrawnEvent,
+} from '@/shared/events/user-withdrawn.event';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 import { MailService } from '@/shared/mail/mail.service';
 
@@ -599,10 +603,10 @@ export class UserService implements OnModuleInit {
     }
 
     // 3. 도메인 클린업 이벤트 동기식 발행 (EntityManager 주입)
-    await this.eventEmitter.emitAsync('user.withdrawn', {
+    await this.eventEmitter.emitAsync(USER_WITHDRAWN_EVENT, {
       userId,
       entityManager: manager,
-    });
+    } satisfies UserWithdrawnEvent);
 
     return releasedSales;
   }

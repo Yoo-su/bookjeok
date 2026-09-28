@@ -11,13 +11,6 @@ interface CoolModeProps {
   };
 }
 
-interface Particle {
-  element: HTMLElement;
-  size: number;
-  speedHorz: number;
-  speedVert: number;
-}
-
 const getParticle = (x: number, y: number, size: number) => {
   const particle = document.createElement("div");
   particle.style.position = "fixed";
@@ -69,13 +62,6 @@ export const CoolMode = ({ children, options }: CoolModeProps) => {
 
           const angle = Math.random() * Math.PI * 2;
           const velocity = Math.random() * 10 * speedScale;
-
-          const pObj: Particle = {
-            element: particle,
-            size: parseFloat(particle.style.width),
-            speedHorz: Math.cos(angle) * velocity,
-            speedVert: Math.sin(angle) * velocity,
-          };
 
           let opacity = 1;
 

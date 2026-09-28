@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/shadcn/dropdown-menu";
 import { PriceDisplay } from "@/shared/components/ui/price-display";
-import { Link, useRouter } from "@/shared/config/i18n/routing";
+import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { formatDate } from "@/shared/utils/format-date";
 
@@ -38,8 +38,6 @@ interface BookSaleHistoryItemProps {
 export const BookSaleHistoryItem = ({ sale }: BookSaleHistoryItemProps) => {
   const t = useTranslations("market.history");
   const tActions = useTranslations("market.detail.actions");
-  const tCommon = useTranslations("common");
-  const router = useRouter();
   const locale = useLocale();
 
   const { mutate: deleteSale, isPending: isDeleting } =
