@@ -12,7 +12,8 @@ export function JsonLd({ data }: JsonLdProps) {
     <script
       type="application/ld+json"
       dangerouslySetInnerHTML={{
-        __html: JSON.stringify(data).replace(/</g, "\u003c"),
+        // 백슬래시를 이중으로 써야 6글자 JSON 이스케이프가 된다. 하나면 JS가 "<"로 읽어 치환이 무효
+        __html: JSON.stringify(data).replace(/</g, "\\u003c"),
       }}
     />
   );

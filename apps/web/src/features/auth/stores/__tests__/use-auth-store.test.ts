@@ -1,6 +1,8 @@
-import { User } from "@bookjeok/core";
+import { RECENT_BOOKS_KEY, User } from "@bookjeok/core";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { CHAT_STORAGE_KEY } from "@/features/book/constants/ai-chat";
 
 import { useAuthStore } from "../use-auth-store";
 
@@ -111,5 +113,33 @@ describe("useAuthStore", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.accessToken).toBeNull();
     expect(result.current.refreshToken).toBeNull();
+  });
+
+  it("로그인 세션을 끝내면 최근 본 책과 AI 대화 기록을 탭 저장소에서 지운다", () => {
+    act(() => {
+      useAuthStore.getState().setAuth({
+        user: mockUser,
+        accessToken: "access-token",
+        refreshToken: "refresh-token",
+      });
+    });
+    sessionStorage.setItem(RECENT_BOOKS_KEY, "[]");
+    sessionStorage.setItem(`${CHAT_STORAGE_KEY}_user_1`, "[]");
+    sessionStorage.setItem("auth-return-url", "/my-page");
+
+    act(() => useAuthStore.getState().clearAuth());
+
+    expect(sessionStorage.getItem(RECENT_BOOKS_KEY)).toBeNull();
+    expect(sessionStorage.getItem(`${CHAT_STORAGE_KEY}_user_1`)).toBeNull();
+    expect(sessionStorage.getItem("auth-return-url")).toBe("/my-page");
+  });
+
+  it("비로그인 상태의 clearAuth는 최근 본 책을 지우지 않는다", () => {
+    sessionStorage.setItem(RECENT_BOOKS_KEY, "[]");
+
+    act(() => useAuthStore.getState().clearAuth());
+
+    expect(sessionStorage.getItem(RECENT_BOOKS_KEY)).toBe("[]");
+    sessionStorage.clear();
   });
 });

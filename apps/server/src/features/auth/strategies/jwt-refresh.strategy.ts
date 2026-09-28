@@ -7,6 +7,7 @@ import { UserService } from '@/features/user/services/user.service';
 import { BusinessException } from '@/shared/exceptions';
 
 import { JwtPayload } from '../types/jwt-payload.type';
+import { isTokenRevoked } from '../utils/is-token-revoked';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -30,10 +31,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     }
 
     // 발급 시점의 tokenVersion과 현재 DB의 tokenVersion이 다르면(로그아웃 또는 무효화된 토큰) 거부
-    if (
-      payload.tokenVersion !== undefined &&
-      user.tokenVersion !== payload.tokenVersion
-    ) {
+    if (isTokenRevoked(payload, user)) {
       throw new BusinessException(
         'AUTH_TOKEN_EXPIRED',
         HttpStatus.UNAUTHORIZED,

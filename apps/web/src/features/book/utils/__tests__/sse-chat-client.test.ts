@@ -91,4 +91,49 @@ describe("streamAiChat 토큰 갱신", () => {
     ).rejects.toThrow("UNAUTHORIZED");
     expect(useAuthStore.getState().accessToken).toBeNull();
   });
+
+  it.each([
+    ["서버 오류(5xx)", () => Promise.resolve(jsonResponse({}, 503))],
+    ["요청 제한(429)", () => Promise.resolve(jsonResponse({}, 429))],
+    ["네트워크 오류", () => Promise.reject(new TypeError("Failed to fetch"))],
+  ])("갱신 요청이 %s로 실패하면 로그인 상태를 유지한다", async (_, refresh) => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockImplementationOnce(refresh);
+
+    const error = await streamAiChat({
+      messages: [{ role: "user", content: "추천해 줘" }],
+      accessToken: "expired",
+      onChunk: vi.fn(),
+      onDone: vi.fn(),
+      onError: vi.fn(),
+    }).catch((e: Error) => e);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).not.toBe("UNAUTHORIZED");
+    expect(useAuthStore.getState().refreshToken).toBe("refresh-1");
+  });
+
+  it("갱신 뒤 재시도가 실패해도 로그아웃하지 않는다", async () => {
+    fetchMock
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(
+        jsonResponse({
+          success: true,
+          data: { accessToken: "fresh", refreshToken: "refresh-2" },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 500 }));
+
+    await expect(
+      streamAiChat({
+        messages: [{ role: "user", content: "추천해 줘" }],
+        accessToken: "expired",
+        onChunk: vi.fn(),
+        onDone: vi.fn(),
+        onError: vi.fn(),
+      }),
+    ).rejects.toThrow("HTTP Error 500");
+    expect(useAuthStore.getState().accessToken).toBe("fresh");
+  });
 });

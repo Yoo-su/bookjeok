@@ -157,7 +157,14 @@ export const useAiChat = () => {
   }, [userStorageKey, welcomeMessage]);
 
   // 대화 변경 시 sessionStorage 동기화 (단, 스트리밍 중인 플래그는 제거 후 저장)
+  const savedKeyRef = useRef(userStorageKey);
   useEffect(() => {
+    // 계정이 바뀐 직후의 messages는 아직 이전 계정 것이다. 그대로 저장하면 로그아웃한
+    // 사용자의 대화가 게스트 키에 옮겨 적힌다. 새 키의 기록을 불러온 다음 렌더부터 저장한다
+    if (savedKeyRef.current !== userStorageKey) {
+      savedKeyRef.current = userStorageKey;
+      return;
+    }
     if (typeof window !== "undefined" && !loading) {
       const cleanMessages = messages.map(({ isStreaming, books, ...rest }) => ({
         ...rest,

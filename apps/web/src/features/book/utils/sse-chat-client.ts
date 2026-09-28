@@ -52,43 +52,52 @@ export async function streamAiChat(
   if (response.status === 401 && !isRetry) {
     const refreshToken = useAuthStore.getState().refreshToken;
     if (refreshToken) {
+      let refreshRes: Response;
       try {
-        const refreshRes = await fetch(
-          `${apiBaseURL}${API_PATHS.auth.refresh}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${refreshToken}`,
-            },
+        refreshRes = await fetch(`${apiBaseURL}${API_PATHS.auth.refresh}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${refreshToken}`,
           },
-        );
+        });
+      } catch (netErr: unknown) {
+        // 갱신 요청이 닿지 못했을 뿐 세션이 거부된 것은 아니다. 로그인 상태를 유지한다
+        const message =
+          netErr instanceof Error ? netErr.message : String(netErr);
+        throw new Error(`Network Error: ${message}`);
+      }
 
-        if (refreshRes.ok) {
-          // 서버 응답은 { success, data } 봉투다. axios 인터셉터처럼 벗겨서 읽는다
-          const body = await refreshRes.json();
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-            body?.data ?? {};
+      // 리프레시 토큰이 거부된 401만 세션 종료로 본다. 5xx·429는 일시 장애다
+      if (!refreshRes.ok && refreshRes.status !== 401) {
+        throw new Error(`HTTP Error ${refreshRes.status}`);
+      }
 
-          if (newAccessToken) {
-            useAuthStore.getState().setTokens({
-              accessToken: newAccessToken,
-              refreshToken: newRefreshToken || refreshToken,
-            });
+      if (refreshRes.ok) {
+        // 서버 응답은 { success, data } 봉투다. axios 인터셉터처럼 벗겨서 읽는다
+        const body = await refreshRes.json().catch(() => null);
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+          body?.data ?? {};
 
-            // 갱신된 AccessToken으로 1회 재시도
-            return await streamAiChat(
-              { ...options, accessToken: newAccessToken },
-              true,
-            );
-          }
+        if (!newAccessToken) {
+          throw new Error("Failed to retrieve new access token");
         }
-      } catch (refreshErr) {
-        console.error("Failed to refresh token during AI Stream:", refreshErr);
+
+        useAuthStore.getState().setTokens({
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken || refreshToken,
+        });
+
+        // 갱신된 AccessToken으로 1회 재시도. 재시도 중 오류는 세션과 무관하므로
+        // 아래 로그아웃 처리로 흘려보내지 않는다
+        return await streamAiChat(
+          { ...options, accessToken: newAccessToken },
+          true,
+        );
       }
     }
 
-    // Refresh Token도 만료되었거나 없으면 로그아웃 처리 후 예외 발생
+    // Refresh Token이 거부(401)되었거나 없으면 로그아웃 처리 후 예외 발생
     // clearAuth만 하고 SPA에 머무르면 이전 사용자의 쿼리 캐시가 살아남아
     // 같은 브라우저에서 다음 사용자가 로그인할 때 그대로 노출된다.
     useAuthStore.getState().clearAuth();

@@ -87,7 +87,11 @@ sequenceDiagram
 
 ### `tokenVersion` 기반 즉시 무효화
 
-`User.tokenVersion` 값이 JWT payload에 포함됩니다. 로그아웃이나 보안 이벤트 시 DB의 `tokenVersion`을 증가시키면, 아직 만료되지 않은 기존 Refresh Token이 **전부 즉시 무효**가 됩니다. 토큰 블랙리스트를 따로 운영하지 않고 정수 하나로 세션을 끊는 방식입니다.
+`User.tokenVersion` 값이 Access·Refresh 두 토큰의 payload에 모두 포함됩니다. 로그아웃이나 보안 이벤트 시 DB의 `tokenVersion`을 증가시키면, 아직 만료되지 않은 기존 토큰이 **전부 즉시 무효**가 됩니다. 토큰 블랙리스트를 따로 운영하지 않고 정수 하나로 세션을 끊는 방식입니다.
+
+- 검사는 `utils/is-token-revoked.ts` 한 곳에 있고 `JwtStrategy`·`JwtRefreshStrategy`·소켓 핸드셰이크(`shared/websocket/authenticate-socket.ts`)가 함께 씁니다. `tokenVersion`이 없는 토큰(Access Token에 버전을 싣기 전 발급분, 최대 15분)은 배포 순간 소켓 재연결이 한꺼번에 거부되지 않도록 통과시킵니다.
+- 버전이 사용자 단위라 **로그아웃하면 그 계정의 모든 기기가 함께 로그아웃**됩니다. 기기별 로그아웃에는 세션 저장소가 필요합니다.
+- 소켓은 연결 시점에만 인증하므로, 다른 기기에서 로그아웃해도 이미 연결된 소켓은 끊기 전까지 유지됩니다.
 
 ## 5. 이메일 인증
 

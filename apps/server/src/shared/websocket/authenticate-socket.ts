@@ -2,6 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
 
 import { JwtPayload } from '@/features/auth/types/jwt-payload.type';
+import { isTokenRevoked } from '@/features/auth/utils/is-token-revoked';
 import { User } from '@/features/user/entities/user.entity';
 
 /** 소켓 인증에 필요한 유저 조회 능력만 요구한다 (UserService 전체를 묶지 않기 위함) */
@@ -45,6 +46,11 @@ export async function authenticateSocket(
   // 탈퇴한 계정의 토큰은 만료 전까지 유효하므로 여기서 막는다.
   if (user.deletedAt) {
     throw new Error('탈퇴한 계정입니다.');
+  }
+
+  // 로그아웃으로 무효화된 토큰. 인증은 연결 시점에만 하므로 여기서 막아야 한다.
+  if (isTokenRevoked(payload, user)) {
+    throw new Error('무효화된 토큰입니다.');
   }
 
   return user;

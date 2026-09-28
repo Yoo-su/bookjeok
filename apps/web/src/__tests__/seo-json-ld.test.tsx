@@ -1,5 +1,6 @@
 import { BookInfo, Review, SaleStatus, UsedBookSale } from "@bookjeok/core";
 import { render } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { BookSaleJsonLd } from "@/features/book-sale/components/common/book-sale-json-ld";
@@ -102,6 +103,20 @@ describe("검색봇에 전달하는 실제 JSON-LD", () => {
   it("태그가 없으면 keywords를 만들지 않는다", () => {
     expect(jsonLd(<ReviewJsonLd review={review} />)).not.toHaveProperty(
       "keywords",
+    );
+  });
+
+  it("사용자 입력의 </script>가 SSR HTML에서 스크립트 태그를 닫지 못한다", () => {
+    const title = '</script><img src=x onerror="alert(1)">';
+    const html = renderToStaticMarkup(
+      <ReviewJsonLd review={{ ...review, title }} />,
+    );
+
+    // 여는 태그 하나, 닫는 태그 하나만 있어야 한다
+    expect(html.match(/<\/script/gi)).toHaveLength(1);
+    expect(html).not.toContain("<img");
+    expect(jsonLd(<ReviewJsonLd review={{ ...review, title }} />).name).toBe(
+      title,
     );
   });
 

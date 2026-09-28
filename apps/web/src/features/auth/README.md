@@ -11,7 +11,8 @@ auth/
 │   ├── use-auth-store.ts                  # 토큰·사용자 세션 (Zustand)
 │   └── __tests__/use-auth-store.test.ts
 ├── utils/
-│   └── return-url.ts                      # 로그인 후 복귀 경로 저장/복원
+│   ├── return-url.ts                      # 로그인 후 복귀 경로 저장/복원
+│   └── purge-user-storage.ts              # 세션 종료 시 탭 저장소의 사용자 흔적 삭제
 ├── mutations/
 └── components/
     ├── forms/
@@ -46,11 +47,17 @@ JWT를 URL 쿼리스트링에 실어 보내면 브라우저 히스토리·리퍼
 useAuthStore 저장 → return-url 로 복귀
 ```
 
+콜백은 `ticket`만 받습니다. URL로 토큰을 직접 받던 예전 경로는 공격자가 자기 토큰을 담은 링크로 피해자를 공격자 계정에 로그인시킬 수 있어 제거했습니다.
+
 ### Silent Refresh
 
-Access Token 만료는 `@bookjeok/api-client`의 Axios 인터셉터가 처리합니다. 401을 감지하면 refresh를 시도하고 원래 요청을 재시도합니다. **프론트 코드에서 토큰 갱신을 직접 다루지 마세요.** refresh까지 실패하면 스토어를 비우고 로그인으로 보냅니다.
+Access Token 만료는 `@bookjeok/api-client`의 Axios 인터셉터가 처리합니다. 401을 감지하면 refresh를 시도하고 원래 요청을 재시도합니다. **프론트 코드에서 토큰 갱신을 직접 다루지 마세요.** refresh가 **401로 거부**되면 스토어를 비우고 로그인으로 보냅니다. 네트워크 오류·5xx·429는 일시 장애로 보고 로그인 상태를 유지합니다(SSE 클라이언트도 같은 규칙).
 
-서버는 `user.tokenVersion`을 올려 Refresh Token을 즉시 무효화할 수 있습니다(로그아웃·보안 이벤트).
+서버는 `user.tokenVersion`을 올려 Access·Refresh Token을 즉시 무효화할 수 있습니다(로그아웃·보안 이벤트).
+
+### 세션 종료
+
+로그아웃·refresh 거부·탈퇴는 모두 하드 내비게이션으로 끝내 쿼리 캐시·스토어·소켓을 폐기합니다(`shared/utils/session.ts`). `clearAuth()`는 로그인 세션이 있었을 때 sessionStorage의 최근 본 책과 AI 대화 기록도 지웁니다.
 
 ### 이메일 인증
 
