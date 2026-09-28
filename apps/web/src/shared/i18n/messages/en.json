@@ -208,7 +208,9 @@
     "trade_reserved": "{actorName} picked you as the trading partner.",
     "trade_completed": "Your trade with {actorName} is complete. Leave a review.",
     "fallback_actor": "Someone",
-    "fallback_cancel_reason": "Trade cancelled"
+    "fallback_cancel_reason": "Trade cancelled",
+    "feedback_replied": "We replied to your message. Take a look.",
+    "system_name": "Bookjeok"
   },
   "auth": {
     "login": {
@@ -1196,6 +1198,10 @@
           "title": "Trade history",
           "description": "Your completed used-book trades and reviews."
         }
+      },
+      "feedback": {
+        "label": "My Messages",
+        "desc": "Messages you sent and our replies"
       }
     },
     "profile": {
@@ -2520,6 +2526,82 @@
         "q": "Is it free?",
         "a": "Yes, it's free for every Bookjeok member."
       }
+    }
+  },
+  "feedback": {
+    "book_author": "Author",
+    "book_publisher": "Publisher",
+    "book_title": "Book title",
+    "book_title_placeholder": "Title of the book",
+    "cancel": "Cancel",
+    "content_label": "Details",
+    "content_label_optional": "Anything else (optional)",
+    "daily_limit": "You can send up to {limit} messages a day. Please try again tomorrow.",
+    "description": "Tell us what you noticed while using Bookjeok. Only the team can see what you send.",
+    "error": "Couldn't send it. Please try again shortly.",
+    "open": "Send feedback",
+    "optional": "Optional",
+    "placeholders": {
+      "book_request": "Not sure of the title? Tell us what you remember.",
+      "bug": "Which screen, what did you do, and what went wrong?",
+      "other": "Write anything you like.",
+      "suggestion": "What would you like to see, or what felt inconvenient?"
+    },
+    "request_book": "Can't find a book? Request it",
+    "submit": "Send",
+    "submitting": "Sending...",
+    "success": "Thanks for the feedback. You can see our reply under My Page > My Messages.",
+    "title": "Send feedback",
+    "type_label": "Feedback type",
+    "types": {
+      "book_request": "Book request",
+      "bug": "Bug report",
+      "other": "Other",
+      "suggestion": "Suggestion"
+    },
+    "load_more": "Load more",
+    "status": {
+      "received": "Received",
+      "in_progress": "In review",
+      "done": "Done",
+      "wont_fix": "Won't fix"
+    },
+    "my": {
+      "title": "My Messages",
+      "subtitle": "See the messages you sent, their status, and our replies.",
+      "empty_title": "No messages yet",
+      "empty_desc": "Tell us about a missing book, a problem, or a feature you'd like.",
+      "reply_label": "Reply from Bookjeok",
+      "reply_waiting": "No reply yet. We'll notify you when we reply.",
+      "load_error": "Couldn't load your messages."
+    },
+    "admin": {
+      "title": "Feedback Inbox",
+      "subtitle": "Change status and reply. Replies are shown to the sender with a notification.",
+      "forbidden": "Only operators can view this page.",
+      "filter_status": "Status",
+      "filter_type": "Type",
+      "filter_all": "All",
+      "empty": "No matching messages.",
+      "load_error": "Couldn't load messages.",
+      "user_withdrawn": "Deleted account",
+      "page": "Page",
+      "device": "Device",
+      "edit": "Handle",
+      "edit_title": "Handle message #{id}",
+      "edit_desc": "Status and reply are shown to the sender. Notes are for operators only.",
+      "status_label": "Status",
+      "reply_label": "Reply (shown to sender)",
+      "reply_placeholder": "Reply to the sender",
+      "reply_help": "Saving a new or edited reply notifies the sender.",
+      "reply_will_notify": "Saving will notify the sender of your reply.",
+      "reply_no_user": "The sender deleted their account, so no one will see the reply.",
+      "note_label": "Note (operators only)",
+      "note_placeholder": "Handling notes",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved.",
+      "save_error": "Couldn't save."
     }
   }
 }

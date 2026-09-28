@@ -18,6 +18,7 @@ import {
   Handshake,
   Heart,
   MessageSquare,
+  MessageSquareText,
   PackageCheck,
   Pencil,
   ShoppingBag,
@@ -98,6 +99,12 @@ export const MyPageView = () => {
       label: t("menu.comments.label"),
       description: t("menu.comments.desc"),
       href: PATHS.MY_COMMENTS,
+    },
+    {
+      icon: MessageSquareText,
+      label: t("menu.feedback.label"),
+      description: t("menu.feedback.desc"),
+      href: PATHS.MY_PAGE_FEEDBACK,
     },
   ];
 

@@ -26,6 +26,11 @@ export const PrivacyEn = () => {
             service such as writing book reviews and providing used book trading
             features.
           </li>
+          <li>
+            <strong>Handling Inquiries and Reports:</strong> Reviewing book
+            requests, bug reports, and suggestions, informing you of the
+            outcome, and improving the service.
+          </li>
         </ul>
       </section>
 
@@ -50,6 +55,11 @@ export const PrivacyEn = () => {
             Social identifier (providerID), profile image URL, nickname (※ We do
             not collect or store the email address linked to your social
             account.)
+          </li>
+          <li>
+            <strong>When Sending an Inquiry or Report:</strong> Inquiry type and
+            content, requested book details (title, author, publisher), and the
+            address of the page it was sent from.
           </li>
           <li>
             <strong>Automatically Collected Items during Service Use:</strong>{" "}
@@ -94,7 +104,9 @@ export const PrivacyEn = () => {
             withdrawal, your direct identifying details are anonymized or
             immediately destroyed. Saved reading logs and reviews are
             permanently deleted, while comments written on other posts are
-            anonymized by disconnecting the user link.
+            anonymized by disconnecting the user link. Inquiries and reports you
+            sent are also kept as service improvement records after the user
+            link is removed.
           </li>
         </ul>
       </section>

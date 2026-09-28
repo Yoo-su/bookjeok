@@ -8,6 +8,7 @@
  * - SALE_xxx: 판매글 관련 에러
  * - REVIEW_xxx: 리뷰 관련 에러
  * - COMMENT_xxx: 댓글 관련 에러
+ * - FEEDBACK_xxx: 문의·제보 관련 에러
  * - CHAT_xxx: 채팅 관련 에러
  * - VALIDATION_xxx: 입력값 검증 관련 에러
  * - INTERNAL_xxx: 서버 내부 에러
@@ -164,6 +165,26 @@ export const ERROR_CODES = {
   COMMENT_FORBIDDEN: {
     code: 'COMMENT_002',
     message: '댓글을 수정하거나 삭제할 권한이 없습니다.',
+  },
+
+  // ============================================
+  // 문의·제보 관련 에러 (FEEDBACK)
+  // ============================================
+  FEEDBACK_CONTENT_REQUIRED: {
+    code: 'FEEDBACK_001',
+    message: '내용을 입력해 주세요.',
+  },
+  FEEDBACK_BOOK_TITLE_REQUIRED: {
+    code: 'FEEDBACK_002',
+    message: '요청할 책 제목을 입력해 주세요.',
+  },
+  FEEDBACK_DAILY_LIMIT_EXCEEDED: {
+    code: 'FEEDBACK_003',
+    message: '오늘은 문의를 더 보낼 수 없습니다. 내일 다시 보내 주세요.',
+  },
+  FEEDBACK_NOT_FOUND: {
+    code: 'FEEDBACK_004',
+    message: '문의를 찾을 수 없습니다.',
   },
 
   // ============================================

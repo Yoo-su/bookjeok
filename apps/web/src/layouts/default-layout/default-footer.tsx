@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 
+import { FeedbackButton } from "@/features/feedback/components/feedback-button";
 import { Logo } from "@/layouts/common/logo";
 import { Separator } from "@/shared/components/shadcn/separator";
 import { Link } from "@/shared/config/i18n/routing";
@@ -36,6 +37,7 @@ const WaveDecoration = () => (
 export const DefaultFooter = () => {
   const t = useTranslations("footer");
   const tNav = useTranslations("header.nav");
+  const tFeedback = useTranslations("feedback");
   const currentYear = new Date().getFullYear();
 
   return (
@@ -145,6 +147,11 @@ export const DefaultFooter = () => {
                   {t("contact")}
                 </h3>
                 <ul className="space-y-1 text-sm text-stone-500">
+                  <li>
+                    <FeedbackButton className="inline-block py-1.5 font-medium text-stone-700 hover:text-stone-900 transition-colors">
+                      {tFeedback("open")}
+                    </FeedbackButton>
+                  </li>
                   <li>rhan0871@naver.com</li>
                   <li>Seoul, Republic of Korea</li>
                 </ul>

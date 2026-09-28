@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
+import { useFeedbackDialogStore } from "@/features/feedback/stores/use-feedback-dialog-store";
 import {
   Avatar,
   AvatarFallback,
@@ -25,7 +26,9 @@ import { hardRedirect, markSessionToast } from "@/shared/utils/session";
 export default function UserPopover() {
   const tAuth = useTranslations("header.auth");
   const tNav = useTranslations("header.nav");
+  const tFeedback = useTranslations("feedback");
   const user = useAuthStore((state) => state.user);
+  const openFeedback = useFeedbackDialogStore((state) => state.open);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -115,6 +118,18 @@ export default function UserPopover() {
             asChild
           >
             <Link href={PATHS.READING_LOG}>{tNav("reading_log")}</Link>
+          </Button>
+          <Button
+            variant="ghost"
+            hoverScale={1}
+            tapScale={1}
+            className="justify-start w-full h-auto px-3 py-2"
+            onClick={() => {
+              setIsOpen(false);
+              openFeedback();
+            }}
+          >
+            {tFeedback("open")}
           </Button>
           <Button
             variant="ghost"

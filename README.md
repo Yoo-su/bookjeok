@@ -226,8 +226,8 @@
 Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 - **채팅** — 판매글별 1:1 채팅방, 이미지 전송, 타이핑 인디케이터, **읽음 워터마크**(참가자별 `lastReadMessageId`) 기반 안 읽은 개수 계산, 핸드셰이크 단계 JWT 검증(`authenticateSocket`)
-- **알림** — 리뷰 리액션·리뷰 댓글·댓글 좋아요에 더해 중고거래 11종을 포함한 **14종 알림 타입**을 실시간 푸시. 도메인 서비스는 `EventEmitter` 이벤트만 발행하고, 리스너가 알림 생성·채팅 시스템 메시지·메일 발송을 비동기로 처리합니다.
-- **메일** — Resend로 회원가입 이메일 인증 링크와 채팅방 개설 알림을 발송합니다(`chat.room_created` 이벤트 → `MailEventListener`, `async: true`).
+- **알림** — 리뷰 리액션·리뷰 댓글·댓글 좋아요에 더해 중고거래·직거래 13종과 문의 답변을 포함한 **17종 알림 타입**을 실시간 푸시. 도메인 서비스는 `EventEmitter` 이벤트만 발행하고, 리스너가 알림 생성·채팅 시스템 메시지·메일 발송을 비동기로 처리합니다.
+- **메일** — Resend로 회원가입 이메일 인증 링크와 채팅방 개설 알림을 발송합니다(`chat.room_created` 이벤트 → `MailEventListener`, `async: true`). 사용자 문의·제보가 접수되면 운영자(`FEEDBACK_NOTIFY_EMAIL`)에게도 보냅니다(`feedback.created` → `FeedbackNotifyListener`).
 
 ---
 
@@ -389,7 +389,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | **Google Gemini**                     | 의도 분류·RAG 합성(Flash), 임베딩(`gemini-embedding-001`) | `server: llm, search`                   |
 | **토스페이먼츠**                      | 에스크로 결제 승인·취소·웹훅                              | `server: order`, `web: order`           |
 | **Delivery Tracker**                  | 택배 배송 상태 조회 및 30분 주기 폴링                     | `server: order`                         |
-| **Resend**                            | 회원가입 이메일 인증 링크, 채팅 개설 알림 메일            | `server: shared/mail`                   |
+| **Resend**                            | 인증 링크·채팅 개설 알림·운영자 문의 알림 메일            | `server: shared/mail`                   |
 | **Vercel Blob**                       | 리뷰·판매글·프로필 이미지 업로드/삭제                     | `web: /api/upload`, `server`            |
 | **Vercel Image Optimization**         | 홈 메인 슬라이더의 R2 표지를 화면 크기에 맞게 변환·캐시   | `web: book-slider`                      |
 | **카카오 맵 SDK**                     | 거래 위치 지도, 지오코딩                                  | `web: shared/components/map`            |
@@ -594,6 +594,7 @@ pnpm test
 | `GEMINI_MODEL_NAME`                                  |      | 사용할 Gemini 모델명                                                           |
 | `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                                            |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL`               |  ✅  | 이메일 인증·알림 발송                                                          |
+| `FEEDBACK_NOTIFY_EMAIL`                              |      | 사용자 문의·제보 알림을 받을 운영자 메일. 비우면 DB에만 쌓임                   |
 | `BLOB_READ_WRITE_TOKEN`                              |  ✅  | Vercel Blob 이미지 업로드                                                      |
 | `TOSS_PAYMENTS_SECRET_KEY` / `_CLIENT_KEY`           |      | 토스페이먼츠 에스크로                                                          |
 | `DELIVERY_TRACKER_BASE_URL`                          |      | 배송 추적 API 엔드포인트                                                       |
@@ -628,9 +629,9 @@ pnpm test
 
 모든 기능 폴더에 개별 README가 있습니다.
 
-- **서버 도메인** — [auth](apps/server/src/features/auth/README.md) · [user](apps/server/src/features/user/README.md) · [book](apps/server/src/features/book/README.md) · [review](apps/server/src/features/review/README.md) · [comment](apps/server/src/features/comment/README.md) · [reading-log](apps/server/src/features/reading-log/README.md) · [wishlist](apps/server/src/features/wishlist/README.md) · [used-book-sale](apps/server/src/features/used-book-sale/README.md) · [order](apps/server/src/features/order/README.md) · [trade](apps/server/src/features/trade/README.md) · [chat](apps/server/src/features/chat/README.md) · [notification](apps/server/src/features/notification/README.md) · [llm](apps/server/src/features/llm/README.md) · [search](apps/server/src/features/search/README.md) · [search-keyword](apps/server/src/features/search-keyword/README.md) · [insights](apps/server/src/features/insights/README.md) · [health](apps/server/src/features/health/README.md)
+- **서버 도메인** — [auth](apps/server/src/features/auth/README.md) · [user](apps/server/src/features/user/README.md) · [book](apps/server/src/features/book/README.md) · [review](apps/server/src/features/review/README.md) · [comment](apps/server/src/features/comment/README.md) · [reading-log](apps/server/src/features/reading-log/README.md) · [wishlist](apps/server/src/features/wishlist/README.md) · [used-book-sale](apps/server/src/features/used-book-sale/README.md) · [order](apps/server/src/features/order/README.md) · [trade](apps/server/src/features/trade/README.md) · [chat](apps/server/src/features/chat/README.md) · [notification](apps/server/src/features/notification/README.md) · [feedback](apps/server/src/features/feedback/README.md) · [llm](apps/server/src/features/llm/README.md) · [search](apps/server/src/features/search/README.md) · [search-keyword](apps/server/src/features/search-keyword/README.md) · [insights](apps/server/src/features/insights/README.md) · [health](apps/server/src/features/health/README.md)
 - **서버 횡단 관심사** — [src/shared](apps/server/src/shared/README.md) (SmartCache · 에러 체계 · 멱등성 · 활동 로그 · 메일 · 탈퇴 캐스케이드)
-- **웹 도메인** — [auth](apps/web/src/features/auth/README.md) · [user](apps/web/src/features/user/README.md) · [book](apps/web/src/features/book/README.md) · [book-sale](apps/web/src/features/book-sale/README.md) · [order](apps/web/src/features/order/README.md) · [trade](apps/web/src/features/trade/README.md) · [chat](apps/web/src/features/chat/README.md) · [notification](apps/web/src/features/notification/README.md) · [review](apps/web/src/features/review/README.md) · [comment](apps/web/src/features/comment/README.md) · [reading-log](apps/web/src/features/reading-log/README.md) · [insights](apps/web/src/features/insights/README.md)
+- **웹 도메인** — [auth](apps/web/src/features/auth/README.md) · [user](apps/web/src/features/user/README.md) · [book](apps/web/src/features/book/README.md) · [book-sale](apps/web/src/features/book-sale/README.md) · [order](apps/web/src/features/order/README.md) · [trade](apps/web/src/features/trade/README.md) · [chat](apps/web/src/features/chat/README.md) · [notification](apps/web/src/features/notification/README.md) · [review](apps/web/src/features/review/README.md) · [comment](apps/web/src/features/comment/README.md) · [feedback](apps/web/src/features/feedback/README.md) · [reading-log](apps/web/src/features/reading-log/README.md) · [insights](apps/web/src/features/insights/README.md)
 - **웹 공통 UX** — [intro](apps/web/src/features/intro/README.md) (홈 히어로) · [music](apps/web/src/features/music/README.md) (배경음악) · [confirm](apps/web/src/features/confirm/README.md) (전역 확인 다이얼로그) · [announcement](apps/web/src/features/announcement/README.md) (새 기능 소개 모달)
 
 ### 설계 · 운영

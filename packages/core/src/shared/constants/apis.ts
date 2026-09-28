@@ -61,6 +61,12 @@ export const API_PATHS = {
     detail: (id: number) => `/comments/${id}`,
     like: (id: number) => `/comments/${id}/like`,
   },
+  feedback: {
+    base: "/feedback",
+    my: "/feedback/my",
+    admin: "/admin/feedback",
+    adminDetail: (id: number) => `/admin/feedback/${id}`,
+  },
   notification: {
     base: "/notifications",
     read: (id: number) => `/notifications/${id}/read`,

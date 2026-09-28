@@ -23,6 +23,9 @@ export const PATHS = {
   MY_PAGE: "/my-page",
   MY_REVIEWS: "/my-page/reviews",
   MY_COMMENTS: "/my-page/comments",
+  MY_PAGE_FEEDBACK: "/my-page/feedback",
+  /** 운영자 문의 관리 (ADMIN만) */
+  ADMIN_FEEDBACK: "/admin/feedback",
   MY_PAGE_WISHLIST: "/my-page/wishlist",
   BOOK_MARKET: "/book/market",
   USER_PROFILE: (handle: string) => `/users/${handle}`,

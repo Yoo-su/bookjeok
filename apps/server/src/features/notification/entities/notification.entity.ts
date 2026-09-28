@@ -29,6 +29,8 @@ export enum NotificationType {
   // 직거래 (결제 없이 진행되는 거래)
   TRADE_RESERVED = 'TRADE_RESERVED',
   TRADE_COMPLETED = 'TRADE_COMPLETED',
+  // 북적이 보내는 알림 (행위자 없음)
+  FEEDBACK_REPLIED = 'FEEDBACK_REPLIED',
 }
 
 @Entity('notifications')
