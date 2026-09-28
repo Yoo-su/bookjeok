@@ -91,6 +91,10 @@ export const DefaultHeader = () => {
   const currentUser = mounted ? user : null;
 
   const isActive = (path: string) => pathname?.startsWith(path);
+  // 비로그인이면 가드에 막히는 내 독서 기록 대신 공개 소개로 보낸다
+  const readingLogHref = currentUser
+    ? PATHS.READING_LOG
+    : PATHS.READING_LOG_INTRO;
 
   const getLinkClass = (path: string) =>
     cn(
@@ -163,16 +167,10 @@ export const DefaultHeader = () => {
           </Link>
 
           {/* 02. 독서 기록 */}
-          <Link
-            href={PATHS.READING_LOG}
-            onClick={
-              !currentUser ? () => saveReturnUrl(PATHS.READING_LOG) : undefined
-            }
-            className={getLinkClass(PATHS.READING_LOG)}
-          >
-            <span className={getIndexNumClass(PATHS.READING_LOG)}>02</span>
+          <Link href={readingLogHref} className={getLinkClass(readingLogHref)}>
+            <span className={getIndexNumClass(readingLogHref)}>02</span>
             <span className="tracking-tight">{t("nav.menu_log")}</span>
-            {isActive(PATHS.READING_LOG) && <HandDrawnUnderline />}
+            {isActive(readingLogHref) && <HandDrawnUnderline />}
           </Link>
 
           {/* 03. 라운지 */}

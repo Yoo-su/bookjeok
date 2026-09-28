@@ -60,7 +60,8 @@ export const MobileNavSheet = () => {
           index: "01",
         },
         {
-          href: PATHS.READING_LOG,
+          // 비로그인이면 가드에 막히는 내 독서 기록 대신 공개 소개로 보낸다
+          href: currentUser ? PATHS.READING_LOG : PATHS.READING_LOG_INTRO,
           label: t("reading_log"),
           index: "02",
         },

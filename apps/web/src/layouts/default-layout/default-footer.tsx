@@ -101,7 +101,7 @@ export const DefaultFooter = () => {
                       href={PATHS.READING_LOG_INTRO}
                       className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
-                      {tNav("menu_log")}
+                      {tNav("reading_log")}
                     </Link>
                   </li>
                   <li>
