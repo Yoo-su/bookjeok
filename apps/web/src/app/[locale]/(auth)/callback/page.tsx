@@ -1,7 +1,6 @@
 "use client";
 
 import { exchangeAuthTicket } from "@bookjeok/api-client";
-import { User } from "@bookjeok/core";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 
@@ -10,68 +9,39 @@ import { consumeReturnUrl } from "@/features/auth/utils/return-url";
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
+/**
+ * 소셜 로그인 콜백. 서버가 붙여 준 1회용 티켓을 토큰으로 교환합니다.
+ *
+ * URL로 토큰을 직접 받던 예전 방식은 받지 않습니다. 남겨 두면 공격자가 자기 토큰을 담은
+ * 링크만으로 피해자를 공격자 계정에 로그인시킬 수 있습니다.
+ */
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setTokens = useAuthStore((state) => state.setTokens);
-  const setUser = useAuthStore((state) => state.setUser);
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   useEffect(() => {
     const handleAuth = async () => {
       const ticket = searchParams.get("ticket");
-      const accessToken = searchParams.get("accessToken");
-      const refreshToken = searchParams.get("refreshToken");
-      const userString = searchParams.get("user");
-
-      // 1. 보안 권장 방식: 1회용 인증 티켓 교환
-      if (ticket) {
-        try {
-          const data = await exchangeAuthTicket(ticket);
-          setTokens({
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-          });
-          if (data.user) {
-            setUser(data.user as User);
-          }
-          const returnUrl = consumeReturnUrl();
-          router.replace(returnUrl || PATHS.HOME);
-          return;
-        } catch (error) {
-          console.error("Failed to exchange auth ticket:", error);
-          router.replace(PATHS.LOGIN);
-          return;
-        }
+      if (!ticket) {
+        router.replace(PATHS.LOGIN);
+        return;
       }
 
-      // 2. 하위 호환성 폴백: 레거시 직접 전달 파라미터 처리
-      if (accessToken && refreshToken) {
-        try {
-          setTokens({ accessToken, refreshToken });
-          if (userString) {
-            try {
-              const user: User = JSON.parse(userString);
-              setUser(user);
-            } catch (e) {
-              console.warn(
-                "Could not parse user from query, UserProvider will fetch profile:",
-                e,
-              );
-            }
-          }
-          const returnUrl = consumeReturnUrl();
-          router.replace(returnUrl || PATHS.HOME);
-        } catch (error) {
-          console.error("Failed to process legacy auth callback:", error);
-          router.replace(PATHS.LOGIN);
-        }
-      } else {
+      try {
+        const data = await exchangeAuthTicket(ticket);
+        // 토큰과 사용자를 한 번에 바꾼다. 따로 넣으면 그 사이 이전 사용자 정보가 남는다
+        setAuth(data);
+        const returnUrl = consumeReturnUrl();
+        router.replace(returnUrl || PATHS.HOME);
+      } catch (error) {
+        console.error("Failed to exchange auth ticket:", error);
         router.replace(PATHS.LOGIN);
       }
     };
 
     void handleAuth();
-  }, [router, searchParams, setTokens, setUser]);
+  }, [router, searchParams, setAuth]);
 
   return null;
 }

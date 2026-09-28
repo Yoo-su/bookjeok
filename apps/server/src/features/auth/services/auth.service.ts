@@ -146,12 +146,9 @@ export class AuthService {
     role: 'USER' | 'ADMIN',
     tokenVersion: number = 0,
   ) {
-    const accessPayload: JwtPayload = {
-      sub: userId,
-      nickname: userNickname,
-      role,
-    };
-    const refreshPayload: JwtPayload = {
+    // 두 토큰 모두 tokenVersion을 싣는다. 액세스 토큰에 없으면 로그아웃 뒤에도
+    // 만료(15분)까지 API·소켓 요청이 통과한다
+    const payload: JwtPayload = {
       sub: userId,
       nickname: userNickname,
       role,
@@ -159,11 +156,11 @@ export class AuthService {
     };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(accessPayload, {
+      this.jwtService.signAsync(payload, {
         secret: this.jwtSecret,
         expiresIn: TOKEN_EXPIRY.ACCESS_TOKEN,
       }),
-      this.jwtService.signAsync(refreshPayload, {
+      this.jwtService.signAsync(payload, {
         secret: this.jwtRefreshSecret,
         expiresIn: TOKEN_EXPIRY.REFRESH_TOKEN,
       }),
@@ -278,7 +275,7 @@ export class AuthService {
   }
 
   /**
-   * 사용자의 토큰 버전을 증가시켜 기존 발급된 모든 Refresh Token을 즉시 무효화(로그아웃)합니다.
+   * 사용자의 토큰 버전을 증가시켜 기존 발급된 모든 토큰(액세스·리프레시)을 즉시 무효화(로그아웃)합니다.
    * @param userId 유저 ID
    */
   async logout(userId: number): Promise<void> {

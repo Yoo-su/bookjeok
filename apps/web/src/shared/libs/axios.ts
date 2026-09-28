@@ -90,6 +90,15 @@ privateApiClient.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // 토큰을 실어 보냈는데 그사이 스토어가 비었다면 이 탭에서 이미 세션이 끝난 것이다
+      // (로그아웃 직후 도착한 응답 등). 로그아웃이 시작한 이동을 로그인 페이지로 덮지 않는다
+      if (
+        originalRequest.headers?.Authorization &&
+        !useAuthStore.getState().accessToken
+      ) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -145,10 +154,17 @@ privateApiClient.interceptors.response.use(
         return privateApiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as AxiosError, null);
-        useAuthStore.getState().clearAuth();
-        // 무한 리디렉션 방지를 위해 reload 대신 login 페이지로 이동
-        if (typeof window !== "undefined") {
-          redirectToLogin();
+        // 리프레시 토큰이 거부된 401만 세션 종료로 본다. 네트워크 오류·5xx·429는
+        // 일시 장애라 로그인 상태를 유지하고, 다음 요청에서 다시 갱신을 시도한다
+        if (
+          axios.isAxiosError(refreshError) &&
+          refreshError.response?.status === 401
+        ) {
+          useAuthStore.getState().clearAuth();
+          // 무한 리디렉션 방지를 위해 reload 대신 login 페이지로 이동
+          if (typeof window !== "undefined") {
+            redirectToLogin();
+          }
         }
         return Promise.reject(refreshError);
       } finally {

@@ -10,7 +10,7 @@
 
 - **JWT 이중 토큰 인증:** Access Token 및 Refresh Token 발급/검증 (`POST /auth/refresh`).
 - **1회용 인증 티켓 교환 (OAuth Ticket Exchange):** 소셜 로그인 콜백 시 JWT를 브라우저 URL에 노출하지 않고 60초 일회용 티켓을 발급하여 `POST /auth/exchange`로 교환.
-- **`tokenVersion` 기반 즉시 무효화:** 사용자 로그아웃 또는 계정 보안 이벤트 시 DB `tokenVersion`을 증가시켜 이전 Refresh Token을 즉시 만료.
+- **`tokenVersion` 기반 즉시 무효화:** 사용자 로그아웃 또는 계정 보안 이벤트 시 DB `tokenVersion`을 증가시켜 이전 Access·Refresh Token을 즉시 만료.
 - **Rate Limiting:** `@nestjs/throttler`를 활용한 무차별 대입 공격(Brute-Force) 방어.
 
 ### 2. 도서 검색 및 RAG 기반 AI 도서 추천 (Search & LLM)

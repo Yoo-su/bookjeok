@@ -2,6 +2,8 @@ import { User } from "@bookjeok/core";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { purgeUserSessionStorage } from "../utils/purge-user-storage";
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
@@ -18,7 +20,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       accessToken: null,
       refreshToken: null,
@@ -30,8 +32,11 @@ export const useAuthStore = create<AuthState>()(
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
         }),
-      clearAuth: () =>
-        set({ user: null, accessToken: null, refreshToken: null }),
+      clearAuth: () => {
+        // 로그인 세션이 있었을 때만 지운다. 비로그인 방문자의 최근 본 책은 남긴다
+        if (get().accessToken || get().user) purgeUserSessionStorage();
+        set({ user: null, accessToken: null, refreshToken: null });
+      },
     }),
     {
       name: "auth-storage",

@@ -52,13 +52,34 @@ describe('NotificationGateway', () => {
       emit: jest.fn(),
     } as unknown as Socket;
 
-    jwtService.verifyAsync.mockResolvedValue({ sub: 42 });
-    userService.findById.mockResolvedValue({ id: 42, nickname: 'User42' });
+    const user = { id: 42, nickname: 'User42', tokenVersion: 0 };
+    jwtService.verifyAsync.mockResolvedValue({ sub: 42, tokenVersion: 0 });
+    userService.findById.mockResolvedValue(user);
 
     await gateway.handleConnection(mockSocket);
 
-    expect(mockSocket.data.user).toEqual({ id: 42, nickname: 'User42' });
+    expect(mockSocket.data.user).toEqual(user);
     expect(mockSocket.join).toHaveBeenCalledWith('user:42');
+  });
+
+  it('handleConnection은 로그아웃으로 버전이 오른 토큰을 거부한다', async () => {
+    const payload = { sub: 42, tokenVersion: 0 };
+    const mockSocket = {
+      id: 'sock-2',
+      handshake: { auth: { token: 'revoked-jwt-token' } },
+      data: {},
+      join: jest.fn(),
+      disconnect: jest.fn(),
+      emit: jest.fn(),
+    } as unknown as Socket;
+
+    jwtService.verifyAsync.mockResolvedValue(payload);
+    userService.findById.mockResolvedValue({ id: 42, tokenVersion: 1 });
+
+    await gateway.handleConnection(mockSocket);
+
+    expect(mockSocket.join).not.toHaveBeenCalled();
+    expect(mockSocket.disconnect).toHaveBeenCalled();
   });
 
   it('sendNotification should broadcast to user room', () => {
