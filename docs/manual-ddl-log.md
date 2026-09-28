@@ -49,7 +49,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                          | `79b04b2f`, 10절        |
 | 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「독서 키재기」용 실측 판형·표지색, 빈 테이블) | (미커밋), 11절          |
 | 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)      | `532dfd31`, 12절        |
-| 미적용     | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)        | (미커밋), 13절          |
+| 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)        | `9546a94e`, 13절        |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -1237,7 +1237,7 @@ REVOKE ALL ON public.book_dimensions FROM book_ingest;
 
 되돌리면 도구는 다시 권한 점검에서 멈춥니다(적재 불가).
 
-## 13. `feedbacks` 테이블 + 문의 답변 알림 — 사용자 문의·제보 (미적용)
+## 13. `feedbacks` 테이블 + 문의 답변 알림 — 사용자 문의·제보 (2026-09-29)
 
 ### 배경
 
@@ -1318,6 +1318,13 @@ COMMIT;
 ```sql
 UPDATE public.users SET role = 'ADMIN' WHERE handle = '<운영자 핸들>' RETURNING id, nickname, role;
 ```
+
+### 적용 기록 (2026-09-29)
+
+- 0단계(enum 값)·1단계(테이블)를 Supabase SQL Editor에서 실행하고, 서버에 `FEEDBACK_NOTIFY_EMAIL`을
+  넣은 뒤 `9546a94e`를 develop에 push했습니다(서버 자동 배포). 아래 확인 쿼리의 결과 값은 기록하지 않았습니다.
+- **2단계(운영자 계정 지정)는 아직입니다.** 그 전까지 `/admin/feedback`은 "운영자만 볼 수 있는 페이지"
+  안내만 보이고 답변을 달 수 없습니다. 문의 접수·운영자 메일·「나의 문의」는 동작합니다.
 
 ### 확인
 
