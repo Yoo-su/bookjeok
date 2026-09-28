@@ -7,8 +7,7 @@
 ```
 book-sale/
 ├── actions/
-│   ├── upload-action.ts              # Server Action — Vercel Blob 업로드
-│   └── delete-action.ts              # Server Action — Blob 삭제
+│   └── delete-action.ts              # Server Action — 본인 Blob 삭제 (토큰 확인)
 ├── services/
 │   └── image-upload-service.ts       # 압축 → 업로드 → 진행률 오케스트레이션
 ├── hooks/
@@ -75,14 +74,18 @@ book-sale/
   ▼ browser-image-compression 으로 클라이언트 압축
 image-upload-service — 순차 업로드 + 진행률 계산
   │
-  ▼ upload-action (Server Action)
+  ▼ @vercel/blob/client upload → /api/upload (토큰으로 요청자·경로·용량 확인)
 Vercel Blob 저장 → URL 반환
   │
   ▼
 upload-progress-modal 로 진행률 표시, 실패 시 개별 재시도
 ```
 
-판매글 삭제·이미지 교체 시 `delete-action`으로 더 이상 참조되지 않는 Blob을 정리합니다. Server Action을 쓰는 이유는 `BLOB_READ_WRITE_TOKEN`을 브라우저에 노출하지 않기 위해서입니다. 폼의 `bodySizeLimit`은 `next.config.ts`에서 10MB로 설정되어 있습니다.
+판매글 삭제·이미지 교체 시 `delete-action`으로 더 이상 참조되지 않는 Blob을 정리합니다. Server Action을 쓰는 이유는 `BLOB_READ_WRITE_TOKEN`을 브라우저에 노출하지 않기 위해서입니다.
+
+- 서버 액션은 누구나 호출할 수 있는 공개 엔드포인트입니다. `delete-action`은 액세스 토큰으로 요청자를 확인하고 **본인 디렉터리(`{provider}-{id}/`)의 URL만** 지웁니다(`shared/libs/blob-owner.ts`).
+- 이미지는 **저장 API가 성공한 뒤에** 지웁니다. 먼저 지우면 수정·삭제가 409(거래 중·거래 완료)로 실패했을 때 글은 남고 이미지만 사라집니다. 삭제 실패는 고아 파일만 남기고 결과에는 영향이 없습니다.
+- 업로드 토큰(`/api/upload`)에는 `maximumSizeInBytes`로 20MB 상한을 겁니다. 클라이언트가 허용하는 가장 큰 원본(프로필 이미지)과 같습니다(`shared/constants/upload.ts`).
 
 ### 위치 기반 탐색
 

@@ -69,6 +69,14 @@ comment/
 
 탈퇴 회원이 누른 좋아요는 지우면서 해당 댓글들의 `likeCount`도 1씩 줄입니다.
 
+### 대상이 사라질 때
+
+댓글은 대상(`targetType`, `targetId`)을 외래키 없이 문자열로만 참조해 DB가 정리해 주지 않습니다. 리뷰가 지워지면(작성자 삭제·탈퇴) 리뷰 모듈이 같은 트랜잭션에서 `utils/delete-target-comments.ts`로 그 리뷰의 댓글과 댓글 좋아요를 함께 지웁니다. 남겨 두면 "내 댓글"에서 제목 없는 항목이 404로 이어집니다(2026-09-28 추가, 그 이전에 생긴 고아 댓글은 수동 정리 대상).
+
+### 목록 페이지 값
+
+`GET /comments`의 `page`·`cursorId`는 1 이상 정수, `limit`은 1~50입니다(`COMMENT_PAGE_SIZE_MAX`). `limit=0`은 TypeORM `take(0)`이라 LIMIT 없이 전량 조회가 되고, 음수 `page`는 음수 OFFSET으로 500이 나던 것을 400으로 막습니다.
+
 ### 알림
 
 | 이벤트            | 알림                             |

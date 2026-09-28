@@ -41,7 +41,7 @@ user/
 
 > 진행 중인 결제 거래나 판매자로서 예약 중인 판매글이 있으면 서버가 탈퇴를 차단합니다. 구매자로 예약된 판매글은 탈퇴와 함께 판매중으로 풀립니다.
 
-탈퇴는 소프트 삭제(`deletedAt`)라 `getPublicProfileByHandle`이 곧바로 404를 던지지만, **ISR에는 직전 200 HTML이 남습니다.** 그래서 홈으로 떠나기 전에 `revalidateUserProfile`을 먼저 기다립니다 — `window.location` 이동은 진행 중인 서버 액션을 끊습니다.
+탈퇴는 소프트 삭제(`deletedAt`)라 `getPublicProfileByHandle`이 곧바로 404를 던지지만, **ISR에는 직전 200 HTML이 남습니다.** 그래서 홈으로 떠나기 전에 `revalidateUserProfile`을 먼저 기다립니다 — `window.location` 이동은 진행 중인 서버 액션을 끊습니다. 이때 토큰은 이미 무효라 서버 액션은 프로필이 404인지로 호출을 허용합니다([캐싱 문서](../../../docs/CACHING.md#호출자-확인)).
 
 ### 통계 대시보드
 
