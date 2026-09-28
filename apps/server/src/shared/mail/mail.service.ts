@@ -1,8 +1,27 @@
+import { FeedbackType } from '@bookjeok/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 
+import type { Feedback } from '@/features/feedback/entities/feedback.entity';
 import { User } from '@/features/user/entities/user.entity';
+
+const FEEDBACK_TYPE_LABELS: Record<FeedbackType, string> = {
+  [FeedbackType.BOOK_REQUEST]: '책 요청',
+  [FeedbackType.BUG]: '버그 제보',
+  [FeedbackType.SUGGESTION]: '기능 제안·개선',
+  [FeedbackType.OTHER]: '기타 문의',
+};
+
+/** 사용자 입력을 메일 HTML에 넣기 전 이스케이프 */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 @Injectable()
 export class MailService {
@@ -10,6 +29,7 @@ export class MailService {
   private resend: Resend | null = null;
   private readonly fromEmail: string;
   private readonly clientDomain: string;
+  private readonly feedbackNotifyEmail: string | undefined;
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
@@ -26,6 +46,9 @@ export class MailService {
     this.clientDomain =
       this.configService.get<string>('CLIENT_DOMAIN') ??
       'http://localhost:3000';
+    this.feedbackNotifyEmail = this.configService.get<string>(
+      'FEEDBACK_NOTIFY_EMAIL',
+    );
   }
 
   /**
@@ -129,6 +152,73 @@ export class MailService {
       subject,
       html,
       `Chat notification for User #${seller.id}: ${serviceUrl}`,
+    );
+  }
+
+  /**
+   * 사용자 문의·제보를 운영자에게 알립니다.
+   * FEEDBACK_NOTIFY_EMAIL이 없으면 보내지 않습니다 (문의는 DB에 남음).
+   */
+  async sendFeedbackNotice(feedback: Feedback): Promise<boolean> {
+    if (!this.feedbackNotifyEmail) {
+      this.logger.warn(
+        `FEEDBACK_NOTIFY_EMAIL is not set. Feedback #${feedback.id} was saved without notice.`,
+      );
+      return false;
+    }
+
+    const typeLabel = FEEDBACK_TYPE_LABELS[feedback.type] ?? feedback.type;
+    const { bookTitle, bookAuthor, bookPublisher, pagePath, userAgent } =
+      feedback.details ?? {};
+    const headline = (bookTitle || feedback.content)
+      .replace(/\s+/g, ' ')
+      .slice(0, 40);
+    const subject = `[북적 문의] ${typeLabel} · ${headline}`;
+
+    const author = feedback.user
+      ? `${feedback.user.nickname} (#${feedback.user.id}${feedback.user.email ? `, ${feedback.user.email}` : ''})`
+      : '탈퇴한 회원';
+    const pageUrl = pagePath ? `${this.clientDomain}${pagePath}` : null;
+
+    const rows: [string, string | null | undefined][] = [
+      ['접수 번호', `#${feedback.id}`],
+      ['종류', typeLabel],
+      ['작성자', author],
+      ['책 제목', bookTitle],
+      ['저자', bookAuthor],
+      ['출판사', bookPublisher],
+      ['보던 페이지', pageUrl],
+      ['기기', userAgent],
+    ];
+    const rowHtml = rows
+      .filter(([, value]) => value)
+      .map(
+        ([label, value]) => `
+          <tr>
+            <td style="padding: 6px 12px 6px 0; color: #78716c; white-space: nowrap; vertical-align: top;">${label}</td>
+            <td style="padding: 6px 0; color: #1c1917; word-break: break-all;">${escapeHtml(value as string)}</td>
+          </tr>`,
+      )
+      .join('');
+    const contentHtml = feedback.content
+      ? `<div style="margin-top: 20px; padding: 16px; background-color: #f5f5f4; border-radius: 10px; font-size: 14px; color: #1c1917; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(feedback.content)}</div>`
+      : '';
+
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 20px; background-color: #fcfbf9;">
+        <div style="background-color: #ffffff; border: 1px solid #e7e5e4; border-radius: 16px; padding: 28px;">
+          <h1 style="font-size: 18px; font-weight: 600; color: #1c1917; margin: 0 0 16px;">새 문의가 접수됐습니다</h1>
+          <table style="font-size: 14px; border-collapse: collapse;">${rowHtml}</table>
+          ${contentHtml}
+        </div>
+      </div>
+    `;
+
+    return this.sendMail(
+      this.feedbackNotifyEmail,
+      subject,
+      html,
+      `Feedback #${feedback.id} (${feedback.type}): ${headline}`,
     );
   }
 

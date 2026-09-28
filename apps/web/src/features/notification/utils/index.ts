@@ -2,6 +2,10 @@ import { Notification, NotificationType } from "@bookjeok/core";
 
 import { PATHS } from "@/shared/constants/paths";
 
+/** 사람이 아니라 북적이 보내는 알림. 행위자 대신 북적 로고·이름을 보인다 */
+export const isSystemNotification = (notification: Notification) =>
+  notification.type === NotificationType.FEEDBACK_REPLIED;
+
 export const getNotificationMessageParams = (
   notification: Notification,
   fallbacks: { actor: string; cancelReason: string },
@@ -124,6 +128,11 @@ export const getNotificationMessageParams = (
           actorName,
         },
       };
+    case NotificationType.FEEDBACK_REPLIED:
+      return {
+        key: "feedback_replied",
+        params: {},
+      };
     default:
       return {
         key: "default",
@@ -174,6 +183,8 @@ export const getNotificationLink = (notification: Notification): string => {
       return PATHS.MY_PAGE_TRADES;
     case NotificationType.OTHER_BUYER_TRADING:
       return PATHS.LOUNGE;
+    case NotificationType.FEEDBACK_REPLIED:
+      return PATHS.MY_PAGE_FEEDBACK;
     default:
       return "#";
   }

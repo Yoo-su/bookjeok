@@ -44,7 +44,7 @@ useNotificationSocket ──▶ queryClient 캐시 갱신
 
 ---
 
-## 알림 타입 (14종)
+## 알림 타입 (17종)
 
 서버 `NotificationType`과 1:1로 대응하며, `utils/index.ts`가 타입별 문구·아이콘·이동 경로를 매핑합니다.
 
@@ -55,6 +55,10 @@ useNotificationSocket ──▶ queryClient 캐시 갱신
 | 배송      | `SHIPPING_STARTED`, `DELIVERY_COMPLETED`, `SHIPPING_DEADLINE_IMMINENT`          |
 | 확정·취소 | `AUTO_CONFIRM_IMMINENT`, `PURCHASE_CONFIRMED`, `ORDER_CANCELLED`                |
 | 후기      | `TRADE_REVIEW_RECEIVED`                                                         |
+| 직거래    | `TRADE_RESERVED`, `TRADE_COMPLETED`                                             |
+| 북적 공지 | `FEEDBACK_REPLIED` — 문의 답변. **행위자 없음**(`actorId` null)                 |
+
+행위자 없는 알림(`isSystemNotification`)은 프로필 사진·닉네임 대신 `/logo-square-sketch.svg`와 "북적"을 보입니다.
 
 새 알림 타입을 추가할 때는 서버 enum → `@bookjeok/core` 타입 → `utils/index.ts` 매핑 순으로 함께 갱신해야 합니다. 매핑이 빠지면 알림은 도착하지만 문구와 링크가 비어 보입니다.
 

@@ -21,22 +21,23 @@ export class NotificationService {
    * 저장 후 실시간 게이트웨이를 통해 수신자에게 즉시 전송합니다.
    *
    * @param recipientId 수신자 ID
-   * @param actorId 행위자(알림 유발자) ID
+   * @param actorId 행위자(알림 유발자) ID. 북적이 보내는 알림은 null
    * @param type 알림 유형
    * @param metadata 알림 메타데이터 (JSON)
    * @returns 저장된 알림 엔티티
    */
   async createNotification(
     recipientId: number,
-    actorId: number,
+    actorId: number | null,
     type: NotificationType,
     metadata: Record<string, unknown>,
   ) {
-    if (recipientId === actorId) return;
+    // 자기 행동으로 자기에게 가는 알림만 막는다. 행위자 없는 알림은 운영자 본인에게도 간다
+    if (actorId !== null && recipientId === actorId) return;
 
     const notification = this.notificationRepository.create({
       recipient: { id: recipientId },
-      actor: { id: actorId },
+      ...(actorId !== null && { actor: { id: actorId } }),
       type,
       metadata,
     });

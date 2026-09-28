@@ -5,6 +5,7 @@ import { EntityManager } from 'typeorm';
 
 import { ChatCleanupListener } from '@/features/chat/listeners/chat-cleanup.listener';
 import { CommentCleanupListener } from '@/features/comment/listeners/comment-cleanup.listener';
+import { FeedbackCleanupListener } from '@/features/feedback/listeners/feedback-cleanup.listener';
 import { LlmCleanupListener } from '@/features/llm/listeners/llm-cleanup.listener';
 import { NotificationCleanupListener } from '@/features/notification/listeners/notification-cleanup.listener';
 import { ReadingLogCleanupListener } from '@/features/reading-log/listeners/reading-log-cleanup.listener';
@@ -18,6 +19,7 @@ import { UserCleanupListener } from './user-cleanup.listener';
 const listeners: Type<unknown>[] = [
   ChatCleanupListener,
   CommentCleanupListener,
+  FeedbackCleanupListener,
   LlmCleanupListener,
   NotificationCleanupListener,
   ReadingLogCleanupListener,

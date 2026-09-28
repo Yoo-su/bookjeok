@@ -12,6 +12,7 @@ export * from "./features/book";
 export * from "./features/book-sale";
 export * from "./features/chat";
 export * from "./features/comment";
+export * from "./features/feedback";
 export * from "./features/insights";
 export * from "./features/notification";
 export * from "./features/order";

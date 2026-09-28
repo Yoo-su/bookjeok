@@ -208,7 +208,9 @@
     "trade_reserved": "{actorName}님이 거래 상대로 지정했습니다.",
     "trade_completed": "{actorName}님과의 거래가 완료되었습니다. 후기를 남겨보세요.",
     "fallback_actor": "사용자",
-    "fallback_cancel_reason": "거래 취소"
+    "fallback_cancel_reason": "거래 취소",
+    "feedback_replied": "보내신 문의에 답변이 달렸어요. 확인해 보세요.",
+    "system_name": "북적"
   },
   "auth": {
     "login": {
@@ -1196,6 +1198,10 @@
           "title": "거래 내역",
           "description": "완료된 중고책 거래 내역과 거래 후기를 확인합니다."
         }
+      },
+      "feedback": {
+        "label": "나의 문의",
+        "desc": "보낸 문의와 운영자 답변"
       }
     },
     "profile": {
@@ -2520,6 +2526,82 @@
         "q": "무료인가요?",
         "a": "네. 북적 회원이면 누구나 무료로 쓸 수 있어요."
       }
+    }
+  },
+  "feedback": {
+    "book_author": "저자",
+    "book_publisher": "출판사",
+    "book_title": "책 제목",
+    "book_title_placeholder": "찾는 책의 제목",
+    "cancel": "취소",
+    "content_label": "내용",
+    "content_label_optional": "더 알려 주실 내용 (선택)",
+    "daily_limit": "오늘은 문의를 {limit}건까지 보낼 수 있어요. 내일 다시 보내 주세요.",
+    "description": "북적을 쓰며 느낀 점을 운영자에게 바로 전해 주세요. 보내 주신 내용은 운영자만 봅니다.",
+    "error": "보내지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "open": "문의·제보하기",
+    "optional": "선택",
+    "placeholders": {
+      "book_request": "제목이 정확하지 않다면 기억나는 내용을 적어 주세요.",
+      "bug": "어느 화면에서 무엇을 했을 때 어떤 문제가 생겼나요?",
+      "other": "자유롭게 적어 주세요.",
+      "suggestion": "있으면 좋겠는 기능이나 불편했던 점을 알려 주세요."
+    },
+    "request_book": "찾는 책이 없나요? 책 요청하기",
+    "submit": "보내기",
+    "submitting": "보내는 중...",
+    "success": "보내 주셔서 고마워요. 답변은 마이페이지 「나의 문의」에서 볼 수 있어요.",
+    "title": "문의·제보하기",
+    "type_label": "문의 종류",
+    "types": {
+      "book_request": "책 요청",
+      "bug": "버그 제보",
+      "other": "기타",
+      "suggestion": "기능 제안·개선"
+    },
+    "load_more": "더 보기",
+    "status": {
+      "received": "접수됨",
+      "in_progress": "확인 중",
+      "done": "반영 완료",
+      "wont_fix": "반영 안 함"
+    },
+    "my": {
+      "title": "나의 문의",
+      "subtitle": "보낸 문의와 처리 상태, 운영자 답변을 확인할 수 있어요.",
+      "empty_title": "아직 보낸 문의가 없어요",
+      "empty_desc": "찾는 책, 불편한 점, 바라는 기능을 알려 주세요.",
+      "reply_label": "북적의 답변",
+      "reply_waiting": "아직 답변 전이에요. 답변이 달리면 알림으로 알려 드릴게요.",
+      "load_error": "문의를 불러오지 못했어요."
+    },
+    "admin": {
+      "title": "문의 관리",
+      "subtitle": "상태를 바꾸고 답변을 달아요. 답변은 작성자에게 보이고 알림이 가요.",
+      "forbidden": "운영자만 볼 수 있는 페이지예요.",
+      "filter_status": "상태",
+      "filter_type": "종류",
+      "filter_all": "전체",
+      "empty": "해당하는 문의가 없어요.",
+      "load_error": "문의를 불러오지 못했어요.",
+      "user_withdrawn": "탈퇴한 회원",
+      "page": "페이지",
+      "device": "기기",
+      "edit": "처리하기",
+      "edit_title": "문의 #{id} 처리",
+      "edit_desc": "상태와 답변은 작성자에게 보이고, 메모는 운영자만 봐요.",
+      "status_label": "처리 상태",
+      "reply_label": "답변 (작성자에게 보임)",
+      "reply_placeholder": "작성자에게 보낼 답변",
+      "reply_help": "답변을 새로 쓰거나 고쳐 저장하면 작성자에게 알림이 가요.",
+      "reply_will_notify": "저장하면 작성자에게 답변 알림이 가요.",
+      "reply_no_user": "탈퇴한 회원이라 답변을 볼 사람이 없어요.",
+      "note_label": "메모 (운영자만)",
+      "note_placeholder": "처리 기록 등",
+      "save": "저장",
+      "saving": "저장하는 중...",
+      "saved": "저장했어요.",
+      "save_error": "저장하지 못했어요."
     }
   }
 }

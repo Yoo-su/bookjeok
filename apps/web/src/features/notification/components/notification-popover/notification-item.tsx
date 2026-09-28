@@ -20,12 +20,18 @@ import { formatRelativeTime } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
 
 import { useDeleteNotification, useMarkAsRead } from "../../mutations";
-import { getNotificationLink, getNotificationMessageParams } from "../../utils";
+import {
+  getNotificationLink,
+  getNotificationMessageParams,
+  isSystemNotification,
+} from "../../utils";
 
 interface NotificationItemProps {
   notification: Notification;
   onClose?: () => void;
 }
+
+const SYSTEM_AVATAR_SRC = "/logo-square-sketch.svg";
 
 export const NotificationItem = ({
   notification,
@@ -38,6 +44,7 @@ export const NotificationItem = ({
   const { mutate: deleteNotification } = useDeleteNotification();
 
   const link = getNotificationLink(notification);
+  const isSystem = isSystemNotification(notification);
   const { key, params } = getNotificationMessageParams(notification, {
     actor: t("fallback_actor"),
     cancelReason: t("fallback_cancel_reason"),
@@ -74,19 +81,27 @@ export const NotificationItem = ({
       >
         <Avatar className="h-10 w-10 mt-0.5 border border-border/50 shadow-sm shrink-0">
           <AvatarImage
-            src={getProfileImageUrl(notification.actor?.profileImageUrl)}
-            alt={notification.actor?.nickname}
-            className="object-cover"
+            src={
+              isSystem
+                ? SYSTEM_AVATAR_SRC
+                : getProfileImageUrl(notification.actor?.profileImageUrl)
+            }
+            alt={isSystem ? t("system_name") : notification.actor?.nickname}
+            className={
+              isSystem ? "object-contain bg-white p-1" : "object-cover"
+            }
           />
           <AvatarFallback className="bg-muted text-muted-foreground text-xs font-medium">
-            {notification.actor?.nickname?.[0] ?? "?"}
+            {isSystem
+              ? t("system_name")[0]
+              : (notification.actor?.nickname?.[0] ?? "?")}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 space-y-1.5 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-semibold leading-none text-foreground">
-              {notification.actor?.nickname}
+              {isSystem ? t("system_name") : notification.actor?.nickname}
             </p>
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] text-muted-foreground/80 shrink-0 font-medium tracking-tight">

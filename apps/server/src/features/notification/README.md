@@ -1,6 +1,6 @@
 # Notification Module (`features/notification`)
 
-사용자 알림의 생성·조회·읽음 처리와 Socket.IO 실시간 푸시를 담당합니다. 커뮤니티 활동과 중고거래 진행 상황을 합쳐 **14종** 알림을 다룹니다.
+사용자 알림의 생성·조회·읽음 처리와 Socket.IO 실시간 푸시를 담당합니다. 커뮤니티 활동, 중고거래 진행 상황, 문의 답변을 합쳐 **17종** 알림을 다룹니다.
 
 ## 1. 폴더 구조
 
@@ -45,7 +45,7 @@ OrderScheduler     ──emit──▶ order.*_warning                          
 
 > 5번을 빠뜨리면 알림은 도착하지만 문구와 링크가 비어 보입니다.
 
-## 3. 알림 타입 (14종)
+## 3. 알림 타입 (17종)
 
 | 분류      | 타입                                                                            |
 | --------- | ------------------------------------------------------------------------------- |
@@ -54,6 +54,13 @@ OrderScheduler     ──emit──▶ order.*_warning                          
 | 배송      | `SHIPPING_STARTED`, `DELIVERY_COMPLETED`, `SHIPPING_DEADLINE_IMMINENT`          |
 | 확정·취소 | `AUTO_CONFIRM_IMMINENT`, `PURCHASE_CONFIRMED`, `ORDER_CANCELLED`                |
 | 후기      | `TRADE_REVIEW_RECEIVED`                                                         |
+| 직거래    | `TRADE_RESERVED`, `TRADE_COMPLETED`                                             |
+| 북적 공지 | `FEEDBACK_REPLIED` — 문의 답변. **행위자 없음**(`actorId` null)                 |
+
+**행위자 없는 알림**: `createNotification(recipientId, null, ...)`로 보냅니다. 북적이 보내는 알림이라
+"자기 행동은 자기에게 알리지 않는다" 검사를 건너뜁니다(운영자가 자기 문의에 답해도 알림이 감).
+웹은 `isSystemNotification`으로 골라 행위자 대신 북적 로고·이름을 보입니다. 타입을 추가하면 운영 DB의
+`notification_type_enum`에도 값을 넣어야 합니다(DDL 로그 3·13절).
 
 ## 4. API 엔드포인트
 
@@ -73,7 +80,7 @@ OrderScheduler     ──emit──▶ order.*_warning                          
 | ------------- | --------- | ----------------------------------------------------- |
 | `id`          | `number`  | PK                                                    |
 | `recipientId` | `number`  | 수신자                                                |
-| `actorId`     | `number`  | 알림 유발자                                           |
+| `actorId`     | `number`  | 알림 유발자. 북적이 보내는 알림은 null                |
 | `type`        | `enum`    | `NotificationType`                                    |
 | `metadata`    | `jsonb`   | 문구 구성에 필요한 동적 데이터 (책 제목, 주문번호 등) |
 | `isRead`      | `boolean` | 읽음 여부                                             |

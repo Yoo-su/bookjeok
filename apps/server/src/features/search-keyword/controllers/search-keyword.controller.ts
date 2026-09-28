@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Logger,
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -21,6 +22,8 @@ import { SearchKeywordService } from '../services/search-keyword.service';
 @ApiTags('인기 검색어 (Search Keyword)')
 @Controller('search-keywords')
 export class SearchKeywordController {
+  private readonly logger = new Logger(SearchKeywordController.name);
+
   constructor(private readonly searchKeywordService: SearchKeywordService) {}
 
   @Post()
@@ -35,8 +38,13 @@ export class SearchKeywordController {
   })
   @ApiResponse({ status: 204, description: '검색어가 기록되었습니다.' })
   recordSearchKeyword(@Body() dto: RecordSearchKeywordDto): void {
-    // fire-and-forget 방식으로 처리 (비동기 완료 대기 안 함)
-    void this.searchKeywordService.recordSearchKeyword(dto.keyword);
+    // 응답을 기다리게 하지 않는다. 처리기 없는 거부는 프로세스를 죽이므로 잡아 둔다
+    this.searchKeywordService
+      .recordSearchKeyword(dto.keyword)
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`검색어 기록 실패: ${message}`);
+      });
   }
 
   @Get('popular')

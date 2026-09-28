@@ -1,6 +1,6 @@
 "use client";
 
-import { BookInfo } from "@bookjeok/core";
+import { BookInfo, FeedbackType } from "@bookjeok/core";
 import { useInfiniteBookSearch } from "@bookjeok/react-query";
 import { motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
+import { FeedbackButton } from "@/features/feedback/components/feedback-button";
 import { Loader2 } from "@/shared/components/icons/iconsax";
 import { cn } from "@/shared/utils/cn";
 
@@ -28,6 +29,7 @@ export const BookSearchResultList = ({
   paramName = "q",
 }: BookSearchResultListProps) => {
   const t = useTranslations("book.search");
+  const tFeedback = useTranslations("feedback");
   const searchParams = useSearchParams();
   const query = searchParams.get(paramName) || "";
 
@@ -72,6 +74,12 @@ export const BookSearchResultList = ({
       <div className="py-20 text-center text-gray-500">
         <p className="text-lg">{t("no_results", { query })}</p>
         <p className="mt-2 text-sm">{t("check_typo")}</p>
+        <FeedbackButton
+          preset={{ type: FeedbackType.BOOK_REQUEST, bookTitle: query }}
+          className="mt-6 inline-flex h-10 items-center rounded-full border border-stone-300 px-5 text-sm font-medium text-stone-700 transition-colors hover:border-stone-500 hover:text-stone-900"
+        >
+          {tFeedback("request_book")}
+        </FeedbackButton>
       </div>
     );
   }

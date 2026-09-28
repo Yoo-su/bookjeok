@@ -14,6 +14,7 @@ import { AuthModule } from '@/features/auth/auth.module';
 import { BookModule } from '@/features/book/book.module';
 import { ChatModule } from '@/features/chat/chat.module';
 import { CommentModule } from '@/features/comment/comment.module';
+import { FeedbackModule } from '@/features/feedback/feedback.module';
 import { HealthModule } from '@/features/health/health.module';
 import { InsightsModule } from '@/features/insights/insights.module';
 import { LlmModule } from '@/features/llm/llm.module';
@@ -114,6 +115,7 @@ import { MailModule } from '@/shared/mail/mail.module';
     SearchKeywordModule,
     SearchModule,
     NotificationModule,
+    FeedbackModule,
     HealthModule,
     ActivityModule,
     SmartCacheModule,

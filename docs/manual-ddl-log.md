@@ -49,6 +49,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                          | `79b04b2f`, 10절        |
 | 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「독서 키재기」용 실측 판형·표지색, 빈 테이블) | (미커밋), 11절          |
 | 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)      | `532dfd31`, 12절        |
+| 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)        | `9546a94e`, 13절        |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -339,7 +340,7 @@ COMMIT;
 되돌리면 후기 데이터가 사라집니다. 배포 후 후기가 쌓이기 시작했다면
 이 스크립트를 그대로 쓰지 마세요.
 
-`notifications_type_enum`에 추가한 값은 되돌리지 않습니다. Postgres는 enum 값
+`notification_type_enum`에 추가한 값은 되돌리지 않습니다. Postgres는 enum 값
 삭제를 지원하지 않고, 남아 있어도 쓰지 않으면 해가 없습니다.
 
 설계 설명은 `apps/server/src/features/trade/README.md`에 있습니다.
@@ -1235,3 +1236,117 @@ REVOKE ALL ON public.book_dimensions FROM book_ingest;
 ```
 
 되돌리면 도구는 다시 권한 점검에서 멈춥니다(적재 불가).
+
+## 13. `feedbacks` 테이블 + 문의 답변 알림 — 사용자 문의·제보 (2026-09-29)
+
+### 배경
+
+사용자가 책 요청·버그·기능 제안을 운영자에게 보내고, 운영자가 웹의 `/admin/feedback`에서
+상태를 바꾸고 답변을 달면 작성자에게 북적 알림이 가고 마이페이지 「나의 문의」에 보이는
+창구입니다(서버 `feedback` README). 접수되면 `FEEDBACK_NOTIFY_EMAIL`로 운영자 메일도 갑니다.
+
+### 적용 순서
+
+**develop·main에 서버 코드가 push되면 Azure 배포가 자동으로 돕니다. 아래를 push 전에 끝내세요.**
+
+1. 0단계(알림 enum 값)를 트랜잭션 밖에서 실행
+2. 1단계(테이블)를 한 트랜잭션으로 실행
+3. 운영자 계정을 ADMIN으로 지정(2단계)
+4. 서버 환경 변수 `FEEDBACK_NOTIFY_EMAIL` 추가
+5. push → 서버 자동 배포 → 웹 배포
+
+먼저 배포하면 생기는 일:
+
+- 테이블이 없으면 `POST /feedback`·`/feedback/my`·`/admin/feedback`이 500을 내고,
+  **회원 탈퇴가 막힙니다.** 탈퇴 리스너(`FeedbackCleanupListener`)가 `feedbacks`를
+  UPDATE하다 실패하면 탈퇴 트랜잭션 전체가 롤백되기 때문입니다.
+- enum 값이 없으면 운영자가 답변을 저장해도 알림 INSERT가 실패합니다. 답변 저장 자체는
+  성공하고(알림은 별도 이벤트) 서버 로그에 `문의 #N 답변 알림 실패`가 남습니다.
+
+#### 0단계 — 알림 enum 값 (트랜잭션 밖에서 먼저)
+
+3절과 같습니다. 운영 enum 이름은 테이블과 달리 **단수형** `notification_type_enum`입니다.
+실행 전에 이름을 조회해 확인하세요.
+
+```sql
+SELECT t.typname FROM pg_type t
+  JOIN pg_attribute a ON a.atttypid = t.oid
+ WHERE a.attrelid = 'public.notifications'::regclass AND a.attname = 'type';
+
+ALTER TYPE "notification_type_enum" ADD VALUE IF NOT EXISTS 'FEEDBACK_REPLIED';
+```
+
+#### 1단계 — 테이블
+
+```sql
+BEGIN;
+CREATE TABLE public.feedbacks (
+  "id"        SERIAL NOT NULL,
+  "userId"    integer,
+  "type"      character varying(20) NOT NULL,  -- BOOK_REQUEST · BUG · SUGGESTION · OTHER
+  "content"   text NOT NULL DEFAULT '',
+  "details"   jsonb NOT NULL DEFAULT '{}',     -- 책 정보·보던 페이지·User-Agent
+  "status"    character varying(20) NOT NULL DEFAULT 'RECEIVED',
+  "reply"     text,                            -- 작성자에게 보이는 답변
+  "repliedAt" TIMESTAMP WITH TIME ZONE,
+  "adminNote" text,                            -- 운영자만 보는 메모
+  "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  CONSTRAINT "PK_feedbacks_id" PRIMARY KEY ("id"),
+  CONSTRAINT "FK_feedbacks_userId" FOREIGN KEY ("userId")
+    REFERENCES public.users ("id") ON DELETE SET NULL
+);
+ALTER TABLE public.feedbacks ENABLE ROW LEVEL SECURITY;
+COMMIT;
+```
+
+- **RLS**: 9·11절과 같은 이유로 켜고 정책은 두지 않습니다. 사용자가 쓴 글과 기기 정보가
+  들어 있어 anon REST API로 열리면 안 됩니다.
+- **탈퇴**: 회원 행은 소프트 삭제라 FK의 `SET NULL`이 실제로 동작하는 일은 드뭅니다. 탈퇴 시
+  연결을 끊는 것은 `FeedbackCleanupListener`입니다(댓글과 같은 익명화).
+- **인덱스 없음**: 운영자가 훑는 작은 테이블입니다. 내 문의 목록·하루 한도 집계의 `userId`
+  조건도 행 수가 적어 순차 탐색이 낫습니다. 수천 행을 넘기면 `("userId", "id")`를 봅니다.
+- PK·FK 이름은 8절 규칙대로 엔티티에 박았습니다. TypeORM 메타데이터로 `PK_feedbacks_id`·
+  `FK_feedbacks_userId`(SET NULL), 컬럼 11개의 타입·NULL·기본값이 위 SQL과 같고, 알림
+  enum에 `FEEDBACK_REPLIED`가 들어간 것을 확인했습니다(2026-09-28).
+
+#### 2단계 — 운영자 계정
+
+`/admin/feedback`과 운영자 API는 `users.role = 'ADMIN'`만 통과합니다. 역할은 로그인할 때
+토큰과 사용자 정보에 실리므로, 바꾼 뒤 **로그아웃했다가 다시 로그인**해야 웹에 반영됩니다.
+
+```sql
+UPDATE public.users SET role = 'ADMIN' WHERE handle = '<운영자 핸들>' RETURNING id, nickname, role;
+```
+
+### 적용 기록 (2026-09-29)
+
+- 0단계(enum 값)·1단계(테이블)를 Supabase SQL Editor에서 실행하고, 서버에 `FEEDBACK_NOTIFY_EMAIL`을
+  넣은 뒤 `9546a94e`를 develop에 push했습니다(서버 자동 배포). 아래 확인 쿼리의 결과 값은 기록하지 않았습니다.
+- **2단계(운영자 계정 지정)는 아직입니다.** 그 전까지 `/admin/feedback`은 "운영자만 볼 수 있는 페이지"
+  안내만 보이고 답변을 달 수 없습니다. 문의 접수·운영자 메일·「나의 문의」는 동작합니다.
+
+### 확인
+
+```sql
+SELECT column_name, data_type, is_nullable, column_default
+  FROM information_schema.columns
+ WHERE table_name = 'feedbacks' ORDER BY ordinal_position;
+SELECT conname, confdeltype FROM pg_constraint
+ WHERE conrelid = 'public.feedbacks'::regclass;
+SELECT relrowsecurity FROM pg_class WHERE oid = 'public.feedbacks'::regclass;
+SELECT 'FEEDBACK_REPLIED' = ANY(enum_range(NULL::notification_type_enum)::text[]) AS has_value;
+```
+
+컬럼 11개, 제약 `PK_feedbacks_id`·`FK_feedbacks_userId`(`confdeltype = 'n'`), `relrowsecurity = true`,
+`has_value = true`면 정상입니다. 배포 후 한 바퀴 돌려 봅니다: 푸터 「문의·제보하기」로 한 건 보내기 →
+운영자 메일 도착 → `/admin/feedback`에서 답변 저장 → 작성자 계정에 알림 → 「나의 문의」에 답변 표시.
+
+### 되돌리기
+
+```sql
+DROP TABLE public.feedbacks;
+```
+
+서버를 이 변경 이전으로 먼저 내린 뒤 실행하세요. 테이블만 지우면 탈퇴가 막힙니다.
+`notification_type_enum`에 추가한 값은 3절과 같은 이유로 되돌리지 않습니다.

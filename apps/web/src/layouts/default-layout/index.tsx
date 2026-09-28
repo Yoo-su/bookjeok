@@ -2,6 +2,7 @@
 
 import { AnnouncementHost } from "@/features/announcement/components/announcement-host";
 import { RecentBooksDrawer } from "@/features/book/components/recent-books/recent-books-drawer";
+import { FeedbackDialog } from "@/features/feedback/components/feedback-dialog";
 
 import { DefaultFooter } from "./default-footer";
 import { DefaultHeader } from "./default-header";
@@ -26,6 +27,7 @@ export const DefaultLayout = ({
       <DefaultFooter />
       <RecentBooksDrawer />
       <AnnouncementHost />
+      <FeedbackDialog />
     </div>
   );
 };
