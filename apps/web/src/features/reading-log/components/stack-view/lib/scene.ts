@@ -91,9 +91,20 @@ function fitText(
   return s.length > 1 ? `${s.trim()}…` : "";
 }
 
-/** 말풍선의 왼쪽 끝과 폭(px). 이름표가 부딪히는지 미리 볼 때도 쓴다 */
-function bubbleSpan(
+interface Box {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+const hits = (a: Box, b: Box) =>
+  a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+
+/** 말풍선 몸통의 자리와 꼬리 x(px). 이름표가 부딪히는지 미리 볼 때도 쓴다 */
+function bubbleRect(
   cx: number,
+  bottom: number,
   lines: [string, string],
   u: number,
   width: number,
@@ -106,7 +117,10 @@ function bubbleSpan(
     minX,
     Math.min(width - w - 3 * u, Math.round(cx - w * 0.62)),
   );
-  return { x, w };
+  const h = lines.length * 19 * u + 14 * u;
+  const y = Math.max(3 * u, bottom - h - 12 * u);
+  const tx = Math.max(x + 16 * u, Math.min(x + w - 16 * u, cx - 6 * u));
+  return { x, y, w, h, tx };
 }
 
 function bubbleItem(
@@ -122,11 +136,16 @@ function bubbleItem(
 ): GroupItem {
   const size = 16 * u;
   const lh = 19 * u;
-  const { x, w } = bubbleSpan(cx, lines, u, width, minX, measure);
-  const h = lines.length * lh + 14 * u;
-  const y = Math.max(3 * u, bottom - h - 12 * u);
+  const { x, y, w, h, tx } = bubbleRect(
+    cx,
+    bottom,
+    lines,
+    u,
+    width,
+    minX,
+    measure,
+  );
   const r = 12 * u;
-  const tx = Math.max(x + 16 * u, Math.min(x + w - 16 * u, cx - 6 * u));
   const B = y + h;
   // 선만 연필로 긋는다. 캐릭터와 같이 세 벌을 번갈아 보여 떨리게 한다
   const shape: Cmds = [
@@ -589,7 +608,52 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     ann.push({ k: "p", d, ...a });
   const AT = (item: Omit<TextItem, "k" | "halo" | "hw">) =>
     ann.push({ k: "t", halo: C.paper, hw: 5 * u, ...item });
-  let heightLabel = labels.myHeight;
+  // 이름표 글자가 차지하는 자리. 글자 테두리만큼 둘레를 넓힌다
+  const size = 16 * u;
+  const labelBox = (x: number, y: number, t: string, end = false): Box => {
+    const w = measure(t, size, 700, "hand");
+    const x0 = end ? x - w : x;
+    return {
+      x0: x0 - 2 * u,
+      y0: y - size / 2 - u,
+      x1: x0 + w + 2 * u,
+      y1: y + size / 2 + u,
+    };
+  };
+  const bubbleBottom = Math.min(fy, artTop) + 6 * u;
+
+  // 쌓은 높이는 늘 맨 위 책 왼쪽, 꼭대기 높이에 둔다. 좁은 화면에서는 눈금자에 조금 걸쳐도 된다
+  // (글자 테두리가 선을 덮어 읽힌다). 눈금 숫자(눈금자 왼쪽)만은 덮지 않는다
+  const stackW = measure(labels.stackHeight, size, 700, "hand");
+  const lx = Math.max(left - 6 * u, rx - u + stackW);
+  let ly = topY;
+  const stackBox = books.length
+    ? labelBox(lx, topY, labels.stackHeight, true)
+    : null;
+
+  // 남은 높이 화살표와 글자 상자. 목표 이름표가 피할 수 있게 먼저 자리를 잡는다
+  const gap = topY - fy;
+  const remain = target && gap > 34 * u;
+  const two = gap > 80 * u;
+  const bw =
+    Math.max(
+      measure(labels.remain, size, 700, "hand"),
+      two ? measure(labels.approxBooks, 14 * u, 700, "hand") : 0,
+    ) +
+    10 * u;
+  // 글자 상자(종이색)가 눈금자를 덮지 않게 눈금자 오른쪽으로 민다
+  const remainX = Math.max(tcx, rulerW + 6 * u + bw / 2);
+  const bh = (two ? 38 : 20) * u;
+  const remainBox: Box | null = remain
+    ? {
+        x0: remainX - bw / 2,
+        y0: (topY + fy) / 2 - bh / 2,
+        x1: remainX + bw / 2,
+        y1: (topY + fy) / 2 + bh / 2,
+      }
+    : null;
+
+  let myBox: Box | null = null;
   if (target) {
     const lineEnd = figure ? fx + 92 * k : targetLeft + 4 * u;
     A(`M${f1(rx)},${f1(fy)} L${f1(lineEnd)},${f1(fy)}`, {
@@ -598,27 +662,52 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       dash: [5 * u, 4 * u],
       cap: "round",
     });
-    // 사물은 쌓은 책과 겹치지 않게 늘 점선 위에 두고, 말풍선과 부딪히면 짧은 이름표로 바꾼다
-    if (obj && labels.myHeightShort) {
-      const bubble = bubbleSpan(
-        fcx,
-        labels.bubble,
-        u,
-        bubbleW,
-        rulerW + 4 * u,
-        measure,
+    const b = bubbleRect(
+      fcx,
+      bubbleBottom,
+      labels.bubble,
+      u,
+      bubbleW,
+      rulerW + 4 * u,
+      measure,
+    );
+    const bubble: Box[] = [
+      { x0: b.x, y0: b.y, x1: b.x + b.w, y1: b.y + b.h },
+      {
+        x0: b.tx - 5 * u,
+        y0: b.y + b.h,
+        x1: b.tx + 7 * u,
+        y1: b.y + b.h + 11 * u,
+      },
+    ];
+    // 쌓은 높이는 꼭대기에 붙어 있어야 하므로 점선에 붙은 이름표가 비킨다.
+    // 점선 위, 아래 순으로 보고 사물은 짧은 이름표도 본다. 말풍선에 가리는 것이 가장 나쁘고,
+    // 다음이 다른 글자(쌓은 높이·남은 높이), 책 위에 걸치는 것은 테두리 덕에 읽혀 가장 낫다
+    const texts = obj
+      ? [labels.myHeight, labels.myHeightShort ?? labels.myHeight]
+      : [labels.myHeight];
+    const options = [fy - 11 * u, fy + 13 * u].flatMap((y) =>
+      texts.map((t) => ({ t, y })),
+    );
+    const pile: Box = { x0: left, y0: topY, x1: right, y1: floorY };
+    const words = [stackBox, remainBox].filter((b): b is Box => b !== null);
+    const badness = (c: { t: string; y: number }) => {
+      const b = labelBox(rx + 6 * u, c.y, c.t);
+      return (
+        (bubble.some((x) => hits(b, x)) ? 4 : 0) +
+        (words.some((x) => hits(b, x)) ? 2 : 0) +
+        (hits(b, pile) ? 1 : 0)
       );
-      const right = rx + 6 * u + measure(heightLabel, 16 * u, 700, "hand");
-      if (right > bubble.x - 4 * u) heightLabel = labels.myHeightShort;
-    }
+    };
+    const pick = options.reduce((a, c) => (badness(c) < badness(a) ? c : a));
+    myBox = labelBox(rx + 6 * u, pick.y, pick.t);
     out.push({
       k: "t",
       id: "my-height",
       x: rx + 6 * u,
-      // 좁은 화면의 캐릭터는 말풍선이 위를 차지해 아래에 둔다
-      y: fy + (figure && W < 360 * u ? 13 : -11) * u,
-      t: heightLabel,
-      size: 16 * u,
+      y: pick.y,
+      t: pick.t,
+      size,
       weight: 700,
       fam: "hand",
       fill: C.pen,
@@ -628,51 +717,28 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     });
   }
 
-  if (books.length) {
-    // 쌓은 책 왼쪽에 적되, 눈금자에 걸치지 않게 눈금자 오른쪽으로 민다
-    const labelW = measure(labels.stackHeight, 16 * u, 700, "hand");
-    const lx = Math.max(left - 9 * u, rulerW + 4 * u + labelW);
-    // 쌓은 책 꼭대기 눈금 옆에 적는다. 목표 이름표와 겹칠 때만 비키되,
-    // 이름표가 점선 위에 있으면 그 아래로 딱 비킬 만큼만 내린다(멀리 떨어지면 어느 높이인지 헷갈린다).
-    // 점선 아래에 이름표를 두는 좁은 화면의 캐릭터 무대는 전처럼 20px 내린다
-    const targetRight = rx + 6 * u + measure(heightLabel, 16 * u, 700, "hand");
-    const clash =
-      target &&
-      Math.abs(topY - fy) < 20 * u &&
-      (!obj || lx - labelW < targetRight + 6 * u);
-    const targetBelow = figure && W < 360 * u;
-    const ly = !clash
-      ? topY
-      : targetBelow
-        ? topY + 20 * u
-        : Math.min(Math.max(topY, fy + 6 * u), floorY - 4 * u);
+  if (stackBox) {
+    // 목표 이름표가 어느 쪽으로도 못 비켰을 때만 겹치지 않을 만큼 위·아래로 민다
+    if (myBox && hits(myBox, stackBox)) {
+      const half = (stackBox.y1 - stackBox.y0) / 2;
+      ly =
+        topY >= (myBox.y0 + myBox.y1) / 2 ? myBox.y1 + half : myBox.y0 - half;
+      ly = Math.max(half, Math.min(floorY - half, ly));
+    }
     AT({
+      id: "stack-height",
       x: lx,
       y: ly,
       t: labels.stackHeight,
-      size: 16 * u,
+      size,
       weight: 700,
       fam: "hand",
       fill: C.ink,
       anchor: "end",
     });
-    A(`M${f1(left - 7 * u)},${f1(topY)} L${f1(left - 2 * u)},${f1(topY)}`, {
-      stroke: C.ink,
-      sw: 1.4 * u,
-      cap: "round",
-    });
   }
-  const gap = topY - fy;
-  if (target && gap > 34 * u) {
-    const two = gap > 80 * u;
-    const bw =
-      Math.max(
-        measure(labels.remain, 16 * u, 700, "hand"),
-        two ? measure(labels.approxBooks, 14 * u, 700, "hand") : 0,
-      ) +
-      10 * u;
-    // 글자 상자(종이색)가 눈금자를 덮지 않게 눈금자 오른쪽으로 민다
-    const x = Math.max(tcx, rulerW + 6 * u + bw / 2);
+  if (remain) {
+    const x = remainX;
     const y1 = topY - 6 * u;
     const y2 = fy + 6 * u;
     A(`M${f1(x)},${f1(y1)} L${f1(x)},${f1(y2)}`, {
@@ -685,7 +751,6 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       `M${f1(x - 4.5 * u)},${f1(y2 + 6 * u)} L${f1(x)},${f1(y2)} L${f1(x + 4.5 * u)},${f1(y2 + 6 * u)} M${f1(x - 4.5 * u)},${f1(y1 - 6 * u)} L${f1(x)},${f1(y1)} L${f1(x + 4.5 * u)},${f1(y1 - 6 * u)}`,
       { stroke: C.pen, sw: 1.6 * u, cap: "round", join: "round" },
     );
-    const bh = (two ? 38 : 20) * u;
     const my = (y1 + y2) / 2;
     A(
       `M${f1(x - bw / 2)},${f1(my - bh / 2)} h${f1(bw)} v${f1(bh)} h${f1(-bw)} Z`,
@@ -735,7 +800,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     out.push(
       bubbleItem(
         fcx,
-        Math.min(fy, artTop) + 6 * u,
+        bubbleBottom,
         labels.bubble,
         C,
         u,
