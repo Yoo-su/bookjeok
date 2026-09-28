@@ -4,7 +4,11 @@ import type { BookSizeSource } from "./types";
  * 크기 정보가 없는 책에 쓰는 기본 판형(mm).
  * 알라딘 수확본(2026-09-25, 56,885권)의 중앙값이다(docs/book-data-migration-plan.md 8-f).
  */
-export const DEFAULT_BOOK_SIZE = { width: 150, height: 215, depth: 15 } as const;
+export const DEFAULT_BOOK_SIZE = {
+  width: 150,
+  height: 215,
+  depth: 15,
+} as const;
 
 /** 쪽수로 두께를 추정할 때 한 쪽의 두께(mm). 수확본 적합, 오차 중앙값 0.4mm */
 export const BOOK_MM_PER_PAGE = 0.049;
@@ -37,8 +41,15 @@ export const BOOK_SIZE_PLAUSIBLE = {
   weight: [20, 10000],
 } as const;
 
-const plausible = (key: keyof typeof BOOK_SIZE_PLAUSIBLE, v: number | null | undefined) =>
-  v != null && v >= BOOK_SIZE_PLAUSIBLE[key][0] && v <= BOOK_SIZE_PLAUSIBLE[key][1] ? v : null;
+const plausible = (
+  key: keyof typeof BOOK_SIZE_PLAUSIBLE,
+  v: number | null | undefined,
+) =>
+  v != null &&
+  v >= BOOK_SIZE_PLAUSIBLE[key][0] &&
+  v <= BOOK_SIZE_PLAUSIBLE[key][1]
+    ? v
+    : null;
 
 export interface EstimatedBookSize {
   width: number;
@@ -66,7 +77,10 @@ function isbnJitter(isbn: string, salt: number): number {
  * 세로·가로·두께가 모두 실측이면 "measured", 하나라도 채웠으면 "estimated"다.
  * 두께는 쪽수가 있으면 쪽수로, 없으면 기본값에 ISBN 편차를 줘 만든다.
  */
-export function estimateBookSize(isbn: string, raw: PartialBookSize): EstimatedBookSize {
+export function estimateBookSize(
+  isbn: string,
+  raw: PartialBookSize,
+): EstimatedBookSize {
   const known = {
     width: plausible("width", raw.width),
     height: plausible("height", raw.height),
@@ -75,15 +89,27 @@ export function estimateBookSize(isbn: string, raw: PartialBookSize): EstimatedB
     weight: plausible("weight", raw.weight),
   };
   const hard = raw.binding === "양장본";
-  const height = known.height ?? DEFAULT_BOOK_SIZE.height + Math.round(isbnJitter(isbn, 1) * 8);
-  const width = known.width ?? Math.round(height * (DEFAULT_BOOK_SIZE.width / DEFAULT_BOOK_SIZE.height));
+  const height =
+    known.height ??
+    DEFAULT_BOOK_SIZE.height + Math.round(isbnJitter(isbn, 1) * 8);
+  const width =
+    known.width ??
+    Math.round(height * (DEFAULT_BOOK_SIZE.width / DEFAULT_BOOK_SIZE.height));
   const depth =
     known.depth ??
     (known.pages
-      ? Math.max(3, Math.round(known.pages * BOOK_MM_PER_PAGE + (hard ? BOOK_COVER_MM.hard : BOOK_COVER_MM.soft)))
+      ? Math.max(
+          3,
+          Math.round(
+            known.pages * BOOK_MM_PER_PAGE +
+              (hard ? BOOK_COVER_MM.hard : BOOK_COVER_MM.soft),
+          ),
+        )
       : DEFAULT_BOOK_SIZE.depth + Math.round(isbnJitter(isbn, 2) * 4));
-  const weight = known.weight ?? Math.round(width * height * depth * BOOK_DENSITY);
-  const measured = known.width != null && known.height != null && known.depth != null;
+  const weight =
+    known.weight ?? Math.round(width * height * depth * BOOK_DENSITY);
+  const measured =
+    known.width != null && known.height != null && known.depth != null;
   return {
     width,
     height,
@@ -99,12 +125,22 @@ export function estimateBookSize(isbn: string, raw: PartialBookSize): EstimatedB
  * 채도를 낮춘 색 중에서 ISBN으로 하나 고른다.
  */
 const FALLBACK_COVER_PALETTE = [
-  "#D9CBB8", "#C9D3C4", "#C8D1DB", "#DCC7C3", "#D8D2C0",
-  "#C4CCC9", "#D6C9D6", "#CFC6B8", "#BFC8D2", "#DDD5C8",
+  "#D9CBB8",
+  "#C9D3C4",
+  "#C8D1DB",
+  "#DCC7C3",
+  "#D8D2C0",
+  "#C4CCC9",
+  "#D6C9D6",
+  "#CFC6B8",
+  "#BFC8D2",
+  "#DDD5C8",
 ] as const;
 
 export function fallbackCoverColor(isbn: string): string {
-  const i = Math.floor(((isbnJitter(isbn, 3) + 1) / 2) * FALLBACK_COVER_PALETTE.length);
+  const i = Math.floor(
+    ((isbnJitter(isbn, 3) + 1) / 2) * FALLBACK_COVER_PALETTE.length,
+  );
   return FALLBACK_COVER_PALETTE[Math.min(FALLBACK_COVER_PALETTE.length - 1, i)];
 }
 
@@ -117,7 +153,10 @@ export function inkColorFor(background: string): string {
     const v = c / 255;
     return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
   };
-  const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  const L =
+    0.2126 * lin((n >> 16) & 255) +
+    0.7152 * lin((n >> 8) & 255) +
+    0.0722 * lin(n & 255);
   // 먹색(#1C1917, L≈0.01)과 흰색(#F6F2EA, L≈0.89) 중 대비가 큰 쪽
   return (L + 0.05) / 0.06 >= 0.94 / (L + 0.05) ? "#1C1917" : "#F6F2EA";
 }
