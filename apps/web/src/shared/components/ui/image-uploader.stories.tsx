@@ -35,8 +35,8 @@ export const WithExistingImages: Story = {
   args: {
     previews: [],
     existingImages: [
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
     ],
     onImagesAdd: () => {},
     onImageRemove: () => {},
@@ -49,13 +49,13 @@ export const WithExistingImages: Story = {
 export const MaxReached: Story = {
   args: {
     previews: [
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
     ],
     existingImages: [
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
+      "https://cdn.bookjeok.com/covers/9788932912363.webp",
     ],
     onImagesAdd: () => {},
     onImageRemove: () => {},
@@ -67,9 +67,7 @@ export const MaxReached: Story = {
 /** 최대 3개 제한 */
 export const MaxThree: Story = {
   args: {
-    previews: [
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
-    ],
+    previews: ["https://cdn.bookjeok.com/covers/9788932912363.webp"],
     onImagesAdd: () => {},
     onImageRemove: () => {},
     maxFiles: 3,

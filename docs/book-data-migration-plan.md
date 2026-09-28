@@ -36,7 +36,7 @@
 | **1**   | **카카오 기반 신간 적재 도구** — 구현·운영 첫 적재 완료(`tools/book-ingest`). 이후 필요할 때 실행           | 가역. 신규 유입의 유일한 경로 | 6-d 「운영자 적재 도구」 |
 | **2**   | **10/30 전 알라딘으로 적재** — 도구에서 공급처로 고를 수 있게 함(2026-09-23). cover500·긴 소개·**판매지수** | **기한 2026-10-30**           | 6-d 「공급처 선택」      |
 | ~~2-b~~ | ~~독서 키재기용 판형 수확 → `book_dimensions` 적재~~ — **2026-09-25 완료** (57,035행)                       | **기한 2026-10-30**(수확)     | 8-f                      |
-| 3       | 알라딘 잔재 정리 (표지 헬퍼·`remotePatterns`·env)                                                           | 언제든                        | Phase 4                  |
+| 3       | 알라딘 잔재 정리 — 표지 헬퍼·`remotePatterns`는 2026-09-28 완료, env·적재 도구 공급처는 10/30 뒤            | 언제든                        | Phase 4                  |
 | 4       | DB의 HTML 엔티티 잔류분 정리 (약 600행)                                                                     | 언제든                        | 6-c                      |
 | ~~—~~   | ~~D9 공급처 결정~~                                                                                          | **사실상 결정** — 아래        | 3장, 6-d                 |
 | ~~—~~   | ~~신간 미러링 스케줄러 + 검색 0건 폴백~~                                                                    | **폐기** (2026-09-08 방침)    | 6-d 「검색 경로 설계」   |
@@ -200,17 +200,17 @@
   (`searchFormatted`, `searchDetailFormatted`)
 - `apps/server/src/features/book/providers/aladin-book-catalog.provider.ts` — 어댑터
 - `apps/server/src/features/book/book.module.ts` — 두 체인의 등록부
-- `packages/core/src/shared/utils/cover-image.ts` — `formatAladinCoverImage`,
-  `extractAladinDetailedDescription`
+- ~~`packages/core/src/shared/utils/cover-image.ts` — `formatAladinCoverImage`,
+  `extractAladinDetailedDescription`~~ — 2026-09-28 제거
 
 ### 프론트 표시
 
-- `book-card.tsx:74`, `ai-book-recommend-slider.tsx:58` — 렌더 시점에
-  `formatAladinCoverImage` 호출
+- ~~`book-card.tsx:74`, `ai-book-recommend-slider.tsx:58` — 렌더 시점에
+  `formatAladinCoverImage` 호출~~ — 2026-09-28 제거
 - `book-detail/book-description.tsx:28,33` — 알라딘 출처 표기
 - `book-detail/book-actions.tsx:46` — 알라딘 구매 링크. 상세가 자체 DB를 타면
   `link`가 없어 버튼이 나오지 않습니다(의도된 결과)
-- `apps/web/next.config.ts` — `remotePatterns`의 `image.aladin.co.kr`
+- ~~`apps/web/next.config.ts` — `remotePatterns`의 `image.aladin.co.kr`~~ — 2026-09-28 제거
 
 ### 데이터
 
@@ -1286,7 +1286,8 @@ Cloudinary URL은 2026-09-07 재확인에서도 8건 전부 **401**이었습니�
       (목록은 실측 산출물에 있습니다. 8-b 참조. **제목 대조를 반드시 함께 하세요**)
 - [x] 회수 가능한 14건은 표지 원본 확보 완료 (2026-09-07 델타 수집)
 - [ ] 회수 불가한 건은 플레이스홀더로 확정
-- [ ] 정리 완료 후 `next.config.ts`의 `res.cloudinary.com` 제거 (Phase 4)
+- [x] `next.config.ts`의 `res.cloudinary.com` 제거 (2026-09-28) — 표지 없는 행은 2026-09-09에
+      삭제됐고 `books.image`에 Cloudinary 주소 0건
 
 ### Cloudinary 계정 처리
 
@@ -1901,12 +1902,13 @@ DB는 407MB(무료 한도 500MB)이고 `books`가 390MB입니다. 새 코드는 
 
 - [x] `aladin-book-search.service.ts` + `aladin-book-catalog.provider.ts` 삭제 (2026-09-08)
 - [x] `book.module.ts`의 두 체인에서 알라딘 어댑터 제거 (2026-09-08)
-- [ ] `packages/core`의 `formatAladinCoverImage` 정리 — **남아 있음.** `book-card.tsx:74`,
-      `ai-book-recommend-slider.tsx:59`가 렌더 시점에 호출합니다. DB에 알라딘 URL이 없어
-      사실상 no-op입니다. 제거 시 호출부를 함께 고치고 `packages/core`를 재빌드하세요.
-      (`extractAladinDetailedDescription`은 이미 없음)
+- [x] `packages/core`의 `formatAladinCoverImage` 정리 (2026-09-28) — 호출부 2곳은
+      `book.image`를 그대로 씁니다. `books.image` 64,899행 전부 `cdn.bookjeok.com`(같은 날 실측)
 - [x] 알라딘 응답 타입 정리 — `packages/core`에서 제거 완료 (2026-09-05)
-- [ ] `next.config.ts`에서 `image.aladin.co.kr` 제거 — **남아 있음** (`remotePatterns` 2곳)
+- [x] `next.config.ts`에서 `image.aladin.co.kr` 제거 (2026-09-28) — 같은 날 카카오·네이버·
+      Cloudinary·KOPIS 호스트도 함께 제거. 남은 호스트는 `cdn.bookjeok.com`과 Vercel Blob뿐입니다.
+      DB 이미지 컬럼 실측상 외부 주소는 초기 소셜 가입자 프로필 5건(네이버·카카오)뿐이고,
+      아바타는 전부 `unoptimized`라 허용 목록이 필요 없습니다
 - [x] 구매 링크/출처 표기, i18n 키 `aladin_buy_link`·`aladin_source_credit` 제거 (2026-09-08)
 - [ ] `ALADIN_TTB_KEY` 제거 — `turbo.json` `globalEnv`에서는 제거됨. **`.env.example`과
       `docker-compose.yml`(server·web 서비스 env)에는 남아 있음.** 서버·웹은 쓰지 않습니다.
@@ -2117,6 +2119,8 @@ curl -s https://bookjeok.com/ko/book/9788932925554/detail | grep -c "바움가�
 ## 10. 진행 로그
 
 작업을 마칠 때마다 한 줄씩 추가하세요. 다음 세션이 여기부터 읽습니다.
+
+2026-09-28 Phase 4 일부: `formatAladinCoverImage` 제거, `next.config.ts` 외부 이미지 호스트(알라딘·카카오·네이버·Cloudinary·KOPIS) 제거. DB 이미지 컬럼 실측 — 표지 전량 자체 CDN, 판매·리뷰 본문·채팅 전량 Vercel Blob, 외부 주소는 초기 소셜 가입자 프로필 5건뿐(아바타는 `unoptimized`). 라운지 독자 모달 아바타도 `unoptimized`로 맞춤.
 
 2026-09-28 추가: 전체 점검 후속 수정 중 도서 관련은 두 가지다. `BookCatalogService`의 범위 클램프 함수를 `shared/utils/clamp-number.ts`로 옮겨 댓글·독서 기록·채팅 페이지 값에도 재사용했고(동작 동일), 도서 상세의 저자·출판사·연관 도서 검색 링크가 검색어를 인코딩하지 않아 `&`·`+`·`#`에서 잘리던 것을 고쳤다. 공급처·DB·표지·ISR 정책 변경은 없고 체크박스 상태도 그대로다.
 

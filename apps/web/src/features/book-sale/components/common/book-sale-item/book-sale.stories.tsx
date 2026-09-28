@@ -12,9 +12,7 @@ const mockSale: UsedBookSaleType = {
   city: "서울",
   district: "강남구",
   content: "한 번 읽고 보관만 했습니다. 깨끗한 상태입니다.",
-  imageUrls: [
-    "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
-  ],
+  imageUrls: ["https://cdn.bookjeok.com/covers/9788932912363.webp"],
   status: SaleStatus.FOR_SALE,
   createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
   updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
@@ -30,8 +28,7 @@ const mockSale: UsedBookSaleType = {
     author: "헤르만 헤세",
     publisher: "민음사",
     description: "헤르만 헤세의 대표작",
-    image:
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+    image: "https://cdn.bookjeok.com/covers/9788932912363.webp",
     link: "",
     discount: "7200",
     pubdate: "20000101",

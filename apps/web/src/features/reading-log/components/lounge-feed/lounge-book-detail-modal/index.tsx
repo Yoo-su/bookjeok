@@ -119,6 +119,9 @@ export function LoungeBookDetailModal({
                           src={getProfileImageUrl(reader.profileImageUrl) || ""}
                           alt={reader.nickname}
                           fill
+                          // 다른 아바타처럼 원본을 그대로 쓴다. 초기 소셜 가입자의
+                          // 네이버·카카오 프로필 주소는 이미지 허용 호스트에 없다
+                          unoptimized
                           className="object-cover"
                         />
                       </div>

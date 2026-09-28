@@ -30,8 +30,7 @@ const defaultItemData: LoungePopularBook = {
     author: "헤르만 헤세",
     publisher: "민음사",
     description: "헤르만 헤세의 대표작",
-    image:
-      "https://shopping-phinf.pstatic.net/main_3249079/32490791688.20221019151415.jpg",
+    image: "https://cdn.bookjeok.com/covers/9788932912363.webp",
     link: "",
     discount: "7200",
     pubdate: "20000101",
