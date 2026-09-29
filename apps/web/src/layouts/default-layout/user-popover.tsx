@@ -131,6 +131,19 @@ export default function UserPopover() {
           >
             {tFeedback("open")}
           </Button>
+          {user.role === "ADMIN" && (
+            <Button
+              variant="ghost"
+              hoverScale={1}
+              tapScale={1}
+              className="justify-start w-full h-auto px-3 py-2"
+              asChild
+            >
+              <Link href={PATHS.ADMIN_FEEDBACK}>
+                {tFeedback("admin.title")}
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             hoverScale={1}

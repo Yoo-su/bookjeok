@@ -15,6 +15,7 @@ import {
   getNotificationMessageParams,
   isSystemNotification,
 } from "@/features/notification/utils";
+import { PATHS } from "@/shared/constants/paths";
 import ko from "@/shared/i18n/messages/ko.json";
 import { AdminFeedbackView } from "@/views/admin-feedback-view";
 
@@ -23,6 +24,7 @@ import { MyFeedbackList } from "../components/my-feedback-list";
 
 const mockUpdate = vi.fn();
 const mockAdminQuery = vi.fn();
+const mockReplace = vi.fn();
 let mockMyItems: MyFeedback[] = [];
 let mockRole: "USER" | "ADMIN" = "USER";
 
@@ -65,6 +67,7 @@ vi.mock("@/shared/config/i18n/routing", () => ({
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
+  useRouter: () => ({ replace: mockReplace }),
 }));
 
 vi.mock("next-intl", () => ({
@@ -151,12 +154,12 @@ describe("나의 문의", () => {
 describe("운영자 문의 관리", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("ADMIN이 아니면 목록을 부르지 않고 안내만 보인다", () => {
+  it("ADMIN이 아니면 목록을 부르지 않고 홈으로 보낸다", () => {
     mockRole = "USER";
 
     render(<AdminFeedbackView />);
 
-    expect(screen.getByText(ko.feedback.admin.forbidden)).toBeInTheDocument();
+    expect(mockReplace).toHaveBeenCalledWith(PATHS.HOME);
     expect(mockAdminQuery).not.toHaveBeenCalled();
   });
 
@@ -168,6 +171,7 @@ describe("운영자 문의 관리", () => {
     expect(mockAdminQuery).toHaveBeenCalledWith({
       status: FeedbackStatus.RECEIVED,
     });
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   it("처리 창은 상태·답변·메모를 함께 저장하고 알림이 간다고 알려 준다", () => {

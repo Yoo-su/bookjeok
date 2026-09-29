@@ -2578,7 +2578,6 @@
     "admin": {
       "title": "Feedback Inbox",
       "subtitle": "Change status and reply. Replies are shown to the sender with a notification.",
-      "forbidden": "Only operators can view this page.",
       "filter_status": "Status",
       "filter_type": "Type",
       "filter_all": "All",

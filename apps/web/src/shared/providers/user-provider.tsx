@@ -48,6 +48,7 @@ export default function UserProvider({ children }: UserProviderProps) {
     if (!path) return false;
     return (
       path.startsWith("/my-page") ||
+      path.startsWith("/admin") ||
       path === "/book/sales/register" ||
       path === "/book/reviews/write" ||
       path.endsWith("/edit")
