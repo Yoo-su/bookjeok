@@ -56,6 +56,8 @@ book/
 
 ### AI 대화형 추천 (SSE)
 
+> **UI 비노출, 서버·DB 유지(2026-09-29).** 검색 화면에서 탭을 뺐고 `?mode=ai`도 키워드 검색으로 보입니다. 아래 컴포넌트·훅은 되살릴 때를 위해 남겨 두었습니다.
+
 `search-mode-tabs`에서 AI 모드로 전환하면 `ai-chat-window`가 열리고, `use-ai-chat`이 대화 상태를 관리합니다. 전송은 `POST /search/ai/stream`이며 `sse-chat-client`가 스트림을 파싱합니다.
 
 ```
