@@ -1,75 +1,59 @@
 # User Module (`features/user`)
 
-`UserModule`은 bookjeok 서비스의 사용자 계정 정보와 관련된 모든 데이터 및 비즈니스 로직을 관리하는 모듈입니다.
+`UserModule`은 사용자 계정(`users`)과 프로필·탈퇴·이메일 인증 관련 비즈니스 로직을 관리합니다. 소셜·이메일 로그인 자체는 [`auth`](../auth/README.md)가 담당하고, 이 모듈은 사용자 조회·생성을 제공합니다.
 
 ## 1. 주요 파일 및 역할
 
-- **`user.controller.ts`**: `/user` 경로의 API 엔드포인트를 정의합니다. 클라이언트가 사용자 프로필 정보나 자신이 등록한 판매글 목록을 요청할 때 사용됩니다.
-- **`user.service.ts`**: 사용자 관련 비즈니스 로직을 처리합니다. 데이터베이스와 직접 상호작용하여 사용자를 조회, 생성, 수정하는 역할을 합니다. `AuthModule`에서 소셜 로그인 시 사용자를 검증하는 데 사용되기도 합니다.
-- **`user.entity.ts`**: 데이터베이스의 `users` 테이블 스키마를 정의하는 TypeORM 엔티티입니다. 사용자의 핵심 정보를 담고 있으며, 다른 엔티티(판매글, 채팅 등)와의 관계를 정의합니다.
-- **`decorators/current-user.decorator.ts`**: 요청(request) 객체에 담긴 사용자 정보(`req.user`)를 컨트롤러에서 `@CurrentUser()` 데코레이터만으로 쉽게 가져올 수 있도록 하는 커스텀 데코레이터입니다.
-- **`utils/nickname-generator.ts`**: 신규 사용자에게 부여할 랜덤 닉네임을 생성하는 유틸리티입니다. "형용사 + 명사" 패턴으로 225가지 조합을 제공합니다.
-- **`dtos/`**: 사용자 관련 데이터 전송 객체(DTO)를 정의합니다. 예를 들어, `update-sale-status.dto.ts`는 판매글 상태 업데이트 시 필요한 데이터 형식을 정의합니다. (실제로는 `Book` 도메인과 더 관련이 깊을 수 있습니다.)
+- **`controllers/user.controller.ts`**: `/user` 경로의 API. 내 프로필·통계·판매글, 공개 프로필, 닉네임 검사, 프로필 수정, 회원 탈퇴.
+- **`services/user.service.ts`**: 사용자 조회·생성(소셜/이메일), 프로필 수정(이메일 변경 시 재인증 토큰 발급), 공개 프로필 집계, `tokenVersion` 증가, 이메일 인증 토큰 검증·재발송, **회원 탈퇴**(아래 참고). 개발 환경에서는 `onModuleInit`이 `users` id 시퀀스를 동기화합니다.
+- **`entities/user.entity.ts`**: `users` 테이블. 필드별 공개 범위(항상 숨김/본인만/공개)는 [`shared/README.md`의 「사용자 직렬화」](../../shared/README.md)를 보세요. **`wishlist.entity.ts`**(`Wishlist`)도 이 폴더에 있고, 위시리스트 API는 [`wishlist`](../wishlist/README.md) 모듈이 제공합니다.
+- **`dtos/`**: `update-user.dto.ts`(닉네임·프로필 이미지·실명·성별·연령대·이메일), `my-profile-response.dto.ts`(내 프로필 응답, `role` 포함), `public-user-profile.dto.ts`(공개 프로필), `update-sale-status.dto.ts`.
+- **`decorators/current-user.decorator.ts`**: `req.user`를 `@CurrentUser()`로 꺼냅니다.
+- **`utils/nickname-generator.ts`**: 신규 사용자에게 "형용사 + 명사" 패턴 닉네임(15×15조합)을 부여합니다.
+- **`listeners/user-cleanup.listener.ts`**: `user.withdrawn`을 받아 사용자 행을 익명화합니다. 탈퇴 리스너 목록은 [`shared/README.md`](../../shared/README.md#회원-탈퇴-캐스케이드).
+- **`constants.ts`**: 공개 프로필 노출 개수 상한, `USER_SELF_GROUP`.
 
 ## 2. API 엔드포인트
 
-| HTTP Method | 경로 (`/user/...`) | 설명                                                    | 인증 필요         |
-| :---------- | :----------------- | :------------------------------------------------------ | :---------------- |
-| `GET`       | `/profile`         | 현재 로그인된 사용자의 프로필 정보를 조회합니다.        | ✅ (Access Token) |
-| `GET`       | `/check-nickname`  | 닉네임 중복 여부를 확인합니다. (쿼리: `?nickname=xxx`)  | ✅ (Access Token) |
-| `PATCH`     | `/`                | 현재 로그인된 사용자의 프로필을 수정합니다.             | ✅ (Access Token) |
-| `GET`       | `/my-sales`        | 현재 로그인된 사용자가 등록한 모든 판매글을 조회합니다. | ✅ (Access Token) |
-| `GET`       | `/wishlist`        | 내 위시리스트 목록을 조회합니다.                        | ✅ (Access Token) |
-| `POST`      | `/wishlist`        | 위시리스트에 항목을 추가합니다. (id 필드 사용)          | ✅ (Access Token) |
-| `DELETE`    | `/wishlist`        | 위시리스트에서 항목을 제거합니다.                       | ✅ (Access Token) |
-| `GET`       | `/wishlist/check`  | 특정 항목의 위시리스트 여부를 확인합니다.               | ✅ (Access Token) |
+| HTTP Method | 경로 (`/user/...`) | 설명                                                                           | 인증                          |
+| :---------- | :----------------- | :----------------------------------------------------------------------------- | :---------------------------- |
+| `GET`       | `/profile`         | 내 프로필 (`MyProfileResponseDto`)                                             | ✅                            |
+| `GET`       | `/profile/:handle` | 공개 프로필 (핸들·닉네임·숫자 id 순으로 조회, 탈퇴 회원은 404)                 | ❌                            |
+| `GET`       | `/check-nickname`  | 닉네임 사용 가능 여부 (`?nickname=`). 로그인 상태면 내 현재 닉네임은 사용 가능 | 선택 (`OptionalJwtAuthGuard`) |
+| `PATCH`     | `/`                | 프로필 수정                                                                    | ✅                            |
+| `GET`       | `/my-sales`        | 내가 등록한 판매글                                                             | ✅                            |
+| `GET`       | `/stats`           | 내 판매글 상태별 개수·활성 채팅방 수·리뷰 수                                   | ✅                            |
+| `DELETE`    | `/me`              | 회원 탈퇴                                                                      | ✅                            |
 
-## 3. `User` 엔티티 스키마
+위시리스트(`/user/wishlist/*`)는 경로만 `/user` 아래일 뿐 이 컨트롤러가 아니라 `wishlist` 모듈의 컨트롤러입니다.
 
-`user.entity.ts` 파일은 데이터베이스의 `users` 테이블 구조를 정의합니다.
+## 3. `User` 엔티티 주요 컬럼
 
-| 컬럼명 (`@Column`) | 타입                | 설명                                        | 비고 (관계, 제약조건 등)  |
-| :----------------- | :------------------ | :------------------------------------------ | :------------------------ |
-| `id`               | `number`            | 사용자의 고유 ID (Primary Key)              | `@PrimaryGeneratedColumn` |
-| `provider`         | `string`            | 소셜 로그인 제공자 (e.g., "naver", "kakao") |                           |
-| `providerId`       | `string`            | 소셜 플랫폼에서의 고유 ID                   |                           |
-| `email`            | `string` (nullable) | 사용자 이메일                               | `@Unique()`               |
-| `nickname`         | `string`            | 사용자 닉네임                               |                           |
-| `profileImageUrl`  | `string` (nullable) | 프로필 이미지 URL                           |                           |
-| `createdAt`        | `Date`              | 계정 생성일                                 | `@CreateDateColumn`       |
-| `updatedAt`        | `Date`              | 계정 정보 수정일                            | `@UpdateDateColumn`       |
+| 컬럼명                                                  | 타입                     | 설명                                                  |
+| :------------------------------------------------------ | :----------------------- | :---------------------------------------------------- |
+| `id`                                                    | `number`                 | PK                                                    |
+| `provider` / `providerId`                               | `string`                 | `naver`·`kakao`·`local`, 소셜 측 고유 ID              |
+| `email`                                                 | `string` (nullable)      | `@Unique`                                             |
+| `password`                                              | `string` (nullable)      | 이메일 가입 해시. 항상 숨김                           |
+| `nickname` / `handle`                                   | `string`                 | 표시 이름 / 프로필 URL용 고유 핸들 (핸들은 수정 불가) |
+| `profileImageUrl`                                       | `string` (nullable)      |                                                       |
+| `isReadingLogPublic`                                    | `boolean`                | 독서 기록 공개 여부 (기본 `true`)                     |
+| `role`                                                  | `'USER' \| 'ADMIN'`      | `AdminGuard`가 확인. 운영자는 SQL로 지정              |
+| `name` / `gender` / `ageRange`                          | `string` (nullable)      | 소셜에서 받은 값. 본인만 볼 수 있음                   |
+| `isEmailVerified`                                       | `boolean`                | 이메일 인증 여부. `EmailVerifiedGuard` 기준           |
+| `emailVerificationToken` / `emailVerificationExpiresAt` | nullable                 | 인증 링크 토큰과 24시간 만료. 항상 숨김               |
+| `tokenVersion`                                          | `number`                 | 토큰 즉시 무효화용. 항상 숨김                         |
+| `lastActiveAt`                                          | `timestamptz` (nullable) | 최근 활동 시각                                        |
+| `deletedAt`                                             | `timestamptz` (nullable) | 탈퇴 시각 (소프트 삭제)                               |
+| `createdAt` / `updatedAt`                               | `timestamptz`            |                                                       |
 
-### 관계 (Relations)
+관계: `usedBookSales`, `chatParticipants`, `reviews`, `readingLogs` (1:N).
 
-- **`usedBookSales`**: `UsedBookSale` 엔티티와 1:N 관계. 한 명의 사용자는 여러 개의 중고 서적 판매글을 가질 수 있습니다.
-- **`chatParticipants`**: `ChatParticipant` 엔티티와 1:N 관계. 사용자가 참여하고 있는 채팅방 목록을 나타냅니다.
-- **`wishlists`**: `Wishlist` 엔티티와 1:N 관계. 사용자의 찜 목록 정보를 나타냅니다.
+## 4. 회원 탈퇴
 
-## 4. 모듈 간의 상호작용
+`UserService.withdraw`는 한 트랜잭션에서 상태를 바꾼 뒤 `user.withdrawn` 이벤트로 각 도메인이 자기 데이터를 정리하게 합니다. 활성 결제 주문이 있거나 판매자로서 예약 중인 판매글이 있으면 탈퇴를 막고, 구매자로 예약된 남의 판매글은 판매중으로 되돌립니다(커밋 후 `trade.reservation_cancelled` 발행). 자세한 규칙은 [`shared/README.md`의 「회원 탈퇴 캐스케이드」](../../shared/README.md#회원-탈퇴-캐스케이드)에 있습니다.
 
-`UserModule`은 다른 모듈과 긴밀하게 상호작용합니다.
+## 5. 관련
 
-```mermaid
-graph LR
-    AuthModule --"사용자 검증/생성 요청"--> UserService;
-    JwtStrategy --"사용자 조회"--> UserService;
-
-    subgraph UserModule
-        UserController
-        UserService
-        UserEntity["User (Entity)"]
-    end
-
-    UserService --"DB CRUD"--> UserEntity;
-    BookService --"작성자 정보 참조"--> UserEntity;
-    ChatService --"참여자 정보 참조"--> UserEntity;
-
-    style AuthModule fill:#FFF5E1,stroke:#F39C12
-    style JwtStrategy fill:#FEF9E7,stroke:#F39C12
-    style BookService fill:#E8F8F5,stroke:#16A085
-    style ChatService fill:#EBF5FB,stroke:#3498DB
-```
-
-- **`AuthModule` -> `UserService`**: 소셜 로그인 시 `AuthService`는 `UserService.findByProviderId()`를 호출하여 기존 사용자인지 확인하고, `UserService.createUser()`를 통해 신규 사용자를 생성합니다.
-- **`JwtStrategy` -> `UserService`**: API 요청 시 JWT 페이로드에 담긴 사용자 ID(`sub`)를 이용해 `UserService.findById()`를 호출하여 유효한 사용자인지 검증합니다.
-- **다른 모듈 -> `UserEntity`**: `BookModule`, `ChatModule` 등 다른 모듈에서는 판매글의 작성자 정보나 채팅 참여자 정보를 참조하기 위해 `User` 엔티티와 관계를 맺습니다.
+- 웹: [`features/user`](../../../../web/src/features/user/README.md)
+- 인증·가드: [`features/auth`](../auth/README.md)

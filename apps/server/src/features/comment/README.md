@@ -7,6 +7,7 @@
 ```
 comment/
 ├── comment.module.ts
+├── constants.ts                   # COMMENT_PAGE_SIZE_MAX 등
 ├── controllers/comment.controller.ts
 ├── services/
 │   ├── comment.service.ts
@@ -14,6 +15,7 @@ comment/
 ├── entities/
 │   ├── comment.entity.ts          # Comment (targetType: BOOK | REVIEW)
 │   └── comment-like.entity.ts     # CommentLike
+├── utils/delete-target-comments.ts   # 대상(리뷰) 삭제 시 댓글·좋아요 함께 삭제 (+ spec)
 ├── listeners/
 │   ├── comment-notification.listener.ts  # comment.created · comment.liked
 │   └── comment-cleanup.listener.ts       # user.withdrawn

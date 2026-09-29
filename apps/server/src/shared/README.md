@@ -7,7 +7,7 @@
 ## 전역 파이프라인 순서 (`main.ts`)
 
 ```
-helmet → compression → cookie-parser → CORS(화이트리스트)
+cookie-parser → helmet → compression → CORS(화이트리스트)
   │
   ▼
 ThrottlerGuard (전역, 60초 / 120회)
@@ -82,7 +82,7 @@ async create() { ... }
 | `user`    | 인증 사용자별    |
 | `ip+user` | 두 값 조합       |
 
-`ttl`은 밀리초입니다(cache-manager 3.x 기준).
+`ttl`은 밀리초입니다(cache-manager 7 기준).
 
 **응답이 요청자에 따라 달라지지 않으면 반드시 `global`을 쓰세요.** 공용 데이터에 `ip`를 걸면
 IP마다 캐시가 갈라져 히트율이 무너지고, prefix→key 맵에 IP 수만큼 키가 쌓입니다(만료돼도 맵에는
@@ -109,7 +109,7 @@ exceptions/
 throw new BusinessException('SALE_NOT_FOUND', HttpStatus.NOT_FOUND);
 ```
 
-`ERROR_CODES`는 도메인 프리픽스로 묶여 있습니다 — `AUTH_xxx`, `USER_xxx`, `BOOK_xxx`, `SALE_xxx`, `ORDER_xxx`, `REVIEW_xxx`, `COMMENT_xxx`, `CHAT_xxx`, `VALIDATION_xxx`, `INTERNAL_xxx`. 각 항목은 `{ code, message }` 형태이며, 프론트는 `code`로 분기하고 `message`를 그대로 노출할 수 있습니다.
+`ERROR_CODES`는 도메인 프리픽스로 묶여 있습니다 — `AUTH_xxx`, `USER_xxx`, `BOOK_xxx`, `SALE_xxx`, `ORDER_xxx`, `TRADE_xxx`, `REVIEW_xxx`, `COMMENT_xxx`, `CHAT_xxx`, `WISHLIST_xxx`, `FEEDBACK_xxx`, `VALIDATION_xxx`, `INTERNAL_xxx` 등(전체는 `error-codes.ts`). 각 항목은 `{ code, message }` 형태이며, 프론트는 `code`로 분기하고 `message`를 그대로 노출할 수 있습니다.
 
 새 에러를 만들 때는 반드시 `error-codes.ts`에 먼저 등록합니다.
 
@@ -157,7 +157,7 @@ activity/
 
 `@TrackActivity(ActivityType.XXX)`가 붙은 엔드포인트 호출을 인터셉터가 가로채 `activity_logs`에 **비동기로** 적재합니다. 적재 실패가 원래 요청을 실패시키지 않습니다.
 
-계측 지점은 auth(로그인·가입), book(조회), review(작성·조회·리액션·수정·삭제), comment, reading-log, used-book-sale, wishlist, llm, search-keyword 등 20여 곳입니다.
+계측 지점은 auth(로그인·가입), book(조회), review(작성·조회·리액션·수정·삭제), comment, reading-log, used-book-sale, wishlist, llm, search-keyword 등 30여 곳입니다.
 
 > **현재 `activity_logs`를 읽는 기능은 없습니다.** 감사·분석용 원장으로 적재만 하고 있으며, 인사이트 대시보드의 통계는 각 도메인 테이블(`used_book_sales`, `reviews` 등)에서 직접 집계합니다. 이 테이블은 계속 증가하므로 보존 기간 정책이 필요합니다.
 
@@ -169,13 +169,14 @@ activity/
 mail/
 ├── mail.module.ts
 ├── mail.service.ts
-└── listeners/mail-event.listener.ts
+└── listeners/mail-event.listener.ts   # chat.room_created (문의 알림 리스너는 feedback 도메인에 있음)
 ```
 
-| 용도                      | 트리거                                      |
-| ------------------------- | ------------------------------------------- |
-| 회원가입 이메일 인증 링크 | `AuthService` / `UserService`에서 직접 호출 |
-| 채팅방 개설 알림          | `chat.room_created` 이벤트 (`async: true`)  |
+| 용도                       | 트리거                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 회원가입 이메일 인증 링크  | `AuthService` / `UserService`에서 직접 호출                                                                   |
+| 채팅방 개설 알림           | `chat.room_created` 이벤트 (`async: true`)                                                                    |
+| 사용자 문의·제보 접수 알림 | `feedback.created` 이벤트 → `feedback/listeners/feedback-notify.listener.ts` (수신처 `FEEDBACK_NOTIFY_EMAIL`) |
 
 발신 주소는 `RESEND_FROM_EMAIL`이며 미설정 시 `북적 <onboarding@resend.dev>`를 사용합니다. 메일 발송은 이벤트 리스너에서 비동기로 처리해 채팅방 생성 응답을 지연시키지 않습니다.
 

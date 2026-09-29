@@ -26,8 +26,8 @@
 | `GET`       | `/location-sales`      | 특정 지역 판매글 조회     | ❌        |
 
 `GET /insights`는 집계 쿼리 7개를 `Promise.all`로 동시에 돌립니다. 쿼리 수만 보면
-캐시를 걸고 싶어지지만 **걸지 않았습니다.** 2026-09-13 기준 대상 테이블이
-`used_book_sales` 27행, `reviews` 75행, `review_reactions` 83행, `tags` 126행입니다.
+캐시를 걸고 싶어지지만 **걸지 않았습니다.** 2026-09-29 운영 실측으로 대상 테이블이
+`used_book_sales` 28행, `reviews` 77행, `review_reactions` 86행, `tags` 127행입니다.
 이 규모에서는 집계 비용이 사실상 0이고, 캐시는 낡은 수치만 남깁니다.
 
 캐시를 다시 검토한다면 **행 수를 먼저 재세요.** 쿼리 개수나 `Promise.all`만 보고
@@ -93,7 +93,7 @@ KST 새벽 시각 고정 테스트를 함께 보세요.
 
 모든 통계는 **각 도메인 테이블에서 직접 집계**합니다. `activityTrend`는 `used_book_sales`와 `reviews`의 `createdAt`을 `ACTIVITY_TREND_DAYS`(30일) 범위에서 일별로 묶은 결과이며, `shared/activity`의 `activity_logs` 테이블은 사용하지 않습니다.
 
-동일한 `InsightsResponseDto`를 `apps/web`의 `/insights` 페이지와 `apps/admin`의 운영 대시보드가 함께 소비합니다. 응답 구조를 바꿀 때는 두 앱을 모두 확인하세요.
+동일한 `InsightsResponseDto`를 `apps/web`의 `/insights` 페이지와 `apps/admin`의 운영 대시보드가 소비합니다(admin은 미사용 앱이라 실질적으로는 web). 응답 구조를 바꿀 때는 admin도 컴파일되는지 확인하세요.
 
 ## 5. 쿼리 최적화
 
@@ -102,7 +102,7 @@ KST 새벽 시각 고정 테스트를 함께 보세요.
 - **CASE WHEN 활용**: 가격 분포 집계 시 단일 쿼리로 모든 구간을 계산
 - **GROUP BY 최적화**: 지역/카테고리 통계는 GROUP BY로 한 번에 집계
 - **LIMIT 적용**: 인기 태그, 지역 통계 등에 TOP N 제한 적용
-- **WITHDRAWN 제외**: 판매 취소된 판매글은 통계에서 제외
+- **WITHDRAWN 제외**: 서버 `SaleStatus.WITHDRAWN`(판매글 철회) 상태는 통계에서 제외
 
 > 위 항목들은 데이터가 커질 때를 대비한 것입니다. 현재 규모에서는 어느 쪽이든
 > 차이가 없으니, 여기에 더 손대기 전에 2절의 행 수부터 다시 재세요.

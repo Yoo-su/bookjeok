@@ -11,15 +11,19 @@
 
 ## 2. 주요 파일 및 역할
 
-- **`chat.controller.ts`**: `/chat` 경로의 REST API 엔드포인트를 정의합니다. 채팅방 목록, 이전 메시지 조회, 채팅방 생성/나가기 등의 기능을 제공합니다.
-- **`chat.gateway.ts`**: `@WebSocketGateway` 데코레이터를 사용하여 웹소켓 서버를 구현합니다. 클라이언트와의 연결 수립/종료, 메시지 수신 및 브로드캐스팅, 특정 `room`으로의 이벤트 전송 등을 담당합니다.
-- **`chat.service.ts`**: 채팅 관련 핵심 비즈니스 로직을 처리합니다.
+- **`controllers/chat.controller.ts`**: `/chat` 경로의 REST API 엔드포인트를 정의합니다. 채팅방 목록, 이전 메시지 조회, 채팅방 생성/나가기 등의 기능을 제공합니다.
+- **`gateways/chat.gateway.ts`**: `@WebSocketGateway` 데코레이터를 사용하여 웹소켓 서버를 구현합니다. 클라이언트와의 연결 수립/종료, 메시지 수신 및 브로드캐스팅, 특정 `room`으로의 이벤트 전송 등을 담당합니다.
+- **`services/chat.service.ts`**: 채팅 관련 핵심 비즈니스 로직을 처리합니다.
   - `getChatRoom`: 판매글 ID와 구매자 ID를 받아 기존 채팅방을 찾거나, 없으면 새로 생성하여 반환합니다.
   - `getChatRooms`: 특정 사용자가 참여 중인 모든 채팅방 목록과 각 방의 마지막 메시지, 안 읽은 메시지 수를 조회합니다.
-  - `saveMessage`: 받은 메시지를 데이터베이스에 저장합니다.
+  - `saveMessage`: 받은 메시지를 데이터베이스에 저장합니다. `imageUrls`가 있으면 `IMAGE` 타입으로 저장하고 `MAX_CHAT_IMAGES`(core)를 넘으면 `CHAT_IMAGE_LIMIT_EXCEEDED`로 거부합니다.
+  - `sendTradeMessage`·`notifyOtherBuyersTrading`·`notifySaleSold`·`notifySaleBackOnMarket`: 거래 이벤트가 채팅방에 남기는 `SYSTEM`/`TRADE_STATUS`/`TRADE_ACTION` 메시지와 다른 구매희망자 방 안내를 만듭니다(주문·거래 리스너가 호출).
+  - `filterJoinableRoomIds`: `joinRooms`가 요청한 방 중 실제 참여 중인 방만 남깁니다.
+  - `leaveRoom`: 채팅방 나가기. 활성 주문이 있으면 막습니다(결제 플래그가 꺼져 있으면 이 검사를 건너뜁니다).
   - `markMessagesAsRead`: 특정 채팅방을 읽음 처리합니다. 읽은 메시지를 건별로 기록하지 않고 `ChatParticipant.lastReadMessageId` 워터마크를 UPDATE 한 번으로 올립니다.
   - `getOpponentLastReadMessageId`: 상대방 참여자의 워터마크를 반환합니다. 내가 보낸 메시지의 읽음 표시 초기값입니다.
 - 소켓 연결 인증은 `shared/websocket/authenticate-socket.ts`가 담당합니다. 핸드셰이크의 JWT를 검증하고 탈퇴 계정을 걸러내며, 게이트웨이의 `handleConnection`이 호출합니다. (NestJS 가드는 `@SubscribeMessage` 핸들러에만 걸리고 연결 시점에는 동작하지 않아 가드로 둘 수 없습니다)
+- **`listeners/chat-cleanup.listener.ts`**: `user.withdrawn` 이벤트로 탈퇴 회원의 채팅 데이터를 정리합니다.
 - **`entities/`**: 채팅 관련 데이터베이스 테이블 스키마를 정의합니다.
   - `chat-room.entity.ts`: 채팅방 정보를 담는 엔티티. `UsedBookSale`과 관계를 맺습니다.
   - `chat-participant.entity.ts`: 어떤 `User`가 어떤 `ChatRoom`에 참여하고 있는지 나타내는 중간 테이블 엔티티. 읽음 워터마크(`lastReadMessageId`)도 여기에 있습니다.
@@ -42,11 +46,12 @@
 - **서버 수신 이벤트 (Client -> Server)**
   | 이벤트명 | 데이터 (`data`) | 설명 |
   | :------------ | :---------------------------- | :------------------------------------- |
-  | `sendMessage` | `{ roomId: number, content: string }` | 특정 채팅방으로 메시지를 전송합니다. |
+  | `sendMessage` | `{ roomId: number, content: string, imageUrls?: string[], clientMessageId?: string }` | 특정 채팅방으로 메시지를 전송합니다. `clientMessageId`는 저장하지 않고 `newMessage`에 그대로 실어 클라이언트가 낙관적 메시지를 교체하게 합니다. |
   | `joinRooms` | `number[]` (roomIds) | 클라이언트가 여러 채팅방에 한번에 join합니다. |
   | `leaveRoom` | `{ roomId: number }` | 특정 채팅방에서 나갑니다. |
   | `startTyping` | `{ roomId: number }` | 상대방에게 입력 중 상태를 알립니다. |
   | `stopTyping` | `{ roomId: number }` | 상대방에게 입력 중 상태가 끝났음을 알립니다. |
+  | `markAsRead` | `{ roomId: number }` | 방을 읽음 처리합니다(워터마크 전진). |
 
 - **서버 발신 이벤트 (Server -> Client)**
   | 이벤트명 | 데이터 (`data`) | 설명 |
@@ -57,6 +62,7 @@
   | `userLeft` | `{ roomId: number, message: ChatMessage }` | 상대방이 채팅방을 나갔을 때 시스템 메시지와 함께 받습니다. |
   | `userRejoined`| `{ roomId: number, message: ChatMessage }` | 나갔던 사용자가 다시 채팅방에 참여했을 때 시스템 메시지와 함께 받습니다. |
   | `typing` | `{ nickname: string, isTyping: boolean }` | 상대방의 입력 상태를 전달받습니다. |
+  | `messagesRead` | `{ roomId: number, userId: number, lastReadMessageId: number }` | 상대가 새로 읽었을 때 받아 내가 보낸 메시지의 읽음 표시를 갱신합니다. |
   | `error` | `WsException` 객체 | 인증 실패 등 에러 발생 시 받습니다. |
 
 ## 4. 읽음 처리: 워터마크

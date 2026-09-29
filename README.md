@@ -72,7 +72,7 @@
    │  apps/server — NestJS 11 (Azure Container Apps, Docker)                │
    │                                                                        │
    │  Global Pipeline                                                       │
-   │   helmet → compression → cookie-parser → CORS                          │
+   │   cookie-parser → helmet → compression → CORS                          │
    │   ThrottlerGuard → LoggingInterceptor → SmartCacheInterceptor          │
    │   → ActivityTrackingInterceptor → CacheInvalidationInterceptor         │
    │   → TransformInterceptor → ClassSerializerInterceptor                  │
@@ -81,7 +81,7 @@
    │  Domain Modules                                                        │
    │   auth · user · book · review · comment · reading-log · wishlist       │
    │   used-book-sale · order · trade · chat · llm · search · search-keyword │
-   │   insights · notification · health                                     │
+   │   insights · notification · feedback · health                          │
    │                                                                        │
    │  Cross-cutting                                                         │
    │   CLS Transactional · EventEmitter · @nestjs/schedule · Resend Mail    │
@@ -108,7 +108,7 @@
 
 ### 키워드 기반 도서 검색
 
-자체 DB에 적재한 도서 약 5.7만 종을 제목·저자·출판사로 검색합니다. `pg_trgm` GIN 인덱스 기반 부분일치이며, 관련도(완전일치 → 접두일치 → 부분일치)로 버킷을 나눈 뒤 알라딘 판매지수(`salesPoint`)로 순서를 가립니다. **런타임에 외부 도서 API를 호출하지 않습니다**(아래 「외부 서비스 연동」 참고). TanStack Query 기반 무한 스크롤로 결과를 점진적으로 탐색하며, 사용자 검색어는 정규화 후 별도로 기록되어(초성 제거·공백 정리·2글자 미만 폐기) 최근 1년 기준 인기 검색어 Top 10을 집계합니다.
+자체 DB에 적재한 도서 약 6.6만 종을 제목·저자·출판사로 검색합니다. `pg_trgm` GIN 인덱스 기반 부분일치이며, 관련도(완전일치 → 접두일치 → 부분일치)로 버킷을 나눈 뒤 알라딘 판매지수(`salesPoint`)로 순서를 가립니다. **런타임에 외부 도서 API를 호출하지 않습니다**(아래 「외부 서비스 연동」 참고). TanStack Query 기반 무한 스크롤로 결과를 점진적으로 탐색하며, 사용자 검색어는 정규화 후 별도로 기록되어(초성 제거·공백 정리·2글자 미만 폐기) 최근 1년 기준 인기 검색어 Top 10을 집계합니다.
 
 ---
 
@@ -349,7 +349,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 ### 5. 이벤트 기반 회원 탈퇴 정리
 
-탈퇴 시 `user.withdrawn` 이벤트 하나만 발행하면 chat · comment · llm · notification · reading-log · review · used-book-sale · user · activity 9개 리스너가 각자의 데이터를 정리합니다. 도메인 모듈 간 직접 의존 없이 정리 로직을 확장할 수 있습니다.
+탈퇴 시 `user.withdrawn` 이벤트 하나만 발행하면 chat · comment · feedback · llm · notification · reading-log · review · used-book-sale · user · activity 10개 리스너가 각자의 데이터를 정리합니다. 도메인 모듈 간 직접 의존 없이 정리 로직을 확장할 수 있습니다.
 
 ### 6. 선언적 트랜잭션 (CLS)
 
@@ -357,7 +357,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 ### 7. 활동 로그 인터셉터
 
-`@TrackActivity(type)`가 붙은 엔드포인트 호출을 `ActivityTrackingInterceptor`가 가로채 `activity_logs`에 비동기 적재합니다. 로그인·검색·조회·작성 등 20여 개 지점이 계측되어 있으며, 현재는 감사(audit) 로그 용도로 **적재만** 하고 조회하는 기능은 없습니다.
+`@TrackActivity(type)`가 붙은 엔드포인트 호출을 `ActivityTrackingInterceptor`가 가로채 `activity_logs`에 비동기 적재합니다. 로그인·검색·조회·작성 등 30여 개 지점이 계측되어 있으며, 현재는 감사(audit) 로그 용도로 **적재만** 하고 조회하는 기능은 없습니다.
 
 ### 8. 거리 검색: PostGIS 대신 cube + earthdistance
 
@@ -431,9 +431,9 @@ bookjeok/
 │   ├── web/                      # Next.js 15 사용자 웹 프론트엔드
 │   │   ├── src/app/              # App Router ([locale] 다국어, route handlers, sitemap/robots/rss)
 │   │   ├── src/views/            # 페이지 뷰 조립 레이어
-│   │   ├── src/features/         # 도메인 기능 (auth, book, book-sale, chat, comment, confirm,
-│   │   │                         #   insights, intro, music, notification, order,
-│   │   │                         #   reading-log, review, trade, user)
+│   │   ├── src/features/         # 도메인 기능 (announcement, auth, book, book-sale, chat, comment,
+│   │   │                         #   confirm, feedback, insights, intro, music, notification,
+│   │   │                         #   order, reading-log, review, trade, user)
 │   │   ├── src/shared/           # 공용 컴포넌트·프로바이더·훅·유틸·i18n·analytics
 │   │   ├── src/layouts/          # DefaultLayout, Header, Navigation
 │   │   ├── docs/ARCHITECTURE.md  # 컴포넌트 구조 & i18n 가이드
@@ -445,11 +445,11 @@ bookjeok/
 │   │
 │   └── server/                   # NestJS 11 백엔드 API
 │       ├── src/app/              # 루트 모듈 (TypeORM, CLS, Throttler, Cache, Schedule)
-│       ├── src/features/         # 17개 도메인 모듈
+│       ├── src/features/         # 18개 도메인 모듈
 │       │   ├── auth/  user/  book/  review/  comment/  reading-log/  wishlist/
 │       │   ├── used-book-sale/  order/  trade/  chat/  notification/
 │       │   ├── llm/  search/  search-keyword/
-│       │   └── insights/  health/
+│       │   └── insights/  feedback/  health/
 │       └── src/shared/           # 횡단 관심사
 │           ├── activity/         # 활동 로그 (데코레이터 + 인터셉터)
 │           ├── cache/            # SmartCache (캐싱/무효화 데코레이터)
@@ -475,6 +475,7 @@ bookjeok/
 │   └── ddl/                      # 운영에 적용한 DDL 원본
 ├── .agents/rules/                # 코드베이스 컨벤션 (개발자 & AI 에이전트 공용)
 ├── .github/workflows/            # CI, Azure Container Apps 배포
+├── docker/postgres/init/         # 로컬 DB 초기화 스크립트 (확장 설치)
 ├── docker-compose.yml            # 로컬 PostgreSQL + pgvector
 ├── turbo.json
 └── pnpm-workspace.yaml
@@ -500,14 +501,14 @@ bookjeok/
 
 ## Testing & Quality
 
-| 항목             | 현황                                                                                                 |
-| ---------------- | ---------------------------------------------------------------------------------------------------- |
-| 서버 단위 테스트 | Jest — 21개 spec (주문 서비스·스케줄러·토스 연동·채팅 게이트웨이·가드 등)                            |
-| 웹 테스트        | Vitest 4 + Testing Library — 41개 테스트 파일 (결제 플로우, 주문 상세, 배송/분쟁 모달, 거래 후기 등) |
-| 컴포넌트 문서    | Storybook 8 — 11개 스토리                                                                            |
-| 타입 안전성      | `tsc --noEmit` 게이트 (server / web / admin)                                                         |
-| 정적 분석        | ESLint 9 Flat Config + Prettier                                                                      |
-| CI               | GitHub Actions에서 `pnpm turbo lint test` → `pnpm turbo build`                                       |
+| 항목             | 현황                                                                                                  |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
+| 서버 단위 테스트 | Jest — 47개 spec (주문 서비스·스케줄러·토스 연동·채팅 게이트웨이·가드 등)                             |
+| 웹 테스트        | Vitest 4 + Testing Library — 102개 테스트 파일 (결제 플로우, 주문 상세, 배송/분쟁 모달, 거래 후기 등) |
+| 컴포넌트 문서    | Storybook 8 — 25개 스토리                                                                             |
+| 타입 안전성      | `tsc --noEmit` 게이트 (server / web / admin)                                                          |
+| 정적 분석        | ESLint 9 Flat Config + Prettier                                                                       |
+| CI               | GitHub Actions에서 `pnpm turbo lint test` → `pnpm turbo build`                                        |
 
 ```bash
 pnpm lint
@@ -582,32 +583,32 @@ pnpm test
 
 전체 목록과 설명은 [.env.example](.env.example)에 있습니다. 주요 항목:
 
-| 변수                                                 | 필수 | 설명                                                                           |
-| ---------------------------------------------------- | :--: | ------------------------------------------------------------------------------ |
-| `DATABASE_URL`                                       |  ✅  | PostgreSQL 연결 문자열                                                         |
-| `JWT_SECRET` / `JWT_REFRESH_SECRET`                  |  ✅  | 액세스/리프레시 토큰 서명 키                                                   |
-| `CLIENT_DOMAIN`                                      |  ✅  | CORS 및 소셜 로그인 리다이렉트 대상                                            |
-| `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 소셜 로그인 (도서 검색에는 쓰지 않음)                                   |
-| `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                                  |
-| `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 적재 도구의 알라딘 공급처 전용(10/30까지) — 지우지 말 것 |
-| `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                                  |
-| `GEMINI_MODEL_NAME`                                  |      | 사용할 Gemini 모델명                                                           |
-| `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                                            |
-| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`               |  ✅  | 이메일 인증·알림 발송                                                          |
-| `FEEDBACK_NOTIFY_EMAIL`                              |      | 사용자 문의·제보 알림을 받을 운영자 메일. 비우면 DB에만 쌓임                   |
-| `BLOB_READ_WRITE_TOKEN`                              |  ✅  | Vercel Blob 이미지 업로드                                                      |
-| `TOSS_PAYMENTS_SECRET_KEY` / `_CLIENT_KEY`           |      | 토스페이먼츠 에스크로                                                          |
-| `DELIVERY_TRACKER_BASE_URL`                          |      | 배송 추적 API 엔드포인트                                                       |
-| `FEATURE_PAYMENT_ENABLED`                            |      | 서버 측 결제 기능 플래그                                                       |
-| `NEXT_PUBLIC_API_URL`                                |  ✅  | 웹에서 바라볼 백엔드 주소                                                      |
-| `NEXT_PUBLIC_KAKAO_APP_KEY`                          |  ✅  | 카카오 맵 JS SDK 키                                                            |
-| `NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY`               |      | 결제 위젯 클라이언트 키                                                        |
-| `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED`                |      | 웹 측 결제 기능 플래그                                                         |
-| `USER_WEB_URL`                                       |      | 관리자 포털 서버가 갱신 요청을 보낼 사용자 웹 주소 (서버 전용)                 |
-| `REVALIDATE_TOKEN`                                   |      | On-Demand ISR 갱신 시크릿 (서버 전용, 폴백 없음)                               |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID`                      |      | Google Analytics                                                               |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID`                     |      | Microsoft Clarity                                                              |
-| `NEXT_PUBLIC_GOOGLE_ADSENSE_ID`                      |      | Google AdSense                                                                 |
+| 변수                                                 | 필수 | 설명                                                                                         |
+| ---------------------------------------------------- | :--: | -------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                       |  ✅  | PostgreSQL 연결 문자열                                                                       |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET`                  |  ✅  | 액세스/리프레시 토큰 서명 키                                                                 |
+| `CLIENT_DOMAIN`                                      |  ✅  | CORS 및 소셜 로그인 리다이렉트 대상                                                          |
+| `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 소셜 로그인 (도서 검색에는 쓰지 않음)                                                 |
+| `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                                                |
+| `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 적재 도구의 알라딘 공급처 전용(10/30까지) — 지우지 말 것               |
+| `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                                                |
+| `GEMINI_MODEL_NAME`                                  |      | AI 도서 추천(search)의 Gemini 모델명. 기본 `gemini-3.1-flash-lite`, AI 요약(llm)은 상수 사용 |
+| `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                                                          |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL`               |  ✅  | 이메일 인증·알림 발송                                                                        |
+| `FEEDBACK_NOTIFY_EMAIL`                              |      | 사용자 문의·제보 알림을 받을 운영자 메일. 비우면 DB에만 쌓임                                 |
+| `BLOB_READ_WRITE_TOKEN`                              |  ✅  | Vercel Blob 이미지 업로드                                                                    |
+| `TOSS_PAYMENTS_SECRET_KEY` / `_CLIENT_KEY`           |      | 토스페이먼츠 에스크로                                                                        |
+| `DELIVERY_TRACKER_BASE_URL`                          |      | 배송 추적 API 엔드포인트                                                                     |
+| `FEATURE_PAYMENT_ENABLED`                            |      | 서버 측 결제 기능 플래그                                                                     |
+| `NEXT_PUBLIC_API_URL`                                |  ✅  | 웹에서 바라볼 백엔드 주소                                                                    |
+| `NEXT_PUBLIC_KAKAO_APP_KEY`                          |  ✅  | 카카오 맵 JS SDK 키                                                                          |
+| `NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY`               |      | 결제 위젯 클라이언트 키                                                                      |
+| `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED`                |      | 웹 측 결제 기능 플래그                                                                       |
+| `USER_WEB_URL`                                       |      | 관리자 포털 서버가 갱신 요청을 보낼 사용자 웹 주소 (서버 전용)                               |
+| `REVALIDATE_TOKEN`                                   |      | On-Demand ISR 갱신 시크릿 (서버 전용, 폴백 없음)                                             |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID`                      |      | Google Analytics                                                                             |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID`                     |      | Microsoft Clarity                                                                            |
+| `NEXT_PUBLIC_GOOGLE_ADSENSE_ID`                      |      | Google AdSense                                                                               |
 
 ---
 

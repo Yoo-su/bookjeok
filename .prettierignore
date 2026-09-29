@@ -5,7 +5,6 @@
 **/build/
 pnpm-lock.yaml
 apps/web/next-env.d.ts
-apps/web/docs/component-tree.json
 # 적재 도구의 목록 캐시(gitignore). prettier는 하위 폴더 .gitignore를 읽지 않는다.
 tools/book-ingest/.data/
 

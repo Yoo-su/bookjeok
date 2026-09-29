@@ -46,13 +46,17 @@
 ```
 src/
 ├── app/
-│   ├── login/                  # 관리자 로그인 페이지
+│   ├── page.tsx                # 관리자 로그인 (루트)
+│   ├── api/revalidate/route.ts # 사용자 웹의 ISR 갱신 웹훅을 서버에서 대신 호출
 │   └── dashboard/
 │       ├── page.tsx            # 통합 통계 대시보드
 │       ├── sales/              # 중고 장터 검수 페이지
 │       ├── reviews/            # 도서 리뷰 검수 페이지
 │       └── cache/              # ISR 캐시 제어 센터
-├── layouts/                    # AdminLayout (네비게이션 사이드바 & 테마)
-├── libs/                       # axios 인스턴스 (관리자 토큰 인터셉터)
-└── stores/                     # useAuthStore (관리자 JWT 및 세션)
+├── layouts/admin-layout.tsx    # 네비게이션 사이드바 & 테마
+├── libs/                       # api.ts(axios 인스턴스·토큰 인터셉터) · revalidate.ts
+├── shared/utils/cn.ts
+└── stores/auth.ts              # 관리자 JWT 및 세션 (Zustand)
 ```
+
+> 문의(피드백) 처리 화면은 여기가 아니라 웹의 `/admin/feedback`에 있습니다([feedback README](../web/src/features/feedback/README.md)).

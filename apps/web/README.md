@@ -9,8 +9,8 @@
 
 - **🤖 대화형 AI 도서 탐색 (SSE)** — `fetch` + `ReadableStream` 기반 커스텀 SSE 클라이언트로 추천 결과를 조각 단위 렌더링
 - **💳 에스크로 결제 & 거래 관리** — 토스페이먼츠 SDK 연동, 주문 상태 타임라인, 배송/분쟁/구매확정 및 직거래/택배 거래 완료·후기 관리
-- **💬 실시간 소통** — Socket.IO 1:1 거래 채팅(타이핑 인디케이터·읽음 표시)과 전역 실시간 알림 14종
-- **📖 독서 기록 & 라운지** — 월별 캘린더, 통계, Framer Motion 3D 카드 덱, 공개 피드
+- **💬 실시간 소통** — Socket.IO 1:1 거래 채팅(타이핑 인디케이터·읽음 표시)과 전역 실시간 알림 17종
+- **📖 독서 기록 & 라운지** — 월별 캘린더, 통계, 독서 키재기(읽은 책을 실제 두께로 쌓아 사물·작가 키와 비교, 이미지 공유), 공개 피드
 - **✍️ 리치 텍스트 리뷰** — Tiptap 3 에디터, 이미지 업로드·리사이즈, `sanitize-html` 정제 렌더링
 - **📊 인사이트 시각화** — ApexCharts 기반 지역·가격·태그·리액션 대시보드
 - **⚡ 데이터 페칭 & 캐싱** — TanStack Query v5 기반 옵티미스틱 업데이트, 무한 스크롤/커서 페이지네이션, RSC prefetch
@@ -53,9 +53,10 @@ src/
 ├── app/                      # Next.js App Router
 │   ├── [locale]/             # 다국어 라우트
 │   │   ├── (auth)/           # login · signup · callback · verify-email
-│   │   ├── (default)/        # 홈 · lounge · insights · my-page(trades 포함) · order · 약관
-│   │   ├── book/             # search · market · [isbn]/detail · sales · reviews
-│   │   └── share/deck/[handle]/
+│   │   ├── (default)/        # 홈 · lounge · insights · users/[handle] · my-page(trades·feedback 포함) ·
+│   │   │                     #   order · reading-log · reading-height(공개 소개) · admin/feedback(운영자) · 약관
+│   │   ├── book/             # search · market · [isbn]/detail · sales(register 포함) · reviews(write 포함)
+│   │   └── share/deck/[handle]/  # 폐지된 카드덱 링크 → 공개 프로필로 영구 리다이렉트
 │   ├── api/                  # route handlers (upload, revalidate)
 │   ├── sitemap.ts · robots.ts · manifest.ts · rss.xml/
 │   ├── not-found.tsx · global-error.tsx
@@ -65,10 +66,10 @@ src/
 │   ├── book/                 # 검색, 상세, AI 챗(SSE), 최근 본 책
 │   ├── book-sale/            # 판매글 등록/수정/탐색/상세, 지도, 비디오 히어로, 이미지 업로드
 │   ├── order/                # 에스크로 결제, 주문 상세, 배송/분쟁 모달
-│   ├── trade/                # 직거래/택배 거래 완료 내역, 양방향 거래 후기, 신뢰 지표 배지/통계
+│   ├── trade/                # 직거래/택배 거래 완료 내역, 양방향 거래 후기, 신뢰 지표 배지/통계 (seller-trust-badge·seller-stats-card)
 │   ├── chat/                 # 1:1 실시간 채팅 및 거래 액션 카드
 │   ├── notification/         # 실시간 알림 (벨 · 팝오버)
-│   ├── reading-log/          # 캘린더·통계·3D 덱·독서 라운지
+│   ├── reading-log/          # 캘린더·통계·독서 키재기·독서 라운지
 │   ├── review/               # Tiptap 리뷰 작성/조회/리액션
 │   ├── comment/              # 댓글 · 좋아요
 │   ├── user/                 # 프로필·통계·위시리스트·탈퇴
@@ -79,17 +80,17 @@ src/
 │   └── announcement/         # 새 기능 소개 모달 (접속 시 한 번)
 ├── shared/
 │   ├── components/           # shadcn · common · editor · map · ads · analytics · icons
-│   ├── providers/            # QueryProvider · UserProvider · SocketProvider
+│   ├── providers/            # QueryProvider · UserProvider · SocketProvider · IntlMessagesProvider
 │   ├── hooks/                # 이미지 업로드, 오버레이, 스크롤, reduced-motion 등
-│   ├── config/               # env · metadata · json-ld · i18n(routing/request)
+│   ├── config/               # env · metadata · json-ld · crawlers · route-segments · i18n(routing/request)
 │   ├── constants/            # PATHS · public-routes · cache
-│   ├── libs/                 # axios · query-client
+│   ├── libs/                 # axios · query-client · requester
 │   ├── utils/                # 포맷터, sanitize, 에러 핸들러, 캐시 퍼지 등
 │   ├── actions/              # revalidate server action
 │   └── i18n/messages/        # ko.json · en.json
 ├── layouts/                  # DefaultLayout · Header · Navigation
 ├── styles/
-├── middleware.ts             # next-intl 로케일 라우팅
+├── middleware.ts             # next-intl 로케일 라우팅 + 크롤러 차단·라우트 형태 검사 (docs/CACHING.md 「크롤 표면」)
 └── __tests__/setup.ts        # Vitest 셋업 (jest-dom 매처 등록)
 ```
 

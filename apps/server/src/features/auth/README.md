@@ -22,7 +22,8 @@ auth/
 ├── decorators/social-auth.decorator.ts
 ├── dtos/
 │   ├── login.dto.ts · register.dto.ts · social-login.dto.ts
-└── types/jwt-payload.type.ts
+├── types/jwt-payload.type.ts
+└── utils/is-token-revoked.ts       # tokenVersion 대조 (전략·소켓 공용)
 ```
 
 ## 2. API 엔드포인트
@@ -112,6 +113,7 @@ POST /auth/send-verification-email  →  Resend로 인증 링크 발송
 | 판매글 작성        | `used-book-sale` |
 | 거래 채팅 개설     | `chat`           |
 | 구매자 지정 · 결제 | `order`          |
+| 직거래 예약 · 완료 | `trade`          |
 
 사기·어뷰징 계정이 거래에 진입하지 못하게 하는 것이 목적입니다.
 
@@ -122,7 +124,7 @@ POST /auth/send-verification-email  →  Resend로 인증 링크 발송
 | `AuthGuard('jwt')`         | 일반 인증 필요 라우트                                                                                                                            |
 | `AuthGuard('jwt-refresh')` | `/auth/refresh` 전용                                                                                                                             |
 | `EmailVerifiedGuard`       | 이메일 인증 완료 회원만                                                                                                                          |
-| `AdminGuard`               | 관리자 포털 전용 API                                                                                                                             |
+| `AdminGuard`               | `role === ADMIN` 전용 API. 현재는 `feedback`의 `/admin/feedback`만 씁니다(웹의 운영자 화면). `apps/admin`은 미사용입니다.                        |
 | `OptionalJwtAuthGuard`     | 인증 헤더가 없으면 익명 접근을 허용하고, 유효한 토큰이면 사용자 정보를 주입합니다. 만료·손상된 토큰은 401로 응답해 클라이언트 갱신을 유도합니다. |
 
 ## 7. 관련 환경 변수

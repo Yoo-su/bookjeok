@@ -11,7 +11,7 @@ user/
 └── components/
     ├── profile/
     │   ├── user-profile/             # 공개 프로필 (/users/[handle])
-    │   ├── profile-edit-modal/       # 닉네임·핸들·소개·프로필 이미지 수정
+    │   ├── profile-edit-modal/       # 닉네임·프로필 이미지 수정 (핸들은 수정 불가)
     │   ├── withdrawal-modal/         # 회원 탈퇴
     │   └── profile-page-json-ld/     # ProfilePage 구조화 데이터
     ├── dashboard/
@@ -37,7 +37,7 @@ user/
 
 ### 회원 탈퇴
 
-`withdrawal-modal` → `DELETE /user/me`. 서버는 `user.withdrawn` 이벤트를 발행하고 9개 리스너가 각 도메인 데이터를 정리합니다([shared 문서](../../../../server/src/shared/README.md#회원-탈퇴-캐스케이드)). 되돌릴 수 없으므로 모달에서 명시적으로 재확인합니다.
+`withdrawal-modal` → `DELETE /user/me`. 서버는 `user.withdrawn` 이벤트를 발행하고 10개 리스너가 각 도메인 데이터를 정리합니다([shared 문서](../../../../server/src/shared/README.md#회원-탈퇴-캐스케이드)). 되돌릴 수 없으므로 모달에서 명시적으로 재확인합니다.
 
 > 진행 중인 결제 거래나 판매자로서 예약 중인 판매글이 있으면 서버가 탈퇴를 차단합니다. 구매자로 예약된 판매글은 탈퇴와 함께 판매중으로 풀립니다.
 
@@ -51,7 +51,7 @@ user/
 
 공개 프로필의 독서 기록은 **캐릭터 없는 독서 키재기**입니다(2026-09-25, 이전에는 PC 캘린더·모바일 리스트). 주인의 키는 그 사람 기기에만 있으므로 쌓은 책만 세우고, 공유·키 입력은 없습니다. 독서 기록이 공개이고 기록이 있을 때만 보이며, 첫 연도는 가장 최근 기록의 연도입니다. 코드는 [`reading-log`](../reading-log/README.md)의 `public-reading-stack`이고 `next/dynamic`으로 불러옵니다. 독서 키재기는 브라우저에서만 그리므로 프로필 HTML에는 읽은 책 제목이 들어가지 않습니다.
 
-공개 프로필에는 [`order`](../order/README.md) 기능의 `seller-stats-card` / `seller-trust-badge`가 함께 노출되어 "거래 완료 N건 · 긍정 후기 N%"를 보여줍니다.
+공개 프로필에는 [`trade`](../trade/README.md) 기능의 `seller-stats-card` / `seller-trust-badge`가 함께 노출되어 "거래 완료 N건 · 긍정 후기 N%"를 보여줍니다.
 
 ## 3. 관련
 

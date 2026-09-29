@@ -1,10 +1,10 @@
 /**
  * AI 도서 요약 프롬프트를 생성합니다.
- * 네이버 책 API의 description과 차별화된 분석적 요약을 생성하도록 설계되었습니다.
+ * 출판사 책소개(`books.description`)와 차별화된 분석적 요약을 생성하도록 설계되었습니다.
  *
  * @param title - 책 제목
  * @param author - 저자명
- * @param description - 네이버 책 API에서 제공하는 책 소개 (선택)
+ * @param description - 도서 DB의 책 소개 (선택)
  * @returns Gemini API에 전달할 프롬프트 문자열
  */
 export const getPromptText = (

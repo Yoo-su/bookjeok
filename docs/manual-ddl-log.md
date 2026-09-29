@@ -44,12 +44,12 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-09 | `books.salesPoint` 컬럼 추가 (알라딘 판매지수)                                         | `ab4d58b2`              |
 | 2026-09-09 | `reading_logs.isbn` 외래키 추가 (누락돼 있던 제약)                                     | `745d0f16`              |
 | 2026-09-12 | 인덱스 정리 (제거 4·교체 3·외래키 16 추가·유니크 이름 2 변경) + 고아 enum 드롭         | `84b78e24`              |
-| 2026-09-23 | `book_ingest` 역할 생성 + `books` RLS 정책 2개 (신간 적재 도구 전용)                   | (미커밋)                |
+| 2026-09-23 | `book_ingest` 역할 생성 + `books` RLS 정책 2개 (신간 적재 도구 전용)                   | `f00dad86`, 9절         |
 | 미상       | `books` 검색 키 표현식 인덱스 `IDX_books_search_key_trgm` (2026-09-23에 발견·기록)     | (코드는 아래 10절)      |
 | 2026-09-23 | 컬럼별 trgm 인덱스 3개 제거 (검색 키 코드 배포 후, 37MB 회수)                          | `79b04b2f`, 10절        |
-| 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「독서 키재기」용 실측 판형·표지색, 빈 테이블) | (미커밋), 11절          |
+| 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「독서 키재기」용 실측 판형·표지색, 빈 테이블) | `04b6bd55`, 11절        |
 | 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)      | `532dfd31`, 12절        |
-| 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)        | `9546a94e`, 13절        |
+| 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)       | `9546a94e`, 13절        |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).

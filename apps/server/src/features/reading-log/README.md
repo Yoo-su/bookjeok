@@ -10,15 +10,17 @@ reading-log/
 ├── constants.ts                       # 라운지 페이지 크기·집계 기간
 ├── controllers/
 │   ├── reading-log.controller.ts      # /reading-logs (개인, 인증 필요)
-│   └── lounge.controller.ts           # /reading-logs/lounge (공개)
-├── services/reading-log.service.ts
+│   ├── lounge.controller.ts           # /reading-logs/lounge (공개)
+│   └── public-reading-log.controller.ts # /reading-logs/users/:handle/stack (공개 프로필의 독서 키재기)
+├── services/
+│   ├── reading-log.service.ts
+│   └── reading-log.service.spec.ts
 ├── entities/reading-log.entity.ts
 ├── listeners/reading-log-cleanup.listener.ts   # user.withdrawn
 ├── utils/cursor.util.ts                # 커서 조각 검증 (500 → 400)
-├── dtos/
-│   ├── create-reading-log.dto.ts
-│   └── update-reading-log.dto.ts
 └── dtos/
+    ├── create-reading-log.dto.ts
+    ├── update-reading-log.dto.ts
     └── update-reading-log-settings.dto.ts
 ```
 
@@ -32,11 +34,18 @@ reading-log/
 | GET    | `/`                  | 월별 독서 기록 조회 (캘린더용)              |
 | GET    | `/list`              | 커서 기반 목록 조회 (무한 스크롤)           |
 | GET    | `/stats`             | 월간·연간 독서 통계                         |
+| GET    | `/stack`             | 한 해의 독서 키재기 데이터 (`?year=`)       |
 | GET    | `/book/:isbn/status` | 이 책을 기록한 횟수·마지막 날짜 (재독 안내) |
 | GET    | `/settings`          | 라운지 공개 설정 조회                       |
 | PATCH  | `/settings`          | 라운지 공개 설정 변경                       |
 | PATCH  | `/:id`               | 기록 수정 (메모·날짜)                       |
 | DELETE | `/:id`               | 기록 삭제                                   |
+
+### 공개 독서 키재기 (`/reading-logs/users`) — 인증 없음
+
+| 메서드 | 경로             | 설명                                                   |
+| ------ | ---------------- | ------------------------------------------------------ |
+| GET    | `/:handle/stack` | 공개 프로필의 독서 키재기 (`?year=`, 비공개면 빈 목록) |
 
 ### 독서 라운지 (`/reading-logs/lounge`) — 공개
 
@@ -48,8 +57,8 @@ reading-log/
 | GET    | `/book/:isbn/readers` | 특정 도서를 읽은 독자 목록                  |
 
 라운지 엔드포인트에는 **응답 캐시를 걸지 않았습니다.** `/active-readers`에 5분
-캐시를 검토했다가 뺐습니다 — 2026-09-13 기준 `reading_logs` 50행, 공개 사용자
-31명이라 집계 비용이 사실상 0이고, 순위 반영만 5분 늦어지는 손해만 남습니다.
+캐시를 검토했다가 뺐습니다 — 2026-09-29 운영 실측으로 `reading_logs` 181행(기록한 사용자 14명),
+공개 설정 사용자 46명이라 집계 비용이 사실상 0이고, 순위 반영만 5분 늦어지는 손해만 남습니다.
 캐시를 다시 검토한다면 **행 수를 먼저 재세요.**
 
 ## 3. 엔티티 — `ReadingLog` (`reading_logs`)
