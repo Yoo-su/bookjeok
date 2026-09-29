@@ -29,9 +29,9 @@
 | `id`             | `bigint`       | PK, auto-increment       |
 | `keyword`        | `varchar(100)` | 정규화된 검색어 (UNIQUE) |
 | `searchCount`    | `bigint`       | 누적 검색 횟수           |
-| `lastSearchedAt` | `timestamp`    | 최근 검색 시각           |
-| `createdAt`      | `timestamp`    | 생성 시각                |
-| `updatedAt`      | `timestamp`    | 수정 시각                |
+| `lastSearchedAt` | `timestamptz`  | 최근 검색 시각           |
+| `createdAt`      | `timestamptz`  | 생성 시각                |
+| `updatedAt`      | `timestamptz`  | 수정 시각                |
 
 ## 4. 검색어 정규화 규칙
 

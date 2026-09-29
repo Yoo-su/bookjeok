@@ -1,6 +1,6 @@
 # 🏗️ Frontend Component Architecture Guide
 
-이 문서는 `bookjeok-front` 프로젝트의 컴포넌트 구조 원칙을 정의합니다.
+이 문서는 `apps/web`(북적 웹 프론트엔드)의 컴포넌트 구조 원칙을 정의합니다.
 새로운 기능을 개발하거나 리팩토링할 때, 모든 에이전트와 개발자는 이 규칙을 준수해야 합니다.
 
 ## 1. 핵심 철학: "Context-Based Grouping" (문맥 기반 그룹화)

@@ -65,6 +65,7 @@
   - **`widgets/`**: 전역 채팅 위젯 및 토글 버튼 (`chat-widget`, `chat-toggle-button`)
   - **`room/`**: 채팅방 내부 UI (`chat-room`, `header`, `message-list`, `input`, `chat-item`)
   - **`list/`**: 채팅방 목록 (`chat-list`)
+  - **`trade/`**: 채팅방 안의 거래 UI (`trade-status-banner`·`trade-message-card`(결제 플래그 뒤), `direct-trade-banner`(직거래 예약·완료), `select-buyer-modal`)
 
 ## 2. 핵심 로직 흐름
 

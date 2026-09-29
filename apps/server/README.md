@@ -43,7 +43,7 @@
 ```
 src/
 ├── app/app.module.ts   # 루트 모듈 (TypeORM, CLS 트랜잭션, Throttler, Cache, Schedule)
-├── main.ts             # 엔트리포인트 (helmet, compression, CORS, 전역 필터/인터셉터, ValidationPipe, Swagger)
+├── main.ts             # 엔트리포인트 (cookie-parser, helmet, compression, CORS, 전역 필터/인터셉터, ValidationPipe, Swagger)
 ├── features/           # 도메인 모듈 (Controller - Service - Entity - DTO)
 │   ├── auth            # JWT 인증, OAuth, 티켓 교환, 이메일 인증 가드, Throttler
 │   ├── book            # 도서 카탈로그 조회 및 상세 정보 제공
@@ -61,6 +61,7 @@ src/
 │   ├── user            # 사용자 프로필 & tokenVersion 관리
 │   ├── wishlist        # 위시리스트
 │   ├── insights        # 서비스 전체 누적 통계 집계
+│   ├── feedback        # 사용자 문의·제보 접수, 운영자 답변, 답변 알림
 │   └── health          # @nestjs/terminus 헬스체크
 └── shared/             # 횡단 관심사
     ├── activity/       # 활동 로그 (@TrackActivity + 인터셉터)

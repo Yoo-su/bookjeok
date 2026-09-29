@@ -7,6 +7,15 @@
 >
 > - 서버: [`apps/server/src/features/trade/README.md`](../apps/server/src/features/trade/README.md) · [`apps/server/src/features/order/README.md`](../apps/server/src/features/order/README.md)
 > - 웹: [`apps/web/src/features/trade/README.md`](../apps/web/src/features/trade/README.md) · [`apps/web/src/features/order/README.md`](../apps/web/src/features/order/README.md)
+>
+> **구현과 달라진 점 (2026-09-29 코드와 대조).** 아래 본문은 초기 설계 그대로라 다음이 다릅니다.
+>
+> - `TradeReview`는 `trade/entities/`에 있고 `Order`가 아니라 **`TradeCompletion`**(`completionId`)에 붙습니다. 유일 제약은 `(completionId, reviewerId)`라 한 거래에 양쪽이 각각 한 건씩 씁니다(본문의 "구매자→판매자 단방향, `orderId` 참조"는 폐기).
+> - 후기 API는 `/trade-reviews`에 `GET eligibility/:completionId`가 추가됐고, 예약·완료 API는 `/trades/*`입니다. `TradeReviewController`와 `/trades`에는 **`PaymentFeatureGuard`를 걸지 않습니다**(직거래 후기가 결제 플래그와 무관해야 하므로). 가드는 `OrderController`·`TossWebhookController`에만 있습니다.
+> - 그 결과 웹 프로필의 **거래 후기 탭은 플래그와 무관하게 노출**되고, 플래그 뒤에 남은 것은 `SellerTrustBadge`, 채팅 거래 배너·카드, `tradeMethod` 선택 UI, `/order/*`·`/my-page/purchases`·`/my-page/sales-orders` 진입입니다.
+> - `ChatMessageType`에 `IMAGE`가 추가됐습니다. 알림은 이후 직거래 2종(`TRADE_RESERVED`·`TRADE_COMPLETED`)과 문의 답변(`FEEDBACK_REPLIED`)이 붙어 총 17종입니다(본문의 "11종"은 결제 도입 당시 수).
+> - 본문에 적은 일부 이름은 구현에서 바뀌었습니다(예: 토스 서비스 메서드 `confirmEscrowPayment` → 코드의 `toss-payments.service.ts` 참고, `orderApi`/`tradeReviewApi` 묶음 객체 대신 개별 함수, `TradeReviewForm` → `trade-review-modal`, 라우트 상수 `MY_PURCHASES`/`MY_SALES_ORDERS` → `MY_PAGE_PURCHASES`/`MY_PAGE_SALES_ORDERS`). 이름은 코드에서 확인하세요.
+> - `getSellerStats`는 여전히 후기를 전량 조회해 메모리에서 집계합니다(`docs/book-data-migration-plan.md` 9-c 「결제 활성화 전 점검 항목」).
 
 ## 1. 개요 및 원칙
 
@@ -150,7 +159,7 @@ stateDiagram-v2
   - 백엔드: `FEATURE_PAYMENT_ENABLED=false` (PG 승인 완료 시 `true` 전환)
   - 프론트엔드: `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED=false` (PG 승인 완료 시 `true` 전환)
 - **백엔드 격리**:
-  - `PaymentFeatureGuard`를 `OrderController`, `TossWebhookController`, `TradeReviewController`에 적용하여 비활성화 시 503 Service Unavailable 차단.
+  - `PaymentFeatureGuard`를 `OrderController`, `TossWebhookController`에 적용하여 비활성화 시 503 Service Unavailable 차단. (초기 설계에는 `TradeReviewController`도 있었으나 직거래 후기를 위해 제외됨 — 상단 정오표 참고)
   - `OrderSchedulerService`의 6개 크론 잡에 플래그 가드를 적용하여 비활성화 시 0 반환 및 DB 폴링 차단.
   - `ChatService.leaveRoom`에서 플래그 OFF 시 활성 주문 검사를 우회하여 일반 채팅방 퇴장 보장.
   - `TossPaymentsService`에서 시크릿키 부재 시에도 서버 구동에 영향 없도록 안전 처리.
@@ -159,7 +168,7 @@ stateDiagram-v2
   - `TradeMessageCard`: 결제 및 주문 상세 버튼 숨김 및 `useOrderDetailQuery` 차단.
   - 판매글 작성/수정 폼: `tradeMethod` 선택 UI를 숨기고 `DIRECT_ONLY`(직거래)로 기본값 고정.
   - 결제 및 주문 관련 모든 페이지 라우트(`/order/*`, `/my-page/sales-orders`): 접근 시 홈(`/`)으로 즉시 리디렉트.
-  - 유저 프로필 페이지: 거래 후기 탭 및 `SellerTrustBadge` 미노출 및 관련 쿼리 비활성화.
+  - 유저 프로필 페이지: `SellerTrustBadge` 미노출. (거래 후기 탭은 현재 플래그와 무관하게 노출 — 상단 정오표 참고)
 
 ---
 
@@ -176,7 +185,7 @@ stateDiagram-v2
 1. **타임존 정비**:
    - `ChatRoom`, `ChatMessage`의 `@CreateDateColumn()`, `@UpdateDateColumn()`에 `{ type: 'timestamptz' }` 명시 확인 및 적용.
 2. **ChatMessage 엔티티 확장**:
-   - `ChatMessageType` enum 추가 (`TEXT`, `SYSTEM`, `TRADE_STATUS`, `TRADE_ACTION`).
+   - `ChatMessageType` enum 추가 (`TEXT`, `SYSTEM`, `TRADE_STATUS`, `TRADE_ACTION`; 이후 `IMAGE` 추가).
    - `type` 컬럼 (기본값 `TEXT`), `metadata` 컬럼 (`jsonb`, nullable) 추가.
 3. **UsedBookSale 엔티티 확장**:
    - `TradeMethod` enum 추가 (`DIRECT_ONLY`, `DELIVERY_ONLY`, `BOTH`).
@@ -186,7 +195,7 @@ stateDiagram-v2
    - 필드: `id`, `status`(`OrderStatus`), `amount`, `paymentKey`, 배송지 스냅샷(`recipientName`, `recipientPhone`, `zipCode`, `address`, `addressDetail`), 배송정보(`carrier`, `trackingNumber`), 시각 필드들(`expiresAt`, `deliveredAt`, `disputedAt`, `paidAt`, `shippedAt`, `confirmedAt`, `cancelledAt`), 사유(`disputeReason`, `cancelReason`), `@VersionColumn() version`.
    - 관계: `sale`(`UsedBookSale`), `buyer`(`User`), `seller`(`User`), `chatRoom`(`ChatRoom`), `tradeReview`(`TradeReview` 1:1).
    - 인덱스: `[status, expiresAt]`, `[status, deliveredAt]`, `[status, disputedAt]`, `[buyerId]`, `[sellerId]`.
-5. **TradeReview 엔티티 (`apps/server/src/features/order/entities/trade-review.entity.ts`)**:
+5. **TradeReview 엔티티 (초기 설계 위치 `order/entities/trade-review.entity.ts` — 현재는 `trade/entities/trade-review.entity.ts`, `completionId`에 연결)**:
    - `TradeReviewTag` enum 정의 (긍정 태그 5종, 부정 태그 4종).
    - 필드: `id`(PK, number), `orderId`(`varchar`, `Order.id` 참조), `order`(`Order` 1:1), `reviewer`(`User`), `targetUser`(`User`), `tags`(`simple-array`), `content`(text, nullable), `createdAt`, `updatedAt`(`timestamptz`).
    - 인덱스: `[targetUserId, createdAt]`.
@@ -518,7 +527,7 @@ cmd.exe /c "pnpm --filter @bookjeok/web test"
    - `FEATURE_PAYMENT_ENABLED=false` (서버)
    - `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED=false` (웹)
 2. **백엔드 보안 가드 & 스케줄러 격리**:
-   - `PaymentFeatureGuard`: `OrderController`, `TossWebhookController`, `TradeReviewController`에 503 차단 적용.
+   - `PaymentFeatureGuard`: `OrderController`, `TossWebhookController`에 503 차단 적용. (`TradeReviewController` 제외 — 상단 정오표 참고)
    - `OrderSchedulerService`: 6개 크론 잡 전체에 `isPaymentEnabled()` 검사 및 조기 반환 적용.
    - `ChatService.leaveRoom`: 플래그 비활성화 시 활성 주문 검사 우회하여 일반 채팅 기능 영향 방지.
    - `TossPaymentsService`: 시크릿 키 부재 시에도 서버 구동 실패 방지.
@@ -527,7 +536,7 @@ cmd.exe /c "pnpm --filter @bookjeok/web test"
    - `TradeMessageCard`: 결제 및 상세 버튼 숨김 및 주문 쿼리 비활성화.
    - `BookSaleForm` / `BookSaleEditForm`: `tradeMethod` 선택 UI 숨김 및 기본값 `DIRECT_ONLY` 고정.
    - 주문/결제 라우트(`/order/*`, `/my-page/sales-orders`): 접근 시 홈(`/`) 리디렉트.
-   - `UserProfile`: 거래 후기 탭 및 `SellerTrustBadge` 숨김 및 쿼리 비활성화.
+   - `UserProfile`: `SellerTrustBadge` 숨김. (거래 후기 탭은 노출 유지 — 상단 정오표 참고)
 4. **동작 검증**:
    - `FEATURE_PAYMENT_ENABLED=false` 환경에서 기존 직거래 등록, 채팅 중계, 방 나가기 플로우 100% 정상 작동 확인.
    - 모노레포 전체 패키지 빌드(`pnpm build`) 100% 성공 검증.

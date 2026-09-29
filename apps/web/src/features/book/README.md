@@ -86,7 +86,7 @@ sse-chat-client ──▶ POST /search/ai/stream (fetch + ReadableStream)
 
 ### 최근 본 책
 
-`use-recent-book-store`는 Zustand persist로 브라우저 스토리지에 저장합니다. 서버 상태가 아니므로 React Query가 아닌 클라이언트 스토어를 사용합니다.
+`use-recent-book-store`는 Zustand persist로 브라우저 **sessionStorage**(키 `recent-books`, `RECENT_BOOKS_KEY`)에 저장합니다. 탭을 닫으면 사라지고 로그아웃 시 `clearAuth()`가 지웁니다. 서버 상태가 아니므로 React Query가 아닌 클라이언트 스토어를 사용합니다.
 
 ## 3. SEO
 

@@ -27,7 +27,7 @@ order/
 │   └── my-sales-orders/                 # 내 판매 주문 (list / card / skeleton)
 ├── utils/
 │   └── order-storage.ts                 # 배송지 스냅샷 임시 저장
-└── __tests__/                           # 6개 테스트 파일
+└── __tests__/                           # 테스트 파일
 ```
 
 ---

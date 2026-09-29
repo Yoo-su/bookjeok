@@ -20,7 +20,7 @@
 
 ### 3. 도메인 커버리지
 
-`auth`, `book`, `book-sale`, `chat`, `comment`, `insights`, `llm`, `notification`, `order`, `reading-log`, `review`, `trade`, `user` 13개 도메인의 API 함수를 제공합니다.
+`auth`, `book`(AI 요약 조회 포함), `book-sale`, `chat`, `comment`, `feedback`, `insights`, `notification`, `order`, `reading-log`, `review`, `trade`, `user` 13개 도메인의 API 함수를 제공합니다. 멱등 키 헤더 처리는 `src/utils/idempotency.ts`.
 
 ---
 

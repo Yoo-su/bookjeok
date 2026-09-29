@@ -4,13 +4,17 @@
 
 ## 1. 주요 파일 및 역할
 
-- **`llm.controller.ts`**: `/llm` 경로의 API 엔드포인트를 정의합니다. 클라이언트로부터 책 요약 생성 요청을 받아 `LlmService`로 전달합니다.
-- **`llm.service.ts`**: AI 모델과의 상호작용을 담당하는 핵심 서비스입니다.
-  - `@google/generative-ai` SDK를 사용하여 Gemini 모델을 초기화합니다.
-  - `generateBookSummary()`: 요청받은 책 정보와 사전 정의된 프롬프트를 조합하여 AI 모델에 질의하고, 생성된 텍스트를 반환합니다.
-- **`dtos/book-summary.dto.ts`**: 책 요약 요청 시 클라이언트가 보내야 할 데이터 형식( `title`, `author`)을 정의하고 유효성을 검증합니다.
-- **`constants/index.ts`**: 사용할 AI 모델의 이름(`gemini-2.5-pro`)과 같은 상수를 정의합니다.
-- **`utils/get-prompt-text.ts`**: AI 모델에 보낼 프롬프트 텍스트를 생성하는 유틸리티 함수입니다. 프롬프트 내용을 한 곳에서 관리하여 일관성을 유지하고 수정을 용이하게 합니다.
+- **`controllers/llm.controller.ts`**: `/llm` 경로의 API 엔드포인트를 정의합니다. 저장된 요약 조회(`GET`)와 요약 생성(`POST`, JWT)을 `LlmService`로 전달합니다.
+- **`services/llm.service.ts`**: AI 모델과의 상호작용을 담당하는 핵심 서비스입니다.
+  - `@google/generative-ai` SDK로 Gemini 모델을 초기화합니다.
+  - `getSavedSummary(isbn)`: `ai_book_summaries`에 저장된 요약을 조회합니다.
+  - `generateBookSummary()`: 저장본이 있으면 그대로 반환하고, 없으면 프롬프트와 JSON 응답 스키마(`summary`·`keyPoints`·`targetAudience`·`keywords`)로 모델을 호출합니다. 성공하면 `ai_book_summaries`에 ISBN 기준으로 캐싱하고, 성공·실패 모두 `ai_request_logs`(토큰·지연시간·상태)에 남깁니다.
+  - 호출이 실패해도 도서 소개글이 30자를 넘으면 소개글 앞 200자로 만든 대체 요약을 반환하고, 아니면 `EXTERNAL_API_ERROR`(503)를 던집니다.
+- **`dtos/book-summary.dto.ts`**: 요약 요청 본문(`title`, `author`, `description`, `isbn`, `publisher`)을 정의하고 검증합니다. 응답 형식은 `dtos/book-summary-response.dto.ts`.
+- **`entities/`**: `ai-book-summary.entity.ts`(`ai_book_summaries`, ISBN별 캐시), `ai-request-log.entity.ts`(`ai_request_logs`, search 모듈의 AI 호출 로그도 같은 테이블).
+- **`constants/llm-model.ts`**: 요약에 쓰는 모델명 상수(`gemini-3.1-flash-lite`). search 모듈의 RAG는 이 상수 대신 `GEMINI_MODEL_NAME` 환경 변수를 읽습니다.
+- **`utils/get-prompt-text.ts`**: 프롬프트 텍스트를 만드는 유틸리티. **`utils/extract-json.ts`**는 search 모듈도 가져다 씁니다.
+- **`listeners/llm-cleanup.listener.ts`**: `user.withdrawn` 이벤트로 탈퇴 회원의 AI 로그를 정리합니다.
 
 ## 2. API 엔드포인트
 
@@ -23,30 +27,25 @@
 
 ### AI 책 요약 생성
 
-클라이언트가 특정 책에 대한 AI 요약을 요청하면, 백엔드는 Google Gemini API와 통신하여 결과를 받아 반환합니다.
-
 ```mermaid
 sequenceDiagram
     participant C as 클라이언트
     participant S as bookjeok 서버
-    participant AI as Google Gemini AI
+    participant DB as PostgreSQL
+    participant AI as Google Gemini
 
-    C->>S: 1. POST /llm/book-summary ({ title, author })
-
-    S->>S: 2. [LlmController] getBookSummary() 호출
-    S->>S: 3. [LlmService] generateBookSummary(title, author) 호출
-
-    S->>S: 4. [getPromptText] 프롬프트 생성
-    S->>AI: 5. 생성된 프롬프트로 generateContent() API 호출
-    AI-->>S: 6. 요약 텍스트 생성 및 응답
-
-    S-->>C: 7. 200 OK 응답 (생성된 요약 텍스트 포함)
+    C->>S: 1. POST /llm/book-summary ({ title, author, description?, isbn?, publisher? })
+    S->>DB: 2. isbn이 있으면 ai_book_summaries 조회 → 있으면 즉시 반환
+    S->>AI: 3. 프롬프트 + JSON 응답 스키마로 generateContent()
+    AI-->>S: 4. summary·keyPoints·targetAudience·keywords
+    S->>DB: 5. ai_request_logs 기록, isbn이 있으면 ai_book_summaries에 캐싱
+    S-->>C: 6. 201 응답 (BookSummaryResponseDto)
 ```
 
-1.  **API 요청**: 클라이언트가 책 제목(`title`)과 저자(`author`) 정보를 담아 `POST /llm/book-summary` API를 호출합니다.
-2.  **서비스 호출**: `LlmController`는 요청 데이터를 받아 `LlmService.generateBookSummary()` 메서드를 호출합니다.
-3.  **프롬프트 생성**: `LlmService`는 `getPromptText` 유틸리티 함수를 사용해 AI 모델에 최적화된 프롬프트 문자열을 생성합니다.
-4.  **AI 모델 호출**: 서비스는 `@google/generative-ai` SDK를 통해 미리 초기화된 Gemini 모델의 `generateContent()` 메서드를 호출하여 AI에게 요약 생성을 요청합니다.
-5.  **결과 반환**: AI 모델이 생성한 텍스트를 응답으로 받아, 해당 텍스트를 클라이언트에게 최종적으로 반환합니다.
+1.  **저장본 우선**: `isbn`이 있고 이미 저장된 요약이 있으면 모델을 호출하지 않습니다.
+2.  **프롬프트 생성**: `getPromptText`가 제목·저자·소개글·출판사로 프롬프트를 만듭니다.
+3.  **모델 호출**: 응답을 JSON 스키마로 강제하고(`temperature 0.2`) 키워드의 `#` 접두를 벗깁니다.
+4.  **기록·캐싱**: 성공하면 `ai_book_summaries`에 저장합니다(저장 전 `BookService.resolveBook(isbn)`으로 도서 존재를 확인하는 가드일 뿐 도서를 만들지는 않습니다). 로그 저장이나 캐싱이 실패해도 응답은 그대로 나갑니다.
+5.  **실패 시**: 소개글이 충분하면 소개글 기반 대체 요약, 아니면 503 `EXTERNAL_API_ERROR`.
 
-이러한 구조를 통해 AI 모델과 관련된 로직(프롬프트 엔지니어링, API 키 관리, SDK 사용법 등)을 `LlmModule` 내에 캡슐화하여 다른 비즈니스 로직과의 분리를 명확히 합니다.
+AI 모델과 관련된 로직(프롬프트, API 키 관리, SDK 사용법 등)은 `LlmModule` 안에 두어 다른 비즈니스 로직과 분리합니다.

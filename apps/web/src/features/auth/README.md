@@ -20,6 +20,7 @@ auth/
     │   └── signup-form/
     ├── guards/
     │   ├── auth-guard/                    # 로그인 필요 라우트 보호
+    │   ├── admin-guard/                   # 운영자(role ADMIN)만 통과 — /admin/feedback
     │   └── guest-guard/                   # 로그인 상태면 진입 차단
     ├── email-verification-alert.tsx       # 미인증 회원 안내 + 재발송
     └── __tests__/email-verification-alert.test.tsx
@@ -72,10 +73,11 @@ Access Token 만료는 `@bookjeok/api-client`의 Axios 인터셉터가 처리합
 
 ## 3. 가드
 
-| 컴포넌트      | 동작                                               |
-| ------------- | -------------------------------------------------- |
-| `auth-guard`  | 비로그인 시 로그인으로 리다이렉트 + 복귀 경로 저장 |
-| `guest-guard` | 이미 로그인했으면 로그인/회원가입 페이지 진입 차단 |
+| 컴포넌트      | 동작                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `auth-guard`  | 비로그인 시 로그인으로 리다이렉트 + 복귀 경로 저장                                                                               |
+| `admin-guard` | `role !== ADMIN`이면 접근 차단. 현재 `admin-feedback-view`(`/admin/feedback`)에만 씁니다. 최종 차단은 서버 `AdminGuard`가 합니다 |
+| `guest-guard` | 이미 로그인했으면 로그인/회원가입 페이지 진입 차단                                                                               |
 
 공개 라우트 목록은 `shared/constants/public-routes.ts`에 있고, 라우트 상수는 `shared/constants/paths.ts`(`PATHS`)를 사용합니다. 경로 문자열을 하드코딩하지 마세요.
 

@@ -1,6 +1,6 @@
 # 도서 데이터 탈(脫) 외부 API 마이그레이션 계획
 
-**상태: 진행 중 · 최종 갱신 2026-09-25 (적재 도구 자유 검색·`book_dimensions` 적재 추가)**
+**상태: 진행 중 · 최종 갱신 2026-09-29 (적재 도구 베스트셀러 모드·Phase 4 일부 정리 반영, `books` 65,661행 실측)**
 
 > **이 문서의 서술은 작성 시점 기준입니다.** 2026-09-23에 코드·운영 페이지·공개
 > API와 대조해 현재 상태 서술을 동기화했지만, 본문 곳곳의 수치와 "지금은 ~이다"는
@@ -47,7 +47,8 @@
 **D9의 현재 답:** 카카오 책 검색 API를 **서버가 아니라 운영자 도구의 입구로만**
 씁니다. 런타임 경로(검색·상세·`resolveBook`)에는 여전히 외부 공급처가 없습니다.
 그래서 사용자가 DB에 없는 책으로 판매글·리뷰를 쓰는 길은 없으며, 이것은
-2026-09-08에 감수하기로 한 것입니다(사용자 0명 단계).
+2026-09-08에 감수하기로 한 것입니다(당시 사용자 0명 단계. 2026-09-29 현재는 탈퇴 제외 47명이 있어
+전제가 바뀌었으니, DB에 없는 책 문의가 들어오면 「문의·제보」의 책 요청으로 받아 적재 도구로 넣습니다).
 
 ### 끝난 것
 
@@ -541,7 +542,7 @@ HTTP 왕복만큼 상세가 느렸습니다.
 - [x] ~~결정된 공급처의 어댑터 구현~~ — 서버에 붙이지 않음. 포트는 그대로 둔다
 - [x] ~~환경변수 등록~~ — 서버·웹이 쓰지 않으므로 `.env.example`·`globalEnv` 대상 아님.
       키(`KAKAO_REST_API_KEY`)는 도구를 돌리는 머신의 로컬 env에만 둔다
-- [ ] 커버리지 실측 — 1차는 출판사 기준으로 2026-09-23에 함(6-d). 판매글 ISBN 기준은 사용자 0명이라 표본 없음
+- [ ] 커버리지 실측 — 1차는 출판사 기준으로 2026-09-23에 함(6-d). 판매글 ISBN 기준은 당시 사용자 0명이라 표본 없음(2026-09-29 현재 판매글 28건)
 - [x] ~~알라딘 어댑터는 폴백으로 남겨둔다~~ — 2026-09-08에 제거됨
 
 제약으로 남아 있는 것은 「확정된 결정」 6번뿐입니다 — **카카오를 쓰더라도 주
@@ -1996,11 +1997,11 @@ Postgres가 인덱스가 있어도 Seq Scan을 택합니다(`reading_logs`엔 `(
 `FEATURE_PAYMENT_ENABLED`가 꺼져 있어 지금은 잠복 상태입니다. **결제를 켜기 전에
 반드시 확인하세요.**
 
-- [ ] `trade-completion.service.ts` — `persistReservation`(74행)과
-      `persistReservationCancel`(141행)에 `hasActiveOrder()` 검증이 없습니다.
-      `persistDirectCompletion`(220행)에는 있습니다. 결제 대기·완료 중인 판매글을
-      판매자가 직거래 예약으로 덮어쓰거나 판매중으로 되돌릴 수 있습니다
-- [ ] `order.service.ts` — 택배 주문 생성 시 `sale.reservedForUserId` 미할당
+- [x] `trade-completion.service.ts` — `persistReservation`·`persistReservationCancel`에
+      `hasActiveOrder()` 검증이 없어 결제 대기·완료 중인 판매글을 판매자가 직거래 예약으로
+      덮어쓰거나 판매중으로 되돌릴 수 있었습니다. **반영 확인(2026-09-29)** — 세 메서드 모두
+      `SALE_IN_TRADE_CANNOT_CHANGE_STATUS`로 막습니다(커밋 `9ea1a3c6`)
+- [ ] `order.service.ts` — 택배 주문 생성(`persistSelectBuyer`) 시 `sale.reservedForUserId` 미할당 (2026-09-29 코드 확인, 여전히 미할당)
 - [ ] `UsedBookSale`에 낙관적 락(`@VersionColumn`)이 없습니다. `Order`에는 있습니다
 - [ ] `trade-review.service.ts` — `getSellerStats`가 리뷰 전량을 메모리에 올려
       JS로 집계합니다. 현재 76건이라 문제없으나 리뷰가 늘면 바뀝니다
@@ -2065,6 +2066,8 @@ $env:SEARCH_DATABASE_URL='<접속 문자열>'; pnpm --filter @bookjeok/server ex
 
 - 접속 문자열은 `apps/server/.env.prod.local`의 `SURVEY_DATABASE_URL`에 있습니다
   (gitignore 대상, 권한 600).
+- 윈도우에는 그 파일이 없지만 `tools/book-ingest/.env`의 `INGEST_DATABASE_URL`(`book_ingest` 역할)로
+  같은 DB를 **SELECT**할 수 있습니다(books 외 테이블도 조회됨, 2026-09-28·29 확인. UPDATE·DDL 불가).
 - **직접 연결(`db.<ref>.supabase.co`)은 쓸 수 없습니다.** AAAA 레코드만 있는
   IPv6 전용 호스트인데 이 개발 머신에 전역 IPv6가 없습니다.
 - **Supabase 풀러(`aws-1-ap-northeast-2.pooler.supabase.com:5432`)로 접속합니다.**

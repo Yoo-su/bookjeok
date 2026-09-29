@@ -34,7 +34,7 @@ export const PATHS = {
 ## 2. 상태 관리 (Zustand)
 
 - 스토어 위치: `features/[feature]/stores/`
-- 영속성: 인증/최근 본 데이터 등은 `zustand/middleware`의 `persist` 사용 (`auth-storage`, `recent-book-storage`).
+- 영속성: 인증/최근 본 데이터 등은 `zustand/middleware`의 `persist` 사용 (`auth-storage`, `recent-books`(sessionStorage), `announcements-seen`, `reading-log-view` 등).
 - 셀렉터 패턴: 불필요한 전체 재렌더링 방지를 위해 개별 상태 구독.
 
 ```typescript
@@ -47,7 +47,7 @@ const user = useAuthStore((state) => state.user);
 
 ### 3-1. 채팅 시스템
 
-- 메시지 타입: `ChatMessageType` (`TEXT`, `SYSTEM`, `TRADE_STATUS`, `TRADE_ACTION`).
+- 메시지 타입: `ChatMessageType` (`TEXT`, `SYSTEM`, `TRADE_STATUS`, `TRADE_ACTION`, `IMAGE`).
 - 거래 상태 변경 시 `TRADE_STATUS` 소켓 수신 → TanStack Query 캐시 자동 갱신 (`orderKeys`, `bookSaleKeys`, `chatKeys`).
 - 모바일 백그라운드 복귀 대응: 재연결 시 `joinRooms` 자동 재전송.
 

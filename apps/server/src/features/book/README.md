@@ -1,9 +1,9 @@
 # Book Module (`features/book`)
 
-도서 **마스터 데이터**(`Book` 엔티티)와 외부 도서 API 연동을 담당합니다.
+도서 **마스터 데이터**(`Book`·`BookDimension` 엔티티)와 자체 DB 기반 도서 검색·상세를 담당합니다.
 
-> **외부 도서 API 호출은 이 모듈이 단독으로 담당합니다.** 웹에서 공급처를 직접
-> 부르지 않습니다. 알라딘 종료(2026-10-30) 대응 진행 상황은
+> **런타임에 외부 도서 API를 호출하지 않습니다.** 검색·상세 모두 자체 DB 단독이고(2026-09-08),
+> 웹도 공급처를 직접 부르지 않습니다. 신규 도서는 운영자 적재 도구로 넣습니다. 알라딘 종료(2026-10-30) 대응 진행 상황은
 > [docs/book-data-migration-plan.md](../../../../../docs/book-data-migration-plan.md)를 보세요.
 
 > 중고책 판매글은 이 모듈이 아니라 [`used-book-sale`](../used-book-sale/README.md)에 있습니다.
@@ -18,11 +18,14 @@ book/
 │   └── book.controller.spec.ts
 ├── providers/                            # 도서 공급처 포트와 어댑터
 │   ├── book-catalog.types.ts             # 포트 인터페이스 + 주입 토큰
-│   └── local-db-book-catalog.provider.ts # 자체 DB 어댑터 (현재 유일한 공급처)
+│   ├── book-search-query.ts (+ spec)     # 검색어 → 검색 키 SQL (pg_trgm 표현식 인덱스용)
+│   └── local-db-book-catalog.provider.ts (+ spec) # 자체 DB 어댑터 (현재 유일한 공급처)
 ├── services/
 │   ├── book.service.ts (+ spec)          # 도서 마스터 조회·동기화·통계
 │   └── book-catalog.service.ts (+ spec)  # 공급처 체인 오케스트레이터
-├── entities/book.entity.ts               # isbn을 PK로 사용
+├── entities/
+│   ├── book.entity.ts                    # isbn을 PK로 사용
+│   └── book-dimension.entity.ts          # 실측 판형·표지색 (독서 키재기용)
 ├── pipes/book-resolve.pipe.ts            # ISBN → Book 보장 파이프
 └── interceptors/book-view-count.interceptor.ts
 ```
@@ -39,17 +42,20 @@ book/
 
 ## 3. 엔티티 — `Book` (`isbn` PK)
 
-| 컬럼                           | 타입          | 설명                               |
-| ------------------------------ | ------------- | ---------------------------------- |
-| `isbn`                         | `string`      | Primary Key                        |
-| `title`, `author`, `publisher` | `string`      | 서지 정보                          |
-| `discount`                     | `string`      | 가격 정보 (기본 `''`)              |
-| `description`                  | `text`        | 소개                               |
-| `image`                        | `string`      | 표지 URL                           |
-| `pubDate`                      | `string`      | 출판일 (YYYY-MM-DD 형식)           |
-| `salesPoint`                   | `number`      | 알라딘 판매지수 (인기도 산정 반영) |
-| `viewCount`                    | `number`      | 단순 상세 조회수                   |
-| `createdAt` / `updatedAt`      | `timestamptz` |                                    |
+| 컬럼                           | 타입          | 설명                                                                             |
+| ------------------------------ | ------------- | -------------------------------------------------------------------------------- |
+| `isbn`                         | `string`      | Primary Key                                                                      |
+| `title`, `author`, `publisher` | `string`      | 서지 정보                                                                        |
+| `discount`                     | `string`      | **정가** (기본 `''`). 이름과 달리 할인가가 아님                                  |
+| `description`                  | `text`        | 소개                                                                             |
+| `image`                        | `string`      | 표지 URL                                                                         |
+| `pubDate`                      | `string`      | 출판일 (`date`, YYYY-MM-DD 형식, nullable)                                       |
+| `salesPoint`                   | `number`      | 알라딘 판매지수 (nullable, 인기도 산정 반영. 2026-10-30 이후 갱신 불가한 스냅샷) |
+| `embedding`                    | `vector(768)` | 시맨틱 검색용. `select: false` — `match_books()` RPC만 읽음                      |
+| `viewCount`                    | `number`      | 단순 상세 조회수                                                                 |
+| `createdAt` / `updatedAt`      | `timestamptz` |                                                                                  |
+
+`BookDimension`(`book_dimensions`, PK=FK=`isbn`)은 가로·세로·두께·쪽수·무게·제본·표지 대표색을 담습니다. 알라딘 종료 전 수확한 스냅샷이고, 신규 적재분은 적재 도구가 `books`와 한 트랜잭션으로 넣습니다. 값이 없는 책은 행이 없고 `packages/core`의 `estimateBookSize`가 조회 시 추정합니다.
 
 ISBN을 PK로 쓰기 때문에 리뷰·독서 기록·판매글·위시리스트가 모두 자연스럽게 같은 도서를 참조합니다.
 

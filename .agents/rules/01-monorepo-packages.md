@@ -25,7 +25,7 @@ apps/admin           → Next.js 15 App Router (react-query, api-client, core에
 
 ## 2. 신규 기능 개발 순서 (Contract-First)
 
-1. `packages/core` — 인터페이스, enum, API 경로 상수(`API_PATHS`), 쿼리 키 팩토리(`queryKeys`)
+1. `packages/core` — 인터페이스, enum, API 경로 상수(`API_PATHS`), 쿼리 키 팩토리(`bookKeys`·`reviewKeys`·`orderKeys` 등 도메인별 `*Keys`)
 2. `apps/server` — Entity, DTO(`implements` 코어 인터페이스), Service, Controller
 3. `packages/api-client` — API 호출 함수
 4. `packages/react-query` — useQuery/useMutation 훅 (`"use client"` 선언 필수)

@@ -27,8 +27,10 @@ notification/
 ReviewService      ──emit──▶ review.reacted   ──▶ ReviewNotificationListener  ─┐
 CommentService     ──emit──▶ comment.created  ──▶ CommentNotificationListener ─┤
                    ──emit──▶ comment.liked                                     ├─▶ NotificationService
-OrderService       ──emit──▶ order.* (11종)   ──▶ OrderEventListener          ─┘        │
+OrderService       ──emit──▶ order.* (13종)   ──▶ OrderEventListener          ─┘        │
 OrderScheduler     ──emit──▶ order.*_warning                                            │
+TradeService       ──emit──▶ trade.*          ──▶ TradeEventListener          ─┤
+FeedbackService    ──emit──▶ feedback.replied ──▶ FeedbackReplyNotifyListener ─┤
                                                                                         ▼
                                                               DB 저장 + NotificationGateway 푸시
 ```

@@ -167,6 +167,9 @@ pnpm ingest apply --source aladin --publishers 민음사 --yes
 pnpm ingest apply --publishers 민음사 --isbn 9788937477515 --yes
 pnpm ingest apply --source aladin --query 9791159921445 --isbn 9791159921445 --yes
 
+# DB 보유 수 상위 출판사 (출판사 칩에 쓸 이름 확인용)
+pnpm ingest publishers --limit 50
+
 # 베스트셀러 (알라딘만). --categories 0=종합, all=전 분야. --months 1이면 이번 주만
 pnpm ingest scan --source aladin --list Bestseller --categories all
 pnpm ingest scan --source aladin --list Bestseller --months 60 --interval month

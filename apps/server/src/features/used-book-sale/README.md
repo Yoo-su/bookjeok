@@ -121,7 +121,7 @@ enum TradeMethod {
 
 ## 모듈 의존성
 
-- `BookModule`: 책 정보 조회/생성 (`BookResolvePipe`)
+- `BookModule`: 등록 시 ISBN이 `books`에 있는지 확인 (`BookResolvePipe`, 없으면 404 — 도서를 만들지 않음)
 - `UserModule`: 작성자 정보 조회
 - `Order` 엔티티: 활성 주문 확인 (수정·삭제·상태 변경 차단 판정)
 - `TradeCompletion` 엔티티: 거래 완료 기록 확인 (같은 판정 + 판매완료 되돌리기 차단)
