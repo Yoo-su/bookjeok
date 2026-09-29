@@ -74,7 +74,7 @@ src/features/reading-log/components/
 ### Case C: `auth` (인증)
 
 - `forms/`: 로그인 폼, 회원가입 폼
-- `guards/`: `AuthGuard`, `GuestGuard`
+- `guards/`: `AuthGuard`, `GuestGuard`, `AdminGuard`
 
 ---
 

@@ -39,6 +39,9 @@ export class MyProfileResponseDto {
   @ApiProperty({ description: '이메일 인증 완료 여부' })
   isEmailVerified: boolean;
 
+  @ApiProperty({ description: '권한', enum: ['USER', 'ADMIN'] })
+  role: 'USER' | 'ADMIN';
+
   constructor(user: User) {
     this.id = user.id;
     this.email = user.email;
@@ -52,5 +55,6 @@ export class MyProfileResponseDto {
     this.gender = user.gender ?? null;
     this.ageRange = user.ageRange ?? null;
     this.isEmailVerified = user.isEmailVerified ?? false;
+    this.role = user.role;
   }
 }

@@ -2578,7 +2578,6 @@
     "admin": {
       "title": "문의 관리",
       "subtitle": "상태를 바꾸고 답변을 달아요. 답변은 작성자에게 보이고 알림이 가요.",
-      "forbidden": "운영자만 볼 수 있는 페이지예요.",
       "filter_status": "상태",
       "filter_type": "종류",
       "filter_all": "전체",
