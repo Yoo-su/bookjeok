@@ -61,6 +61,12 @@ function DialogPortal({
 
 const DialogClose = DialogPrimitive.Close;
 
+/**
+ * onUpdate가 있으면 motion이 WAAPI 대신 매 프레임 스타일을 쓴다.
+ * WAAPI는 끝날 때 최종값보다 먼저 취소된다. 움직임 없는 페이지(독서 키재기)면 크롬이 그 한 프레임을 그려 깜빡인다
+ */
+const skipWaapi = () => {};
+
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> &
@@ -74,6 +80,7 @@ const DialogOverlay = React.forwardRef<
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
+      onUpdate={skipWaapi}
       className={cn(
         "fixed inset-0 z-50 bg-black/70 backdrop-blur-xs",
         className,
@@ -121,6 +128,7 @@ const DialogContent = React.forwardRef<
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            onUpdate={skipWaapi}
             className={cn(
               "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-xl sm:rounded-xl",
               className,
