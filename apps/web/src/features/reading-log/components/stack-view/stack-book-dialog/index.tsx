@@ -40,7 +40,11 @@ export function StackBookDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+      {/* 크롬에서 흐림 오버레이가 무대 위로 페이드되면 화면이 깜빡여 흐림을 끈다 */}
+      <DialogContent
+        className="sm:max-w-[520px]"
+        overlayClassName="backdrop-blur-none"
+      >
         <div className="grid grid-cols-[96px_1fr] items-start gap-4 sm:grid-cols-[108px_1fr] sm:gap-5">
           {book.image ? (
             <Image
@@ -90,7 +94,7 @@ export function StackBookDialog({
           </div>
         </div>
         {book.memo ? (
-          <p className="rounded-xl bg-stone-100 px-3.5 py-3 font-[family-name:var(--font-gaegu)] text-[19px] font-bold leading-snug text-stone-900">
+          <p className="rounded-xl bg-stone-100 px-3.5 py-3 font-[family-name:var(--font-gaegu)] text-[19px] font-normal leading-snug text-stone-900">
             “{book.memo}”
           </p>
         ) : (
