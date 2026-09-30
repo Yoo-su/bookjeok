@@ -38,7 +38,6 @@ async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.5,
     },
-    { path: "/insights", changeFrequency: "weekly" as const, priority: 0.3 },
     { path: "/lounge", changeFrequency: "daily" as const, priority: 0.8 },
     {
       path: "/reading-log",

@@ -439,7 +439,8 @@
       "book": "도서",
       "market": "중고마켓",
       "review": "리뷰",
-      "stats": "통계"
+      "stats": "통계",
+      "reading": "독서"
     }
   },
   "book": {

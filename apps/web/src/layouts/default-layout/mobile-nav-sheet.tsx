@@ -52,11 +52,11 @@ export const MobileNavSheet = () => {
   // 네비게이션 섹션 정의 (에디토리얼 챕터 인덱스 포함)
   const navSections: NavSection[] = [
     {
-      title: tSheet("book"),
+      title: tSheet("reading"),
       items: [
         {
-          href: PATHS.BOOK_SEARCH,
-          label: t("book_search"),
+          href: PATHS.LOUNGE,
+          label: t("lounge"),
           index: "01",
         },
         {
@@ -65,10 +65,25 @@ export const MobileNavSheet = () => {
           label: t("reading_log"),
           index: "02",
         },
+      ],
+    },
+    {
+      title: tSheet("review"),
+      items: [
         {
-          href: PATHS.LOUNGE,
-          label: t("lounge"),
-          index: "03",
+          href: PATHS.REVIEWS,
+          label: t("review_feed"),
+          index: "03.1",
+        },
+        {
+          href: PATHS.REVIEW_WRITE,
+          label: t("write_review"),
+          index: "03.2",
+        },
+        {
+          href: PATHS.MY_REVIEWS,
+          label: t("my_reviews"),
+          index: "03.3",
         },
       ],
     },
@@ -93,32 +108,12 @@ export const MobileNavSheet = () => {
       ],
     },
     {
-      title: tSheet("review"),
+      title: tSheet("book"),
       items: [
         {
-          href: PATHS.REVIEWS,
-          label: t("review_feed"),
-          index: "05.1",
-        },
-        {
-          href: PATHS.REVIEW_WRITE,
-          label: t("write_review"),
-          index: "05.2",
-        },
-        {
-          href: PATHS.MY_REVIEWS,
-          label: t("my_reviews"),
-          index: "05.3",
-        },
-      ],
-    },
-    {
-      title: tSheet("stats"),
-      items: [
-        {
-          href: PATHS.INSIGHTS,
-          label: t("insights"),
-          index: "06",
+          href: PATHS.BOOK_SEARCH,
+          label: t("book_search"),
+          index: "05",
         },
       ],
     },

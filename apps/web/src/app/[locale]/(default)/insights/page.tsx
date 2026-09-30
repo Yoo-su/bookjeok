@@ -1,6 +1,7 @@
 import { getInsights } from "@bookjeok/api-client";
 import { insightsKeys } from "@bookjeok/core";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { BreadcrumbJsonLd } from "@/shared/components/breadcrumb-json-ld";
@@ -10,6 +11,9 @@ import InsightsView from "@/views/insights-view";
 
 // 6시간마다 데이터 재검증
 export const revalidate = 21600;
+
+/** 메뉴에서 내린 페이지. 코드는 두고 주소로 들어와도 404를 낸다 */
+const INSIGHTS_OPEN = false;
 
 export async function generateMetadata({
   params,
@@ -32,6 +36,8 @@ export default async function Page({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  if (!INSIGHTS_OPEN) notFound();
+
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "header" });

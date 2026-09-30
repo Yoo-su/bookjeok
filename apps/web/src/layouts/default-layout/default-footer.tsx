@@ -84,14 +84,6 @@ export const DefaultFooter = () => {
                 <ul className="space-y-1 text-sm text-stone-500">
                   <li>
                     <Link
-                      href={PATHS.BOOK_SEARCH}
-                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
-                    >
-                      {tNav("menu_search")}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
                       href={PATHS.LOUNGE}
                       className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
@@ -116,14 +108,6 @@ export const DefaultFooter = () => {
                   </li>
                   <li>
                     <Link
-                      href={PATHS.BOOK_MARKET}
-                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
-                    >
-                      {tNav("menu_market")}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
                       href={PATHS.REVIEWS}
                       className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
@@ -132,10 +116,18 @@ export const DefaultFooter = () => {
                   </li>
                   <li>
                     <Link
-                      href={PATHS.INSIGHTS}
+                      href={PATHS.BOOK_MARKET}
                       className="inline-block py-1.5 hover:text-stone-800 transition-colors"
                     >
-                      {tNav("menu_insights")}
+                      {tNav("menu_market")}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href={PATHS.BOOK_SEARCH}
+                      className="inline-block py-1.5 hover:text-stone-800 transition-colors"
+                    >
+                      {tNav("menu_search")}
                     </Link>
                   </li>
                 </ul>
