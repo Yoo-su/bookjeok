@@ -446,6 +446,13 @@
     "search": {
       "title": "Book Search",
       "subtitle": "Search for books by title, author, or publisher.",
+      "hero": {
+        "placeholder": "Title, author or ISBN",
+        "play": "Play background video",
+        "pause": "Pause background video",
+        "clear": "Clear search",
+        "unavailable": "Background video is unavailable"
+      },
       "tab_keyword": "Keyword Search",
       "tab_ai": "AI Recommendation",
       "placeholder": "What book are you looking for?",

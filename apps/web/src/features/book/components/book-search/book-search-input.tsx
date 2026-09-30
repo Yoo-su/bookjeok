@@ -6,12 +6,14 @@ import { Search } from "@/shared/components/icons/iconsax";
 import { Input } from "@/shared/components/shadcn/input";
 
 import { useBookSearchParams } from "../../hooks/use-book-search-params";
+import styles from "./search-hero.module.css";
 
 interface BookSearchInputProps {
   /** 쿼리 파라미터 이름 (기본값: "q") */
   paramName?: string;
   /** 맞춤 플레이스홀더 (기본값: t("placeholder")) */
   placeholder?: string;
+  variant?: "default" | "hero";
 }
 
 /**
@@ -22,8 +24,12 @@ interface BookSearchInputProps {
 export const BookSearchInput = ({
   paramName = "q",
   placeholder,
+  variant = "default",
 }: BookSearchInputProps) => {
   const t = useTranslations("book.search");
+  const isHero = variant === "hero";
+  const inputPlaceholder =
+    placeholder || t(isHero ? "hero.placeholder" : "placeholder");
 
   const { inputValue, setInputValue, executeSearch, handleKeyDown } =
     useBookSearchParams({ paramName });
@@ -34,33 +40,44 @@ export const BookSearchInput = ({
   };
 
   return (
-    <div className="relative mb-8 max-w-2xl mx-auto w-full">
-      <div className="relative group">
-        {/* 왼쪽 돋보기 아이콘 */}
-        <Search
-          className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-zinc-600 transition-colors pointer-events-none"
-          aria-hidden="true"
-        />
+    <div
+      className={
+        isHero ? styles.inputWrapper : "relative mb-8 max-w-2xl mx-auto w-full"
+      }
+    >
+      <div className={isHero ? styles.inputGroup : "relative group"}>
+        {!isHero && (
+          <Search
+            className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 group-focus-within:text-zinc-600 transition-colors pointer-events-none"
+            aria-hidden="true"
+          />
+        )}
 
         <Input
-          type="text"
+          type={isHero ? "search" : "text"}
+          enterKeyHint="search"
           value={inputValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || t("placeholder")}
-          aria-label={placeholder || t("placeholder")}
-          className="w-full pl-14 pr-16 h-16 text-lg font-light tracking-wide bg-white border border-zinc-200 rounded-full shadow-xl shadow-zinc-200/40 focus:border-zinc-300 focus:ring-4 focus:ring-zinc-100 transition-all duration-300 placeholder:text-zinc-400"
+          placeholder={inputPlaceholder}
+          aria-label={inputPlaceholder}
+          className={
+            isHero
+              ? styles.searchInput
+              : "w-full pl-14 pr-16 h-16 text-lg font-light tracking-wide bg-white border border-zinc-200 rounded-full shadow-xl shadow-zinc-200/40 focus:border-zinc-300 focus:ring-4 focus:ring-zinc-100 transition-all duration-300 placeholder:text-zinc-400"
+          }
         />
 
-        {/* 오른쪽 검색 버튼 (우아한 원형) */}
-        <button
-          type="button"
-          onClick={executeSearch}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-zinc-900 hover:bg-zinc-800 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center cursor-pointer"
-          aria-label={t("button_label")}
-        >
-          <Search className="w-4 h-4" aria-hidden="true" />
-        </button>
+        {!isHero && (
+          <button
+            type="button"
+            onClick={executeSearch}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-zinc-900 hover:bg-zinc-800 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center cursor-pointer"
+            aria-label={t("button_label")}
+          >
+            <Search className="w-4 h-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
     </div>
   );

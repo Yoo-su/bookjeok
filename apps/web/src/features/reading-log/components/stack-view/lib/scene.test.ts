@@ -69,7 +69,7 @@ function bubbleBox(items: SceneItem[]): Box | null {
 function booksOf(n: number): ReadingStackBook[] {
   return Array.from({ length: n }, (_, i) => ({
     ...SAMPLE_BOOKS[i % SAMPLE_BOOKS.length],
-    logId: i + 1,
+    logId: String(i + 1),
   }));
 }
 

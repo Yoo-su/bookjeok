@@ -13,6 +13,7 @@ interface StickyBookSearchBarProps {
   isVisible: boolean;
   /** 쿼리 파라미터 이름 (기본값: "q") */
   paramName?: string;
+  top?: number;
 }
 
 /**
@@ -23,6 +24,7 @@ interface StickyBookSearchBarProps {
 export const StickyBookSearchBar = ({
   isVisible,
   paramName = "q",
+  top = 80,
 }: StickyBookSearchBarProps) => {
   const t = useTranslations("book.search");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,24 +50,26 @@ export const StickyBookSearchBar = ({
 
   return (
     <div
+      data-sticky-book-search
+      role="search"
+      aria-label={t("title")}
+      style={{ top }}
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 flex items-center justify-center py-3 px-4 transition-all duration-500 ease-[0.16,1,0.3,1] transform",
+        "fixed left-0 right-0 z-40 flex items-center justify-center py-2 px-4 bg-white/95 backdrop-blur-md border-b border-stone-200 transition-[opacity,transform] duration-150 motion-reduce:transition-none",
         isVisible
           ? "translate-y-0 opacity-100"
-          : "-translate-y-full opacity-0 pointer-events-none invisible",
+          : "-translate-y-2 opacity-0 pointer-events-none invisible",
       )}
     >
-      {/* Frosted Glass Background */}
-      <div className="absolute inset-x-0 top-0 h-full bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm" />
-
-      <div className="relative w-full max-w-xl z-10">
+      <div className="relative w-full max-w-5xl">
         <div className="relative group">
           <button
+            type="button"
             onClick={executeSearch}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-1 text-zinc-400 hover:text-zinc-600 transition-colors"
+            className="absolute left-1 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded text-zinc-500 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-zinc-700 active:opacity-70"
             aria-label={t("button_label")}
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-4 h-4" aria-hidden="true" />
           </button>
 
           <Input
@@ -75,15 +79,19 @@ export const StickyBookSearchBar = ({
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             placeholder={t("sticky_placeholder")}
-            className="w-full pl-11 pr-10 h-11 text-base bg-white/60 border-zinc-200/50 hover:bg-white/90 focus:bg-white focus:border-zinc-300 rounded-full shadow-sm focus:shadow-md focus:ring-2 focus:ring-zinc-100 transition-all duration-300 font-light tracking-wide"
+            aria-label={t("hero.placeholder")}
+            style={{ fontSize: 16 }}
+            className="w-full pl-11 pr-11 h-11 bg-white border-stone-300 rounded-md shadow-none focus-visible:border-stone-600 focus-visible:ring-stone-400/30 transition-none font-normal"
           />
 
           {inputValue && (
             <button
+              type="button"
               onClick={handleClear}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-colors"
+              aria-label={t("hero.clear")}
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded hover:bg-zinc-100 text-zinc-500 focus-visible:outline-2 focus-visible:outline-zinc-700 active:opacity-70"
             >
-              <X className="w-3 h-3" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
         </div>

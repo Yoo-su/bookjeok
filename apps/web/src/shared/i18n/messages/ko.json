@@ -446,6 +446,13 @@
     "search": {
       "title": "도서 검색",
       "subtitle": "찾고 싶은 책의 제목, 저자, 출판사를 검색해보세요.",
+      "hero": {
+        "placeholder": "제목, 저자, ISBN 검색",
+        "play": "배경 영상 재생",
+        "pause": "배경 영상 일시정지",
+        "clear": "검색어 지우기",
+        "unavailable": "배경 영상을 재생할 수 없습니다"
+      },
       "tab_keyword": "키워드 검색",
       "tab_ai": "AI 추천 검색",
       "placeholder": "어떤 책을 찾고 계신가요?",

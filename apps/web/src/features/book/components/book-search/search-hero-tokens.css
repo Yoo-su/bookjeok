@@ -1,0 +1,34 @@
+/* Hallmark · component: search hero · genre: editorial · theme: existing Bookjeok */
+.search-video-hero {
+  --search-paper: var(--color-white);
+  --search-ink: var(--color-neutral-950);
+  --search-muted: var(--color-neutral-500);
+  --search-rule: var(--color-neutral-200);
+  --search-control: var(--color-white);
+  --search-focus: var(--color-white);
+  --search-copy: var(--color-neutral-200);
+  --search-scrim-top: color-mix(in srgb, var(--color-black) 20%, transparent);
+  --search-scrim-middle: color-mix(
+    in srgb,
+    var(--color-black) 45%,
+    transparent
+  );
+  --search-scrim-bottom: color-mix(
+    in srgb,
+    var(--color-black) 75%,
+    transparent
+  );
+  --search-vignette: color-mix(in srgb, var(--color-black) 45%, transparent);
+  --search-playback: color-mix(in srgb, var(--color-black) 30%, transparent);
+  --search-playback-rule: color-mix(
+    in srgb,
+    var(--color-white) 35%,
+    transparent
+  );
+  --search-display: var(--font-gowun-batang);
+  --search-body: var(--font-pretendard);
+  --search-space-sm: 0.75rem;
+  --search-space-md: 1rem;
+  --search-space-lg: 1.5rem;
+  --search-space-xl: 2rem;
+}
