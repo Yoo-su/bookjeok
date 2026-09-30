@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { Search } from "@/shared/components/icons/iconsax";
+import { Search, X } from "@/shared/components/icons/iconsax";
 import { Input } from "@/shared/components/shadcn/input";
 
 import { useBookSearchParams } from "../../hooks/use-book-search-params";
@@ -67,6 +67,17 @@ export const BookSearchInput = ({
               : "w-full pl-14 pr-16 h-16 text-lg font-light tracking-wide bg-white border border-zinc-200 rounded-full shadow-xl shadow-zinc-200/40 focus:border-zinc-300 focus:ring-4 focus:ring-zinc-100 transition-all duration-300 placeholder:text-zinc-400"
           }
         />
+
+        {isHero && inputValue && (
+          <button
+            type="button"
+            onClick={() => setInputValue("")}
+            className={styles.clearButton}
+            aria-label={t("hero.clear")}
+          >
+            <X size={18} />
+          </button>
+        )}
 
         {!isHero && (
           <button

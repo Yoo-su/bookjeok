@@ -20,6 +20,7 @@ import styles from "./search-hero.module.css";
 
 const VIDEO_SRC = "/videos/bookjeok_search_video.mp4";
 const POSTER_SRC = "/videos/bookjeok_search_poster.jpg";
+const VIDEO_COMPLETED_KEY = `book-search-video-completed:${VIDEO_SRC}`;
 const GRAIN_BACKGROUND = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>',
 )}")`;
@@ -48,6 +49,7 @@ export const SearchHero = ({ children }: { children?: ReactNode }) => {
   const inViewRef = useRef(inView);
   inViewRef.current = inView;
   const autoplayRejected = useRef(false);
+  const completedRef = useRef(false);
   const [hasFrame, setHasFrame] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +77,17 @@ export const SearchHero = ({ children }: { children?: ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    try {
+      if (sessionStorage.getItem(VIDEO_COMPLETED_KEY) === "1") {
+        completedRef.current = true;
+        setEnded(true);
+      }
+    } catch {
+      // 저장소 접근이 막힌 환경에서도 검색과 영상 재생은 계속 동작한다.
+    }
+  }, []);
+
+  useEffect(() => {
     const video = videoRef.current;
     if (!video || failed) return;
 
@@ -86,7 +99,13 @@ export const SearchHero = ({ children }: { children?: ReactNode }) => {
         video.pause();
         return;
       }
-      if (video.paused && !video.ended && !autoplayRejected.current) play();
+      if (
+        video.paused &&
+        !video.ended &&
+        !completedRef.current &&
+        !autoplayRejected.current
+      )
+        play();
     };
 
     const connection = getConnection();
@@ -153,6 +172,12 @@ export const SearchHero = ({ children }: { children?: ReactNode }) => {
           }}
           onWaiting={() => setIsLoading(true)}
           onEnded={() => {
+            completedRef.current = true;
+            try {
+              sessionStorage.setItem(VIDEO_COMPLETED_KEY, "1");
+            } catch {
+              // 저장소가 비활성화돼 있어도 현재 화면의 재생 완료 상태는 유지한다.
+            }
             setEnded(true);
             setIsPlaying(false);
             setIsLoading(false);
