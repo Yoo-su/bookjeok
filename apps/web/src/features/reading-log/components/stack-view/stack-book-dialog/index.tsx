@@ -90,7 +90,7 @@ export function StackBookDialog({
           </div>
         </div>
         {book.memo ? (
-          <p className="rounded-xl bg-stone-100 px-3.5 py-3 font-[family-name:var(--font-gaegu)] text-[19px] font-bold leading-snug text-stone-900">
+          <p className="rounded-xl bg-stone-100 px-3.5 py-3 font-[family-name:var(--font-gaegu)] text-[19px] font-normal leading-snug text-stone-900">
             “{book.memo}”
           </p>
         ) : (
