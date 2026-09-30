@@ -1,0 +1,216 @@
+/* Hallmark · component: search hero · genre: editorial · theme: existing market cinema
+ * pre-emit critique: P4 H5 E4 S5 R5 V4 */
+.hero {
+  position: relative;
+  width: calc(100% + 2rem);
+  min-height: 460px;
+  aspect-ratio: 16 / 9;
+  margin: -1rem -1rem 0;
+  overflow: hidden;
+  background: var(--search-ink);
+  color: var(--search-paper);
+}
+.scene {
+  position: absolute;
+  inset: 0;
+}
+.poster,
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.video {
+  position: absolute;
+  inset: 0;
+}
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    var(--search-scrim-bottom),
+    var(--search-scrim-middle),
+    var(--search-scrim-top)
+  );
+}
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    var(--search-vignette)
+  );
+}
+.grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-size: 160px 160px;
+}
+.copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: var(--search-space-xl) var(--search-space-lg) 3rem;
+  text-align: left;
+}
+.form {
+  width: 100%;
+  max-width: 30rem;
+}
+.title {
+  margin: 0;
+  font-family: var(--search-display);
+  font-size: 1.9rem;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.04em;
+}
+.subtitle {
+  max-width: 28rem;
+  margin: var(--search-space-sm) 0 var(--search-space-lg);
+  font-family: var(--search-body);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--search-copy);
+}
+.inputWrapper {
+  width: 100%;
+}
+.keywords {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  margin-top: 0.5rem;
+  font-family: var(--search-body);
+  font-size: 0.8125rem;
+  color: var(--search-copy);
+}
+.keywordsLabel {
+  flex: none;
+  margin-right: 0.25rem;
+}
+.keyword {
+  min-width: 0;
+  max-width: 10ch;
+  min-height: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--search-paper);
+  cursor: pointer;
+}
+.keyword:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.keyword:active {
+  opacity: 0.7;
+}
+.keyword:focus-visible {
+  outline: 2px solid var(--search-focus);
+  outline-offset: 3px;
+}
+.inputGroup {
+  position: relative;
+}
+.searchInput {
+  height: 3.5rem;
+  padding-left: var(--search-space-md);
+  padding-right: var(--search-space-md);
+  border: 1px solid var(--search-rule);
+  border-radius: 0.5rem;
+  background: var(--search-control);
+  font-family: var(--search-body);
+  font-size: 16px;
+  color: var(--search-ink);
+  box-shadow: none;
+  transition: none;
+}
+.searchInput::placeholder {
+  color: var(--search-muted);
+}
+.searchInput:focus-visible {
+  border-color: var(--search-focus);
+  outline: 2px solid var(--search-focus);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+.playback {
+  position: absolute;
+  bottom: var(--search-space-md);
+  right: var(--search-space-md);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--search-playback-rule);
+  border-radius: 50%;
+  background: var(--search-playback);
+  color: var(--search-paper);
+  cursor: pointer;
+}
+.playback:hover {
+  opacity: 0.85;
+}
+.playback:active {
+  opacity: 0.7;
+}
+.playback:focus-visible {
+  outline: 2px solid var(--search-focus);
+  outline-offset: 3px;
+}
+.playback:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.spinner {
+  animation: spin 1s linear infinite;
+}
+.placeholder {
+  width: 100%;
+  max-width: 32rem;
+  height: 3.5rem;
+  border-radius: 0.5rem;
+  background: var(--search-control);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (min-width: 640px) {
+  .hero {
+    width: calc(100% + 3rem);
+    margin: -1.5rem -1.5rem 0;
+    min-height: 520px;
+  }
+}
+@media (min-width: 768px) {
+  .hero {
+    min-height: 600px;
+  }
+  .title {
+    font-size: 3.1rem;
+  }
+  .copy {
+    padding: 3rem;
+  }
+  .subtitle {
+    font-size: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

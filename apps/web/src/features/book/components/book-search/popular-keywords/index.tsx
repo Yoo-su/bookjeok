@@ -9,6 +9,8 @@ import { ChevronDown } from "@/shared/components/icons/iconsax";
 import { usePathname } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils";
 
+import heroStyles from "../search-hero.module.css";
+
 /**
  * 인기 검색어 컴포넌트
  *
@@ -17,7 +19,11 @@ import { cn } from "@/shared/utils";
  * - hover 시 전체 Top 10 목록이 드롭다운으로 표시
  * - 검색어 클릭 시 해당 검색어로 즉시 검색
  */
-export const PopularKeywords = () => {
+export const PopularKeywords = ({
+  variant = "default",
+}: {
+  variant?: "default" | "hero";
+}) => {
   const t = useTranslations("book.search");
   const pathname = usePathname();
   const { data, isLoading } = usePopularKeywordsQuery();
@@ -30,14 +36,15 @@ export const PopularKeywords = () => {
 
   // 3초마다 다음 검색어로 전환 (hover 시 일시정지)
   useEffect(() => {
-    if (keywords.length <= 1 || isHovered || isPaused) return;
+    if (variant === "hero" || keywords.length <= 1 || isHovered || isPaused)
+      return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % keywords.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [keywords.length, isHovered, isPaused]);
+  }, [variant, keywords.length, isHovered, isPaused]);
 
   // 검색어 클릭 핸들러
   const handleKeywordClick = useCallback(
@@ -57,6 +64,25 @@ export const PopularKeywords = () => {
   }
 
   const currentKeyword = keywords[currentIndex];
+
+  if (variant === "hero") {
+    return (
+      <div className={heroStyles.keywords} aria-label={t("popular_keywords")}>
+        <span className={heroStyles.keywordsLabel}>{t("popular_label")}</span>
+        {keywords.slice(0, 3).map((item) => (
+          <button
+            key={item.keyword}
+            type="button"
+            className={heroStyles.keyword}
+            title={item.keyword}
+            onClick={() => handleKeywordClick(item.keyword)}
+          >
+            {item.keyword}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div
