@@ -7,7 +7,7 @@
   --search-control: var(--color-white);
   --search-focus: var(--color-white);
   --search-copy: var(--color-neutral-200);
-  --search-dim: color-mix(in srgb, var(--color-black) 30%, transparent);
+  --search-dim: color-mix(in srgb, var(--color-black) 15%, transparent);
   --search-scrim-top: color-mix(in srgb, var(--color-black) 20%, transparent);
   --search-scrim-middle: color-mix(
     in srgb,

@@ -19,9 +19,9 @@ import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-moti
 import styles from "./search-hero.module.css";
 
 // /videos는 30일 캐시라 영상을 바꿀 때는 같은 이름에 덮어쓰지 말고 파일명을 바꾼다.
-const VIDEO_SRC = "/videos/bookjeok_search_hero.mp4";
-const POSTER_SRC = "/videos/bookjeok_search_hero_poster.jpg";
-const END_FRAME_SRC = "/videos/bookjeok_search_hero_end.jpg";
+const VIDEO_SRC = "/videos/bookjeok_search_hero_v2.mp4";
+const POSTER_SRC = "/videos/bookjeok_search_hero_v2_poster.jpg";
+const END_FRAME_SRC = "/videos/bookjeok_search_hero_v2_end.jpg";
 const VIDEO_COMPLETED_KEY = `book-search-video-completed:${VIDEO_SRC}`;
 const GRAIN_BACKGROUND = `url("data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#grain)"/></svg>',

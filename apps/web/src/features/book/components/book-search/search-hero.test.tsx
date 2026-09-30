@@ -78,13 +78,13 @@ describe("검색 히어로 영상 로딩", () => {
 
   it("이전에 끝까지 본 영상은 첫 장면 대신 마지막 장면을 보여 준다", async () => {
     sessionStorage.setItem(
-      "book-search-video-completed:/videos/bookjeok_search_hero.mp4",
+      "book-search-video-completed:/videos/bookjeok_search_hero_v2.mp4",
       "1",
     );
     const { container } = render(<SearchHero />);
     await waitFor(() =>
       expect(container.querySelector("img")?.getAttribute("src")).toContain(
-        "bookjeok_search_hero_end.jpg",
+        "bookjeok_search_hero_v2_end.jpg",
       ),
     );
     expect(container.querySelector("video")).not.toHaveAttribute("src");
@@ -117,7 +117,7 @@ describe("검색 히어로 영상 로딩", () => {
     );
     expect(container.querySelector("video")).toHaveAttribute(
       "src",
-      "/videos/bookjeok_search_hero.mp4",
+      "/videos/bookjeok_search_hero_v2.mp4",
     );
   });
 
