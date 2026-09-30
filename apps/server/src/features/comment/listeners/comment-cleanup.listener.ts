@@ -6,6 +6,7 @@ import {
   USER_WITHDRAWN_EVENT,
   UserWithdrawnEvent,
 } from '@/shared/events/user-withdrawn.event';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Comment } from '../entities/comment.entity';
 import { CommentLike } from '../entities/comment-like.entity';
@@ -33,11 +34,12 @@ export class CommentCleanupListener {
 
       // (commentId, userId) 유니크라 댓글당 1 감소
       if (likes.length > 0) {
-        await entityManager.decrement(
+        await adjustCounter(
+          entityManager,
           Comment,
           { id: In(likes.map((like) => like.commentId)) },
           'likeCount',
-          1,
+          -1,
         );
       }
 

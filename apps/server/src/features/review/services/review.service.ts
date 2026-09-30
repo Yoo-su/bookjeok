@@ -20,6 +20,7 @@ import {
 } from '@/features/review/entities/review-reaction.entity';
 import { Tag } from '@/features/review/entities/tag.entity';
 import { BusinessException } from '@/shared/exceptions';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { POPULAR_REVIEW_MONTHS } from '../constants';
 import { CreateReviewDto } from '../dtos/create-review.dto';
@@ -444,7 +445,13 @@ export class ReviewService {
    * @param id 리뷰 ID
    */
   async incrementViewCount(id: number): Promise<void> {
-    await this.reviewsRepository.increment({ id }, 'viewCount', 1);
+    await adjustCounter(
+      this.reviewsRepository.manager,
+      Review,
+      { id },
+      'viewCount',
+      1,
+    );
   }
 
   /**
@@ -716,7 +723,7 @@ export class ReviewService {
           existingReaction.id,
         );
         if (deleteResult.affected && deleteResult.affected > 0) {
-          await manager.decrement(Review, { id }, 'reactionCount', 1);
+          await adjustCounter(manager, Review, { id }, 'reactionCount', -1);
         }
         return 'removed';
       }
@@ -740,7 +747,7 @@ export class ReviewService {
 
       // 동시 요청에 밀려 무시됐다면 다른 요청이 이미 추가한 것이다.
       if (!insertResult.identifiers?.[0]) return 'changed';
-      await manager.increment(Review, { id }, 'reactionCount', 1);
+      await adjustCounter(manager, Review, { id }, 'reactionCount', 1);
       return 'added';
     }
   }

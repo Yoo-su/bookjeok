@@ -31,7 +31,7 @@ const INK = "#1C1917";
  * 무대 미니어처와 같은 손그림 책. 색면을 윤곽에서 어긋나게 찍고(리소 인쇄 느낌),
  * 윤곽선은 캐릭터처럼 진한 선과 흐린 선을 겹쳐 흔들고, 책등 양끝에 띠를 긋는다.
  */
-function SketchBook({
+export function SketchBook({
   w,
   h,
   color,

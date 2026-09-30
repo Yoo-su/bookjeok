@@ -4,8 +4,11 @@ import {
   estimateBookSize,
   LoungeBookReadersResponse,
   LoungeFeedResponse,
+  LoungeMountainResponse,
   LoungePopularResponse,
   LoungeReader,
+  MOUNTAIN_PEAK_COUNT,
+  MOUNTAIN_WEEK_DAYS,
   ReadingLogBookStatus,
   ReadingStackResponse,
 } from '@bookjeok/core';
@@ -35,6 +38,7 @@ import {
   parseCursorNumericId,
   splitCompositeCursor,
 } from '../utils/cursor.util';
+import { buildMountain, MountainRow } from '../utils/mountain.util';
 
 /**
  * `date` 컬럼의 최댓값을 Date가 아니라 텍스트로 받아 온다.
@@ -389,6 +393,97 @@ export class ReadingLogService {
     }));
 
     return { items };
+  }
+
+  /**
+   * 북적 책산. 공개 사용자의 기록을 올린 순서(createdAt)로 한데 쌓아 높이·지층·꼭대기·넘은 이정표를 낸다.
+   * 독서 날짜가 아니라 올린 순서인 것은 지난 책을 몰아 기록하는 일이 많아서다.
+   *
+   * 전 기록을 한 번에 읽는다. 2026-09-30 기준 175행이라 비용이 없다. 수만 행을 넘으면
+   * 합계·지층을 SQL로 옮기거나 캐시를 검토한다.
+   */
+  async getLoungeMountain(): Promise<LoungeMountainResponse> {
+    const rows: MountainRow[] = await this.readingLogRepository
+      .createQueryBuilder('rl')
+      .innerJoin('rl.user', 'u')
+      .leftJoin(BookDimension, 'dim', 'dim.isbn = rl.isbn')
+      .select('rl.id', 'id')
+      .addSelect('rl.isbn', 'isbn')
+      .addSelect('rl.userId', 'userId')
+      .addSelect('rl.createdAt', 'createdAt')
+      .addSelect('dim.width', 'width')
+      .addSelect('dim.height', 'height')
+      .addSelect('dim.depth', 'depth')
+      .addSelect('dim.pages', 'pages')
+      .addSelect('dim.binding', 'binding')
+      .addSelect('dim.coverColor', 'coverColor')
+      .where('u.isReadingLogPublic = :isPublic', { isPublic: true })
+      .andWhere('u.deletedAt IS NULL')
+      .orderBy('rl.createdAt', 'ASC')
+      .addOrderBy('rl.id', 'ASC')
+      .getRawMany();
+
+    const weekSince = new Date(Date.now() - MOUNTAIN_WEEK_DAYS * 86_400_000);
+    const m = buildMountain(rows, weekSince);
+
+    const peakBooks = m.books.slice(-MOUNTAIN_PEAK_COUNT).reverse();
+    const ids = [
+      ...new Set([
+        ...peakBooks.map((b) => b.row.id),
+        ...m.crossings.map((c) => c.book.row.id),
+      ]),
+    ];
+    const details = ids.length
+      ? await this.readingLogRepository
+          .createQueryBuilder('rl')
+          .leftJoin('rl.book', 'book')
+          .addSelect(['book.isbn', 'book.title', 'book.author'])
+          .innerJoin('rl.user', 'u')
+          .addSelect(['u.nickname', 'u.handle', 'u.profileImageUrl'])
+          .where('rl.id IN (:...ids)', { ids })
+          .getMany()
+      : [];
+    const byId = new Map(details.map((d) => [d.id, d]));
+
+    return {
+      totalMm: m.totalMm,
+      bookCount: m.books.length,
+      readerCount: m.readerCount,
+      weekMm: m.weekMm,
+      weekCount: m.weekCount,
+      bands: m.bands,
+      peak: peakBooks.map((b) => {
+        const log = byId.get(b.row.id);
+        return {
+          logId: b.row.id,
+          isbn: b.row.isbn,
+          title: log?.book?.title ?? '',
+          author: log?.book?.author ?? '',
+          height: b.height,
+          depth: b.depth,
+          coverColor: b.row.coverColor ?? null,
+          addedAt: b.row.createdAt.toISOString(),
+          reader: {
+            nickname: log?.user?.nickname ?? '',
+            handle: log?.user?.handle ?? '',
+            profileImageUrl: log?.user?.profileImageUrl ?? null,
+          },
+        };
+      }),
+      milestones: m.crossings.map((c) => {
+        const log = byId.get(c.book.row.id);
+        return {
+          landmark: c.landmark,
+          reachedAt: c.book.row.createdAt.toISOString(),
+          isbn: c.book.row.isbn,
+          title: log?.book?.title ?? '',
+          reader: {
+            nickname: log?.user?.nickname ?? '',
+            handle: log?.user?.handle ?? '',
+          },
+        };
+      }),
+    };
   }
 
   /**

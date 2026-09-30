@@ -6,10 +6,13 @@ import { Repository } from 'typeorm';
 
 import { BookService } from '@/features/book/services/book.service';
 import { ReviewService } from '@/features/review/services/review.service';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Comment, CommentTargetType } from '../entities/comment.entity';
 import { CommentLike } from '../entities/comment-like.entity';
 import { CommentService } from './comment.service';
+
+jest.mock('@/shared/utils/adjust-counter');
 
 jest.mock('@nestjs-cls/transactional', () => {
   const actual = jest.requireActual<Record<string, unknown>>(
@@ -39,6 +42,7 @@ describe('CommentService', () => {
   let mockTxHost: { tx: any };
 
   beforeEach(async () => {
+    jest.mocked(adjustCounter).mockClear();
     commentRepository = {
       createQueryBuilder: jest.fn(),
       findOne: jest.fn(),
@@ -47,8 +51,6 @@ describe('CommentService', () => {
       update: jest.fn(),
       delete: jest.fn(),
       count: jest.fn(),
-      decrement: jest.fn(),
-      increment: jest.fn(),
     };
 
     commentLikeRepository = {
@@ -90,8 +92,6 @@ describe('CommentService', () => {
         ),
       save: jest.fn().mockResolvedValue({}),
       delete: jest.fn().mockResolvedValue({ affected: 1 }),
-      increment: jest.fn().mockResolvedValue({}),
-      decrement: jest.fn().mockResolvedValue({}),
       createQueryBuilder: jest.fn().mockReturnValue(mockQb),
     };
 
@@ -261,6 +261,13 @@ describe('CommentService', () => {
 
       const result = await service.toggleLike(1, 1);
       expect(result.isLiked).toBe(true);
+      expect(adjustCounter).toHaveBeenCalledWith(
+        mockManager,
+        Comment,
+        { id: 1 },
+        'likeCount',
+        1,
+      );
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.liked',
         expect.objectContaining({ isLiked: true }),
@@ -280,11 +287,12 @@ describe('CommentService', () => {
 
       const result = await service.toggleLike(1, 1);
       expect(result.isLiked).toBe(false);
-      expect(mockManager.decrement).toHaveBeenCalledWith(
+      expect(adjustCounter).toHaveBeenCalledWith(
+        mockManager,
         Comment,
         { id: 1 },
         'likeCount',
-        1,
+        -1,
       );
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         'comment.liked',

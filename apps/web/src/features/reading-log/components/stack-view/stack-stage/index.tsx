@@ -1,26 +1,19 @@
 "use client";
 
 import type { ReadingStackBook } from "@bookjeok/core";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { cn } from "@/shared/utils";
-import { gaegu } from "@/styles/fonts";
 
+import { useCanvasMeasure } from "../hooks/use-canvas-measure";
 import { cm1 } from "../hooks/use-stack-copy";
 import type { StackObjectSpec } from "../lib/objects";
 import type { SceneLabels } from "../lib/scene";
 import { buildStackScene, objectSceneHeight } from "../lib/scene";
 import { SceneNodes } from "../lib/scene-svg";
 import { type StackStatus, stackStatus } from "../lib/status";
-import type { FontRole, SceneColors, StackCharacter } from "../lib/types";
+import type { SceneColors, StackCharacter } from "../lib/types";
 
 /** 첫 책이 바닥에 닿기까지의 시간(ms). 제목 숫자 올리기도 이 값을 쓴다 */
 export const STACK_INTRO_LAND_MS = 420;
@@ -74,41 +67,6 @@ interface StackStageProps {
   onStackClick?: () => void;
   stackClickLabel: string;
   ariaLabel: string;
-}
-
-function useCanvasMeasure() {
-  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  const [fontsVersion, setFontsVersion] = useState(0);
-
-  // 손글씨 글꼴은 글자 묶음별로 늦게 받아진다. 받을 때마다 다시 재야 말풍선 폭이 맞는다
-  useEffect(() => {
-    if (typeof document === "undefined" || !document.fonts) return;
-    let timer: ReturnType<typeof setTimeout>;
-    const bump = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => setFontsVersion((v) => v + 1), 120);
-    };
-    document.fonts.addEventListener("loadingdone", bump);
-    document.fonts.ready.then(bump);
-    return () => {
-      clearTimeout(timer);
-      document.fonts.removeEventListener("loadingdone", bump);
-    };
-  }, []);
-
-  const measure = useCallback(
-    (text: string, size: number, weight: number, fam: FontRole) => {
-      if (!ctxRef.current)
-        ctxRef.current = document.createElement("canvas").getContext("2d");
-      const ctx = ctxRef.current;
-      if (!ctx) return text.length * size * 0.9;
-      ctx.font = `${weight} ${size}px ${fam === "hand" ? gaegu.style.fontFamily : "Pretendard Variable, sans-serif"}`;
-      return ctx.measureText(text).width;
-    },
-    // fontsVersion이 바뀌면 새 함수를 돌려줘 장면을 다시 만들게 한다
-    [fontsVersion],
-  );
-  return measure;
 }
 
 /**

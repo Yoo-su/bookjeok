@@ -1,6 +1,7 @@
 import {
   getLoungeActiveReaders,
   getLoungeFeed,
+  getLoungeMountain,
   getLoungePopular,
 } from "@bookjeok/api-client";
 import { readingLogKeys } from "@bookjeok/core";
@@ -64,6 +65,10 @@ export default async function LoungePage({
     {
       queryKey: readingLogKeys.loungeActiveReaders.queryKey,
       queryFn: getLoungeActiveReaders,
+    },
+    {
+      queryKey: readingLogKeys.loungeMountain.queryKey,
+      queryFn: getLoungeMountain,
     },
   ];
 

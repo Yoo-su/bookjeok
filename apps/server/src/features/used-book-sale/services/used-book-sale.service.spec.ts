@@ -22,7 +22,6 @@ describe('UsedBookSaleService', () => {
     findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
-    increment: jest.fn(),
     remove: jest.fn(),
     merge: jest.fn(),
   };

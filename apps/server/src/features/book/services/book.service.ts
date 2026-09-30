@@ -5,6 +5,7 @@ import { In, Repository } from 'typeorm';
 import { ReadingLogService } from '@/features/reading-log/services/reading-log.service';
 import { WishlistService } from '@/features/wishlist/services/wishlist.service';
 import { BusinessException } from '@/shared/exceptions/business.exception';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Book } from '../entities/book.entity';
 
@@ -53,7 +54,13 @@ export class BookService {
    * 책 상세페이지 조회수를 증가시킵니다.
    */
   async incrementBookViewCount(isbn: string): Promise<void> {
-    await this.bookRepository.increment({ isbn }, 'viewCount', 1);
+    await adjustCounter(
+      this.bookRepository.manager,
+      Book,
+      { isbn },
+      'viewCount',
+      1,
+    );
   }
 
   /**

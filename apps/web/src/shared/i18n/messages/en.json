@@ -1724,6 +1724,84 @@
       "title": "Reading Lounge",
       "description": "See what other readers have been reading lately."
     },
+    "mountain": {
+      "title": "Bookjeok Book Mountain",
+      "subtitle": "Every book our readers have logged, piled into one mountain. It grows a little each time someone logs a book.",
+      "stats": "{count, plural, one {# book} other {# books}} · piled by {readers, plural, one {# reader} other {# readers}}",
+      "week": "+{height} this week ({count, plural, one {# book} other {# books}})",
+      "week_quiet": "No new books this week yet",
+      "week_label": "this week",
+      "len_km": "{v}km",
+      "len_m": "{v}m",
+      "len_cm": "{v}cm",
+      "target": "{name} ~{height}",
+      "remain": "{height} to go",
+      "approx_books": "~{count, plural, one {# book} other {# books}}",
+      "bubble_remain": "Just {height} more!",
+      "bubble_goal": "Let's pass the {object} together",
+      "bubble_done": "We passed them all!",
+      "bubble_done_sub": "Next stop: the sky",
+      "stage_label": "Bookjeok Book Mountain is {height} tall. {remain} to the next landmark, {name}.",
+      "peak_title": "Just added",
+      "peak_hint": "The latest books on top of the mountain.",
+      "cta": "Add my books",
+      "milestones_title": "Landmarks passed",
+      "milestone_by": "passed with {title} by <user>{nickname}</user>",
+      "landmarks": {
+        "emperor": {
+          "name": "emperor penguin",
+          "object": "emperor penguin"
+        },
+        "hoop": {
+          "name": "basketball hoop",
+          "object": "basketball hoop"
+        },
+        "giraffe": {
+          "name": "giraffe",
+          "object": "giraffe"
+        },
+        "cheomseongdae": {
+          "name": "Cheomseongdae",
+          "object": "Cheomseongdae"
+        },
+        "seokgatap": {
+          "name": "Seokgatap Pagoda",
+          "object": "Seokgatap Pagoda"
+        },
+        "yisunsin": {
+          "name": "Admiral Yi statue",
+          "object": "Admiral Yi statue"
+        },
+        "liberty": {
+          "name": "Statue of Liberty",
+          "object": "Statue of Liberty"
+        },
+        "namsanTower": {
+          "name": "N Seoul Tower",
+          "object": "N Seoul Tower"
+        },
+        "building63": {
+          "name": "63 Building",
+          "object": "63 Building"
+        },
+        "lotteTower": {
+          "name": "Lotte World Tower",
+          "object": "Lotte World Tower"
+        },
+        "hallasan": {
+          "name": "Hallasan",
+          "object": "Hallasan"
+        },
+        "baekdusan": {
+          "name": "Baekdusan",
+          "object": "Baekdusan"
+        },
+        "everest": {
+          "name": "Everest",
+          "object": "Everest"
+        }
+      }
+    },
     "hero": {
       "title": "Neighborhood bookshelves",
       "subtitle": "Browse the latest reading logs and thoughts shared by other readers."

@@ -439,6 +439,37 @@ html::-webkit-scrollbar {
   transform-box: fill-box;
   transform-origin: 40% 100%;
 }
+/* 라운지 북적 책산: 산이 바닥에서 솟는다 */
+.mountain-rise {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+/* 북적 책산 하늘의 연필 구름. 구름마다 속도·방향을 달리해 천천히 흘러간다 */
+.mountain-cloud {
+  animation: mountain-drift 19s ease-in-out infinite alternate;
+}
+.mountain-cloud-1 {
+  animation-duration: 25s;
+  animation-delay: -9s;
+  animation-direction: alternate-reverse;
+}
+.mountain-cloud-2 {
+  animation-duration: 31s;
+  animation-delay: -17s;
+}
+@keyframes mountain-drift {
+  from {
+    transform: translateX(-12px);
+  }
+  to {
+    transform: translateX(16px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mountain-cloud {
+    animation: none;
+  }
+}
 @keyframes stack-boil-0 {
   0%,
   33.3% {

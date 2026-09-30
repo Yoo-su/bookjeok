@@ -10,6 +10,7 @@ import { Order } from '@/features/order/entities/order.entity';
 import { TradeCompletion } from '@/features/trade/entities/trade-completion.entity';
 import { User } from '@/features/user/entities/user.entity';
 import { BusinessException } from '@/shared/exceptions';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { POPULAR_SALE_MONTHS } from '../constants';
 import { CreateBookSaleDto } from '../dtos/create-book-sale.dto';
@@ -197,7 +198,13 @@ export class UsedBookSaleService {
    * 판매글 조회수를 증가시킵니다.
    */
   async incrementViewCount(id: number): Promise<void> {
-    await this.usedBookSaleRepository.increment({ id }, 'viewCount', 1);
+    await adjustCounter(
+      this.usedBookSaleRepository.manager,
+      UsedBookSale,
+      { id },
+      'viewCount',
+      1,
+    );
   }
 
   /**
