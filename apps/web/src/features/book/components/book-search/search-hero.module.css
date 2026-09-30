@@ -64,9 +64,7 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
-  /* 좁은 화면에서 검색창이 우측 하단 재생 버튼과 겹치지 않도록 버튼 높이만큼 띄운다. */
-  padding: var(--search-space-xl) var(--search-space-lg)
-    calc(var(--search-space-md) + 2.5rem + var(--search-space-sm));
+  padding: var(--search-space-xl) var(--search-space-lg) 3rem;
   text-align: left;
 }
 .form {
@@ -219,6 +217,29 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+/* 모바일: 문구를 영상 위에 겹치면 어느 장면이든 오리를 가리므로 영상을 위, 문구를 아래에 둔다. */
+@media (max-width: 639px) {
+  .hero {
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+  .scene,
+  .scrim {
+    inset: 0 0 auto;
+    aspect-ratio: 4 / 3;
+    mask-image: linear-gradient(to bottom, #000 65%, transparent);
+  }
+  .copy {
+    position: relative;
+    inset: auto;
+    /* 세로 padding %는 너비 기준이라 75%가 4:3 영상 높이와 같다. 제목은 페이드 구간에 걸친다. */
+    padding: calc(75% - 2.5rem) var(--search-space-lg) var(--search-space-xl);
+  }
+  .playback {
+    top: var(--search-space-md);
+    bottom: auto;
   }
 }
 @media (min-width: 640px) {
