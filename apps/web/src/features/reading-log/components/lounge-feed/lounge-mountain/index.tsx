@@ -153,7 +153,7 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
           <div className="mt-5 lg:mt-6">
             <ReadingLogStartLink
               view="calendar"
-              className="border border-stone-300 bg-white text-stone-800 hover:border-stone-400 hover:bg-stone-50 lg:w-full"
+              className="border border-stone-300 bg-white text-stone-800 hover:border-stone-400 hover:bg-stone-50 w-full max-w-[320px]"
             >
               {t("cta")}
             </ReadingLogStartLink>
