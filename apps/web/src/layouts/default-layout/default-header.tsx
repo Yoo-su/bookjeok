@@ -156,14 +156,11 @@ export const DefaultHeader = () => {
           className="hidden lg:flex items-center gap-5.5 xl:gap-7 whitespace-nowrap shrink-0 font-[family-name:var(--font-gowun-batang)]"
           aria-label={t("nav.main_menu")}
         >
-          {/* 01. 도서 검색 */}
-          <Link
-            href={PATHS.BOOK_SEARCH}
-            className={getLinkClass(PATHS.BOOK_SEARCH)}
-          >
-            <span className={getIndexNumClass(PATHS.BOOK_SEARCH)}>01</span>
-            <span className="tracking-tight">{t("nav.menu_search")}</span>
-            {isActive(PATHS.BOOK_SEARCH) && <HandDrawnUnderline />}
+          {/* 01. 라운지 */}
+          <Link href={PATHS.LOUNGE} className={getLinkClass(PATHS.LOUNGE)}>
+            <span className={getIndexNumClass(PATHS.LOUNGE)}>01</span>
+            <span className="tracking-tight">{t("nav.menu_lounge")}</span>
+            {isActive(PATHS.LOUNGE) && <HandDrawnUnderline />}
           </Link>
 
           {/* 02. 독서 기록 */}
@@ -173,12 +170,75 @@ export const DefaultHeader = () => {
             {isActive(readingLogHref) && <HandDrawnUnderline />}
           </Link>
 
-          {/* 03. 라운지 */}
-          <Link href={PATHS.LOUNGE} className={getLinkClass(PATHS.LOUNGE)}>
-            <span className={getIndexNumClass(PATHS.LOUNGE)}>03</span>
-            <span className="tracking-tight">{t("nav.menu_lounge")}</span>
-            {isActive(PATHS.LOUNGE) && <HandDrawnUnderline />}
-          </Link>
+          {/* 03. 리뷰 그룹 */}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "group relative inline-flex items-center gap-1.5 py-1 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-200 outline-none cursor-pointer",
+                  isActive(PATHS.REVIEWS)
+                    ? "text-stone-900"
+                    : "text-stone-500 hover:text-stone-900",
+                )}
+              >
+                <span className={getIndexNumClass(PATHS.REVIEWS)}>03</span>
+                <span className="tracking-tight">{t("nav.menu_reviews")}</span>
+                <span className="text-[9px] text-stone-400 group-hover:text-stone-700 transition-colors ml-0.5">
+                  ▾
+                </span>
+                {isActive(PATHS.REVIEWS) && <HandDrawnUnderline />}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="center"
+              sideOffset={DROPDOWN_SIDE_OFFSET}
+              className={dropdownContentClass}
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild className={dropdownItemClass}>
+                  <Link href={PATHS.REVIEWS} className={dropdownLinkClass}>
+                    <span>{t("nav.review_feed")}</span>
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                      03.1
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className={dropdownItemClass}>
+                  <Link
+                    href={PATHS.REVIEW_WRITE}
+                    onClick={
+                      !currentUser
+                        ? () => saveReturnUrl(PATHS.REVIEW_WRITE)
+                        : undefined
+                    }
+                    className={dropdownLinkClass}
+                  >
+                    <span>{t("nav.write_review")}</span>
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                      03.2
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className={dropdownItemClass}>
+                  <Link
+                    href={PATHS.MY_REVIEWS}
+                    onClick={
+                      !currentUser
+                        ? () => saveReturnUrl(PATHS.MY_REVIEWS)
+                        : undefined
+                    }
+                    className={dropdownLinkClass}
+                  >
+                    <span>{t("nav.my_reviews")}</span>
+                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                      03.3
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* 04. 중고마켓 그룹 */}
           <DropdownMenu modal={false}>
@@ -250,81 +310,14 @@ export const DefaultHeader = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* 05. 리뷰 그룹 */}
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "group relative inline-flex items-center gap-1.5 py-1 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-200 outline-none cursor-pointer",
-                  isActive(PATHS.REVIEWS)
-                    ? "text-stone-900"
-                    : "text-stone-500 hover:text-stone-900",
-                )}
-              >
-                <span className={getIndexNumClass(PATHS.REVIEWS)}>05</span>
-                <span className="tracking-tight">{t("nav.menu_reviews")}</span>
-                <span className="text-[9px] text-stone-400 group-hover:text-stone-700 transition-colors ml-0.5">
-                  ▾
-                </span>
-                {isActive(PATHS.REVIEWS) && <HandDrawnUnderline />}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="center"
-              sideOffset={DROPDOWN_SIDE_OFFSET}
-              className={dropdownContentClass}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link href={PATHS.REVIEWS} className={dropdownLinkClass}>
-                    <span>{t("nav.review_feed")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      05.1
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link
-                    href={PATHS.REVIEW_WRITE}
-                    onClick={
-                      !currentUser
-                        ? () => saveReturnUrl(PATHS.REVIEW_WRITE)
-                        : undefined
-                    }
-                    className={dropdownLinkClass}
-                  >
-                    <span>{t("nav.write_review")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      05.2
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link
-                    href={PATHS.MY_REVIEWS}
-                    onClick={
-                      !currentUser
-                        ? () => saveReturnUrl(PATHS.MY_REVIEWS)
-                        : undefined
-                    }
-                    className={dropdownLinkClass}
-                  >
-                    <span>{t("nav.my_reviews")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      05.3
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 06. 인사이트 */}
-          <Link href={PATHS.INSIGHTS} className={getLinkClass(PATHS.INSIGHTS)}>
-            <span className={getIndexNumClass(PATHS.INSIGHTS)}>06</span>
-            <span className="tracking-tight">{t("nav.menu_insights")}</span>
-            {isActive(PATHS.INSIGHTS) && <HandDrawnUnderline />}
+          {/* 05. 도서 검색 */}
+          <Link
+            href={PATHS.BOOK_SEARCH}
+            className={getLinkClass(PATHS.BOOK_SEARCH)}
+          >
+            <span className={getIndexNumClass(PATHS.BOOK_SEARCH)}>05</span>
+            <span className="tracking-tight">{t("nav.menu_search")}</span>
+            {isActive(PATHS.BOOK_SEARCH) && <HandDrawnUnderline />}
           </Link>
         </nav>
 
