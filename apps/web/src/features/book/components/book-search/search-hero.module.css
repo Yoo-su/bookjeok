@@ -36,6 +36,11 @@
     var(--search-scrim-top)
   );
 }
+.dim {
+  position: absolute;
+  inset: 0;
+  background: var(--search-dim);
+}
 .vignette {
   position: absolute;
   inset: 0;
@@ -59,7 +64,9 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
-  padding: var(--search-space-xl) var(--search-space-lg) 3rem;
+  /* 좁은 화면에서 검색창이 우측 하단 재생 버튼과 겹치지 않도록 버튼 높이만큼 띄운다. */
+  padding: var(--search-space-xl) var(--search-space-lg)
+    calc(var(--search-space-md) + 2.5rem + var(--search-space-sm));
   text-align: left;
 }
 .form {
@@ -126,7 +133,7 @@
 .searchInput {
   height: 3.5rem;
   padding-left: var(--search-space-md);
-  padding-right: var(--search-space-md);
+  padding-right: 3rem;
   border: 1px solid var(--search-rule);
   border-radius: 0.5rem;
   background: var(--search-control);
@@ -135,6 +142,32 @@
   color: var(--search-ink);
   box-shadow: none;
   transition: none;
+}
+.searchInput::-webkit-search-cancel-button {
+  display: none;
+}
+.clearButton {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--color-neutral-700);
+  cursor: pointer;
+}
+.clearButton:hover {
+  color: var(--color-neutral-950);
+}
+.clearButton:focus-visible {
+  outline: 2px solid var(--color-neutral-700);
+  outline-offset: 2px;
 }
 .searchInput::placeholder {
   color: var(--search-muted);
