@@ -2,6 +2,7 @@
 
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { cn } from "@/shared/utils/cn";
 
 import { useReadingLogViewStore } from "../../../stores/use-reading-log-view-store";
 import type { ReadingLogViewMode } from "../../calendar-view/reading-log-controls";
@@ -10,16 +11,21 @@ import type { ReadingLogViewMode } from "../../calendar-view/reading-log-control
 export function ReadingLogStartLink({
   view,
   children,
+  className,
 }: {
   view: ReadingLogViewMode;
   children: React.ReactNode;
+  className?: string;
 }) {
   const setViewMode = useReadingLogViewStore((s) => s.setViewMode);
   return (
     <Link
       href={PATHS.READING_LOG}
       onClick={() => setViewMode(view)}
-      className="inline-flex h-12 items-center justify-center rounded-full bg-emerald-700 px-6 text-[15px] font-semibold text-white hover:bg-emerald-800"
+      className={cn(
+        "inline-flex h-12 items-center justify-center rounded-full bg-emerald-700 px-6 text-[15px] font-semibold text-white hover:bg-emerald-800",
+        className,
+      )}
     >
       {children}
     </Link>

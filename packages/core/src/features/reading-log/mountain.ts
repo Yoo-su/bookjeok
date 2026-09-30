@@ -1,5 +1,5 @@
 /**
- * 북적 책산: 모든 공개 독서 기록을 한데 쌓은 높이와, 그 옆에 세울 이정표.
+ * 북적 책동산: 모든 공개 독서 기록을 한데 쌓은 높이와, 그 옆에 세울 이정표.
  * 서버는 넘은 이정표를 기록하고, 웹은 다음 목표를 세운다.
  */
 export type MountainLandmarkId =
@@ -53,7 +53,7 @@ export function nextMountainLandmark(totalMm: number): MountainLandmark | null {
   return MOUNTAIN_LANDMARKS.find((l) => l.heightMm > totalMm) ?? null;
 }
 
-/** 책산 꼭대기에 보여 줄 최근 기록 수 */
+/** 책동산 꼭대기에 보여 줄 최근 기록 수 */
 export const MOUNTAIN_PEAK_COUNT = 8;
 
 /** 지층 띠 최대 개수. 넘으면 이웃한 책을 묶어 한 띠로 보낸다 */

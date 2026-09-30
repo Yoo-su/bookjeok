@@ -69,7 +69,7 @@ interface LoungeMountainProps {
 }
 
 /**
- * 북적 책산. 공개 독서 기록 전체를 한 산으로 쌓아 높이·다음 이정표·막 올라온 책·지나온 이정표를 보여 준다.
+ * 북적 책동산. 공개 독서 기록 전체를 한 산으로 쌓아 높이·다음 이정표·막 올라온 책·지나온 이정표를 보여 준다.
  * 숫자와 목록은 서버 HTML에 들어가고, 무대(SVG)는 폭을 잰 뒤 브라우저에서 그린다.
  */
 export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
@@ -101,7 +101,7 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
       </section>
     );
   }
-  // 다른 라운지 섹션처럼 형태가 어긋난 응답·빈 책산은 섹션 부재로 흡수한다
+  // 다른 라운지 섹션처럼 형태가 어긋난 응답·빈 책동산은 섹션 부재로 흡수한다
   if (!data?.bookCount || !scene) return null;
 
   const milestones = [...(data.milestones ?? [])].reverse();
@@ -134,7 +134,8 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
       <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
         <MountainStage scene={scene.stage} ariaLabel={scene.ariaLabel} />
 
-        <div>
+        {/* 넓은 화면에서는 무대 바닥선(PAD.floor 30px)에 발을 맞춘다 */}
+        <div className="lg:pb-[30px]">
           <h3 className="font-serif text-lg font-semibold tracking-tight text-stone-900">
             {t("peak_title")}
           </h3>
@@ -149,8 +150,11 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
               />
             ))}
           </ol>
-          <div className="mt-5">
-            <ReadingLogStartLink view="calendar">
+          <div className="mt-5 lg:mt-6">
+            <ReadingLogStartLink
+              view="calendar"
+              className="border border-stone-300 bg-white text-stone-800 hover:border-stone-400 hover:bg-stone-50 lg:w-full"
+            >
               {t("cta")}
             </ReadingLogStartLink>
           </div>

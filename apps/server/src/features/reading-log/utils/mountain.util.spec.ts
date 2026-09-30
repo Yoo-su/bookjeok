@@ -81,7 +81,7 @@ describe('buildMountain', () => {
     expect(m.bands.reduce((a, b) => a + b.mm, 0)).toBe(m.totalMm);
   });
 
-  it('기록이 없으면 빈 책산이다', () => {
+  it('기록이 없으면 빈 책동산이다', () => {
     const m = buildMountain([], weekSince);
 
     expect(m).toMatchObject({ totalMm: 0, readerCount: 0, bands: [] });

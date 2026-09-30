@@ -29,7 +29,7 @@ export type MountainStageScene = Omit<
   "width" | "minHeight" | "maxHeight" | "colors" | "measure" | "boil" | "u"
 >;
 
-/** 북적 책산 무대. 화면에 처음 들어올 때 산이 바닥에서 솟고 이름표·말풍선이 뒤따른다 */
+/** 북적 책동산 무대. 화면에 처음 들어올 때 산이 바닥에서 솟고 이름표·말풍선이 뒤따른다 */
 export default function MountainStage({
   scene,
   ariaLabel,

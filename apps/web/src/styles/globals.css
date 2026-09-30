@@ -439,12 +439,12 @@ html::-webkit-scrollbar {
   transform-box: fill-box;
   transform-origin: 40% 100%;
 }
-/* 라운지 북적 책산: 산이 바닥에서 솟는다 */
+/* 라운지 북적 책동산: 산이 바닥에서 솟는다 */
 .mountain-rise {
   transform-box: fill-box;
   transform-origin: 50% 100%;
 }
-/* 북적 책산 하늘의 연필 구름. 구름마다 속도·방향을 달리해 천천히 흘러간다 */
+/* 북적 책동산 하늘의 연필 구름. 구름마다 속도·방향을 달리해 천천히 흘러간다 */
 .mountain-cloud {
   animation: mountain-drift 19s ease-in-out infinite alternate;
 }

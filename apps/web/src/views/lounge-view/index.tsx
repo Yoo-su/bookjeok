@@ -55,7 +55,7 @@ export function LoungeView() {
         </header>
         {/* 콘텐츠 영역 */}
         <div className="space-y-16 md:space-y-24">
-          {/* 북적 책산: 공개 기록 전체를 한 산으로 */}
+          {/* 북적 책동산: 공개 기록 전체를 한 산으로 */}
           <LoungeMountain onBookClick={(isbn) => handleOpenModal(isbn)} />
 
           {/* 인기 도서 배너 */}

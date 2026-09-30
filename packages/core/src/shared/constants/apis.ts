@@ -88,7 +88,7 @@ export const API_PATHS = {
     loungeFeed: "/reading-logs/lounge",
     loungePopular: "/reading-logs/lounge/popular",
     loungeActiveReaders: "/reading-logs/lounge/active-readers",
-    /** 북적 책산: 공개 기록 전체의 높이·지층·꼭대기 */
+    /** 북적 책동산: 공개 기록 전체의 높이·지층·꼭대기 */
     loungeMountain: "/reading-logs/lounge/mountain",
     loungeBookReaders: (isbn: string) =>
       `/reading-logs/lounge/book/${isbn}/readers`,

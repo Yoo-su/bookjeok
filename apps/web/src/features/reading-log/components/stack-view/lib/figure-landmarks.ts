@@ -6,8 +6,8 @@ import type { Pencil } from "./pencil";
 import type { Cmds } from "./sketch";
 
 /**
- * 책산 이정표 중 그림이 있는 것의 가로 범위(세로는 0~1000). 사물 사다리와 겹치는 셋은 사물 그림을 쓴다.
- * 그림이 없는 이정표는 점선과 이름만 세운다. 책산이 가까워지면 그때 그린다(주 25cm 안팎, 2026-09-30).
+ * 책동산 이정표 중 그림이 있는 것의 가로 범위(세로는 0~1000). 사물 사다리와 겹치는 셋은 사물 그림을 쓴다.
+ * 그림이 없는 이정표는 점선과 이름만 세운다. 책동산이 가까워지면 그때 그린다(주 25cm 안팎, 2026-09-30).
  */
 export const LANDMARK_ART: Partial<
   Record<MountainLandmarkId, { x: [number, number]; mark?: number }>

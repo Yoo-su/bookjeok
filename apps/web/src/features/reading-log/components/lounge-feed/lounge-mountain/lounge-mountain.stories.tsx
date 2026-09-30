@@ -11,7 +11,7 @@ import { LoungeMountain } from ".";
 
 const READERS = ["책벌레", "밤독서", "수현", "한줄요정", "느린독자"];
 
-/** 예시 46권을 돌려 count권짜리 책산을 만든다. 마지막 week권은 이번 주에 올린 것 */
+/** 예시 46권을 돌려 count권짜리 책동산을 만든다. 마지막 week권은 이번 주에 올린 것 */
 function fixture(count: number, week: number): LoungeMountainResponse {
   const now = Date.now();
   const books = Array.from({ length: count }, (_, i) => {
@@ -113,5 +113,5 @@ export const TowardCheomseongdaePhone: Story = {
   args: { data: fixture(330, 20), width: 375 },
 };
 
-/** 막 시작한 책산. 이번 주 기록 없음 */
+/** 막 시작한 책동산. 이번 주 기록 없음 */
 export const Small: Story = { args: { data: fixture(24, 0), width: 375 } };

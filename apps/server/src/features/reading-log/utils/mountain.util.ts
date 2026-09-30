@@ -8,7 +8,7 @@ import {
   PartialBookSize,
 } from '@bookjeok/core';
 
-/** 책산에 올린 기록 한 건. 올린 순서(createdAt 오름차순)로 들어온다 */
+/** 책동산에 올린 기록 한 건. 올린 순서(createdAt 오름차순)로 들어온다 */
 export interface MountainRow extends PartialBookSize {
   id: string;
   isbn: string;
@@ -35,7 +35,7 @@ export interface MountainTotals {
 }
 
 /**
- * 기록 목록을 책산 하나로 합친다. 두께가 없는 책은 `estimateBookSize`로 채운다.
+ * 기록 목록을 책동산 하나로 합친다. 두께가 없는 책은 `estimateBookSize`로 채운다.
  * 띠는 한 권에 하나이고, `MOUNTAIN_MAX_BANDS`를 넘으면 이웃한 책을 묶는다(색은 가운데 책).
  */
 export function buildMountain(rows: MountainRow[], weekSince: Date) {

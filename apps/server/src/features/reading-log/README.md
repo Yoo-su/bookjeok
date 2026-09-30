@@ -18,7 +18,7 @@ reading-log/
 ├── entities/reading-log.entity.ts
 ├── listeners/reading-log-cleanup.listener.ts   # user.withdrawn
 ├── utils/cursor.util.ts                # 커서 조각 검증 (500 → 400)
-├── utils/mountain.util.ts              # 북적 책산 합산 (두께·지층 띠·넘은 이정표)
+├── utils/mountain.util.ts              # 북적 책동산 합산 (두께·지층 띠·넘은 이정표)
 └── dtos/
     ├── create-reading-log.dto.ts
     ├── update-reading-log.dto.ts
@@ -55,7 +55,7 @@ reading-log/
 | GET    | `/`                   | 라운지 피드 (커서 페이지네이션)               |
 | GET    | `/popular`            | 최근 `LOUNGE_POPULAR_DAYS`일 기준 인기 도서   |
 | GET    | `/active-readers`     | 활동 중인 독자 목록                           |
-| GET    | `/mountain`           | 북적 책산 (공개 기록 전체의 높이·지층·꼭대기) |
+| GET    | `/mountain`           | 북적 책동산 (공개 기록 전체의 높이·지층·꼭대기) |
 | GET    | `/book/:isbn/readers` | 특정 도서를 읽은 독자 목록                    |
 
 라운지 엔드포인트에는 **응답 캐시를 걸지 않았습니다.** `/active-readers`에 5분
@@ -159,7 +159,7 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 `getPublicStack(handle, year)` — `GET /reading-logs/users/:handle/stack?year=`(`PublicReadingLogController`, **인증 없음**). 공개 프로필의 독서 키재기입니다. 핸들이 정확히 일치해야 하고(공개 프로필 조회의 닉네임·ID 대체 검색은 하지 않음), 없거나 탈퇴한 사용자는 404(`USER_NOT_FOUND`)입니다. **독서 기록이 비공개면 기록이 없는 것처럼 빈 목록**을 돌려줍니다 — 공개 프로필 응답의 `readingLogs`와 같은 규칙입니다. 한줄평이 포함되는데, 공개 프로필 리스트·캘린더에서도 이미 보이던 정보입니다.
 
-### 북적 책산
+### 북적 책동산
 
 `getLoungeMountain()` — `GET /reading-logs/lounge/mountain`. 공개 사용자의 기록 전부를 **기록한 시각(`createdAt`) 순**으로 쌓습니다(독서 날짜 순이 아닌 것은 지난 책을 몰아 기록하는 일이 많아서).
 
