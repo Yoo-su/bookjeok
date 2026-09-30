@@ -66,7 +66,7 @@ book/
 - 블러(`backdrop-filter`)와 페이드(opacity)는 같은 요소에 둡니다. 조상에 opacity를 걸면 페이드 중 블러가 끊겼다가 끝에 한 번에 켜집니다.
 - 다음 페이지는 바닥 600px 전에 미리 불러와 로딩 표시가 알약에 가리지 않게 합니다.
 
-`public/videos/bookjeok_search_hero_v2.mp4`는 원본(1080p·11.5Mbps·오디오 포함, 14.6MB)을 오디오 제거·H.264 High·720p·CRF 26·faststart로 다시 인코딩한 2.8MB 파일입니다. `bookjeok_search_hero_v2_poster.jpg`는 첫 프레임, `bookjeok_search_hero_v2_end.jpg`는 마지막 프레임이며 인코딩된 영상에서 뽑아 영상과 전환될 때 화질 차이가 없습니다. `/videos`는 30일 캐시(`next.config.ts`)라 영상을 교체할 때 같은 파일명에 덮어쓰면 재방문자가 옛 영상을 보므로 파일명을 바꿉니다. 포스터를 우선 로드하며, 동작 줄이기·데이터 절약·느린 연결에서는 자동으로 영상 소스를 연결하지 않습니다. 화면 밖·백그라운드에서는 정지하고 자동재생 차단·영상 오류에는 포스터를 유지합니다. 사용자 요청으로는 직접 재생할 수 있습니다.
+`public/videos/bookjeok_search_hero_v3.mp4`는 원본(1080p·9.8Mbps·오디오 포함, 12.3MB)을 오디오 제거·H.264 High·720p·CRF 26·`-tune animation`·faststart로 다시 인코딩한 1.9MB 파일입니다. `bookjeok_search_hero_v3_poster.jpg`는 첫 프레임, `bookjeok_search_hero_v3_end.jpg`는 마지막 프레임이며 인코딩된 영상에서 뽑아 영상과 전환될 때 화질 차이가 없습니다. `/videos`는 30일 캐시(`next.config.ts`)라 영상을 교체할 때 같은 파일명에 덮어쓰면 재방문자가 옛 영상을 보므로 파일명을 바꿉니다. 포스터를 우선 로드하며, 동작 줄이기·데이터 절약·느린 연결에서는 자동으로 영상 소스를 연결하지 않습니다. 화면 밖·백그라운드에서는 정지하고 자동재생 차단·영상 오류에는 포스터를 유지합니다. 사용자 요청으로는 직접 재생할 수 있습니다.
 
 제목과 포스터는 SSR HTML에 남기고 URL을 읽는 `book-search-form`만 별도의 Suspense 경계에 둡니다. 영상 재생을 기다리지 않고 검색할 수 있으며, 기존 URL 검색·하단 검색 알약·인기 검색어·결과 목록 동작을 유지합니다.
 
