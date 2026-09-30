@@ -102,7 +102,7 @@ const hits = (a: Box, b: Box) =>
   a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 
 /** 말풍선 몸통의 자리와 꼬리 x(px). 이름표가 부딪히는지 미리 볼 때도 쓴다 */
-function bubbleRect(
+export function bubbleRect(
   cx: number,
   bottom: number,
   lines: [string, string],
@@ -123,7 +123,7 @@ function bubbleRect(
   return { x, y, w, h, tx };
 }
 
-function bubbleItem(
+export function bubbleItem(
   cx: number,
   bottom: number,
   lines: [string, string],

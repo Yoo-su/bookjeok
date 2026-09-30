@@ -4,6 +4,7 @@ import {
   CreateReadingLogParams,
   LoungeBookReadersResponse,
   LoungeFeedResponse,
+  LoungeMountainResponse,
   LoungePopularResponse,
   ReadingLog,
   ReadingLogBookStatus,
@@ -203,6 +204,16 @@ export const getLoungeActiveReaders =
     );
     return data;
   };
+
+/**
+ * 북적 책산을 조회합니다. (공개 API - 인증 불필요)
+ */
+export const getLoungeMountain = async (): Promise<LoungeMountainResponse> => {
+  const { data } = await publicApiClient.get<LoungeMountainResponse>(
+    API_PATHS.readingLog.loungeMountain,
+  );
+  return data;
+};
 
 /**
  * 특정 도서의 전체 독자 목록을 조회합니다. (공개 API - 인증 불필요)

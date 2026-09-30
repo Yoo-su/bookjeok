@@ -30,7 +30,6 @@ describe('BookService', () => {
             findBy: jest.fn().mockResolvedValue([]),
             create: jest.fn(),
             save: jest.fn(),
-            increment: jest.fn(),
             createQueryBuilder: jest.fn(() => ({
               leftJoin: jest.fn().mockReturnThis(),
               select: jest.fn().mockReturnThis(),

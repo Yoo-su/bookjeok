@@ -658,4 +658,66 @@ describe('ReadingLogService', () => {
       ]);
     });
   });
+
+  describe('getLoungeMountain', () => {
+    const raw = (i: number, userId: number) => ({
+      id: `log-${i}`,
+      isbn: `978890000000${i}`,
+      userId,
+      createdAt: new Date(`2026-09-2${i}T03:00:00Z`),
+      width: 150,
+      height: 220,
+      depth: 20,
+      pages: 300,
+      binding: null,
+      coverColor: i === 2 ? null : '#445566',
+    });
+
+    it('공개 사용자 기록만 올린 순서로 쌓고 꼭대기는 최근 것부터 준다', async () => {
+      const rowsQb = mockSelectQueryBuilder({
+        getRawMany: jest.fn().mockResolvedValue([raw(1, 7), raw(2, 8)]),
+      });
+      const detailQb = mockSelectQueryBuilder({
+        getMany: jest.fn().mockResolvedValue([
+          {
+            id: 'log-2',
+            book: { isbn: '9788900000002', title: '두 번째', author: '작가' },
+            user: { nickname: '둘', handle: 'two', profileImageUrl: null },
+          },
+        ]),
+      });
+      (readingLogRepository.createQueryBuilder as jest.Mock)
+        .mockReturnValueOnce(rowsQb)
+        .mockReturnValueOnce(detailQb);
+
+      const result = await service.getLoungeMountain();
+
+      expect(rowsQb.where).toHaveBeenCalledWith(
+        'u.isReadingLogPublic = :isPublic',
+        { isPublic: true },
+      );
+      expect(rowsQb.andWhere).toHaveBeenCalledWith('u.deletedAt IS NULL');
+      expect(rowsQb.orderBy).toHaveBeenCalledWith('rl.createdAt', 'ASC');
+      expect(result).toMatchObject({
+        totalMm: 40,
+        bookCount: 2,
+        readerCount: 2,
+        milestones: [],
+      });
+      expect(result.peak.map((b) => b.logId)).toEqual(['log-2', 'log-1']);
+      expect(result.peak[0]).toMatchObject({
+        title: '두 번째',
+        coverColor: null,
+        addedAt: '2026-09-22T03:00:00.000Z',
+        reader: { nickname: '둘', handle: 'two', profileImageUrl: null },
+      });
+    });
+
+    it('기록이 없으면 상세 조회 없이 빈 책산을 준다', async () => {
+      const result = await service.getLoungeMountain();
+
+      expect(readingLogRepository.createQueryBuilder).toHaveBeenCalledTimes(1);
+      expect(result).toMatchObject({ totalMm: 0, bookCount: 0, peak: [] });
+    });
+  });
 });

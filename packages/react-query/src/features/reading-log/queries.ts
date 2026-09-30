@@ -4,6 +4,7 @@ import {
   getLoungeActiveReaders,
   getLoungeBookReaders,
   getLoungeFeed,
+  getLoungeMountain,
   getLoungePopular,
   getPublicReadingStack,
   getReadingLogBookStatus,
@@ -136,6 +137,17 @@ export const useLoungeActiveReadersQuery = () => {
     queryKey: readingLogKeys.loungeActiveReaders.queryKey,
     queryFn: () => getLoungeActiveReaders(),
     staleTime: 5 * 60 * 1000, // 5분 (자주 변하지 않으므로)
+  });
+};
+
+/**
+ * 북적 책산 조회 (공개). 기록하면 `readingLogKeys._def` 무효화로 함께 갱신된다
+ */
+export const useLoungeMountainQuery = () => {
+  return useQuery({
+    queryKey: readingLogKeys.loungeMountain.queryKey,
+    queryFn: () => getLoungeMountain(),
+    staleTime: 60 * 1000,
   });
 };
 

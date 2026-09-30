@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { BookService } from '@/features/book/services/book.service';
 import { ReviewService } from '@/features/review/services/review.service';
 import { BusinessException } from '@/shared/exceptions';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 import { clampNumber } from '@/shared/utils/clamp-number';
 
 import { COMMENT_PAGE_SIZE_MAX } from '../constants';
@@ -321,7 +322,13 @@ export class CommentService {
       // 좋아요 취소: 실제로 삭제된 경우에만 likeCount 감소 (중복 감소 방지)
       const deleteResult = await manager.delete(CommentLike, existingLike.id);
       if (deleteResult.affected && deleteResult.affected > 0) {
-        await manager.decrement(Comment, { id: commentId }, 'likeCount', 1);
+        await adjustCounter(
+          manager,
+          Comment,
+          { id: commentId },
+          'likeCount',
+          -1,
+        );
       }
       isLiked = false;
     } else {
@@ -336,7 +343,13 @@ export class CommentService {
 
       // 실제로 새로운 레코드가 삽입된 경우에만 카운트 증가
       if (insertResult.identifiers?.length > 0 && insertResult.identifiers[0]) {
-        await manager.increment(Comment, { id: commentId }, 'likeCount', 1);
+        await adjustCounter(
+          manager,
+          Comment,
+          { id: commentId },
+          'likeCount',
+          1,
+        );
       }
       isLiked = true;
     }

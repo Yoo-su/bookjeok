@@ -3,6 +3,8 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TransactionHost } from '@nestjs-cls/transactional';
 
+import { adjustCounter } from '@/shared/utils/adjust-counter';
+
 import { ReviewResponseDto } from '../dtos/review-response.dto';
 import { Review } from '../entities/review.entity';
 import {
@@ -11,6 +13,8 @@ import {
 } from '../entities/review-reaction.entity';
 import { ReviewImageHelper } from '../helpers/review-image.helper';
 import { ReviewService } from './review.service';
+
+jest.mock('@/shared/utils/adjust-counter');
 
 jest.mock('@nestjs-cls/transactional', () => {
   const actual = jest.requireActual<Record<string, unknown>>(
@@ -38,8 +42,6 @@ describe('ReviewService.toggleReaction', () => {
     findOne: jest.Mock;
     delete: jest.Mock;
     save: jest.Mock;
-    increment: jest.Mock;
-    decrement: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
   let execute: jest.Mock;
@@ -57,6 +59,7 @@ describe('ReviewService.toggleReaction', () => {
   };
 
   beforeEach(async () => {
+    jest.mocked(adjustCounter).mockClear();
     execute = jest.fn().mockResolvedValue({ identifiers: [{ id: 1 }] });
     const qb = {
       insert: jest.fn().mockReturnThis(),
@@ -69,8 +72,6 @@ describe('ReviewService.toggleReaction', () => {
       findOne: jest.fn(),
       delete: jest.fn().mockResolvedValue({ affected: 1 }),
       save: jest.fn().mockResolvedValue({}),
-      increment: jest.fn().mockResolvedValue({}),
-      decrement: jest.fn().mockResolvedValue({}),
       createQueryBuilder: jest.fn().mockReturnValue(qb),
     };
     eventEmitter = { emit: jest.fn() };
@@ -104,7 +105,8 @@ describe('ReviewService.toggleReaction', () => {
       service.toggleReaction(REVIEW_ID, USER_ID, ReviewReactionType.LIKE),
     ).resolves.toBe(result);
 
-    expect(manager.increment).toHaveBeenCalledWith(
+    expect(adjustCounter).toHaveBeenCalledWith(
+      manager,
       Review,
       { id: REVIEW_ID },
       'reactionCount',
@@ -119,7 +121,13 @@ describe('ReviewService.toggleReaction', () => {
     await service.toggleReaction(REVIEW_ID, USER_ID, ReviewReactionType.LIKE);
 
     expect(manager.delete).toHaveBeenCalledWith(ReviewReaction, 3);
-    expect(manager.decrement).toHaveBeenCalled();
+    expect(adjustCounter).toHaveBeenCalledWith(
+      manager,
+      Review,
+      { id: REVIEW_ID },
+      'reactionCount',
+      -1,
+    );
     expectEvent(false);
   });
 
@@ -136,8 +144,7 @@ describe('ReviewService.toggleReaction', () => {
       ReviewReaction,
       expect.objectContaining({ type: ReviewReactionType.INSIGHTFUL }),
     );
-    expect(manager.increment).not.toHaveBeenCalled();
-    expect(manager.decrement).not.toHaveBeenCalled();
+    expect(adjustCounter).not.toHaveBeenCalled();
     expectEvent(false);
   });
 
@@ -147,7 +154,7 @@ describe('ReviewService.toggleReaction', () => {
 
     await service.toggleReaction(REVIEW_ID, USER_ID, ReviewReactionType.LIKE);
 
-    expect(manager.increment).not.toHaveBeenCalled();
+    expect(adjustCounter).not.toHaveBeenCalled();
     expectEvent(false);
   });
 });

@@ -2,6 +2,8 @@
 
 도서 **마스터 데이터**(`Book`·`BookDimension` 엔티티)와 자체 DB 기반 도서 검색·상세를 담당합니다.
 
+조회수 증가는 공용 `adjustCounter`로 처리해 서지 수정일(`updatedAt`)을 보존합니다.
+
 > **런타임에 외부 도서 API를 호출하지 않습니다.** 검색·상세 모두 자체 DB 단독이고(2026-09-08),
 > 웹도 공급처를 직접 부르지 않습니다. 신규 도서는 운영자 적재 도구로 넣습니다. 알라딘 종료(2026-10-30) 대응 진행 상황은
 > [docs/book-data-migration-plan.md](../../../../../docs/book-data-migration-plan.md)를 보세요.

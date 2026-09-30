@@ -18,6 +18,7 @@ reading-log/
 ├── entities/reading-log.entity.ts
 ├── listeners/reading-log-cleanup.listener.ts   # user.withdrawn
 ├── utils/cursor.util.ts                # 커서 조각 검증 (500 → 400)
+├── utils/mountain.util.ts              # 북적 책산 합산 (두께·지층 띠·넘은 이정표)
 └── dtos/
     ├── create-reading-log.dto.ts
     ├── update-reading-log.dto.ts
@@ -49,12 +50,13 @@ reading-log/
 
 ### 독서 라운지 (`/reading-logs/lounge`) — 공개
 
-| 메서드 | 경로                  | 설명                                        |
-| ------ | --------------------- | ------------------------------------------- |
-| GET    | `/`                   | 라운지 피드 (커서 페이지네이션)             |
-| GET    | `/popular`            | 최근 `LOUNGE_POPULAR_DAYS`일 기준 인기 도서 |
-| GET    | `/active-readers`     | 활동 중인 독자 목록                         |
-| GET    | `/book/:isbn/readers` | 특정 도서를 읽은 독자 목록                  |
+| 메서드 | 경로                  | 설명                                          |
+| ------ | --------------------- | --------------------------------------------- |
+| GET    | `/`                   | 라운지 피드 (커서 페이지네이션)               |
+| GET    | `/popular`            | 최근 `LOUNGE_POPULAR_DAYS`일 기준 인기 도서   |
+| GET    | `/active-readers`     | 활동 중인 독자 목록                           |
+| GET    | `/mountain`           | 북적 책산 (공개 기록 전체의 높이·지층·꼭대기) |
+| GET    | `/book/:isbn/readers` | 특정 도서를 읽은 독자 목록                    |
 
 라운지 엔드포인트에는 **응답 캐시를 걸지 않았습니다.** `/active-readers`에 5분
 캐시를 검토했다가 뺐습니다 — 2026-09-29 운영 실측으로 `reading_logs` 181행(기록한 사용자 14명),
@@ -156,6 +158,15 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 - 테이블은 `docs/manual-ddl-log.md` 11절. 이 테이블이 없는 DB에 배포하면 이 API가 500을 냅니다.
 
 `getPublicStack(handle, year)` — `GET /reading-logs/users/:handle/stack?year=`(`PublicReadingLogController`, **인증 없음**). 공개 프로필의 독서 키재기입니다. 핸들이 정확히 일치해야 하고(공개 프로필 조회의 닉네임·ID 대체 검색은 하지 않음), 없거나 탈퇴한 사용자는 404(`USER_NOT_FOUND`)입니다. **독서 기록이 비공개면 기록이 없는 것처럼 빈 목록**을 돌려줍니다 — 공개 프로필 응답의 `readingLogs`와 같은 규칙입니다. 한줄평이 포함되는데, 공개 프로필 리스트·캘린더에서도 이미 보이던 정보입니다.
+
+### 북적 책산
+
+`getLoungeMountain()` — `GET /reading-logs/lounge/mountain`. 공개 사용자의 기록 전부를 **기록한 시각(`createdAt`) 순**으로 쌓습니다(독서 날짜 순이 아닌 것은 지난 책을 몰아 기록하는 일이 많아서).
+
+- 기록·판형은 `getRawMany`로 필요한 열만 한 번에 읽고, 합산은 `utils/mountain.util.ts`의 순수 함수 `buildMountain`이 합니다. 두께가 없으면 `estimateBookSize`, 표지색이 없으면 `fallbackCoverColor`.
+- 지층 띠는 한 권에 하나, `MOUNTAIN_MAX_BANDS`(240)를 넘으면 이웃한 책을 묶습니다(색은 묶음 가운데 책). 띠 두께 합은 전체 높이와 같습니다.
+- 넘은 이정표(`MOUNTAIN_LANDMARKS`, core)는 누적 두께로 처음 넘긴 기록을 찾습니다. 꼭대기 8권과 이 기록들만 두 번째 쿼리로 제목·독자를 붙입니다.
+- **전 기록을 매번 읽습니다.** 2026-09-30 기준 공개 기록 175행이라 비용이 없습니다. 수만 행을 넘으면 합계·지층을 SQL로 옮기거나 캐시를 검토하세요(위 「응답 캐시」 원칙대로 행 수부터).
 
 ### 공개 설정
 

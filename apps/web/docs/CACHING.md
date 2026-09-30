@@ -46,6 +46,7 @@ refetchOnWindowFocus: false,
 | `book.list(출판사, 18)`          | `/`                   | 6시간   | 5분                              |
 | `readingLog.loungePopular`       | `/` · `/lounge`       | 6시간   | 5분                              |
 | `readingLog.loungeActiveReaders` | `/lounge`             | 6시간   | 5분                              |
+| `readingLog.loungeMountain`      | `/lounge`             | 6시간   | 1분                              |
 | `insights.all`                   | `/insights`           | 6시간   | 전역                             |
 | `bookSale.popularSales`          | `/book/market`        | 6시간   | 전역                             |
 | `bookSale.marketSales({})`       | `/book/market`        | 6시간   | 전역                             |

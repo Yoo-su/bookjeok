@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { LoungeActiveReaders } from "@/features/reading-log/components/lounge-feed/lounge-active-readers";
 import { LoungeBookDetailModal } from "@/features/reading-log/components/lounge-feed/lounge-book-detail-modal";
 import { LoungeFeedList } from "@/features/reading-log/components/lounge-feed/lounge-feed-list";
+import { LoungeMountain } from "@/features/reading-log/components/lounge-feed/lounge-mountain";
 import { LoungePopularBanner } from "@/features/reading-log/components/lounge-feed/lounge-popular-banner";
 import { AdBanner } from "@/shared/components/ads/ad-banner";
 import { CrowdCanvas } from "@/shared/components/skiperui/canvas-crowd";
@@ -54,6 +55,9 @@ export function LoungeView() {
         </header>
         {/* 콘텐츠 영역 */}
         <div className="space-y-16 md:space-y-24">
+          {/* 북적 책산: 공개 기록 전체를 한 산으로 */}
+          <LoungeMountain onBookClick={(isbn) => handleOpenModal(isbn)} />
+
           {/* 인기 도서 배너 */}
           <LoungePopularBanner onCardClick={handleOpenModal} />
 

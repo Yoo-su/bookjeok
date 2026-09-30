@@ -192,6 +192,7 @@ mail/
 - `websocket/authenticate-socket.ts` — 소켓 핸드셰이크 JWT 검증(게이트웨이 공용)
 - `websocket/to-socket-payload.ts` — 소켓으로 보낼 엔티티를 HTTP와 같은 규칙으로 직렬화
 - `events/user-withdrawn.event.ts` — 탈퇴 이벤트 이름과 페이로드 타입
+- `utils/adjust-counter.ts` — 조회수·반응수·좋아요 수 증감. TypeORM `increment`/`decrement`는 `updatedAt`까지 갱신해 "수정됨"·sitemap 수정일이 밀리므로 카운터는 이걸로만 바꾼다
 - `utils/clamp-number.ts` — 클라이언트가 보낸 개수·페이지 값을 범위 안으로 가둠(`take(0)`·음수 OFFSET 방지)
 
 ---

@@ -1724,6 +1724,84 @@
       "title": "독서 라운지",
       "description": "다른 독자들이 최근 어떤 책을 읽었는지 확인해보세요."
     },
+    "mountain": {
+      "title": "북적 책산",
+      "subtitle": "북적 독자들이 기록한 책을 모두 한데 쌓으면 이만큼이에요. 누군가 기록할 때마다 한 권씩 높아져요.",
+      "stats": "{count}권 · 독자 {readers}명이 함께 쌓았어요",
+      "week": "이번 주 +{height} ({count}권)",
+      "week_quiet": "이번 주에는 아직 올라온 책이 없어요",
+      "week_label": "이번 주",
+      "len_km": "{v}km",
+      "len_m": "{v}m",
+      "len_cm": "{v}cm",
+      "target": "{name} 약 {height}",
+      "remain": "{height} 남음",
+      "approx_books": "약 {count}권",
+      "bubble_remain": "{height}만 더!",
+      "bubble_goal": "다 같이 {object} 넘어 봐요",
+      "bubble_done": "다 넘었어요!",
+      "bubble_done_sub": "이제 하늘이 목표예요",
+      "stage_label": "북적 책산 {height}. 다음 이정표 {name}까지 {remain} 남았어요.",
+      "peak_title": "막 올라온 책",
+      "peak_hint": "책산 꼭대기에 가장 최근에 올라간 책이에요.",
+      "cta": "내 책도 올리기",
+      "milestones_title": "지나온 이정표",
+      "milestone_by": "<user>{nickname}</user>님의 『{title}』로 넘었어요",
+      "landmarks": {
+        "emperor": {
+          "name": "황제펭귄",
+          "object": "황제펭귄을"
+        },
+        "hoop": {
+          "name": "농구 골대",
+          "object": "농구 골대를"
+        },
+        "giraffe": {
+          "name": "기린",
+          "object": "기린을"
+        },
+        "cheomseongdae": {
+          "name": "첨성대",
+          "object": "첨성대를"
+        },
+        "seokgatap": {
+          "name": "석가탑",
+          "object": "석가탑을"
+        },
+        "yisunsin": {
+          "name": "이순신 장군 동상",
+          "object": "이순신 장군 동상을"
+        },
+        "liberty": {
+          "name": "자유의 여신상",
+          "object": "자유의 여신상을"
+        },
+        "namsanTower": {
+          "name": "남산서울타워",
+          "object": "남산서울타워를"
+        },
+        "building63": {
+          "name": "63빌딩",
+          "object": "63빌딩을"
+        },
+        "lotteTower": {
+          "name": "롯데월드타워",
+          "object": "롯데월드타워를"
+        },
+        "hallasan": {
+          "name": "한라산",
+          "object": "한라산을"
+        },
+        "baekdusan": {
+          "name": "백두산",
+          "object": "백두산을"
+        },
+        "everest": {
+          "name": "에베레스트",
+          "object": "에베레스트를"
+        }
+      }
+    },
     "hero": {
       "title": "이웃 독자들의 책장",
       "subtitle": "다른 독자들이 남긴 최근 독서 기록과 감상을 둘러봅니다."

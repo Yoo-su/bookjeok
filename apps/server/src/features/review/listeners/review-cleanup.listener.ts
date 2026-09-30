@@ -8,6 +8,7 @@ import {
   USER_WITHDRAWN_EVENT,
   UserWithdrawnEvent,
 } from '@/shared/events/user-withdrawn.event';
+import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Review } from '../entities/review.entity';
 import { ReviewReaction } from '../entities/review-reaction.entity';
@@ -37,11 +38,12 @@ export class ReviewCleanupListener {
 
       // (reviewId, userId) 유니크라 리뷰당 1 감소
       if (reactions.length > 0) {
-        await entityManager.decrement(
+        await adjustCounter(
+          entityManager,
           Review,
           { id: In(reactions.map((reaction) => reaction.reviewId)) },
           'reactionCount',
-          1,
+          -1,
         );
       }
 

@@ -110,3 +110,23 @@ export const Lineup: Story = { args: { withReader: true } };
 export const Large: Story = { args: { height: 640, boil: false } };
 /** 모바일 무대에서 작게 그려질 때 */
 export const Small: Story = { args: { height: 110, boil: false } };
+
+/** 기린의 관절·얼룩·얼굴을 확대하고 무대 크기에서도 확인한다 */
+export const Giraffe: Story = {
+  args: { boil: false },
+  render: ({ boil }) => (
+    <div className="flex flex-wrap items-end gap-4 bg-white p-4">
+      <ObjectFigure object="giraffe" height={420} boil={boil} />
+      <div className="grid justify-items-center gap-6">
+        {[200, 110].map((height) => (
+          <ObjectFigure
+            key={height}
+            object="giraffe"
+            height={height}
+            boil={boil}
+          />
+        ))}
+      </div>
+    </div>
+  ),
+};

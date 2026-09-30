@@ -50,6 +50,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-25 | `book_dimensions` 테이블 생성 (독서기록 「독서 키재기」용 실측 판형·표지색, 빈 테이블) | `04b6bd55`, 11절        |
 | 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)      | `532dfd31`, 12절        |
 | 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)       | `9546a94e`, 13절        |
+| 2026-09-29 | `books` 교재·학습서 2,174권 삭제 (DDL 아님, 데이터 정리. 용량 확보)                    | (SQL Editor), 14절      |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -1350,3 +1351,28 @@ DROP TABLE public.feedbacks;
 
 서버를 이 변경 이전으로 먼저 내린 뒤 실행하세요. 테이블만 지우면 탈퇴가 막힙니다.
 `notification_type_enum`에 추가한 값은 3절과 같은 이유로 되돌리지 않습니다.
+
+---
+
+## 14. `books` 교재·학습서 2,174권 삭제 (2026-09-29)
+
+DDL이 아니라 데이터 정리입니다. Supabase 무료 500MB(당시 416MB)를 확보하려고 실행했습니다.
+
+### 대상
+
+- 1차 1,999권: 교재 출판사(EBS·천재교육·비상교육·해커스·시대고시 등), 제목의 수험·시험 단어(기출·모의고사·문제집·공무원·자격증 등), 초등·중등·고등 + 자습서·평가문제·학년-학기(연도) 패턴.
+- 2차 175권: 학습용 워크북·한자·계산·받아쓰기·어휘. 성인용 워크북·교양 한자·어휘서는 남김.
+- 5개 참조 테이블(`reading_logs`·`reviews`·`wishlists`·`used_book_sales`·`ai_book_summaries`)에서 참조되는 책은 0건이었고, 삭제 조건에도 `NOT EXISTS`로 다시 제외.
+- 조회수는 봇 수치라 기준에서 뺌.
+
+### 실행 순서
+
+대상 ISBN 임시 테이블 → 사전 확인(`target = 2174`·`referenced = 0`) → 백업 → 삭제 → 확인 → `VACUUM`.
+
+### 결과 (읽기 전용 조회)
+
+대상 ISBN 잔존 0, `book_dimensions` 고아 0. `book_dimensions`는 `ON DELETE CASCADE`로 함께 삭제. DB 크기는 `VACUUM`만으로는 즉시 줄지 않고(422MB 확인), 빈 공간은 이후 적재가 재사용합니다. 표지(R2)는 그대로 둡니다.
+
+### 되돌리기
+
+백업 테이블을 지웠다면 복구 경로가 없습니다. 지운 책은 카카오·알라딘 적재 도구로 다시 받을 수 있습니다(알라딘은 2026-10-30까지).

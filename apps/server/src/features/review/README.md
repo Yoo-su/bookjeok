@@ -144,6 +144,7 @@ Tiptap 본문에서 이미지 URL을 추출해, 수정·삭제 시 더 이상 �
 ### 조회수
 
 `ViewCountInterceptor`(공용 `BaseViewCountInterceptor` 확장)가 중복 요청을 걸러 카운트를 증가시킵니다.
+조회수·`reactionCount`는 `adjustCounter`로 바꿔 `updatedAt`(sitemap·JSON-LD 수정일)을 건드리지 않습니다.
 
 ### 이벤트
 
