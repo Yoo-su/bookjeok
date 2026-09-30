@@ -43,9 +43,11 @@ export const BookSearchResultList = ({
     status,
   } = useInfiniteBookSearch(query);
 
+  // 바닥에 닿기 전에 미리 불러와 로딩 표시가 하단 검색 알약에 가리지 않게 함
   const { ref, inView } = useInView({
     threshold: 0,
     delay: 100,
+    rootMargin: "0px 0px 600px 0px",
   });
 
   useEffect(() => {
