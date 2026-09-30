@@ -206,7 +206,7 @@ export const getLoungeActiveReaders =
   };
 
 /**
- * 북적 책산을 조회합니다. (공개 API - 인증 불필요)
+ * 북적 책동산을 조회합니다. (공개 API - 인증 불필요)
  */
 export const getLoungeMountain = async (): Promise<LoungeMountainResponse> => {
   const { data } = await publicApiClient.get<LoungeMountainResponse>(

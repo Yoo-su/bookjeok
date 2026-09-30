@@ -74,13 +74,13 @@ export class LoungeController {
 
   @Get('mountain')
   @ApiOperation({
-    summary: '북적 책산 조회',
+    summary: '북적 책동산 조회',
     description:
       '모든 공개 사용자의 독서 기록을 올린 순서로 쌓은 높이·지층·최근 올린 책·넘은 이정표를 반환합니다. 인증 불필요.',
   })
   @ApiResponse({
     status: 200,
-    description: '책산 요약을 반환합니다.',
+    description: '책동산 요약을 반환합니다.',
   })
   getLoungeMountain(): Promise<LoungeMountainResponse> {
     return this.readingLogService.getLoungeMountain();

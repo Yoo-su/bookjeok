@@ -130,14 +130,14 @@ export interface LoungeBookReadersResponse {
   totalCount: number;
 }
 
-/** 책산 지층 띠 하나. 바닥부터 올린 순서 */
+/** 책동산 지층 띠 하나. 바닥부터 올린 순서 */
 export interface LoungeMountainBand {
   mm: number;
   /** 대표 표지색(#rrggbb). 표지색이 없는 책은 서버가 대체색을 고른다 */
   color: string;
 }
 
-/** 책산 꼭대기에 막 올라온 기록 */
+/** 책동산 꼭대기에 막 올라온 기록 */
 export interface LoungeMountainBook {
   logId: string;
   isbn: string;
@@ -148,12 +148,12 @@ export interface LoungeMountainBook {
   /** 두께(mm) */
   depth: number;
   coverColor: string | null;
-  /** 기록한 시각(ISO). 독서 날짜가 아니라 책산에 올라간 때 */
+  /** 기록한 시각(ISO). 독서 날짜가 아니라 책동산에 올라간 때 */
   addedAt: string;
   reader: Pick<LoungeReader, "nickname" | "handle" | "profileImageUrl">;
 }
 
-/** 책산이 넘은 이정표와 넘긴 기록 */
+/** 책동산이 넘은 이정표와 넘긴 기록 */
 export interface LoungeMountainMilestone {
   landmark: MountainLandmarkId;
   reachedAt: string;
@@ -162,7 +162,7 @@ export interface LoungeMountainMilestone {
   reader: Pick<LoungeReader, "nickname" | "handle">;
 }
 
-/** 북적 책산 API 응답. 공개 설정 사용자의 기록만 쌓는다 */
+/** 북적 책동산 API 응답. 공개 설정 사용자의 기록만 쌓는다 */
 export interface LoungeMountainResponse {
   totalMm: number;
   bookCount: number;

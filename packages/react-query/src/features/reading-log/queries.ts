@@ -141,7 +141,7 @@ export const useLoungeActiveReadersQuery = () => {
 };
 
 /**
- * 북적 책산 조회 (공개). 기록하면 `readingLogKeys._def` 무효화로 함께 갱신된다
+ * 북적 책동산 조회 (공개). 기록하면 `readingLogKeys._def` 무효화로 함께 갱신된다
  */
 export const useLoungeMountainQuery = () => {
   return useQuery({

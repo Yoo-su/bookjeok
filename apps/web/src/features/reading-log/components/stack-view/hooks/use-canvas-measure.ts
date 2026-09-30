@@ -6,7 +6,7 @@ import { gaegu } from "@/styles/fonts";
 
 import type { FontRole } from "../lib/types";
 
-/** 장면 글자 폭을 캔버스로 잰다. 독서 키재기 무대와 북적 책산이 같이 쓴다 */
+/** 장면 글자 폭을 캔버스로 잰다. 독서 키재기 무대와 북적 책동산이 같이 쓴다 */
 export function useCanvasMeasure() {
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const [fontsVersion, setFontsVersion] = useState(0);

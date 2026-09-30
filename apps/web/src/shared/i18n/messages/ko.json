@@ -1725,7 +1725,7 @@
       "description": "다른 독자들이 최근 어떤 책을 읽었는지 확인해보세요."
     },
     "mountain": {
-      "title": "북적 책산",
+      "title": "북적 책동산",
       "subtitle": "북적 독자들이 기록한 책을 모두 한데 쌓으면 이만큼이에요. 누군가 기록할 때마다 한 권씩 높아져요.",
       "stats": "{count}권 · 독자 {readers}명이 함께 쌓았어요",
       "week": "이번 주 +{height} ({count}권)",
@@ -1741,9 +1741,9 @@
       "bubble_goal": "다 같이 {object} 넘어 봐요",
       "bubble_done": "다 넘었어요!",
       "bubble_done_sub": "이제 하늘이 목표예요",
-      "stage_label": "북적 책산 {height}. 다음 이정표 {name}까지 {remain} 남았어요.",
+      "stage_label": "북적 책동산 {height}. 다음 이정표 {name}까지 {remain} 남았어요.",
       "peak_title": "막 올라온 책",
-      "peak_hint": "책산 꼭대기에 가장 최근에 올라간 책이에요.",
+      "peak_hint": "책동산 꼭대기에 가장 최근에 올라간 책이에요.",
       "cta": "내 책도 올리기",
       "milestones_title": "지나온 이정표",
       "milestone_by": "<user>{nickname}</user>님의 『{title}』로 넘었어요",

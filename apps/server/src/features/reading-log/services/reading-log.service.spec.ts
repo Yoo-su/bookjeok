@@ -713,7 +713,7 @@ describe('ReadingLogService', () => {
       });
     });
 
-    it('기록이 없으면 상세 조회 없이 빈 책산을 준다', async () => {
+    it('기록이 없으면 상세 조회 없이 빈 책동산을 준다', async () => {
       const result = await service.getLoungeMountain();
 
       expect(readingLogRepository.createQueryBuilder).toHaveBeenCalledTimes(1);
