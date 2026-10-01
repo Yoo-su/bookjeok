@@ -39,6 +39,21 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
     expect(global.twitter?.images).toEqual([url]);
   });
 
+  it.each([
+    ["ko", "북적"],
+    ["en", "Bookjeok"],
+  ])("%s 사이트명은 %s로 통일한다", (locale, siteName) => {
+    const page = createPageMetadata({
+      title: "제목",
+      description: "설명",
+      locale,
+    });
+    const global = generateGlobalMetadata((key) => key, locale);
+    expect(page.openGraph?.siteName).toBe(siteName);
+    expect(global.openGraph?.siteName).toBe(siteName);
+    expect(global.applicationName).toBe(siteName);
+  });
+
   it("세로 도서 표지는 작은 카드로 전달한다", () => {
     const metadata = createPageMetadata({
       title: "책",
@@ -74,7 +89,7 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
         height: 630,
       },
     ]);
-    expect(meta.openGraph?.siteName).toBe("Bookjeok");
+    expect(meta.openGraph?.siteName).toBe("북적");
     expect(meta.openGraph?.url).toBe("https://bookjeok.com/ko/test-path");
 
     // Alternates 검증

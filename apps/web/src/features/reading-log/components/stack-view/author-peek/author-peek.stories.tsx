@@ -8,7 +8,7 @@ import { AuthorPeek, type PeekAction, type PeekSide } from "./index";
 const pick = <T,>(list: readonly T[]) =>
   list[Math.floor(Math.random() * list.length)];
 
-/** 홈 「주목할 만한 도서」 머리글 자리를 흉내 낸 시안 */
+/** 홈 머리글(h1 「북적」) 자리를 흉내 낸 시안 */
 function HomeHeaderDemo({
   height,
   autoplay = false,
@@ -90,11 +90,11 @@ function HomeHeaderDemo({
         </label>
       </div>
       <section className="relative grid h-[420px] place-content-center overflow-hidden bg-white text-center">
-        <h2 className="font-serif text-[64px] font-medium tracking-tight text-stone-900">
-          주목할 만한 도서
-        </h2>
-        <p className="mt-4 text-[22px] text-stone-500">
-          주요 출판사의 베스트셀러를 확인해보세요.
+        <h1 className="font-[family-name:var(--font-gowun-batang)] text-6xl tracking-tight text-stone-900">
+          북적
+        </h1>
+        <p className="mt-3 font-[family-name:var(--font-gaegu)] text-2xl text-stone-600">
+          책 좋아하는 사람들로 북적이는 곳
         </p>
         <AuthorPeek
           key={`${author}-${side}-${action}`}

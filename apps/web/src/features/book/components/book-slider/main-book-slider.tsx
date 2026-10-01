@@ -16,7 +16,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { BookOpen } from "@/shared/components/icons/iconsax";
-import { TextAnimate } from "@/shared/components/magicui/text-animate";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -466,21 +465,12 @@ export const MainBookSlider = () => {
   return (
     <div
       ref={inViewRef}
-      className="w-full bg-transparent py-16 md:py-24 overflow-hidden select-none"
+      className="w-full bg-transparent pt-9 pb-16 md:pt-14 md:pb-24 overflow-hidden select-none"
     >
-      <div className="container mx-auto w-full px-4 md:px-0 mb-12 flex flex-col items-center text-center">
-        <TextAnimate
-          as="h2"
-          animation="blurInUp"
-          by="character"
-          className="text-4xl md:text-5xl font-serif font-semibold tracking-tight text-stone-900 pb-2"
-        >
-          {t("title")}
-        </TextAnimate>
-        <p className="mt-4 text-base md:text-lg text-stone-500 font-light max-w-xl tracking-wide">
-          {t("subtitle")}
-        </p>
-      </div>
+      {/* 홈 h1(`intro/home-heading`) 바로 아래에 놓이므로 작은 소제목으로 둔다 */}
+      <h2 className="mb-3 text-center text-sm font-medium tracking-wide text-stone-400">
+        {t("title")}
+      </h2>
 
       {/* 출판사 필터 칩 목록 */}
       <div className="container mx-auto w-full px-4 md:px-0 mb-16 flex justify-center">

@@ -339,10 +339,13 @@
     "used_books": "중고 서적"
   },
   "home": {
+    "heading": {
+      "title": "북적",
+      "tagline": "책 좋아하는 사람들로 북적이는 곳"
+    },
     "sections": {
       "main_books": {
-        "title": "주목할 만한 도서",
-        "subtitle": "주요 출판사의 베스트셀러를 확인해보세요."
+        "title": "출판사별 베스트셀러"
       },
       "popular_books": {
         "title": "지금 인기많은 책",
@@ -428,7 +431,8 @@
     "language_switcher": "언어 변경"
   },
   "footer": {
-    "description": "독서 기록 관리, 중고책 거래, 도서 리뷰 공유를\n한 곳에서",
+    "description": "북적은 읽은 책을 기록하고, 리뷰를 나누고,\n중고책을 사고파는 독서 공간입니다.",
+    "copyright": "© {year} 북적(bookjeok). All rights reserved.",
     "service": "서비스",
     "contact": "문의",
     "terms": "이용약관",

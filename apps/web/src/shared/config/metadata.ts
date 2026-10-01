@@ -1,5 +1,8 @@
 import { Metadata } from "next";
 
+/** 검색 결과·공유 카드에 찍히는 사이트명. 한국어 검색어("북적")와 표기를 맞춘다. */
+const getSiteName = (locale: string) => (locale === "en" ? "Bookjeok" : "북적");
+
 export const generateGlobalMetadata = (
   t: (key: string) => string,
   locale: string = "ko",
@@ -14,15 +17,16 @@ export const generateGlobalMetadata = (
   // 하위 페이지의 noindex에 도달할 경로가 사라진다.
   const isSearchExcludedLocale = locale !== "ko";
   const homeImage = `/og/${locale === "en" ? "en" : "ko"}-home.png`;
+  const siteName = getSiteName(locale);
   return {
     metadataBase: new URL("https://bookjeok.com"),
     title: {
       template: t("meta.template_title"),
       default: t("meta.default_title"),
     },
-    applicationName: "Bookjeok", // Brand name usually stays same or simple transliteration
+    applicationName: siteName,
     appleWebApp: {
-      title: "Bookjeok",
+      title: siteName,
     },
     icons: {
       icon: [
@@ -49,7 +53,7 @@ export const generateGlobalMetadata = (
       title: t("meta.og.title"),
       description: t("meta.og.description"),
       url: "https://bookjeok.com",
-      siteName: "Bookjeok",
+      siteName,
       images: [
         {
           url: homeImage,
@@ -131,7 +135,7 @@ export const createPageMetadata = ({
   const currentLocale = locale || "ko";
   const cleanPath = path ? (path.startsWith("/") ? path : `/${path}`) : "";
   const fullPath = `/${currentLocale}${cleanPath}`;
-  const brandName = currentLocale === "en" ? "Bookjeok" : "북적";
+  const brandName = getSiteName(currentLocale);
 
   // 이미 타이틀에 브랜드명이 포함되어 있거나 absoluteTitle이 명시된 경우
   const isAbsolute =
@@ -150,7 +154,7 @@ export const createPageMetadata = ({
       title: formattedOgTitle,
       description,
       images,
-      siteName: "Bookjeok",
+      siteName: brandName,
       type: "website",
       url: path !== undefined ? `https://bookjeok.com${fullPath}` : undefined,
     },
