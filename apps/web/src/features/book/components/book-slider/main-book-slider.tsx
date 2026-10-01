@@ -467,10 +467,8 @@ export const MainBookSlider = () => {
       ref={inViewRef}
       className="w-full bg-transparent pt-9 pb-16 md:pt-14 md:pb-24 overflow-hidden select-none"
     >
-      {/* 홈 h1(`intro/home-heading`) 바로 아래에 놓이므로 작은 소제목으로 둔다 */}
-      <h2 className="mb-3 text-center text-sm font-medium tracking-wide text-stone-400">
-        {t("title")}
-      </h2>
+      {/* 보이는 제목이 h1과 칩 묶음을 갈라 놓아 화면에서는 숨긴다 */}
+      <h2 className="sr-only">{t("title")}</h2>
 
       {/* 출판사 필터 칩 목록 */}
       <div className="container mx-auto w-full px-4 md:px-0 mb-16 flex justify-center">
