@@ -23,6 +23,7 @@ export const readingLogKeys = createQueryKeys("readingLog", {
   loungePopular: null,
   loungeActiveReaders: null,
   loungeMountain: null,
+  mountainMine: null,
   loungeBookReaders: (isbn: string) => ({
     queryKey: [isbn],
   }),

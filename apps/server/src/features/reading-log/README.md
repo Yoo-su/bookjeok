@@ -36,6 +36,7 @@ reading-log/
 | GET    | `/list`              | 커서 기반 목록 조회 (무한 스크롤)           |
 | GET    | `/stats`             | 월간·연간 독서 통계                         |
 | GET    | `/stack`             | 한 해의 독서 키재기 데이터 (`?year=`)       |
+| GET    | `/mountain/me`       | 책동산에서 내가 쌓은 몫 (비공개면 0권)      |
 | GET    | `/book/:isbn/status` | 이 책을 기록한 횟수·마지막 날짜 (재독 안내) |
 | GET    | `/settings`          | 라운지 공개 설정 조회                       |
 | PATCH  | `/settings`          | 라운지 공개 설정 변경                       |
@@ -50,13 +51,13 @@ reading-log/
 
 ### 독서 라운지 (`/reading-logs/lounge`) — 공개
 
-| 메서드 | 경로                  | 설명                                          |
-| ------ | --------------------- | --------------------------------------------- |
-| GET    | `/`                   | 라운지 피드 (커서 페이지네이션)               |
-| GET    | `/popular`            | 최근 `LOUNGE_POPULAR_DAYS`일 기준 인기 도서   |
-| GET    | `/active-readers`     | 활동 중인 독자 목록                           |
+| 메서드 | 경로                  | 설명                                            |
+| ------ | --------------------- | ----------------------------------------------- |
+| GET    | `/`                   | 라운지 피드 (커서 페이지네이션)                 |
+| GET    | `/popular`            | 최근 `LOUNGE_POPULAR_DAYS`일 기준 인기 도서     |
+| GET    | `/active-readers`     | 활동 중인 독자 목록                             |
 | GET    | `/mountain`           | 북적 책동산 (공개 기록 전체의 높이·지층·꼭대기) |
-| GET    | `/book/:isbn/readers` | 특정 도서를 읽은 독자 목록                    |
+| GET    | `/book/:isbn/readers` | 특정 도서를 읽은 독자 목록                      |
 
 라운지 엔드포인트에는 **응답 캐시를 걸지 않았습니다.** `/active-readers`에 5분
 캐시를 검토했다가 뺐습니다 — 2026-09-29 운영 실측으로 `reading_logs` 181행(기록한 사용자 14명),
@@ -166,6 +167,7 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 - 기록·판형은 `getRawMany`로 필요한 열만 한 번에 읽고, 합산은 `utils/mountain.util.ts`의 순수 함수 `buildMountain`이 합니다. 두께가 없으면 `estimateBookSize`, 표지색이 없으면 `fallbackCoverColor`.
 - 지층 띠는 한 권에 하나, `MOUNTAIN_MAX_BANDS`(240)를 넘으면 이웃한 책을 묶습니다(색은 묶음 가운데 책). 띠 두께 합은 전체 높이와 같습니다.
 - 넘은 이정표(`MOUNTAIN_LANDMARKS`, core)는 누적 두께로 처음 넘긴 기록을 찾습니다. 꼭대기 8권과 이 기록들만 두 번째 쿼리로 제목·독자를 붙입니다.
+- **내 몫**: `getMyMountainShare(userId)` — `GET /reading-logs/mountain/me`(인증). 같은 기록 조회(`findMountainRows`)에서 `mountainShareOf`로 내 두께·권수를 더하고 전체 높이를 함께 돌려줘 비율이 어긋나지 않습니다. 공개 API(`/lounge/mountain`)는 ISR이 캐시하므로 개인 값을 섞지 않고 따로 뒀습니다. 비공개 설정이면 산에 내 기록이 없어 0권입니다.
 - **전 기록을 매번 읽습니다.** 2026-09-30 기준 공개 기록 175행이라 비용이 없습니다. 수만 행을 넘으면 합계·지층을 SQL로 옮기거나 캐시를 검토하세요(위 「응답 캐시」 원칙대로 행 수부터).
 
 ### 공개 설정

@@ -9,6 +9,7 @@ import {
   LoungeReader,
   MOUNTAIN_PEAK_COUNT,
   MOUNTAIN_WEEK_DAYS,
+  MyMountainShareResponse,
   ReadingLogBookStatus,
   ReadingStackResponse,
 } from '@bookjeok/core';
@@ -38,7 +39,11 @@ import {
   parseCursorNumericId,
   splitCompositeCursor,
 } from '../utils/cursor.util';
-import { buildMountain, MountainRow } from '../utils/mountain.util';
+import {
+  buildMountain,
+  MountainRow,
+  mountainShareOf,
+} from '../utils/mountain.util';
 
 /**
  * `date` 컬럼의 최댓값을 Date가 아니라 텍스트로 받아 온다.
@@ -403,25 +408,7 @@ export class ReadingLogService {
    * 합계·지층을 SQL로 옮기거나 캐시를 검토한다.
    */
   async getLoungeMountain(): Promise<LoungeMountainResponse> {
-    const rows: MountainRow[] = await this.readingLogRepository
-      .createQueryBuilder('rl')
-      .innerJoin('rl.user', 'u')
-      .leftJoin(BookDimension, 'dim', 'dim.isbn = rl.isbn')
-      .select('rl.id', 'id')
-      .addSelect('rl.isbn', 'isbn')
-      .addSelect('rl.userId', 'userId')
-      .addSelect('rl.createdAt', 'createdAt')
-      .addSelect('dim.width', 'width')
-      .addSelect('dim.height', 'height')
-      .addSelect('dim.depth', 'depth')
-      .addSelect('dim.pages', 'pages')
-      .addSelect('dim.binding', 'binding')
-      .addSelect('dim.coverColor', 'coverColor')
-      .where('u.isReadingLogPublic = :isPublic', { isPublic: true })
-      .andWhere('u.deletedAt IS NULL')
-      .orderBy('rl.createdAt', 'ASC')
-      .addOrderBy('rl.id', 'ASC')
-      .getRawMany();
+    const rows = await this.findMountainRows();
 
     const weekSince = new Date(Date.now() - MOUNTAIN_WEEK_DAYS * 86_400_000);
     const m = buildMountain(rows, weekSince);
@@ -484,6 +471,39 @@ export class ReadingLogService {
         };
       }),
     };
+  }
+
+  /**
+   * 책동산에서 내가 쌓은 몫. 전체 높이를 같은 조회에서 함께 내 비율이 어긋나지 않게 한다.
+   * 비공개 설정이면 내 기록이 산에 없으므로 0권으로 돌아간다.
+   */
+  async getMyMountainShare(userId: number): Promise<MyMountainShareResponse> {
+    const m = buildMountain(await this.findMountainRows(), new Date());
+    const mine = mountainShareOf(m.books, userId);
+    return { myMm: mine.mm, myCount: mine.count, totalMm: m.totalMm };
+  }
+
+  /** 책동산에 쌓이는 기록 전부. 공개 설정 사용자의 것만 올린 순서로 */
+  private findMountainRows(): Promise<MountainRow[]> {
+    return this.readingLogRepository
+      .createQueryBuilder('rl')
+      .innerJoin('rl.user', 'u')
+      .leftJoin(BookDimension, 'dim', 'dim.isbn = rl.isbn')
+      .select('rl.id', 'id')
+      .addSelect('rl.isbn', 'isbn')
+      .addSelect('rl.userId', 'userId')
+      .addSelect('rl.createdAt', 'createdAt')
+      .addSelect('dim.width', 'width')
+      .addSelect('dim.height', 'height')
+      .addSelect('dim.depth', 'depth')
+      .addSelect('dim.pages', 'pages')
+      .addSelect('dim.binding', 'binding')
+      .addSelect('dim.coverColor', 'coverColor')
+      .where('u.isReadingLogPublic = :isPublic', { isPublic: true })
+      .andWhere('u.deletedAt IS NULL')
+      .orderBy('rl.createdAt', 'ASC')
+      .addOrderBy('rl.id', 'ASC')
+      .getRawMany();
   }
 
   /**
