@@ -1,6 +1,7 @@
 import {
   API_PATHS,
   PublicUserProfile,
+  UpdateUserProfileParams,
   UserStats,
   WishlistItem,
 } from "@bookjeok/core";
@@ -80,10 +81,9 @@ export const getMyProfile = async (): Promise<
 /**
  * 내 프로필 정보를 수정합니다.
  */
-export const updateProfile = async (params: {
-  nickname?: string;
-  profileImageUrl?: string;
-}): Promise<
+export const updateProfile = async (
+  params: UpdateUserProfileParams,
+): Promise<
   PublicUserProfile & { email: string; isReadingLogPublic: boolean }
 > => {
   const { data } = await privateApiClient.patch<

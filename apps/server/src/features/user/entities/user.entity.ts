@@ -56,8 +56,8 @@ export class User {
   @Column({ nullable: true })
   handle: string;
 
-  @Column({ name: 'profileImageUrl', nullable: true })
-  profileImageUrl: string;
+  @Column({ name: 'profileImageUrl', type: 'varchar', nullable: true })
+  profileImageUrl: string | null;
 
   @CreateDateColumn({ name: 'createdAt', type: 'timestamptz' })
   createdAt: Date;

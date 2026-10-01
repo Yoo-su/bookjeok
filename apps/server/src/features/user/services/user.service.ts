@@ -203,6 +203,14 @@ export class UserService implements OnModuleInit {
       }
     }
 
+    // 로컬 유저는 이메일로 로그인하므로 비우면 계정에 접근할 수 없게 된다
+    if (updateUserDto.email === null && user.provider === 'local') {
+      throw new BusinessException(
+        'LOCAL_USER_EMAIL_REQUIRED',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     // 이메일 변경/등록 시 검증 및 재인증 처리
     let newVerificationToken: string | null = null;
     if (updateUserDto.email && updateUserDto.email !== user.email) {

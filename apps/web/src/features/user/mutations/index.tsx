@@ -47,16 +47,17 @@ export const useRemoveFromWishlistMutation = () => {
 
 /**
  * 사용자 정보 업데이트 뮤테이션 훅
+ *
+ * 성공·실패 안내는 호출하는 쪽이 띄운다. 프로필 수정 모달은 이메일 변경 안내,
+ * 닉네임 중복처럼 결과에 따라 문구가 달라 공통 토스트를 쓸 수 없다.
  */
 export const useUpdateUserMutation = () => {
-  const t = useTranslations("user_profile.toast");
   const router = useRouter();
 
   return useSharedUpdateUserMutation({
     // 공개 프로필은 1시간 ISR이라 쿼리 무효화만으로는 다른 방문자·크롤러에 닿지 않는다.
     // 핸들은 수정 대상이 아니므로(UpdateUserDto에 없다) 옛 경로를 따로 좇을 필요가 없다.
     onSuccess: (data) => {
-      toast.success(t("update_success"));
       void purgeRouteCache(
         revalidateUserProfile({
           handle: data.handle,
@@ -64,9 +65,6 @@ export const useUpdateUserMutation = () => {
         }),
         () => router.refresh(),
       );
-    },
-    onError: (error: unknown) => {
-      handleMutationError(error, "회원 정보 수정");
     },
   });
 };
