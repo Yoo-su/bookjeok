@@ -155,7 +155,7 @@ export const DefaultFooter = () => {
 
           <div className="flex flex-col items-center justify-between gap-4 text-xs text-stone-400 sm:flex-row">
             <p className="text-stone-500 text-sm">
-              &copy; {currentYear} bookjeok. All rights reserved.
+              {t("copyright", { year: currentYear })}
             </p>
             <div className="flex gap-6">
               <Link

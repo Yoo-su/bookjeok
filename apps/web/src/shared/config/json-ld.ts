@@ -22,6 +22,7 @@ export const getJsonLd = (
         "@type": "Organization",
         name: t("json_ld.name"),
         url: siteUrl,
+        sameAs: ["https://www.threads.com/@bookjeok_books"],
         logo: {
           "@type": "ImageObject",
           url: "https://bookjeok.com/logo-square-sketch.png",

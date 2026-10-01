@@ -22,7 +22,8 @@ const AuthorPeek = dynamic(
 /**
  * 머리글 옆 여백이 캐릭터가 설 만큼 넉넉한 화면 폭(px). 좁으면 띄우지 않는다.
  * 가장 기운 자세에서 몸이 출판사 칩(572px)과, 서명이 제목과 12px 이상 떨어지는 폭이
- * 각각 약 804px·788px이다
+ * 각각 약 804px·788px이었다(제목이 「주목할 만한 도서」 338px일 때). 지금 h1은
+ * 부제(24px)가 그보다 조금 짧아 820px에서 가장 긴 서명과도 약 40px 떨어진다
  */
 export const GREETING_MIN_WIDTH = 820;
 /** 첫 등장과, 들어간 뒤 다음 등장까지 간격(ms) */
@@ -34,7 +35,7 @@ const pick = <T,>(list: readonly T[]) =>
   list[Math.floor(Math.random() * list.length)];
 
 /**
- * 홈 「주목할 만한 도서」 머리글 옆으로 작가가 슬라이더 좌우 끝(max-w-5xl)에서 나와 인사한다.
+ * 홈 머리글(h1 「북적」) 옆으로 작가가 슬라이더 좌우 끝(max-w-5xl)에서 나와 인사한다.
  * 부모는 position: relative이고 슬라이더와 같은 폭·위쪽이어야 한다.
  */
 export function AuthorGreeting() {

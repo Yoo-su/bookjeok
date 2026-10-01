@@ -339,10 +339,13 @@
     "used_books": "Used Books"
   },
   "home": {
+    "heading": {
+      "title": "Bookjeok",
+      "tagline": "Bustling with people who love books"
+    },
     "sections": {
       "main_books": {
-        "title": "Featured Books",
-        "subtitle": "Check out bestsellers from top publishers."
+        "title": "Bestsellers by publisher"
       },
       "popular_books": {
         "title": "Trending Now",
@@ -428,7 +431,8 @@
     "language_switcher": "Language"
   },
   "footer": {
-    "description": "Reading log, used book trading, and book reviews—all in one place.",
+    "description": "Bookjeok is a place to log what you read, share reviews, and trade used books.",
+    "copyright": "© {year} Bookjeok. All rights reserved.",
     "service": "Service",
     "contact": "Contact",
     "terms": "Terms",
