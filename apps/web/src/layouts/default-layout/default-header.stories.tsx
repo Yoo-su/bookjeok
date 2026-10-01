@@ -1,4 +1,7 @@
+import type { User } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
+
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 
 import { DefaultHeader } from "./default-header";
 
@@ -55,5 +58,20 @@ export const TightDesktop: Story = {
       },
       defaultViewport: "tightDesktop",
     },
+  },
+};
+
+/** 로그인하면 알림·사용자 메뉴가 선다. 로컬에 API가 없어 알림은 빈 채로 둔다 */
+export const LoggedIn: Story = {
+  ...ScrollToExpand,
+  beforeEach: () => {
+    useAuthStore.setState({
+      user: {
+        id: 1,
+        nickname: "미리보기",
+        handle: "preview",
+        profileImageUrl: null,
+      } as unknown as User,
+    });
   },
 };
