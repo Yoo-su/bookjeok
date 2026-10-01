@@ -178,6 +178,14 @@ export interface LoungeMountainResponse {
   milestones: LoungeMountainMilestone[];
 }
 
+/** 책동산에서 내가 쌓은 몫. 비공개 설정이면 내 기록이 산에 없으므로 0권이다 */
+export interface MyMountainShareResponse {
+  myMm: number;
+  myCount: number;
+  /** 같은 시점의 책동산 전체 높이. 비율은 이 값으로 나눈다 */
+  totalMm: number;
+}
+
 /** 라운지 열성 독서가 정보 */
 export interface ActiveReader {
   user: {

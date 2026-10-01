@@ -87,3 +87,15 @@ export function buildMountain(rows: MountainRow[], weekSince: Date) {
     crossings,
   } satisfies MountainTotals;
 }
+
+/** 책동산에서 한 사람이 올린 책의 두께 합과 권수 */
+export function mountainShareOf(books: MountainBook[], userId: number) {
+  let mm = 0;
+  let count = 0;
+  for (const b of books) {
+    if (b.row.userId !== userId) continue;
+    mm += b.depth;
+    count += 1;
+  }
+  return { mm, count };
+}

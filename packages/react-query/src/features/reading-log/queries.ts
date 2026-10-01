@@ -6,6 +6,7 @@ import {
   getLoungeFeed,
   getLoungeMountain,
   getLoungePopular,
+  getMyMountainShare,
   getPublicReadingStack,
   getReadingLogBookStatus,
   getReadingLogs,
@@ -148,6 +149,18 @@ export const useLoungeMountainQuery = () => {
     queryKey: readingLogKeys.loungeMountain.queryKey,
     queryFn: () => getLoungeMountain(),
     staleTime: 60 * 1000,
+  });
+};
+
+/**
+ * 책동산에서 내가 쌓은 몫 (인증 필요). 로그인했을 때만 켠다
+ */
+export const useMyMountainShareQuery = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: readingLogKeys.mountainMine.queryKey,
+    queryFn: () => getMyMountainShare(),
+    staleTime: 60 * 1000,
+    enabled: options?.enabled,
   });
 };
 

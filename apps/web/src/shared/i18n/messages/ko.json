@@ -1747,6 +1747,9 @@
       "peak_title": "막 올라온 책",
       "peak_hint": "책동산 꼭대기에 가장 최근에 올라간 책이에요.",
       "cta": "내 책도 올리기",
+      "my_share": "내가 쌓은 높이 <h>{height}</h>",
+      "my_share_pct": "전체의 {v}%",
+      "my_share_tiny": "전체의 0.1% 미만",
       "milestones_title": "지나온 이정표",
       "milestone_by": "<user>{nickname}</user>님의 『{title}』로 넘었어요",
       "landmarks": {

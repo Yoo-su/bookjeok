@@ -6,6 +6,7 @@ import {
   LoungeFeedResponse,
   LoungeMountainResponse,
   LoungePopularResponse,
+  MyMountainShareResponse,
   ReadingLog,
   ReadingLogBookStatus,
   ReadingLogListResponse,
@@ -214,6 +215,15 @@ export const getLoungeMountain = async (): Promise<LoungeMountainResponse> => {
   );
   return data;
 };
+
+/** 책동산에서 내가 쌓은 몫을 조회합니다. (인증 필요) */
+export const getMyMountainShare =
+  async (): Promise<MyMountainShareResponse> => {
+    const { data } = await privateApiClient.get<MyMountainShareResponse>(
+      API_PATHS.readingLog.mountainMine,
+    );
+    return data;
+  };
 
 /**
  * 특정 도서의 전체 독자 목록을 조회합니다. (공개 API - 인증 불필요)

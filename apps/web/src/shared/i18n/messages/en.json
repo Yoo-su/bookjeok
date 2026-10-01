@@ -1747,6 +1747,9 @@
       "peak_title": "Just added",
       "peak_hint": "The latest books on top of the mountain.",
       "cta": "Add my books",
+      "my_share": "I added <h>{height}</h>",
+      "my_share_pct": "{v}% of the mountain",
+      "my_share_tiny": "under 0.1% of the mountain",
       "milestones_title": "Landmarks passed",
       "milestone_by": "passed with {title} by <user>{nickname}</user>",
       "landmarks": {

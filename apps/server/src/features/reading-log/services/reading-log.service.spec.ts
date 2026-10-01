@@ -719,5 +719,37 @@ describe('ReadingLogService', () => {
       expect(readingLogRepository.createQueryBuilder).toHaveBeenCalledTimes(1);
       expect(result).toMatchObject({ totalMm: 0, bookCount: 0, peak: [] });
     });
+
+    it('내 몫은 같은 조회에서 전체 높이와 함께 낸다', async () => {
+      const rowsQb = mockSelectQueryBuilder({
+        getRawMany: jest
+          .fn()
+          .mockResolvedValue([raw(1, 7), raw(2, 8), raw(3, 7)]),
+      });
+      (
+        readingLogRepository.createQueryBuilder as jest.Mock
+      ).mockReturnValueOnce(rowsQb);
+
+      const result = await service.getMyMountainShare(7);
+
+      expect(rowsQb.where).toHaveBeenCalledWith(
+        'u.isReadingLogPublic = :isPublic',
+        { isPublic: true },
+      );
+      expect(result).toEqual({ myMm: 40, myCount: 2, totalMm: 60 });
+    });
+
+    it('산에 내 기록이 없으면(비공개 등) 0권이다', async () => {
+      const rowsQb = mockSelectQueryBuilder({
+        getRawMany: jest.fn().mockResolvedValue([raw(1, 8)]),
+      });
+      (
+        readingLogRepository.createQueryBuilder as jest.Mock
+      ).mockReturnValueOnce(rowsQb);
+
+      const result = await service.getMyMountainShare(7);
+
+      expect(result).toEqual({ myMm: 0, myCount: 0, totalMm: 20 });
+    });
   });
 });

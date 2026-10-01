@@ -90,6 +90,8 @@ export const API_PATHS = {
     loungeActiveReaders: "/reading-logs/lounge/active-readers",
     /** 북적 책동산: 공개 기록 전체의 높이·지층·꼭대기 */
     loungeMountain: "/reading-logs/lounge/mountain",
+    /** 책동산에서 내가 쌓은 몫 (인증 필요) */
+    mountainMine: "/reading-logs/mountain/me",
     loungeBookReaders: (isbn: string) =>
       `/reading-logs/lounge/book/${isbn}/readers`,
   },

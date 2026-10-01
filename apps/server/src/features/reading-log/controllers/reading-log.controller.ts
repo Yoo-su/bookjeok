@@ -123,6 +123,16 @@ export class ReadingLogController {
     return this.readingLogService.getStack(req.user.id, Number(year));
   }
 
+  @Get('mountain/me')
+  @ApiOperation({
+    summary: '책동산 내 몫 조회',
+    description:
+      '북적 책동산에서 내가 올린 책의 두께 합·권수와 같은 시점의 전체 높이를 반환합니다. 비공개 설정이면 0권입니다.',
+  })
+  getMyMountainShare(@Request() req) {
+    return this.readingLogService.getMyMountainShare(req.user.id);
+  }
+
   @Get('settings')
   @ApiOperation({
     summary: '독서 기록 설정 조회',

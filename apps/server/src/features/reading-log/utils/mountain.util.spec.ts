@@ -1,6 +1,6 @@
 import { MOUNTAIN_MAX_BANDS } from '@bookjeok/core';
 
-import { buildMountain, MountainRow } from './mountain.util';
+import { buildMountain, MountainRow, mountainShareOf } from './mountain.util';
 
 const row = (
   i: number,
@@ -86,5 +86,17 @@ describe('buildMountain', () => {
 
     expect(m).toMatchObject({ totalMm: 0, readerCount: 0, bands: [] });
     expect(m.crossings).toEqual([]);
+  });
+});
+
+describe('mountainShareOf', () => {
+  it('그 사람이 올린 책의 두께와 권수만 더한다', () => {
+    const { books } = buildMountain(
+      [row(1), row(2, { userId: 2, depth: 50 }), row(3, { depth: 35 })],
+      new Date(),
+    );
+
+    expect(mountainShareOf(books, 1)).toEqual({ mm: 55, count: 2 });
+    expect(mountainShareOf(books, 3)).toEqual({ mm: 0, count: 0 });
   });
 });

@@ -8,11 +8,15 @@ import {
   type MountainLandmarkId,
   nextMountainLandmark,
 } from "@bookjeok/core";
-import { useLoungeMountainQuery } from "@bookjeok/react-query";
+import {
+  useLoungeMountainQuery,
+  useMyMountainShareQuery,
+} from "@bookjeok/react-query";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
@@ -151,6 +155,7 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
             ))}
           </ol>
           <div className="mt-5 lg:mt-6">
+            <MyShare len={len} />
             <ReadingLogStartLink
               view="calendar"
               className="border border-stone-300 bg-white text-stone-800 hover:border-stone-400 hover:bg-stone-50 w-full"
@@ -202,6 +207,33 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
         </div>
       )}
     </section>
+  );
+}
+
+/** 책동산에서 내 몫. 비로그인이거나 산에 내 책이 없으면(비공개 설정 포함) 그리지 않는다 */
+function MyShare({ len }: { len: (mm: number) => string }) {
+  const t = useTranslations("lounge.mountain");
+  const user = useAuthStore((s) => s.user);
+  const { data } = useMyMountainShareQuery({ enabled: !!user });
+  if (!user || !data?.myCount || !data.totalMm) return null;
+  const pct = (data.myMm / data.totalMm) * 100;
+  return (
+    <p className="mb-3 flex flex-wrap items-baseline gap-x-1.5 text-sm text-stone-500">
+      {t.rich("my_share", {
+        height: len(data.myMm),
+        h: (chunks) => (
+          <strong className="font-[family-name:var(--font-gaegu)] text-2xl font-bold leading-none text-stone-900">
+            {chunks}
+          </strong>
+        ),
+      })}
+      <span>
+        {"· "}
+        {pct < 0.1
+          ? t("my_share_tiny")
+          : t("my_share_pct", { v: Number(pct.toFixed(1)) })}
+      </span>
+    </p>
   );
 }
 
