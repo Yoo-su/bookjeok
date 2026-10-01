@@ -26,7 +26,8 @@ user/
 
 ### 프로필 수정
 
-- **닉네임 중복 확인** — `GET /user/check-nickname`으로 저장 전에 검증합니다.
+- **닉네임 검사** — 입력을 `normalizeNickname`(NFC·앞뒤 공백 제거)으로 정규화한 뒤 `validateNickname`으로 서버와 같은 규칙(2~20자, 허용 문자)을 먼저 검사하고, 통과하면 `GET /user/check-nickname`으로 중복을 확인합니다. 두 함수와 규칙 상수는 `@bookjeok/core`에 있습니다. 형식 오류도 중복 확인과 같은 디바운스 뒤에 띄웁니다. 한글 조합 중 잠깐 낀 자모("독ㅈ")로 에러가 깜빡이지 않게 하기 위해서입니다. 입력이 바뀐 뒤 늦게 도착한 이전 중복 확인 응답은 버립니다.
+- **저장은 `useUpdateUserMutation`(`features/user/mutations`)으로 합니다.** `updateProfile`을 직접 부르면 아래 공개 프로필 캐시 정리가 빠집니다(2026-10-01 이전 모달이 그랬습니다). 성공·실패 토스트는 문구가 결과마다 달라 훅이 아니라 모달이 띄웁니다.
 - **핸들(`handle`)** — 공개 프로필 URL(`/users/[handle]`)의 식별자입니다. 폐지된 공유 덱 링크(`/share/deck/[handle]`)는 이 프로필로 리다이렉트하고, 그 사용자의 독서 키재기를 보게 됩니다. **가입 시 자동 생성되며 수정 수단이 없습니다** (`UpdateUserDto`에 필드가 없습니다). 바꿀 수 있게 만든다면 기존 링크가 깨지는 것과 별개로, 이전 핸들 경로의 ISR 캐시도 함께 비워야 합니다([캐싱 문서](../../../docs/CACHING.md#재검증-범위-규칙)).
 - **공개 프로필은 1시간 ISR입니다.** 닉네임이 `generateMetadata` 타이틀에도 들어가므로, 저장 후 `revalidateUserProfile`로 서버 캐시까지 비웁니다. 쿼리 무효화만으로는 다른 방문자·크롤러에게 닿지 않습니다.
 - **프로필 이미지** — 클라이언트 압축 후 Vercel Blob 업로드. 표시용 URL 정규화는 `shared/utils/profile-image`가 담당합니다.

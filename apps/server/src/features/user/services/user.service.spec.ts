@@ -40,8 +40,21 @@ describe('UserService', () => {
   let mockManager: Partial<EntityManager>;
   let mockTxHost: { tx: Partial<EntityManager> };
   let mockEventEmitter: { emitAsync: jest.Mock; emit: jest.Mock };
+  let mockUserRepository: {
+    findOne: jest.Mock;
+    merge: jest.Mock;
+    save: jest.Mock;
+  };
 
   beforeEach(async () => {
+    mockUserRepository = {
+      findOne: jest.fn(),
+      merge: jest.fn((user: object, patch: object) =>
+        Object.assign(user, patch),
+      ),
+      save: jest.fn((user: object) => Promise.resolve(user)),
+    };
+
     mockManager = {
       findOne: jest.fn(),
       find: jest.fn().mockResolvedValue([]),
@@ -61,7 +74,7 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: getRepositoryToken(User), useValue: {} },
+        { provide: getRepositoryToken(User), useValue: mockUserRepository },
         { provide: getRepositoryToken(UsedBookSale), useValue: {} },
         { provide: getRepositoryToken(ChatParticipant), useValue: {} },
         { provide: getRepositoryToken(Review), useValue: {} },
@@ -167,6 +180,33 @@ describe('UserService', () => {
         'trade.reservation_cancelled',
         { saleId: 20, sellerId: 7, buyerId: 1 },
       );
+    });
+  });
+
+  describe('updateUser', () => {
+    const userOf = (provider: string) => ({
+      id: 1,
+      provider,
+      email: 'test@example.com',
+    });
+
+    it('로컬 유저가 이메일을 null로 보내면 LOCAL_USER_EMAIL_REQUIRED 예외를 던져야 합니다', async () => {
+      mockUserRepository.findOne.mockResolvedValueOnce(userOf('local'));
+
+      await expect(
+        service.updateUser(1, { email: null } as unknown as Partial<User>),
+      ).rejects.toMatchObject({ errorCode: 'LOCAL_USER_EMAIL_REQUIRED' });
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('소셜 유저는 이메일을 null로 비울 수 있어야 합니다', async () => {
+      mockUserRepository.findOne.mockResolvedValueOnce(userOf('kakao'));
+
+      const saved = await service.updateUser(1, {
+        email: null,
+      } as unknown as Partial<User>);
+
+      expect(saved.email).toBeNull();
     });
   });
 });

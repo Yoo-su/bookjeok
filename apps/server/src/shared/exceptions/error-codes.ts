@@ -76,6 +76,10 @@ export const ERROR_CODES = {
     code: 'AUTH_015',
     message: '탈퇴한 계정입니다. 새로 가입해주세요.',
   },
+  LOCAL_USER_EMAIL_REQUIRED: {
+    code: 'AUTH_016',
+    message: '이메일로 가입한 계정은 이메일을 비울 수 없습니다.',
+  },
 
   // ============================================
   // 사용자 관련 에러 (USER)

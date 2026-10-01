@@ -1,4 +1,12 @@
-import { checkNickname, updateProfile } from "@bookjeok/api-client";
+import { checkNickname } from "@bookjeok/api-client";
+import {
+  NICKNAME_MAX_LENGTH,
+  type NicknameError,
+  normalizeNickname,
+  type UpdateUserProfileParams,
+  USER_NAME_MAX_LENGTH,
+  validateNickname,
+} from "@bookjeok/core";
 import { upload } from "@vercel/blob/client";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -6,6 +14,7 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
+import { useUpdateUserMutation } from "@/features/user/mutations";
 import { Camera, Loader2, Lock } from "@/shared/components/icons/iconsax";
 import {
   Avatar,
@@ -49,6 +58,18 @@ const DEFAULT_PROFILE_IMAGES = [
   "default_profile10",
 ];
 
+const NICKNAME_ERROR_KEYS = {
+  too_short: "nickname_min",
+  too_long: "nickname_max",
+  invalid_chars: "nickname_invalid",
+} as const satisfies Record<NicknameError, string>;
+
+/** 번역 함수 정체성에 effect가 묶이지 않도록 상태에는 메시지 키만 둔다 */
+type NicknameErrorKey =
+  | (typeof NICKNAME_ERROR_KEYS)[NicknameError]
+  | "nickname_taken"
+  | "nickname_error";
+
 interface ProfileEditModalProps {
   trigger?: React.ReactNode;
 }
@@ -65,6 +86,8 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
   const accessToken = useAuthStore((state) => state.accessToken);
+  // 공개 프로필 쿼리·ISR 캐시까지 비우는 훅. api-client를 직접 부르면 그 정리가 빠진다
+  const { mutateAsync: updateProfile } = useUpdateUserMutation();
 
   // 폼 상태
   const [nickname, setNickname] = useState("");
@@ -83,13 +106,19 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
   const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(
     null,
   );
-  const [nicknameError, setNicknameError] = useState<string | null>(null);
+  const [nicknameErrorKey, setNicknameErrorKey] =
+    useState<NicknameErrorKey | null>(null);
+  const nicknameError = nicknameErrorKey ? t(nicknameErrorKey) : null;
 
   // 저장 상태
   const [isSaving, setIsSaving] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nicknameCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 서버와 같은 규칙으로 정규화한 값으로 비교·검사·저장한다
+  const normalizedNickname = normalizeNickname(nickname);
+  const isNicknameChanged = normalizedNickname !== user?.nickname;
 
   // 모달 열릴 때 초기값 설정
   useEffect(() => {
@@ -103,58 +132,55 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
       setCustomImageFile(null);
       setCustomImagePreview(null);
       setNicknameAvailable(null);
-      setNicknameError(null);
+      setNicknameErrorKey(null);
     }
   }, [open, user]);
 
-  // 닉네임 변경 시 중복 검사 (debounce)
+  // 닉네임 변경 시 형식·중복 검사 (debounce)
+  // 확인이 끝날 때까지 nicknameAvailable이 null이라 저장은 바로 잠긴다
   useEffect(() => {
-    if (!nickname || nickname === user?.nickname) {
-      setNicknameAvailable(null);
-      setNicknameError(null);
-      return;
-    }
+    setNicknameAvailable(null);
+    setNicknameErrorKey(null);
 
-    // 닉네임 유효성 검사
-    if (nickname.length < 2) {
-      setNicknameError(t("nickname_min"));
-      setNicknameAvailable(null);
-      return;
-    }
-    if (nickname.length > 20) {
-      setNicknameError(t("nickname_max"));
-      setNicknameAvailable(null);
-      return;
-    }
+    if (!isNicknameChanged) return;
 
-    setNicknameError(null);
-
-    // 디바운스 처리
+    // 입력이 바뀐 뒤 도착한 이전 응답은 버린다
+    let cancelled = false;
     if (nicknameCheckTimeoutRef.current) {
       clearTimeout(nicknameCheckTimeoutRef.current);
     }
 
     nicknameCheckTimeoutRef.current = setTimeout(async () => {
+      // 한글 조합 중에는 "독ㅈ"처럼 자모가 잠깐 끼므로 형식 오류도 입력이 멈춘 뒤에 알린다
+      const validationError = validateNickname(normalizedNickname);
+      if (validationError) {
+        setNicknameErrorKey(NICKNAME_ERROR_KEYS[validationError]);
+        return;
+      }
+
       setIsCheckingNickname(true);
       try {
-        const result = await checkNickname(nickname);
+        const result = await checkNickname(normalizedNickname);
+        if (cancelled) return;
         setNicknameAvailable(result.available);
         if (!result.available) {
-          setNicknameError(t("nickname_taken"));
+          setNicknameErrorKey("nickname_taken");
         }
       } catch {
-        setNicknameError(t("nickname_error"));
+        if (!cancelled) setNicknameErrorKey("nickname_error");
       } finally {
-        setIsCheckingNickname(false);
+        if (!cancelled) setIsCheckingNickname(false);
       }
     }, 500);
 
     return () => {
+      cancelled = true;
+      setIsCheckingNickname(false);
       if (nicknameCheckTimeoutRef.current) {
         clearTimeout(nicknameCheckTimeoutRef.current);
       }
     };
-  }, [nickname, user?.nickname, t]);
+  }, [normalizedNickname, isNicknameChanged]);
 
   // 이미지 파일 선택 처리
   const handleImageSelect = useCallback(
@@ -214,7 +240,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
     if (!user) return;
 
     // 닉네임 변경 시 중복 검사 확인
-    if (nickname !== user.nickname && !nicknameAvailable) {
+    if (isNicknameChanged && !nicknameAvailable) {
       toast.error(t("nickname_check"));
       return;
     }
@@ -222,23 +248,17 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
     setIsSaving(true);
 
     try {
-      const updateData: {
-        nickname?: string;
-        name?: string | null;
-        email?: string;
-        gender?: string | null;
-        ageRange?: string | null;
-        profileImageUrl?: string;
-      } = {};
+      const updateData: UpdateUserProfileParams = {};
 
       // 닉네임 변경
-      if (nickname !== user.nickname) {
-        updateData.nickname = nickname;
+      if (isNicknameChanged) {
+        updateData.nickname = normalizedNickname;
       }
 
       // 이름 변경
-      if (name !== (user.name || "")) {
-        updateData.name = name || null;
+      const trimmedName = name.trim();
+      if (trimmedName !== (user.name || "")) {
+        updateData.name = trimmedName || null;
       }
 
       // 이메일 변경/등록 (로컬 유저, 카카오 유저, 또는 이메일 미등록 유저)
@@ -313,7 +333,8 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
     }
   }, [
     user,
-    nickname,
+    isNicknameChanged,
+    normalizedNickname,
     name,
     email,
     gender,
@@ -323,6 +344,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
     customImageFile,
     setUser,
     accessToken,
+    updateProfile,
     t,
   ]);
 
@@ -336,7 +358,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
   const isSaveDisabled =
     isSaving ||
     isCheckingNickname ||
-    (nickname !== user.nickname && !nicknameAvailable) ||
+    (isNicknameChanged && !nicknameAvailable) ||
     !!nicknameError;
 
   const isLocalUser = user.provider === "local";
@@ -422,7 +444,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder={t("nickname_placeholder")}
-                maxLength={20}
+                maxLength={NICKNAME_MAX_LENGTH}
                 className={`h-10 bg-stone-50 border-stone-200 focus:bg-white text-base md:text-sm ${
                   nicknameError
                     ? "border-red-500 focus-visible:ring-red-200"
@@ -442,7 +464,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
                 <span className="inline-block h-1 w-1 rounded-full bg-red-500" />
                 {nicknameError}
               </p>
-            ) : nicknameAvailable && nickname !== user.nickname ? (
+            ) : nicknameAvailable && isNicknameChanged ? (
               <p className="flex items-center gap-1 text-xs text-emerald-600">
                 <span className="inline-block h-1 w-1 rounded-full bg-emerald-500" />
                 {t("nickname_available")}
@@ -465,7 +487,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("name_placeholder")}
-              maxLength={50}
+              maxLength={USER_NAME_MAX_LENGTH}
               className="h-10 bg-stone-50 border-stone-200 focus:bg-white text-base md:text-sm"
             />
           </div>

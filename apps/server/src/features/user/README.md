@@ -5,9 +5,9 @@
 ## 1. 주요 파일 및 역할
 
 - **`controllers/user.controller.ts`**: `/user` 경로의 API. 내 프로필·통계·판매글, 공개 프로필, 닉네임 검사, 프로필 수정, 회원 탈퇴.
-- **`services/user.service.ts`**: 사용자 조회·생성(소셜/이메일), 프로필 수정(이메일 변경 시 재인증 토큰 발급), 공개 프로필 집계, `tokenVersion` 증가, 이메일 인증 토큰 검증·재발송, **회원 탈퇴**(아래 참고). 개발 환경에서는 `onModuleInit`이 `users` id 시퀀스를 동기화합니다.
+- **`services/user.service.ts`**: 사용자 조회·생성(소셜/이메일), 프로필 수정(이메일 변경 시 재인증 토큰 발급, 로컬 유저는 이메일을 `null`로 비울 수 없음), 공개 프로필 집계, `tokenVersion` 증가, 이메일 인증 토큰 검증·재발송, **회원 탈퇴**(아래 참고). 개발 환경에서는 `onModuleInit`이 `users` id 시퀀스를 동기화합니다.
 - **`entities/user.entity.ts`**: `users` 테이블. 필드별 공개 범위(항상 숨김/본인만/공개)는 [`shared/README.md`의 「사용자 직렬화」](../../shared/README.md)를 보세요. **`wishlist.entity.ts`**(`Wishlist`)도 이 폴더에 있고, 위시리스트 API는 [`wishlist`](../wishlist/README.md) 모듈이 제공합니다.
-- **`dtos/`**: `update-user.dto.ts`(닉네임·프로필 이미지·실명·성별·연령대·이메일), `my-profile-response.dto.ts`(내 프로필 응답, `role` 포함), `public-user-profile.dto.ts`(공개 프로필), `update-sale-status.dto.ts`.
+- **`dtos/`**: `update-user.dto.ts`(닉네임·프로필 이미지·실명·성별·연령대·이메일. 아래 「프로필 수정 검증」 참고), `my-profile-response.dto.ts`(내 프로필 응답, `role` 포함), `public-user-profile.dto.ts`(공개 프로필), `update-sale-status.dto.ts`.
 - **`decorators/current-user.decorator.ts`**: `req.user`를 `@CurrentUser()`로 꺼냅니다.
 - **`utils/nickname-generator.ts`**: 신규 사용자에게 "형용사 + 명사" 패턴 닉네임(15×15조합)을 부여합니다.
 - **`listeners/user-cleanup.listener.ts`**: `user.withdrawn`을 받아 사용자 행을 익명화합니다. 탈퇴 리스너 목록은 [`shared/README.md`](../../shared/README.md#회원-탈퇴-캐스케이드).
@@ -26,6 +26,21 @@
 | `DELETE`    | `/me`              | 회원 탈퇴                                                                      | ✅                            |
 
 위시리스트(`/user/wishlist/*`)는 경로만 `/user` 아래일 뿐 이 컨트롤러가 아니라 `wishlist` 모듈의 컨트롤러입니다.
+
+### 프로필 수정 검증
+
+생략한 필드는 바꾸지 않습니다. 규칙 상수는 `@bookjeok/core`(`features/user/constants.ts`)에 있고 웹 모달도 같은 값을 씁니다.
+
+| 필드              | 규칙                                                                                                                                                                                                    |
+| :---------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `nickname`        | NFC 정규화·앞뒤 공백 제거 후 2~20자, 한글 완성형·영문·숫자·`_`, 단어 사이 공백 한 칸. `null`·빈 값 거부. 허용 목록인 이유는 한글 채움 문자(U+3164)·폭 없는 공백으로 만든 빈 닉네임을 막기 위해서입니다. |
+| `email`           | 형식 검사. 로컬 가입자는 이메일로 로그인하므로 `null`로 비울 수 없습니다(`LOCAL_USER_EMAIL_REQUIRED`).                                                                                                  |
+| `name`            | 50자 이하. 공백뿐이면 `null`로 저장합니다.                                                                                                                                                              |
+| `gender`          | `M`·`F`·`U` 또는 `null`                                                                                                                                                                                 |
+| `ageRange`        | `0-9` ~ `60-` 7개 값 또는 `null`                                                                                                                                                                        |
+| `profileImageUrl` | 기본 이미지 식별자(`default_profile1~10`) 또는 Vercel Blob(`https://*.public.blob.vercel-storage.com/...`) 주소, 또는 `null`. 가입 시 받은 소셜 프로필 주소는 그대로 두면 유지됩니다.                   |
+
+회원가입(`RegisterDto`)의 닉네임 규칙은 2~10자·공백 불가로 더 엄격합니다. 자동 생성 닉네임("행복한 판다")에 공백이 있어 수정 규칙에서는 공백을 허용합니다.
 
 ## 3. `User` 엔티티 주요 컬럼
 

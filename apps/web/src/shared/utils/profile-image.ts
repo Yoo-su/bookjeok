@@ -1,7 +1,8 @@
 /**
  * 프로필 이미지 URL 유틸리티
- * 기본 프로필 이미지 식별자(default_profile1~5)를 실제 경로로 변환합니다.
+ * 기본 프로필 이미지 식별자(default_profile1~10)를 실제 경로로 변환합니다.
  */
+import { DEFAULT_PROFILE_IMAGE_PATTERN } from "@bookjeok/core";
 
 /**
  * 기본 프로필 이미지 식별자인지 확인합니다.
@@ -10,13 +11,12 @@
  */
 export function isDefaultProfileImage(url: string | null | undefined): boolean {
   if (!url) return false;
-  // default_profile1 ~ default_profile10
-  return /^default_profile([1-9]|10)$/.test(url);
+  return DEFAULT_PROFILE_IMAGE_PATTERN.test(url);
 }
 
 /**
  * 프로필 이미지 URL을 실제 표시 가능한 경로로 변환합니다.
- * - 기본 프로필 식별자(default_profile1~5): /images/avatars/default_profile1.svg 형태로 변환
+ * - 기본 프로필 식별자(default_profile1~10): /images/avatars/default_profile1.svg 형태로 변환
  * - 일반 URL: 그대로 반환
  * - null/undefined: undefined 반환 (AvatarFallback 사용)
  *

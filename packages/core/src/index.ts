@@ -44,8 +44,10 @@ export * from "./features/review/utils";
 export { tradeKeys, tradeReviewKeys } from "./features/trade/query-keys";
 export * from "./features/trade/review-tags";
 export * from "./features/trade/types";
+export * from "./features/user/constants";
 export { userKeys } from "./features/user/query-keys";
 export * from "./features/user/types";
+export * from "./features/user/utils";
 
 // Shared Types
 export * from "./shared/types/api";
