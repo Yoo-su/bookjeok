@@ -3,6 +3,7 @@ import { readingLogKeys } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { gaegu } from "@/styles/fonts";
 
 import { SAMPLE_BOOKS as SAMPLE } from "../lib/sample-books";
@@ -23,7 +24,10 @@ const MANY = Array.from({ length: 300 }, (_, i) => {
   return { ...b, logId: `many-${i}`, date: `2026-${month}-${day}` };
 });
 
-function withStack(items: ReadingStackBook[] | "error") {
+function withStack(
+  items: ReadingStackBook[] | "error",
+  settings?: { isReadingLogPublic: boolean },
+) {
   return function Decorator(Story: () => React.ReactElement) {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -35,6 +39,9 @@ function withStack(items: ReadingStackBook[] | "error") {
     } else {
       const data: ReadingStackResponse = { year: 2026, items };
       client.setQueryData(readingLogKeys.stack(2026).queryKey, data);
+    }
+    if (settings) {
+      client.setQueryData(readingLogKeys.settings.queryKey, settings);
     }
     return (
       <QueryClientProvider client={client}>
@@ -68,3 +75,17 @@ export const EstimatedSizes: Story = {
 export const ManyBooks: Story = { decorators: [withStack(MANY)] };
 export const Empty: Story = { decorators: [withStack([])] };
 export const LoadError: Story = { decorators: [withStack("error")] };
+
+/** 로그인 사용자. 공유 다이얼로그에 프로필 링크 줄이 나온다 */
+const signedIn = () => {
+  useAuthStore.setState({ user: { handle: "bookjeok_reader" } as never });
+};
+export const ShareLink: Story = {
+  beforeEach: signedIn,
+  decorators: [withStack(SAMPLE, { isReadingLogPublic: true })],
+};
+/** 독서 기록이 비공개면 링크로 온 사람이 책을 못 본다고 알린다 */
+export const ShareLinkPrivate: Story = {
+  beforeEach: signedIn,
+  decorators: [withStack(SAMPLE, { isReadingLogPublic: false })],
+};

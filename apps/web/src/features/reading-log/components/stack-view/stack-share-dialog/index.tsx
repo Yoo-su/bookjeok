@@ -1,20 +1,24 @@
 "use client";
 
 import type { ReadingStackBook } from "@bookjeok/core";
+import { useReadingLogSettingsQuery } from "@bookjeok/react-query";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { DocumentCopy } from "@/shared/components/icons/iconsax";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from "@/shared/components/shadcn/dialog";
+import { PATHS } from "@/shared/constants/paths";
 import { cn } from "@/shared/utils";
 import { gaegu, gowun_batang } from "@/styles/fonts";
 
+import { useUpdateReadingLogSettingsMutation } from "../../../mutations";
 import type { StackCompareMode } from "../../../stores/use-stack-settings-store";
 import { LEGEND_MAX } from "../lib/legend";
 import { bookColor, type SceneLabels } from "../lib/scene";
@@ -43,6 +47,8 @@ interface StackShareDialogProps {
   initialMode: StackCompareMode;
   /** 사물 무대와 그 부제 */
   object: StackStageObject & { subline: string };
+  /** 이미지를 본 사람이 들어올 공개 프로필의 주인 */
+  handle?: string;
 }
 
 function download(blob: Blob, filename: string) {
@@ -63,10 +69,24 @@ export function StackShareDialog({
   year,
   initialMode,
   object,
+  handle,
   ...scene
 }: StackShareDialogProps) {
   const t = useTranslations("reading_log.stack.share");
   const tStack = useTranslations("reading_log.stack");
+  const locale = useLocale();
+  const { data: settings } = useReadingLogSettingsQuery();
+  const { mutate: updateSettings, isPending: publishing } =
+    useUpdateReadingLogSettingsMutation();
+  const isPrivate = settings?.isReadingLogPublic === false;
+  // 이미지와 같은 연도로 열리게 하고, 공유로 들어온 방문을 ref로 구분한다
+  const profilePath = handle
+    ? PATHS.USER_PROFILE(encodeURIComponent(handle))
+    : null;
+  const profileUrl =
+    profilePath && typeof window !== "undefined"
+      ? `${window.location.origin}/${locale}${profilePath}?year=${year}&ref=share`
+      : null;
   const [format, setFormat] = useState<ShareFormat>("story");
   const [mode, setMode] = useState(initialMode);
   // 열 때마다 화면에서 보던 탭으로 시작한다
@@ -171,8 +191,27 @@ export function StackShareDialog({
 
   const filename = `bookjeok-reading-height-${year}.png`;
 
+  const copyLink = () => {
+    if (!profileUrl) return Promise.resolve(false);
+    return (
+      navigator.clipboard
+        ?.writeText(profileUrl)
+        .then(() => true)
+        .catch(() => false) ?? Promise.resolve(false)
+    );
+  };
+
+  const handleCopy = async () => {
+    if (await copyLink()) toast.success(t("link_copied"));
+    else toast.error(t("link_copy_failed"));
+  };
+
   const handleShare = async () => {
     if (!image) return;
+    // 이미지 파일에는 링크를 담을 수 없어 클립보드에 같이 넣어 둔다. 링크를 공유 데이터에 섞으면
+    // 인스타 스토리처럼 이미지만 받는 앱이 목록에서 빠질 수 있어 공유는 파일만 보낸다.
+    // 사파리는 await 뒤의 share()를 사용자 동작 밖으로 보므로 복사를 기다리지 않는다
+    void copyLink();
     const file = new File([image.blob], filename, { type: "image/png" });
     if (navigator.canShare?.({ files: [file] })) {
       try {
@@ -322,6 +361,41 @@ export function StackShareDialog({
             </>
           )}
         </div>
+        {profileUrl && (
+          <div className="rounded-2xl border border-stone-200 px-3.5 py-2.5">
+            <div className="flex items-center gap-2">
+              <span className="min-w-0 flex-1 truncate text-[13px] text-stone-600">
+                {window.location.host}
+                {profilePath}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[12.5px] font-semibold text-stone-600 hover:bg-stone-100"
+              >
+                <DocumentCopy className="h-3.5 w-3.5" />
+                {t("link_copy")}
+              </button>
+            </div>
+            {isPrivate ? (
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <p role="alert" className="text-xs text-amber-700">
+                  {t("link_private")}
+                </p>
+                <button
+                  type="button"
+                  disabled={publishing}
+                  onClick={() => updateSettings(true)}
+                  className="shrink-0 cursor-pointer rounded-full bg-stone-900 px-2.5 py-1 text-[12px] font-semibold text-white disabled:opacity-40"
+                >
+                  {t("link_make_public")}
+                </button>
+              </div>
+            ) : (
+              <p className="mt-0.5 text-xs text-stone-500">{t("link_hint")}</p>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
