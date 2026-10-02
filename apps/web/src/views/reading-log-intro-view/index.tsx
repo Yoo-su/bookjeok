@@ -31,7 +31,7 @@ export function ReadingLogIntroView() {
   const t = useTranslations("reading_log_page");
 
   return (
-    <article className="mx-auto grid max-w-3xl gap-12 py-6 sm:py-10">
+    <article className="grid gap-12 py-6 sm:py-10">
       <header className="grid gap-3">
         <p className="flex items-center gap-2.5 text-[10.5px] font-bold uppercase tracking-[0.3em] text-stone-500 before:h-px before:w-6 before:bg-current">
           {t("kicker")}
