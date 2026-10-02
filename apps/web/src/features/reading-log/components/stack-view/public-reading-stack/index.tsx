@@ -2,6 +2,7 @@
 
 import type { ReadingStackBook } from "@bookjeok/core";
 import { usePublicReadingStackQuery } from "@bookjeok/react-query";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 
@@ -40,7 +41,15 @@ export function PublicReadingStack({
 }: PublicReadingStackProps) {
   const t = useTranslations("reading_log.stack");
   const thisYear = new Date().getFullYear();
-  const [year, setYear] = useState(initialYear);
+  // 공유 이미지의 링크는 ?year=로 이미지와 같은 해를 연다
+  const linkedYear = Number(useSearchParams().get("year"));
+  const [year, setYear] = useState(
+    Number.isInteger(linkedYear) &&
+      linkedYear >= READING_LOG_MIN_YEAR &&
+      linkedYear <= thisYear
+      ? linkedYear
+      : initialYear,
+  );
   const { data, isLoading, isError, refetch } = usePublicReadingStackQuery(
     handle,
     year,

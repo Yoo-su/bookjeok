@@ -229,8 +229,11 @@ export async function renderStackShareImage(o: {
   ctx.fillText(texts.brand, M, fy);
   const bw = ctx.measureText(texts.brand).width;
   ctx.fillStyle = PALETTE.muted;
+  ctx.font = `500 28px ${fonts.ui}`;
+  const sw = ctx.measureText(texts.stats).width;
   ctx.font = `600 24px ${fonts.ui}`;
-  ctx.fillText(texts.site, M + bw + 18, fy - 4);
+  // 프로필 주소는 핸들 길이만큼 길어지므로 오른쪽 통계와 겹치지 않게 폭을 묶는다
+  ctx.fillText(texts.site, M + bw + 18, fy - 4, W - 2 * M - bw - 18 - sw - 32);
   ctx.textAlign = "right";
   ctx.font = `500 28px ${fonts.ui}`;
   ctx.fillText(texts.stats, W - M, fy - 4);

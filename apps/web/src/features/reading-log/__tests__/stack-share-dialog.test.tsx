@@ -6,10 +6,24 @@ import { SAMPLE_BOOKS } from "@/features/reading-log/components/stack-view/lib/s
 import { StackShareDialog } from "@/features/reading-log/components/stack-view/stack-share-dialog";
 
 const renderImage = vi.hoisted(() => vi.fn());
+const settings = vi.hoisted(() => ({
+  data: undefined as { isReadingLogPublic: boolean } | undefined,
+}));
+const updateSettings = vi.hoisted(() => vi.fn());
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, values?: Record<string, unknown>) =>
     values ? `${key}:${JSON.stringify(values)}` : key,
+  useLocale: () => "ko",
+}));
+vi.mock("@bookjeok/react-query", () => ({
+  useReadingLogSettingsQuery: () => settings,
+}));
+vi.mock("@/features/reading-log/mutations", () => ({
+  useUpdateReadingLogSettingsMutation: () => ({
+    mutate: updateSettings,
+    isPending: false,
+  }),
 }));
 vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) =>
@@ -33,6 +47,8 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  settings.data = undefined;
+  updateSettings.mockReset();
   renderImage.mockReset();
   renderImage.mockResolvedValue({
     toBlob: (cb: (b: Blob) => void) => cb(new Blob(["png"])),
@@ -47,7 +63,7 @@ const OBJECT = {
   subline: "object-subline",
 };
 
-function setup(initialMode: "object" | "person" = "person") {
+function setup(initialMode: "object" | "person" = "person", handle?: string) {
   return render(
     <StackShareDialog
       open
@@ -62,6 +78,7 @@ function setup(initialMode: "object" | "person" = "person") {
       texts={{ subline: "person-subline" } as never}
       initialMode={initialMode}
       object={OBJECT}
+      handle={handle}
     />,
   );
 }
@@ -126,5 +143,40 @@ describe("StackShareDialog 비교 대상", () => {
     await waitFor(() => expect(lastCall().object).toBeUndefined());
     expect(lastCall().labels).toEqual({ myHeight: "person" });
     expect(lastCall().texts.subline).toBe("person-subline");
+  });
+});
+
+describe("StackShareDialog 프로필 링크", () => {
+  it("핸들이 있으면 이미지와 같은 해의 프로필 주소를 보여 준다", () => {
+    setup("person", "reader");
+    expect(
+      screen.getByText(`${window.location.host}/users/reader`),
+    ).toBeInTheDocument();
+    expect(screen.getByText("link_hint")).toBeInTheDocument();
+  });
+
+  it("링크 복사는 연도와 공유 표시가 붙은 주소를 복사한다", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    setup("person", "reader");
+    fireEvent.click(screen.getByRole("button", { name: "link_copy" }));
+    await waitFor(() =>
+      expect(writeText).toHaveBeenCalledWith(
+        `${window.location.origin}/ko/users/reader?year=2026&ref=share`,
+      ),
+    );
+  });
+
+  it("비공개면 알리고 공개로 바꿀 수 있다", () => {
+    settings.data = { isReadingLogPublic: false };
+    setup("person", "reader");
+    expect(screen.getByRole("alert")).toHaveTextContent("link_private");
+    fireEvent.click(screen.getByRole("button", { name: "link_make_public" }));
+    expect(updateSettings).toHaveBeenCalledWith(true);
+  });
+
+  it("핸들이 없으면 링크 줄을 그리지 않는다", () => {
+    setup();
+    expect(screen.queryByText("link_hint")).not.toBeInTheDocument();
   });
 });

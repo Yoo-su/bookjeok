@@ -4,6 +4,7 @@ import type { ReadingStackBook } from "@bookjeok/core";
 import { useReadingStackQuery } from "@bookjeok/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { RotateCcw, Share2 } from "@/shared/components/icons/iconsax";
 import { cn } from "@/shared/utils";
 
@@ -50,6 +51,7 @@ export function ReadingStack({ year }: { year: number }) {
   const { character, heightCm, author } = useStackComparison();
   const comparisonName = author ? t(`authors.${author}`) : undefined;
   const userMm = heightCm * 10;
+  const handle = useAuthStore((s) => s.user?.handle);
 
   const books = useMemo(() => data?.items ?? [], [data]);
   const totals = useMemo(() => {
@@ -371,6 +373,7 @@ export function ReadingStack({ year }: { year: number }) {
           status={status}
           labels={labelsFor(status, userMm)}
           initialMode={mode}
+          handle={handle}
           object={{
             ...objectStage,
             subline: objectShareSubline(totals.stackMm),
@@ -383,7 +386,9 @@ export function ReadingStack({ year }: { year: number }) {
             heightUnit: t("height_unit"),
             subline: shareSubline(status, totals.stackMm, userMm),
             brand: t("share.brand"),
-            site: t("share.site"),
+            site: handle
+              ? t("share.site_profile", { handle })
+              : t("share.site"),
             stats: t("share.stats", {
               pages: totals.pages.toLocaleString(locale),
               kg: (totals.grams / 1000).toFixed(1),
