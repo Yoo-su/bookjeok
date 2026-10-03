@@ -1,7 +1,6 @@
 "use client";
 
 import { AnnouncementHost } from "@/features/announcement/components/announcement-host";
-import { RecentBooksDrawer } from "@/features/book/components/recent-books/recent-books-drawer";
 import { FeedbackDialog } from "@/features/feedback/components/feedback-dialog";
 
 import { DefaultFooter } from "./default-footer";
@@ -25,7 +24,6 @@ export const DefaultLayout = ({
         {children}
       </main>
       <DefaultFooter />
-      <RecentBooksDrawer />
       <AnnouncementHost />
       <FeedbackDialog />
     </div>

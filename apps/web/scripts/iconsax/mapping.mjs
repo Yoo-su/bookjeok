@@ -101,6 +101,7 @@ export const MAPPING = [
   { name: "Navigation", icon: "discover" },
   { name: "Calendar", icon: "calendar" },
   { name: "CalendarDays", icon: "calendar-date" },
+  { name: "Ruler", icon: "ruler" },
   { name: "Clock", icon: "clock", alias: ["ClockIcon"] },
   { name: "Camera", icon: "camera" },
   { name: "ImageIcon", icon: "image" },

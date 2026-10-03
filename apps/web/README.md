@@ -88,7 +88,7 @@ src/
 │   ├── utils/                # 포맷터, sanitize, 에러 핸들러, 캐시 퍼지 등
 │   ├── actions/              # revalidate server action
 │   └── i18n/messages/        # ko.json · en.json
-├── layouts/                  # DefaultLayout · Header · Navigation
+├── layouts/                  # DefaultLayout · Header · Navigation · BottomDock
 ├── styles/
 ├── middleware.ts             # next-intl 로케일 라우팅 + 크롤러 차단·라우트 형태 검사 (docs/CACHING.md 「크롤 표면」)
 └── __tests__/setup.ts        # Vitest 셋업 (jest-dom 매처 등록)

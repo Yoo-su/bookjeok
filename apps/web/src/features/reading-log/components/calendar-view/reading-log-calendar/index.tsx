@@ -15,7 +15,7 @@ import {
 } from "date-fns";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useOverlay } from "@/shared/hooks/use-overlay";
 import { cn } from "@/shared/utils";
@@ -47,6 +47,9 @@ interface ReadingLogCalendarProps {
   /** 넘기면 보기 모드를 밖에서 제어한다(내 독서기록 페이지가 마지막 보기를 기억한다) */
   viewMode?: ReadingLogViewMode;
   onViewModeChange?: (mode: ReadingLogViewMode) => void;
+  /** 이 날짜의 상세를 그 달 기록을 받은 뒤 한 번 띄움(dock 달력 패널에서 넘어온 딥링크) */
+  openDate?: Date | null;
+  onOpenDateHandled?: () => void;
 }
 
 export function ReadingLogCalendar({
@@ -56,6 +59,8 @@ export function ReadingLogCalendar({
   initialLogs = [],
   viewMode: controlledViewMode,
   onViewModeChange,
+  openDate,
+  onOpenDateHandled,
 }: ReadingLogCalendarProps) {
   const t = useTranslations("reading_log.calendar");
   const overlay = useOverlay();
@@ -119,6 +124,14 @@ export function ReadingLogCalendar({
       />
     ));
   };
+
+  useEffect(() => {
+    if (!openDate || readOnly || viewMode !== "calendar" || isLoading) return;
+    // 달이 바뀌기 전 렌더에서는 이전 달 기록이라 기다림
+    if (!isSameMonth(openDate, currentDate)) return;
+    handleDayClick(openDate);
+    onOpenDateHandled?.();
+  });
 
   return (
     <div className="w-full mx-auto space-y-6">

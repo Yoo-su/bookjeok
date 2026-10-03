@@ -41,9 +41,6 @@ vi.mock("@/features/chat/hooks/use-chat-events", () => ({
   }),
 }));
 
-vi.mock("@/features/chat/components/widgets/chat-toggle-button", () => ({
-  ChatToggleButton: () => null,
-}));
 vi.mock("@/features/chat/components/widgets/chat-widget", () => ({
   ChatWidget: () => null,
 }));

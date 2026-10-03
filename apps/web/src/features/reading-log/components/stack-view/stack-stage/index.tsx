@@ -59,6 +59,8 @@ interface StackStageProps {
   objectMaxHeight?: number;
   /** false면 사물 무대도 높이를 줄이지 않고 부모 높이를 그대로 쓴다(소개 모달처럼 틀이 정해진 곳) */
   fitObjectHeight?: boolean;
+  /** 쌓은 책만 그릴 때 책 폭 하한(px). 작은 무대에서 다독이 바늘처럼 보이지 않게 */
+  minStackWidthPx?: number;
   /** 무대 높이 등을 덮어쓴다 */
   className?: string;
   /** 바뀔 때마다 책을 다시 떨어뜨린다 */
@@ -80,6 +82,7 @@ export function StackStage({
   object,
   objectMaxHeight = OBJECT_STAGE.max,
   fitObjectHeight = true,
+  minStackWidthPx,
   className,
   replayKey,
   onIntroStart,
@@ -210,6 +213,7 @@ export function StackStage({
       measure,
       boil: !reducedMotion && !settling,
       figure: Boolean(labelsFor),
+      minStackWidthPx,
     });
   }, [
     size.width,
@@ -223,6 +227,7 @@ export function StackStage({
     measure,
     reducedMotion,
     settling,
+    minStackWidthPx,
   ]);
 
   // 책을 한 권씩 떨어뜨린다. 보이지 않는 탭에서는 타임라인이 멈춰 책이 투명하게 남으므로 건너뛴다

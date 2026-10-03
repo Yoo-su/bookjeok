@@ -55,6 +55,7 @@
 | `Navigation`          | —                    | iconsax · discover (outline)                     | —                                                                               |
 | `Calendar`            | —                    | iconsax · calendar (outline)                     | —                                                                               |
 | `CalendarDays`        | —                    | iconsax · calendar-date (outline)                | —                                                                               |
+| `Ruler`               | —                    | iconsax · ruler (outline)                        | —                                                                               |
 | `Clock`               | `ClockIcon`          | iconsax · clock (outline)                        | —                                                                               |
 | `Camera`              | —                    | iconsax · camera (outline)                       | —                                                                               |
 | `ImageIcon`           | —                    | iconsax · image (outline)                        | —                                                                               |

@@ -45,9 +45,10 @@
       "unauthorized": "You do not have permission."
     },
     "aria": {
-      "back": "Go back",
-      "forward": "Go forward",
       "scroll_top": "Scroll to top",
+      "dock": "Quick menu",
+      "chat_open": "Open chat",
+      "chat_close": "Close chat",
       "close": "Close",
       "menu": "Menu",
       "view_user_profile": "View {name}'s profile",
@@ -725,6 +726,22 @@
     }
   },
   "reading_log": {
+    "peek": {
+      "calendar_title": "Reading calendar",
+      "stack_title": "Reading stack",
+      "month_label": "{month}/{year}",
+      "month_count": "{count, plural, one {# book} other {# books}}",
+      "prev_month": "Previous month",
+      "next_month": "Next month",
+      "empty_month": "No records this month yet. Tap a day to add one.",
+      "day_label": "{month}/{day}",
+      "day_label_books": "{month}/{day}, {count, plural, one {# book} other {# books}}",
+      "open_calendar": "Open in reading log",
+      "open_stack": "See full stack",
+      "recent_books": "Recently stacked",
+      "stack_empty": "Log the books you finish this year to measure your stack.",
+      "stage_label": "{count, plural, one {# book} other {# books}} read in {year}, stacked {height}cm high"
+    },
     "hero": {
       "metadata": {
         "title": "Reading Log",

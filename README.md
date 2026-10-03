@@ -250,7 +250,8 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 - **위시리스트** — 관심 도서 담기 및 내 위시리스트 관리
 - **댓글** — 리뷰 댓글, 댓글 좋아요, 내가 쓴 댓글 모아보기
-- **배경음악 플레이어** — Zustand 전역 스토어 기반 플로팅 뮤직 플레이어(재생목록·반복 모드)
+- **하단 dock** — 채팅(안 읽음 배지)·기록 달력·독서 키재기·최근 본 책·음악·맨 위로를 화면 하단 한 줄에 모음. 누르면 페이지 이동 대신 패널(데스크톱 카드·모바일 바텀시트)이 열리고, 기록 달력·키재기 패널은 보기 전용으로 독서기록 페이지의 그날·그 보기로 이어짐. 모바일은 아래로 스크롤하거나 입력 중이면 숨기고, 다른 화면으로 옮기면 패널을 닫음(채팅은 유지)
+- **배경음악 플레이어** — Zustand 전역 스토어 기반 뮤직 플레이어(재생목록·반복 모드). 재생 중에는 하단 dock에서 바로 엶
 - **다국어(ko/en)** — `next-intl` 기반 `[locale]` 라우팅
 - **SEO** — 공개 리뷰·판매글 전체 및 연결 도서의 `sitemap.ts`, `robots.ts`, `manifest.ts`, RSS 피드(`/rss.xml`), JSON-LD 구조화 데이터(독서 키재기 소개의 FAQ 포함), canonical/hreflang, 마켓·리뷰·라운지·독서 키재기 전용 정적 공유 카드. 로그인 뒤에 있는 독서 기록과 독서 키재기는 공개 소개 페이지 `/reading-log`·`/reading-height`로 검색에 노출(FAQ JSON-LD 포함)
 - **분석·광고** — Vercel Analytics/Speed Insights, Google Analytics, Microsoft Clarity, Google AdSense
@@ -435,7 +436,7 @@ bookjeok/
 │   │   │                         #   confirm, feedback, insights, intro, music, notification,
 │   │   │                         #   order, reading-log, review, trade, user)
 │   │   ├── src/shared/           # 공용 컴포넌트·프로바이더·훅·유틸·i18n·analytics
-│   │   ├── src/layouts/          # DefaultLayout, Header, Navigation
+│   │   ├── src/layouts/          # DefaultLayout, Header, Navigation, BottomDock
 │   │   ├── docs/ARCHITECTURE.md  # 컴포넌트 구조 & i18n 가이드
 │   │   └── docs/CACHING.md       # ISR · 쿼리 캐시 구조와 재검증 규칙
 │   │
