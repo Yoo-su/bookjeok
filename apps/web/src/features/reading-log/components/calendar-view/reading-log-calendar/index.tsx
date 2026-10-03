@@ -172,7 +172,8 @@ export function ReadingLogCalendar({
             {/* 요일 헤더 - 그라데이션 배경 (Dynamic Theme) */}
             <div
               className={cn(
-                "grid grid-cols-7 border-b border-stone-100/50 transition-all duration-500 bg-linear-to-r",
+                // 모바일은 아래 칸 그리드와 같은 여백·간격이어야 요일과 칸 열이 맞음
+                "grid grid-cols-7 gap-1 px-2 border-b border-stone-100/50 transition-all duration-500 bg-linear-to-r sm:gap-0 sm:px-0",
                 theme.gradient,
               )}
             >
@@ -194,7 +195,8 @@ export function ReadingLogCalendar({
             </div>
 
             {/* 캘린더 그리드 */}
-            <div className="grid grid-cols-7 auto-rows-[100px] sm:auto-rows-[160px] divide-x divide-y divide-gray-100">
+            {/* 모바일은 dock 달력 패널처럼 표지 칸을 띄워 배치, sm 이상은 칸을 선으로 나눈 표 */}
+            <div className="grid grid-cols-7 gap-1 p-2 sm:auto-rows-[160px] sm:gap-0 sm:p-0 sm:divide-x sm:divide-y sm:divide-gray-100">
               {calendarDays.map((day) => (
                 <ReadingLogDayCell
                   key={day.toISOString()}
