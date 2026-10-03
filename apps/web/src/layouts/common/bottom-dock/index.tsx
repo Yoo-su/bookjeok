@@ -37,6 +37,7 @@ import {
 import { usePathname } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { useHideOnScrollDown } from "@/shared/hooks/use-hide-on-scroll-down";
+import { useKeyboardInset } from "@/shared/hooks/use-keyboard-inset";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 import { useScrolledPast } from "@/shared/hooks/use-scrolled-past";
 import { cn } from "@/shared/utils/cn";
@@ -71,6 +72,7 @@ const closeIcon = <X className={iconClass} aria-hidden="true" />;
  * - 패널(채팅·달력·키재기·최근 본 책)은 한 번에 하나
  * - 독서기록 페이지에서는 달력·키재기가 패널 대신 페이지 보기를 바꿈(탭바 재탭과 같음)
  * - 도서 검색 결과 화면: 히어로 검색창이 가려지면 검색 아이템이 생기고, 누르면 입력창으로 펼침
+ *   펼친 동안 모바일 키보드 위로 올림(키보드가 바닥 고정 요소를 덮음)
  * - 다른 화면으로 옮기면 패널을 닫음(채팅은 유지)
  * - 모바일·가로 폰: 아래로 스크롤하거나 입력 중이면 숨김
  */
@@ -142,6 +144,8 @@ export const BottomDock = () => {
   const isScrollingDown = useHideOnScrollDown();
   const isTyping = useIsTyping();
   const isDesktop = useMediaQuery(DOCK_DESKTOP_QUERY);
+  // 모바일 키보드는 화면 바닥 고정 요소를 덮음. 검색창을 펼친 동안 키보드 위로 올림
+  const keyboard = useKeyboardInset(isSearchExpanded && !isDesktop);
 
   const [viewportWidth, setViewportWidth] = useState(0);
   useEffect(() => {
@@ -314,8 +318,16 @@ export const BottomDock = () => {
     <>
       <div
         inert={isHidden}
+        // 키보드 위에서는 안전 영역(홈 인디케이터) 여백이 필요 없어 그만큼 덜 올림
+        style={
+          keyboard.bottom
+            ? {
+                transform: `translateY(calc(env(safe-area-inset-bottom) - ${keyboard.bottom}px))`,
+              }
+            : undefined
+        }
         className={cn(
-          "pointer-events-none fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex justify-center transition-[opacity,translate,visibility] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          "pointer-events-none fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex justify-center transition-[opacity,translate,visibility,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
           isHidden && "invisible translate-y-6 opacity-0",
         )}
       >
