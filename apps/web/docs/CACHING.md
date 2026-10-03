@@ -117,7 +117,7 @@ Vercel은 재검증 결과가 이전과 같으면 ISR 쓰기를 과금하지 않
 | `book/components/book-slider/main-book-slider`         | 홈 출판사 서가 18                 |
 | `book/components/book-slider/popular-book-slider`      | 홈 인기책 목록 2벌 + 히어로       |
 | `book/components/book-search/ai-book-recommend-slider` | AI 추천 N                         |
-| `book/components/recent-books/recent-books-drawer`     | 최근 본 책 N                      |
+| `book/components/recent-books/recent-books-panel`      | 최근 본 책 N                      |
 | `book-sale/components/common/book-sale-item/root`      | 마켓 무한목록 · 홈 최근 판매      |
 | `review/components/common/review-card/root`            | 리뷰 목록 · 홈 리뷰 섹션          |
 | `review/components/recent-review-list/review-row`      | 홈 리뷰 티커 (20건이 차례로 통과) |

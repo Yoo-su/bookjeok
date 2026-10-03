@@ -45,9 +45,10 @@
       "unauthorized": "권한이 없습니다."
     },
     "aria": {
-      "back": "뒤로 가기",
-      "forward": "앞으로 가기",
       "scroll_top": "맨 위로 스크롤",
+      "dock": "빠른 메뉴",
+      "chat_open": "채팅 열기",
+      "chat_close": "채팅 닫기",
       "close": "닫기",
       "menu": "메뉴",
       "view_user_profile": "{name}님의 프로필 보기",
@@ -725,6 +726,22 @@
     }
   },
   "reading_log": {
+    "peek": {
+      "calendar_title": "기록 달력",
+      "stack_title": "독서 키재기",
+      "month_label": "{year}년 {month}월",
+      "month_count": "{count}권",
+      "prev_month": "이전 달",
+      "next_month": "다음 달",
+      "empty_month": "이 달은 아직 기록이 없어요. 날짜를 눌러 남겨 보세요.",
+      "day_label": "{month}월 {day}일",
+      "day_label_books": "{month}월 {day}일, {count}권",
+      "open_calendar": "독서기록에서 크게 보기",
+      "open_stack": "키재기 전체 보기",
+      "recent_books": "최근 쌓은 책",
+      "stack_empty": "올해 완독한 책을 기록하면 쌓은 높이를 재 드려요.",
+      "stage_label": "{year}년에 읽은 책 {count}권을 쌓은 높이 {height}cm"
+    },
     "hero": {
       "metadata": {
         "title": "독서 기록",

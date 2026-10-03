@@ -266,6 +266,18 @@ html::-webkit-scrollbar {
   );
 }
 
+/* 자신과 하위의 스크롤바를 모두 숨김(스크롤은 유지). dock 패널처럼 작은 떠 있는 창에 쓴다.
+   .custom-scrollbar보다 뒤에 둬야 같은 우선순위에서 이긴다 */
+.hide-scrollbars,
+.hide-scrollbars * {
+  scrollbar-width: none;
+}
+
+.hide-scrollbars::-webkit-scrollbar,
+.hide-scrollbars ::-webkit-scrollbar {
+  display: none;
+}
+
 /* 동적 콘텐츠 추가 시 스크롤바로 인한 너비 덜컹거림(Layout Shift) 방지 */
 .stable-scroll {
   scrollbar-gutter: stable;

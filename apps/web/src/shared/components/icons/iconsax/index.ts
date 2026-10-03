@@ -84,6 +84,7 @@ export { RefreshCw } from "./refresh-cw";
 export { Repeat } from "./repeat";
 export { Repeat1 } from "./repeat1";
 export { RotateCcw } from "./rotate-ccw";
+export { Ruler } from "./ruler";
 export { Search } from "./search";
 export { Send } from "./send";
 export { Share2 } from "./share2";

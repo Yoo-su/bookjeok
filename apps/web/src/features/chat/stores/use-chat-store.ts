@@ -11,6 +11,7 @@ interface ChatState {
   opponentLastReadMessageId: { [roomId: number]: number };
 
   toggleChat: () => void;
+  closeChat: () => void;
   openChatRoom: (roomId: number) => void;
   closeChatRoom: () => void;
   setTyping: (roomId: number, nickname: string) => void;
@@ -29,6 +30,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   opponentLastReadMessageId: {},
 
   toggleChat: () => set((state) => ({ isChatOpen: !state.isChatOpen })),
+
+  closeChat: () => set({ isChatOpen: false }),
 
   /**
    * 채팅방을 엽니다. UI 상태만 변경합니다.

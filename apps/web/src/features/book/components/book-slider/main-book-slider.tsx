@@ -266,10 +266,8 @@ export const MainBookSlider = () => {
     if (books.length >= minCount) return books;
 
     const multiplier = Math.ceil(minCount / books.length);
-    return Array(multiplier)
-      .fill(books)
-      .flat()
-      .slice(0, Math.max(minCount, books.length * 3));
+    // 18장(조회 상한)을 넘기면 반지름은 그대로라 카드 간격이 좁아져 붙어 보임
+    return Array(multiplier).fill(books).flat().slice(0, 18);
   }, [books]);
 
   const N = displayBooks.length;

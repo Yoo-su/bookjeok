@@ -7,7 +7,6 @@ import { AdBanner } from "@/shared/components/ads/ad-banner";
 import { Edit } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
 import { NotFoundRedirect } from "@/shared/components/ui/not-found-redirect";
-import { ScrollTopButton } from "@/shared/components/ui/scroll-top-button";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -100,7 +99,6 @@ export const ReviewDetail = ({ id }: ReviewDetailProps) => {
           )}
         </div>
       </div>
-      <ScrollTopButton />
     </article>
   );
 };

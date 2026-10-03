@@ -135,3 +135,56 @@ describe("독서 키재기 이름표 배치", () => {
     expect(failures).toEqual([]);
   });
 });
+
+describe("비교 대상 없는 무대의 쌓은 높이", () => {
+  it("좁은 무대(dock 패널)에서도 쌓은 높이가 책·눈금 숫자를 덮지 않고 무대 안에 있다", () => {
+    const failures: string[] = [];
+    for (const width of [104, 140, 200, 300, 420])
+      for (const n of [1, 6, 46, 138, 322]) {
+        const books = booksOf(n);
+        const stackMm = books.reduce((a, b) => a + b.depth, 0);
+        const { items, stack } = buildStackScene({
+          width,
+          height: 240,
+          books,
+          stackMm,
+          userMm: 1730,
+          character: "M",
+          status: stackStatus(stackMm, 1730),
+          labels: {
+            myHeight: "",
+            remain: "",
+            approxBooks: "",
+            stackHeight: `${(stackMm / 10).toFixed(1)}cm`,
+            bubble: ["", ""],
+          },
+          colors: COLORS,
+          measure,
+          figure: false,
+          minStackWidthPx: 30,
+        });
+        const sh = find(items, "stack-height");
+        if (sh?.k !== "t") {
+          failures.push(`${width} ${n}권: 이름표 없음`);
+          continue;
+        }
+        const box = inkBox(sh);
+        const found: string[] = [];
+        const books_ = {
+          x0: stack.left,
+          y0: stack.top,
+          x1: stack.right,
+          y1: stack.bottom,
+        };
+        if (hits(box, books_)) found.push("책");
+        const ticks = items.filter(
+          (it): it is TextItem =>
+            it.k === "t" && !!it.id?.startsWith("tick-label-"),
+        );
+        if (ticks.some((t) => hits(box, inkBox(t)))) found.push("눈금 숫자");
+        if (box.x0 < 0 || box.x1 > width || box.y0 < 0) found.push("무대 밖");
+        if (found.length) failures.push(`${width} ${n}권: ${found.join(", ")}`);
+      }
+    expect(failures).toEqual([]);
+  });
+});

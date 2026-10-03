@@ -18,7 +18,7 @@
     1.  사용자가 로그인하고 소켓이 연결되면 `useChatEvents` 훅을 통해 소켓 이벤트 리스너(`newMessage`, `newChatRoom` 등)를 등록합니다.
     2.  `useMyChatRoomsQuery`로 채팅방 목록을 가져온 후, `hasJoinedRooms` 상태를 확인하여 아직 참여하지 않은 방이 있으면 `joinRooms` 이벤트를 서버로 보내 한 번에 모든 방에 참여(subscribe)합니다. 실패하면 백오프로 재시도하고, 끝내 실패하면 토스트로 알립니다.
     3.  **재연결 동기화**: 연결이 끊긴 동안 온 메시지는 소켓으로 받지 못하는데 메시지 캐시는 `staleTime: INFINITY`라 스스로 다시 받아오지 않습니다. 그래서 `connect` 리스너를 소켓 인스턴스 수명 내내 붙여 두고(연결 상태로 가두면 끊긴 사이에 리스너가 떨어져 나가 재연결을 놓칩니다), 재연결이면 방 목록을 무효화하고 열려 있는 방은 첫 페이지만 남겨 다시 받습니다. 닫혀 있는 방의 메시지 캐시는 버려 다음에 열 때 새로 받습니다.
-    4.  **위젯 지연 로딩**: `ChatToggleButton`·`ChatWidget`은 `next/dynamic`(`ssr: false`)으로 불러옵니다. 마운트 후 로그인 사용자에게만 그려지므로 서버 렌더 결과는 같습니다. 정적 import였을 때는 이미지 업로드(`@vercel/blob/client` → undici, 이미지 압축)까지 루트 레이아웃을 타고 모든 라우트의 서버 번들에 실렸습니다.
+    4.  **위젯 지연 로딩**: `ChatWidget`은 `next/dynamic`(`ssr: false`)으로 불러옵니다. 여는 버튼과 안 읽음 배지는 하단 dock(`layouts/common/bottom-dock`)에 있습니다. 마운트 후 로그인 사용자에게만 그려지므로 서버 렌더 결과는 같습니다. 정적 import였을 때는 이미지 업로드(`@vercel/blob/client` → undici, 이미지 압축)까지 루트 레이아웃을 타고 모든 라우트의 서버 번들에 실렸습니다.
 
 - **`features/chat/hooks/use-chat-events.ts`**:
   - **역할**: 서버로부터 오는 각종 웹소켓 이벤트를 수신하고, 그에 따라 TanStack Query 캐시를 업데이트하는 로직을 모아놓은 커스텀 훅입니다.
@@ -52,7 +52,10 @@
   - **상태**: `isChatOpen`(위젯 열림/닫힘), `activeChatRoomId`(현재 열려있는 채팅방 ID), `typingUsers`(방별 입력 중인 사용자), `isRoomInactive`(상대방 퇴장 여부), `hasJoinedRooms`(소켓 방 입장 여부), `opponentLastReadMessageId`(방별 상대방 읽음 지점) 등을 관리합니다.
 
 - **`features/chat/components/widgets/chat-widget/`**:
-  - **역할**: 위젯 패널. 한 번이라도 연 뒤에는 **닫아도 언마운트하지 않고** `visibility`로만 감춥니다.
+  - **역할**: 채팅 패널. 공용 `DockPanel`(`shared/components/ui/dock-panel.tsx`) 위에 `ChatList`·`ChatRoom`을 얹습니다. 데스크톱(너비 md 이상이면서 높이 500px 이상, `DOCK_DESKTOP_QUERY`)은 하단 dock 위에서 알약 모양으로 시작해 카드로 펼쳐지고(clip-path), 모바일과 가로로 눕힌 폰은 바텀시트입니다. 시트는 핸들을 끌어내리거나 배경·닫기 버튼으로 닫고, 키보드가 뜨면 `visualViewport` 기준으로 보이는 영역 바닥에 붙습니다. 페이지를 보며 대화할 수 있게 바깥을 눌러도 닫지 않습니다. 한 번이라도 연 뒤에는 **닫아도 언마운트하지 않고** `visibility`로만 감춥니다.
+  - 헤더(z-50)가 패널보다 위라, 패널은 헤더 높이(`useSiteHeaderHeight`)를 재서 그 아래까지만 커지고 넘치는 내용은 패널 안에서 스크롤합니다. 패널 안 스크롤바는 `.hide-scrollbars`(globals.css)로 숨깁니다.
+  - 겹침 순서는 `z-[45]`로 dock(z-40) 위, 확인창·툴팁(z-50) 아래입니다. 예전 위젯은 `z-999`라 채팅 헤더의 툴팁과 나가기 확인창이 위젯 뒤에 깔렸습니다.
+  - 카드·시트 경계(`DOCK_DESKTOP_QUERY`)를 넘나들도록 창 크기를 바꾸거나 기기를 돌리면 카드↔시트로 트리가 바뀌어 한 번 다시 마운트됩니다. 드문 경우라 두었습니다.
   - **이유**: 예전에는 닫을 때마다 말풍선·첨부 이미지 DOM이 통째로 사라졌다가 열 때 다시 만들어졌습니다. 크로미움은 디코딩한 이미지를 캐시에 들고 있어 티가 덜 나지만, 웹킷(특히 iOS)은 디코딩 데이터를 훨씬 빨리 버려서 열 때마다 전부 다시 디코딩합니다. 대화가 길거나 이미지가 많은 방일수록 **사파리에서만** 다시 여는 순간이 눈에 띄게 버벅였습니다.
   - `display: none`이 아니라 `visibility: hidden`을 쓰는 이유는 레이아웃을 남겨 스크롤 위치(`scrollHeight`/`scrollTop`)를 보존하기 위해서입니다.
   - **마운트를 유지할 때 지켜야 할 규칙**: 보이지 않는 동안 도는 작업이 없어야 합니다. 현재 `isChatOpen`으로 막고 있는 것들 —
@@ -62,7 +65,7 @@
     - **채팅방 안에 주기적 작업이나 쿼리를 새로 넣는다면 이 게이팅을 함께 확인하세요.**
 
 - **`features/chat/components/`**: **Context-Based Grouping**
-  - **`widgets/`**: 전역 채팅 위젯 및 토글 버튼 (`chat-widget`, `chat-toggle-button`)
+  - **`widgets/`**: 전역 채팅 패널 (`chat-widget`). 여는 버튼은 하단 dock
   - **`room/`**: 채팅방 내부 UI (`chat-room`, `header`, `message-list`, `input`, `chat-item`)
   - **`list/`**: 채팅방 목록 (`chat-list`)
   - **`trade/`**: 채팅방 안의 거래 UI (`trade-status-banner`·`trade-message-card`(결제 플래그 뒤), `direct-trade-banner`(직거래 예약·완료), `select-buyer-modal`)
@@ -90,7 +93,7 @@ graph TD
     end
 
     subgraph "UI Components"
-        J[ChatToggleButton]
+        J[BottomDock 채팅 버튼]
         K[ChatWidget]
     end
 

@@ -10,7 +10,7 @@ import { useMusicStore } from "../stores/use-music-store";
 
 /**
  * 배경음악 플레이어 진입 아이콘. 재생 중에는 음반이 돈다.
- * 재생/정지는 모달과 FloatingMusicPill이 맡는다.
+ * 재생/정지는 모달이 맡는다. 재생 중 진입은 하단 dock에도 있다.
  */
 export function HeaderMusicButton({ className }: { className?: string }) {
   const t = useTranslations("music");

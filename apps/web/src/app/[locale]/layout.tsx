@@ -11,12 +11,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ChatProvider } from "@/features/chat/providers/chat-provider";
 import { ConfirmHost } from "@/features/confirm";
-import {
-  FloatingMusicPill,
-  GlobalMusicHost,
-  MusicPlayerModal,
-} from "@/features/music";
+import { GlobalMusicHost, MusicPlayerModal } from "@/features/music";
 import { NotificationProvider } from "@/features/notification/providers/notification-provider";
+import { BottomDock } from "@/layouts/common/bottom-dock";
 import GoogleAnalytics from "@/shared/components/analytics/google-analytics";
 import MicrosoftClarity from "@/shared/components/analytics/microsoft-clarity";
 import { JsonLd } from "@/shared/components/json-ld";
@@ -114,6 +111,7 @@ export default async function Layout({
                     </OverlayProvider>
                   </ChatProvider>
                 </SocketProvider>
+                <BottomDock />
               </UserProvider>
 
               <Analytics />
@@ -124,8 +122,12 @@ export default async function Layout({
             <ConfirmHost />
             <GlobalMusicHost />
             <MusicPlayerModal />
-            <FloatingMusicPill />
-            <Toaster position="bottom-center" />
+            {/* 하단 dock(약 56px) 위로 띄움 */}
+            <Toaster
+              position="bottom-center"
+              offset={{ bottom: 88 }}
+              mobileOffset={{ bottom: 84 }}
+            />
             <JsonLd data={jsonLdData} />
             {config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID && (
               <Script

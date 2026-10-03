@@ -19,13 +19,6 @@ import { resyncRoomMessages } from "../utils/chat-cache-utils";
 
 // 위젯은 마운트 후 로그인 사용자에게만 그려져 서버 렌더에 나오지 않는다.
 // 정적 import면 업로드(@vercel/blob → undici)까지 모든 라우트의 서버 번들에 실려 콜드 스타트마다 로드된다
-const ChatToggleButton = dynamic(
-  () =>
-    import("@/features/chat/components/widgets/chat-toggle-button").then(
-      (m) => m.ChatToggleButton,
-    ),
-  { ssr: false },
-);
 const ChatWidget = dynamic(
   () =>
     import("@/features/chat/components/widgets/chat-widget").then(
@@ -231,12 +224,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       {children}
-      {currentUser && !isWidgetHidden && (
-        <>
-          <ChatToggleButton />
-          <ChatWidget />
-        </>
-      )}
+      {currentUser && !isWidgetHidden && <ChatWidget />}
     </>
   );
 };
