@@ -3,10 +3,9 @@
 import type { ReadingLog } from "@bookjeok/core";
 import { useReadingLogsQuery } from "@bookjeok/react-query";
 import {
+  addDays,
   addMonths,
   eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
   format,
   isAfter,
   isSameMonth,
@@ -29,6 +28,7 @@ import { DockPanel } from "@/shared/components/ui/dock-panel";
 import { Link } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils/cn";
 
+import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
 import { readingLogHref } from "../../../utils/reading-log-link";
 
 interface ReadingCalendarPanelProps {
@@ -62,6 +62,8 @@ export const ReadingCalendarPanel = ({
     { year: month.getFullYear(), month: month.getMonth() + 1 },
     { enabled: open },
   );
+  // 앞뒤 달을 미리 받아 넘길 때 빈 칸으로 기다리지 않게
+  useReadingLogPrefetch(month.getFullYear(), month.getMonth() + 1, open, false);
 
   const logsByDate = useMemo(() => {
     const map = new Map<string, ReadingLog[]>();
@@ -73,9 +75,11 @@ export const ReadingCalendarPanel = ({
     return map;
   }, [logs]);
 
+  // 늘 6주를 그림. 달마다 4~6주로 바뀌면 넘길 때 패널 높이가 출렁임
+  const firstDay = startOfWeek(month);
   const days = eachDayOfInterval({
-    start: startOfWeek(month),
-    end: endOfWeek(endOfMonth(month)),
+    start: firstDay,
+    end: addDays(firstDay, 6 * 7 - 1),
   });
   const today = startOfDay(new Date());
   const isCurrentMonth = isSameMonth(month, today);
@@ -125,7 +129,7 @@ export const ReadingCalendarPanel = ({
         </header>
 
         <div className="min-h-0 overflow-y-auto px-3">
-          <div className="grid grid-cols-7 gap-1 pb-1">
+          <div className="relative grid grid-cols-7 gap-1 pb-1">
             {WEEKDAY_KEYS.map((key, i) => (
               <span
                 key={key}
@@ -139,8 +143,15 @@ export const ReadingCalendarPanel = ({
             ))}
 
             {days.map((day) => {
+              // 다른 달 칸도 같은 비율로 자리를 잡아야 6주가 늘 같은 높이
               if (!isSameMonth(day, month)) {
-                return <span key={day.toISOString()} aria-hidden="true" />;
+                return (
+                  <span
+                    key={day.toISOString()}
+                    aria-hidden="true"
+                    className="aspect-[3/4]"
+                  />
+                );
               }
               const dayLogs = logsByDate.get(format(day, "yyyy-MM-dd")) ?? [];
               return (
@@ -166,12 +177,19 @@ export const ReadingCalendarPanel = ({
                 />
               );
             })}
+            {/* 날짜 칸 위에 겹쳐 띄움. 아래 줄에 끼우면 기록을 받은 뒤 패널 높이가 바뀜 */}
+            <div
+              aria-hidden={isLoading || logs.length > 0}
+              className={cn(
+                "pointer-events-none absolute inset-x-0 bottom-0 top-7 flex items-center justify-center transition-opacity duration-200",
+                isLoading || logs.length > 0 ? "opacity-0" : "opacity-100",
+              )}
+            >
+              <p className="mx-2 text-balance rounded-2xl bg-white/95 px-3 py-1.5 text-center text-xs font-medium text-stone-500 shadow-sm ring-1 ring-stone-200">
+                {t("empty_month")}
+              </p>
+            </div>
           </div>
-          {!isLoading && logs.length === 0 && (
-            <p className="py-2 text-center text-xs text-stone-500">
-              {t("empty_month")}
-            </p>
-          )}
         </div>
 
         <footer className="shrink-0 border-t border-stone-100 px-3 py-2">
