@@ -135,7 +135,8 @@ export function LoungeMountain({ onBookClick }: LoungeMountainProps) {
         </p>
       </div>
 
-      <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+      {/* 모바일도 열을 화면 폭에 맞춤. 자동 열은 말줄임 글자의 전체 길이까지 늘어나 320px 화면을 넘음 */}
+      <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
         <MountainStage scene={scene.stage} ariaLabel={scene.ariaLabel} />
 
         {/* 넓은 화면에서는 무대 바닥선(PAD.floor 30px)에 발을 맞춘다 */}
