@@ -22,7 +22,7 @@ reading-log/
     │   └── reading-stack-panel/      # 독서 키재기 요약(높이·연필 무대·진행률·최근 책)
     ├── calendar-view/
     │   ├── reading-log-calendar/     # 월별 캘린더 본체
-    │   ├── reading-log-day-cell/     # 날짜 셀 (완독 표시)
+    │   ├── reading-log-day-cell/     # 날짜 셀 (완독 표시). 모바일은 cover-day-cell
     │   ├── reading-log-controls/     # 월/연 이동, 뷰 전환
     │   ├── reading-log-demo/         # 공개 소개 페이지의 예시 달력(예시 46권, 읽기 전용)
     │   └── reading-log-calendar-skeleton/
@@ -61,6 +61,7 @@ reading-log/
     │   └── lounge-empty-state/
     └── common/
         ├── reading-log-hero/
+        ├── cover-day-cell/           # 표지가 칸을 꽉 채우는 달력 칸 (dock 달력 패널·페이지 모바일 공용)
         ├── reading-log-start-link/   # 소개 페이지 시작 버튼: 고른 보기로 내 독서 기록을 연다
         ├── reading-log-form-dialog/  # 기록 작성·수정 (날짜·메모)
         ├── mark-as-read-button/      # 도서 상세의 「읽었어요」
@@ -84,7 +85,9 @@ reading-log/
 
 ### 캘린더
 
-`reading-log-calendar`가 월 단위로 기록을 조회해 `reading-log-day-cell`에 배치하고, 셀을 클릭하면 `day-details-dialog`가 그날의 완독 도서와 한 줄 메모를 보여줍니다. 작성·수정은 `reading-log-form-dialog`에서 처리합니다. `use-seasonal-theme`이 월에 따라 배색을 바꿉니다.
+`reading-log-calendar`가 월 단위로 기록을 조회해 `reading-log-day-cell`에 배치하고, 셀을 클릭하면 `day-details-dialog`가 그날의 완독 도서와 한 줄 메모를 보여줍니다. 작성·수정은 `reading-log-form-dialog`에서 처리합니다. `use-seasonal-theme`은 월에 따라 계절을 고르지만, 실제로 바뀌는 것은 히어로의 계절 그림·필터·라벨뿐입니다(배색 값은 네 계절이 모두 같은 stone 계열).
+
+모바일(sm 미만)은 칸이 약 45px로 좁아 날짜 줄·제목을 두면 표지가 작아지므로, dock 달력 패널과 같은 `cover-day-cell`(표지가 칸을 꽉 채우고 날짜는 표지 위 칩)로 그리고 칸 사이를 띄웁니다. sm 이상은 선으로 나눈 표(줄 160px, 표지+제목) 그대로입니다. 두 칸을 모두 그리고 CSS로 하나만 보여 화면 폭 판정 없이 서버 렌더와 맞습니다(`display:none`은 그리드 칸을 차지하지 않음).
 
 ### 공개 소개 페이지 `/reading-log`
 
