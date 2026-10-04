@@ -17,6 +17,9 @@ interface StackProgressProps {
   grams: number;
   className?: string;
   comparisonName?: string;
+  /** 테두리·배경 없이. 이미 상자 안(dock 패널)에 놓일 때 상자 속 상자를 피함 */
+  plain?: boolean /** 합계 줄을 빼고 그림. 놓는 쪽이 따로 넓게 둘 때 */;
+  hideStats?: boolean;
 }
 
 /** 내 키까지 얼마나 쌓였는지와 올해 합계 */
@@ -30,6 +33,8 @@ export function StackProgress({
   grams,
   className,
   comparisonName,
+  plain = false,
+  hideStats = false,
 }: StackProgressProps) {
   const t = useTranslations("reading_log.stack");
   const remain = userMm - stackMm;
@@ -44,11 +49,17 @@ export function StackProgress({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-stone-200 bg-stone-50",
+        !plain &&
+          "overflow-hidden rounded-2xl border border-stone-200 bg-stone-50",
         className,
       )}
     >
-      <div className="grid gap-3 p-4 pb-3.5">
+      <div
+        className={cn(
+          "grid gap-3",
+          plain ? !hideStats && "pb-3" : "p-4 pb-3.5",
+        )}
+      >
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-[13px] font-bold text-stone-900">
             {comparisonName
@@ -106,7 +117,9 @@ export function StackProgress({
               })}
         </p>
       </div>
-      <StackStats count={count} pages={pages} grams={grams} />
+      {!hideStats && (
+        <StackStats count={count} pages={pages} grams={grams} plain={plain} />
+      )}
     </div>
   );
 }
@@ -116,10 +129,13 @@ export function StackStats({
   count,
   pages,
   grams,
+  plain = false,
 }: {
   count: number;
   pages: number;
   grams: number;
+  /** 카드 안쪽 여백 없이. 첫 칸을 글과 같은 줄에 맞춤 */
+  plain?: boolean;
 }) {
   const t = useTranslations("reading_log.stack");
   const locale = useLocale();
@@ -146,6 +162,7 @@ export function StackStats({
           key={s.label}
           className={cn(
             "grid min-w-0 gap-1 py-3 pl-3.5 pr-2.5",
+            plain && "pl-3 pr-2 first:pl-0",
             i > 0 && "border-l border-stone-200",
           )}
         >

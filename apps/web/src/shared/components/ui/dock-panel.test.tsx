@@ -14,7 +14,7 @@ import {
   vi,
 } from "vitest";
 
-import { DockPanel } from "./dock-panel";
+import { DockPanel, useDockPanelSettled } from "./dock-panel";
 
 vi.mock("next-intl", () => ({
   useTranslations: (section?: string) => (key: string) =>
@@ -134,5 +134,36 @@ describe("DockPanel 모달 여부", () => {
     const event = fireEvent.keyDown(last, { key: "Tab" });
     // 가두지 않으면 기본 동작(다음 요소로 이동)을 막지 않음
     expect(event).toBe(true);
+  });
+});
+
+describe("DockPanel 다 열림 신호", () => {
+  const Probe = () => (
+    <span>{useDockPanelSettled() ? "settled" : "opening"}</span>
+  );
+  const Panel = ({ open }: { open: boolean }) => (
+    <DockPanel open={open} onClose={() => {}} label="패널" warm>
+      <Probe />
+    </DockPanel>
+  );
+
+  it("열리는 동안은 false, 다 열리면 true, 닫으면 바로 false", () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender } = render(<Panel open={false} />);
+      // warm이면 열기 전에도 닫힌 채 그려 둠
+      expect(screen.getByText("opening")).toBeInTheDocument();
+
+      rerender(<Panel open />);
+      expect(screen.getByText("opening")).toBeInTheDocument();
+      // 애니메이션 끝 신호가 없어도(jsdom) 열림 시간 뒤에는 true
+      act(() => vi.advanceTimersByTime(600));
+      expect(screen.getByText("settled")).toBeInTheDocument();
+
+      rerender(<Panel open={false} />);
+      expect(screen.getByText("opening")).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -33,6 +33,8 @@ import { CoverDayCell } from "../../common/cover-day-cell";
 interface ReadingCalendarPanelProps {
   open: boolean;
   onClose: () => void;
+  /** 열기 전에 미리 그려 둠(DockPanel warm) */
+  warm?: boolean;
 }
 
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -47,6 +49,7 @@ const iconButton =
 export const ReadingCalendarPanel = ({
   open,
   onClose,
+  warm,
 }: ReadingCalendarPanelProps) => {
   const t = useTranslations("reading_log.peek");
   const tCal = useTranslations("reading_log.calendar");
@@ -87,6 +90,7 @@ export const ReadingCalendarPanel = ({
     <DockPanel
       open={open}
       onClose={onClose}
+      warm={warm}
       label={t("calendar_title")}
       dismissOnOutsideClick
       desktopClassName="w-[min(30rem,calc(100vw-2rem))]"
@@ -173,7 +177,7 @@ export const ReadingCalendarPanel = ({
                 isLoading || logs.length > 0 ? "opacity-0" : "opacity-100",
               )}
             >
-              <p className="mx-2 text-balance rounded-2xl bg-white/95 px-3 py-1.5 text-center text-xs font-medium text-stone-500 shadow-sm ring-1 ring-stone-200">
+              <p className="mx-2 text-balance rounded-2xl bg-white/98 px-3 py-1.5 text-center text-xs font-medium text-stone-500 shadow-sm ring-1 ring-stone-200">
                 {t("empty_month")}
               </p>
             </div>

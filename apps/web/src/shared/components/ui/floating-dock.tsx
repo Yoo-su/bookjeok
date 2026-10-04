@@ -26,6 +26,8 @@ export interface FloatingDockItem {
   active?: boolean;
   /** 지금 보고 있는 화면. 아이콘 아래 점과 aria-current로 표시 */
   current?: boolean;
+  /** 누를 것 같을 때(마우스 올림·터치 시작·포커스). 패널 데이터를 미리 받는 데 씀 */
+  onIntent?: () => void;
 }
 
 /** dock 루트 표식. 패널의 바깥 누름 판정에서 dock을 뺄 때 씀 */
@@ -177,6 +179,7 @@ const DockIcon = ({
   badge = 0,
   active,
   current,
+  onIntent,
   showTooltip,
 }: Omit<FloatingDockItem, "key"> & {
   mouseX: MotionValue<number>;
@@ -244,8 +247,14 @@ const DockIcon = ({
         <motion.div
           ref={ref}
           style={{ width: size, height: size }}
-          onPointerEnter={(e) => e.pointerType === "mouse" && setHovered(true)}
+          onPointerEnter={(e) => {
+            if (e.pointerType === "mouse") setHovered(true);
+            onIntent?.();
+          }}
           onPointerLeave={() => setHovered(false)}
+          // 터치는 손가락이 닿는 순간이 클릭보다 100ms 남짓 이름
+          onPointerDown={onIntent}
+          onFocus={onIntent}
           className="relative"
         >
           <AnimatePresence>

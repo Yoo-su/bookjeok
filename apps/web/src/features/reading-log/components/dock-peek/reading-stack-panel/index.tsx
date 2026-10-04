@@ -3,36 +3,41 @@
 import { useReadingStackQuery } from "@bookjeok/react-query";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { type ComponentProps, useEffect, useMemo, useState } from "react";
 
 import { ArrowRight } from "@/shared/components/icons/iconsax";
-import { DockPanel } from "@/shared/components/ui/dock-panel";
+import {
+  DockPanel,
+  useDockPanelSettled,
+} from "@/shared/components/ui/dock-panel";
 import { Link, useRouter } from "@/shared/config/i18n/routing";
 
+import { STACK_PANEL_COVERS } from "../../../hooks/use-dock-peek-prefetch";
 import { useStackSettingsStore } from "../../../stores/use-stack-settings-store";
 import { readingLogHref } from "../../../utils/reading-log-link";
 import { useStackComparison } from "../../stack-view/hooks/use-stack-comparison";
 import { cm1, useStackCopy } from "../../stack-view/hooks/use-stack-copy";
 import { BODY_PARTS, stackStatus } from "../../stack-view/lib/status";
 import { StackObjectProgress } from "../../stack-view/stack-object-progress";
-import { StackProgress } from "../../stack-view/stack-progress";
+import { StackProgress, StackStats } from "../../stack-view/stack-progress";
 import { StackStage } from "../../stack-view/stack-stage";
 
 interface ReadingStackPanelProps {
   open: boolean;
   onClose: () => void;
+  /** 열기 전에 미리 그려 둠(DockPanel warm) */
+  warm?: boolean;
 }
 
 /** 페이지와 같은 기준. 쌓은 책이 무릎 아래면 사물과 비교 */
 const OBJECT_FIRST_RATIO =
   BODY_PARTS.find((p) => p.key === "knee")?.ratio ?? 0.28;
-/** 한 줄에 작게. 무대에 이미 책이 그려져 있어 표지는 곁들이는 정도 */
-const RECENT_COVERS = 6;
 
 /** 독서 키재기 미리보기. 보기 전용이며 무대·공유는 페이지에서 */
 export const ReadingStackPanel = ({
   open,
   onClose,
+  warm,
 }: ReadingStackPanelProps) => {
   const t = useTranslations("reading_log.peek");
   const tStack = useTranslations("reading_log.stack");
@@ -43,11 +48,6 @@ export const ReadingStackPanel = ({
 
   const router = useRouter();
   const { data, isLoading } = useReadingStackQuery(year, { enabled: open });
-  // 열 때마다 책을 다시 떨어뜨림. 페이지에 들어갈 때와 같은 첫인상
-  const [replayKey, setReplayKey] = useState(0);
-  useEffect(() => {
-    if (open) setReplayKey((k) => k + 1);
-  }, [open]);
   const books = useMemo(() => data?.items ?? [], [data]);
   const totals = useMemo(() => {
     const stackMm = books.reduce((a, b) => a + b.depth, 0);
@@ -64,15 +64,18 @@ export const ReadingStackPanel = ({
   const mode =
     savedMode ?? (status.ratio < OBJECT_FIRST_RATIO ? "object" : "person");
   const hasBooks = books.length > 0;
-  const recent = books.slice(-RECENT_COVERS).reverse();
+  // 한 줄에 작게. 무대에 이미 책이 그려져 있어 표지는 곁들이는 정도
+  const recent = books.slice(-STACK_PANEL_COVERS).reverse();
 
   return (
     <DockPanel
       open={open}
       onClose={onClose}
+      warm={warm}
       label={t("stack_title")}
       dismissOnOutsideClick
-      desktopClassName="w-[min(26rem,calc(100vw-2rem))]"
+      desktopClassName="w-[min(28rem,calc(100vw-2rem))]"
+      desktopMaxHeight="44rem"
       mobileClassName=""
     >
       <div className="flex min-h-0 flex-1 flex-col">
@@ -124,16 +127,15 @@ export const ReadingStackPanel = ({
           {hasBooks && <hr className="border-stone-100" />}
 
           {hasBooks && (
-            // 360px 미만은 진행률 카드가 너무 좁아져 무대를 위로 올림
-            <div className="grid items-end gap-3 min-[360px]:grid-cols-[6.5rem_minmax(0,1fr)]">
+            // 360px 미만은 진행률이 너무 좁아져 무대를 위로 올림. 카드(데스크톱)는 폭이 넉넉해 무대를 더 넓힘
+            <div className="grid items-end gap-4 min-[360px]:grid-cols-[7.5rem_minmax(0,1fr)] group-data-[layout=card]/dock-panel:grid-cols-[8.5rem_minmax(0,1fr)]">
               {/* 페이지·공개 프로필과 같은 연필 무대. 사람·사물 없이 쌓은 책만 */}
-              <StackStage
+              <SettledStage
                 books={books}
                 stackMm={totals.stackMm}
                 className="h-[240px] md:h-[240px]"
                 // 무대가 작아 다독이면 책이 바늘처럼 가늘어짐. 높이는 그대로, 폭만 유지
                 minStackWidthPx={30}
-                replayKey={replayKey}
                 onStackClick={() => {
                   onClose();
                   router.push(readingLogHref({ view: "stack" }));
@@ -147,6 +149,8 @@ export const ReadingStackPanel = ({
               />
               {mode === "object" ? (
                 <StackObjectProgress
+                  plain
+                  hideStats
                   stackMm={totals.stackMm}
                   avgDepthMm={totals.avgDepthMm}
                   count={books.length}
@@ -155,6 +159,8 @@ export const ReadingStackPanel = ({
                 />
               ) : (
                 <StackProgress
+                  plain
+                  hideStats
                   comparisonName={
                     author ? tStack(`authors.${author}`) : undefined
                   }
@@ -168,6 +174,16 @@ export const ReadingStackPanel = ({
                 />
               )}
             </div>
+          )}
+
+          {/* 합계는 진행률 칸이 좁아 넘치므로 무대 아래 전체 폭으로 */}
+          {hasBooks && (
+            <StackStats
+              count={books.length}
+              pages={totals.pages}
+              grams={totals.grams}
+              plain
+            />
           )}
 
           {recent.length > 0 && (
@@ -209,4 +225,24 @@ export const ReadingStackPanel = ({
       </div>
     </DockPanel>
   );
+};
+
+/** 열리는 동안은 같은 크기의 빈 자리만. 다 열린 뒤 무대를 붙이고 책을 떨어뜨림 */
+const SettledStage = (
+  props: Omit<ComponentProps<typeof StackStage>, "replayKey">,
+) => {
+  const settled = useDockPanelSettled();
+  // 한 번 붙이면 유지. 다시 열 때는 그리지 않고 책만 다시 떨어뜨림
+  const [mounted, setMounted] = useState(false);
+  const [replayKey, setReplayKey] = useState(0);
+  useEffect(() => {
+    if (!settled) return;
+    setMounted(true);
+    setReplayKey((k) => k + 1);
+  }, [settled]);
+
+  if (!mounted) {
+    return <div aria-hidden="true" className={props.className} />;
+  }
+  return <StackStage {...props} replayKey={replayKey} />;
 };
