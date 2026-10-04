@@ -15,6 +15,9 @@ interface StackObjectProgressProps {
   pages: number;
   grams: number;
   className?: string;
+  /** 테두리·배경 없이(dock 패널) */
+  plain?: boolean /** 합계 줄을 빼고 그림 */;
+  hideStats?: boolean;
 }
 
 /** 다음 사물까지 얼마나 남았는지와 올해 넘은 사물 */
@@ -25,6 +28,8 @@ export function StackObjectProgress({
   pages,
   grams,
   className,
+  plain = false,
+  hideStats = false,
 }: StackObjectProgressProps) {
   const t = useTranslations("reading_log.stack");
   const { objectName, len } = useStackCopy();
@@ -39,11 +44,17 @@ export function StackObjectProgress({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-stone-200 bg-stone-50",
+        !plain &&
+          "overflow-hidden rounded-2xl border border-stone-200 bg-stone-50",
         className,
       )}
     >
-      <div className="grid gap-3 p-4 pb-3.5">
+      <div
+        className={cn(
+          "grid gap-3",
+          plain ? !hideStats && "pb-3" : "p-4 pb-3.5",
+        )}
+      >
         <div className="flex items-baseline justify-between gap-2">
           <span className="min-w-0 text-[13px] font-bold text-stone-900">
             {next
@@ -112,7 +123,9 @@ export function StackObjectProgress({
           </ol>
         </div>
       </div>
-      <StackStats count={count} pages={pages} grams={grams} />
+      {!hideStats && (
+        <StackStats count={count} pages={pages} grams={grams} plain={plain} />
+      )}
     </div>
   );
 }

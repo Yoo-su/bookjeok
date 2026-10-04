@@ -18,6 +18,7 @@ import { useChatStore } from "@/features/chat/stores/use-chat-store";
 import { useMusicStore } from "@/features/music";
 import { ReadingCalendarPanel } from "@/features/reading-log/components/dock-peek/reading-calendar-panel";
 import { ReadingStackPanel } from "@/features/reading-log/components/dock-peek/reading-stack-panel";
+import { useDockPeekPrefetch } from "@/features/reading-log/hooks/use-dock-peek-prefetch";
 import { useReadingLogViewStore } from "@/features/reading-log/stores/use-reading-log-view-store";
 import {
   ArrowUp,
@@ -118,6 +119,13 @@ export const BottomDock = () => {
   };
 
   const recentCount = useRecentBookStore((state) => state.recentBooks.length);
+  const prefetchPeek = useDockPeekPrefetch();
+  // 손이 닿은 패널은 닫힌 채 미리 그려 둠. 누르는 순간엔 열림 애니메이션만 돌게
+  const [warm, setWarm] = useState<Partial<Record<DockPanelKey, true>>>({});
+  const warmUp = (key: "calendar" | "stack") => {
+    prefetchPeek[key]();
+    setWarm((w) => (w[key] ? w : { ...w, [key]: true }));
+  };
   const viewMode = useReadingLogViewStore((s) => s.viewMode);
   const setViewMode = useReadingLogViewStore((s) => s.setViewMode);
 
@@ -202,6 +210,7 @@ export const BottomDock = () => {
           icon: panel === key ? closeIcon : icon,
           active: panel === key,
           onClick: () => togglePanel(key),
+          onIntent: () => warmUp(key),
         };
 
   const allItems: FloatingDockItem[] = [];
@@ -348,9 +357,14 @@ export const BottomDock = () => {
         <>
           <ReadingCalendarPanel
             open={panel === "calendar"}
+            warm={warm.calendar}
             onClose={closePanel}
           />
-          <ReadingStackPanel open={panel === "stack"} onClose={closePanel} />
+          <ReadingStackPanel
+            open={panel === "stack"}
+            warm={warm.stack}
+            onClose={closePanel}
+          />
         </>
       )}
     </>

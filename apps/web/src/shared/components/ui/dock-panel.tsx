@@ -7,7 +7,14 @@ import {
   type Variants,
 } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { X } from "@/shared/components/icons/iconsax";
 import { useBodyScrollLock } from "@/shared/hooks/use-body-scroll-lock";
@@ -34,6 +41,8 @@ interface DockPanelProps {
   mobileMaxHeight?: string;
   /** 패널 밖을 누르면 닫음. 채팅처럼 열어 둔 채 페이지를 보는 패널은 false */
   dismissOnOutsideClick?: boolean;
+  /** 열기 전에 닫힌 채 미리 그려 둠. 첫 열림에 마운트 비용이 겹쳐 애니메이션이 끊기지 않게 */
+  warm?: boolean;
 }
 
 /** dock과 같은 감속 곡선 */
@@ -62,6 +71,16 @@ const SHEET_VARIANTS: Variants = {
   open: { y: 0, visibility: "visible" },
   closed: { y: "100%", transitionEnd: { visibility: "hidden" } },
 };
+
+/** 열림 애니메이션 시간(ms). 끝남 신호가 안 오는 경우(숨은 탭 등)의 대비 */
+const OPEN_MS = (EASE.duration ?? 0.38) * 1000;
+
+const SettledContext = createContext(false);
+
+/**
+ * 패널이 다 열렸는지. 무거운 내용(그림·많은 이미지)은 이때 붙이면 열림 애니메이션이 끊기지 않음
+ */
+export const useDockPanelSettled = () => useContext(SettledContext);
 
 /** dock 위 패널 바닥: 화면 바닥 1rem + dock 54px + 간격 10px */
 const DESKTOP_BOTTOM = "1rem + 64px + env(safe-area-inset-bottom)";
@@ -115,6 +134,7 @@ export const DockPanel = ({
   mobileClassName = "h-[85dvh]",
   mobileMaxHeight = "88dvh",
   dismissOnOutsideClick = false,
+  warm = false,
 }: DockPanelProps) => {
   const t = useTranslations("common.aria");
   const isDesktop = useMediaQuery(DOCK_DESKTOP_QUERY);
@@ -127,6 +147,20 @@ export const DockPanel = ({
   useEffect(() => {
     if (open) setHasOpened(true);
   }, [open]);
+
+  // 다 열린 뒤 true. 닫히면 바로 false
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!open) {
+      setSettled(false);
+      return;
+    }
+    const id = window.setTimeout(() => setSettled(true), OPEN_MS + 120);
+    return () => window.clearTimeout(id);
+  }, [open]);
+  const onAnimationComplete = (definition: unknown) => {
+    if (definition === "open") setSettled(true);
+  };
 
   useBodyScrollLock(open && !isDesktop);
   const keyboard = useKeyboardInset(open && !isDesktop);
@@ -199,7 +233,7 @@ export const DockPanel = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  if (!hasOpened && !open) return null;
+  if (!hasOpened && !open && !warm) return null;
 
   const state = open ? "open" : "closed";
 
@@ -215,6 +249,7 @@ export const DockPanel = ({
         data-layout="card"
         initial="closed"
         animate={state}
+        onAnimationComplete={onAnimationComplete}
         variants={DESKTOP_VARIANTS}
         transition={EASE}
         style={{
@@ -227,7 +262,9 @@ export const DockPanel = ({
           !open && "pointer-events-none",
         )}
       >
-        {children}
+        <SettledContext.Provider value={settled}>
+          {children}
+        </SettledContext.Provider>
       </motion.div>
     );
   }
@@ -258,6 +295,7 @@ export const DockPanel = ({
         data-layout="sheet"
         initial="closed"
         animate={state}
+        onAnimationComplete={onAnimationComplete}
         variants={SHEET_VARIANTS}
         transition={EASE}
         drag="y"
@@ -300,7 +338,11 @@ export const DockPanel = ({
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <SettledContext.Provider value={settled}>
+            {children}
+          </SettledContext.Provider>
+        </div>
       </motion.div>
     </>
   );
