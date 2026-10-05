@@ -840,11 +840,7 @@
       "settings_updated": "Reading log settings updated successfully.",
       "already_added": "You've already logged this book for that day.",
       "create_stack": "Logged. Your stack grew {cm}cm",
-      "stack_passed": "Past your {part}!",
-      "stack_over_passed": "Your stack is taller than you now!",
       "stack_over": "{cm}cm taller than you",
-      "stack_to_next": "{cm}cm to your {part}",
-      "stack_object_passed": "Past the {name}!",
       "stack_object_to_next": "{cm}cm to the {name}",
       "view_stack": "See reading height"
     },
@@ -1044,8 +1040,35 @@
       "object_progress_to": "To the {name}",
       "object_progress_over": "Taller than the {name}",
       "object_progress_over_note": "You passed every thing on the ladder — {len} taller than the {name}.",
-      "object_collected": "Passed",
+      "object_collected": "Collection",
       "object_collected_count": "{count}/{total}",
+      "milestone": {
+        "eyebrow_object": "New object collected · {count}/{total}",
+        "eyebrow_body": "Reading height",
+        "title_object": "Past the {name}!",
+        "title_over": "Taller than you!",
+        "title_part": "Past your {part}!",
+        "body": "With “{title}”, your stack for this year is <h>{cm}cm</h>.",
+        "next_object": "Next up: the {name}, {cm}cm to go.",
+        "all_collected": "You've collected every object this year.",
+        "bubble_object": "You beat me!",
+        "bubble_object_cm": "by {cm}cm",
+        "view_collection": "Open collection",
+        "view_stack": "See reading height",
+        "close": "Close",
+        "stage_label": "Your stack with the book you just logged: {cm}cm"
+      },
+      "collection": {
+        "title": "{year} object collection",
+        "description": "Each time your stack reaches an object's height, it joins your collection. It starts fresh every year.",
+        "collected_by": "{date} · “{title}”",
+        "next_remain": "{cm}cm to go",
+        "final_label": "Final goal",
+        "locked": "Not discovered yet",
+        "empty": "Log your first book to collect the sugar cube.",
+        "all": "You've collected every object this year.",
+        "open": "Open object collection"
+      },
       "object_stage_label": "A {height}cm stack of {count} books next to a {name} (~{len})",
       "objects": {
         "sugar": {

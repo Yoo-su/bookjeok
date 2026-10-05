@@ -18,6 +18,12 @@ import type { SceneColors, StackCharacter } from "../lib/types";
 /** 첫 책이 바닥에 닿기까지의 시간(ms). 제목 숫자 올리기도 이 값을 쓴다 */
 export const STACK_INTRO_LAND_MS = 420;
 
+/** 한 권만 들일 때 대화상자가 자리 잡기를 기다리는 시간(ms) */
+const ENTER_DELAY_MS = 280;
+
+/** 한 권만 들일 때 그 책이 자리에 닿기까지(ms). 높이 숫자 올리기도 이 값을 쓴다 */
+export const STACK_ENTER_LAND_MS = ENTER_DELAY_MS + 470;
+
 /** 키가 바뀔 때 캐릭터가 따라가는 시간(ms) */
 const HEIGHT_TWEEN_MS = 380;
 
@@ -46,6 +52,97 @@ export interface StackStageObject {
   labels: SceneLabels;
 }
 
+/** 위에서 떨어져 바닥(또는 아래 책)에 닿고 살짝 튀는 움직임 */
+function dropKeyframes(fromY: number): Keyframe[] {
+  return [
+    {
+      transform: `translateY(${-fromY}px)`,
+      opacity: 0,
+      easing: "cubic-bezier(.55,0,1,.45)",
+    },
+    {
+      transform: "translateY(0)",
+      opacity: 1,
+      offset: 0.76,
+      easing: "ease-out",
+    },
+    { transform: "translateY(-2px)", offset: 0.88, easing: "ease-in" },
+    { transform: "none", opacity: 1 },
+  ];
+}
+
+/** 쌓은 책을 아래부터 한 권씩 떨어뜨린다 */
+function dropAll(groups: SVGGElement[], step: number) {
+  // 먼저 다 재고 나서 건다. 재기와 걸기를 섞으면 책마다 레이아웃을 새로 계산한다
+  const drops = groups.map((g) => {
+    const bb = g.getBBox();
+    return bb.y + bb.height + 40;
+  });
+  return groups.map((g, i) =>
+    g.animate(dropKeyframes(drops[i]), {
+      duration: 560,
+      delay: i * step,
+      fill: "backwards",
+    }),
+  );
+}
+
+/**
+ * 한 권만 들인다. 맨 위 책은 떨어뜨리고, 사이에 끼는 책(지난 날짜 기록)은
+ * 위 책들을 그 두께만큼 들어 올리며 왼쪽에서 밀어 넣는다
+ */
+function enterOne(groups: SVGGElement[], index: number) {
+  const g = groups[index];
+  const bb = g.getBBox();
+  if (index === groups.length - 1)
+    return [
+      g.animate(dropKeyframes(bb.y + bb.height + 40), {
+        duration: 620,
+        delay: ENTER_DELAY_MS,
+        fill: "backwards",
+      }),
+    ];
+  const lift = groups.slice(index + 1).map((up) =>
+    up.animate(
+      [{ transform: `translateY(${bb.height}px)` }, { transform: "none" }],
+      {
+        duration: 360,
+        delay: ENTER_DELAY_MS,
+        easing: "cubic-bezier(.3,.7,.4,1)",
+        fill: "backwards",
+      },
+    ),
+  );
+  const slide = g.animate(
+    [
+      {
+        transform: `translateX(${-(bb.x + bb.width + 24)}px)`,
+        opacity: 0,
+        easing: "cubic-bezier(.2,.8,.3,1)",
+      },
+      { transform: "translateX(3px)", opacity: 1, offset: 0.82 },
+      { transform: "none", opacity: 1 },
+    ],
+    { duration: 470, delay: ENTER_DELAY_MS + 100, fill: "backwards" },
+  );
+  return [...lift, slide];
+}
+
+/** 쌓은 책 꼭대기에서 위로 퍼지는 짧은 선들. 안에서 밖으로 긋는다 */
+function sparkLines(cx: number, top: number, stackW: number) {
+  const r0 = Math.max(10, stackW * 0.18);
+  return [-162, -128, -90, -52, -18].map((deg, i) => {
+    const a = (deg * Math.PI) / 180;
+    // 가운데 선이 가장 길고 바깥으로 갈수록 짧다
+    const len = i === 2 ? 13 : i % 2 ? 10 : 7;
+    const x0 = cx + Math.cos(a) * r0;
+    const y0 = top - 4 + Math.sin(a) * r0 * 0.6;
+    const x1 = x0 + Math.cos(a) * len;
+    const y1 = y0 + Math.sin(a) * len;
+    return `M${x0.toFixed(1)},${y0.toFixed(1)} L${x1.toFixed(1)},${y1.toFixed(1)}`;
+  });
+}
+
 /** 사물 무대의 높이 범위(px). 폭이 축척을 정하므로 그 안에서 내용만큼 줄인다 */
 const OBJECT_STAGE = { min: 200, max: 600 };
 
@@ -63,8 +160,14 @@ interface StackStageProps {
   minStackWidthPx?: number;
   /** 무대 높이 등을 덮어쓴다 */
   className?: string;
+  /** 사람 무대 높이(px). 사물 무대는 objectMaxHeight 안에서 내용만큼 줄인다 */
+  height?: number;
   /** 바뀔 때마다 책을 다시 떨어뜨린다 */
   replayKey: number;
+  /** 있으면 이 기록 한 권만 들인다. 맨 위면 떨어지고, 사이면 위 책들이 들리며 옆에서 밀려 들어간다 */
+  enteringLogId?: string;
+  /** 들인 책이 닿을 때 꼭대기에서 연필 선이 뻗는다 */
+  celebrate?: boolean;
   onIntroStart?: () => void;
   onStackClick?: () => void;
   stackClickLabel: string;
@@ -84,7 +187,10 @@ export function StackStage({
   fitObjectHeight = true,
   minStackWidthPx,
   className,
+  height: fixedHeight,
   replayKey,
+  enteringLogId,
+  celebrate = false,
   onIntroStart,
   onStackClick,
   stackClickLabel,
@@ -96,6 +202,7 @@ export function StackStage({
   const reducedMotion = usePrefersReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const sparkRef = useRef<SVGGElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [displayMm, setDisplayMm] = useState(userMm);
   const measure = useCanvasMeasure();
@@ -249,38 +356,46 @@ export function StackStage({
     const groups = Array.from(
       svg.querySelectorAll<SVGGElement>("g.stack-book"),
     );
-    const step = stackIntroStepMs(groups.length);
-    // 먼저 다 재고 나서 건다. 재기와 걸기를 섞으면 책마다 레이아웃을 새로 계산한다
-    const drops = groups.map((g) => {
-      const bb = g.getBBox();
-      return bb.y + bb.height + 40;
-    });
-    const animations = groups.map((g, i) => {
-      return g.animate(
-        [
-          {
-            transform: `translateY(${-drops[i]}px)`,
-            opacity: 0,
-            easing: "cubic-bezier(.55,0,1,.45)",
-          },
-          {
-            transform: "translateY(0)",
-            opacity: 1,
-            offset: 0.76,
-            easing: "ease-out",
-          },
-          { transform: "translateY(-2px)", offset: 0.88, easing: "ease-in" },
-          { transform: "none", opacity: 1 },
-        ],
-        { duration: 560, delay: i * step, fill: "backwards" },
-      );
-    });
-    const after = groups.length * step + STACK_INTRO_LAND_MS;
+    const enterIdx = enteringLogId
+      ? books.findIndex((b) => b.logId === enteringLogId)
+      : -1;
+    const animations =
+      enterIdx >= 0
+        ? enterOne(groups, enterIdx)
+        : dropAll(groups, stackIntroStepMs(groups.length));
+    const after =
+      enterIdx >= 0
+        ? STACK_ENTER_LAND_MS
+        : groups.length * stackIntroStepMs(groups.length) + STACK_INTRO_LAND_MS;
     const ann = svg.querySelector("g.stack-annotations");
     const bubble = svg.querySelector("g.stack-bubble");
-    if (ann)
+    const spark = sparkRef.current;
+    if (spark) {
       animations.push(
-        ann.animate([{ opacity: 0 }, { opacity: 1 }], {
+        spark.animate(
+          [{ opacity: 1 }, { opacity: 1, offset: 0.65 }, { opacity: 0 }],
+          { duration: 1400, delay: after - 40, fill: "backwards" },
+        ),
+        ...Array.from(spark.querySelectorAll("path"), (line, i) =>
+          line.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], {
+            duration: 260,
+            delay: after - 40 + i * 18,
+            easing: "cubic-bezier(.2,.8,.3,1)",
+            fill: "backwards",
+          }),
+        ),
+      );
+    }
+    // 한 권만 들일 때는 목표 점선을 먼저 보여 줘 책이 그 선을 넘는 순간이 읽히게 한다
+    const annParts =
+      enterIdx >= 0 && ann
+        ? Array.from(ann.querySelectorAll(":scope > :not(.stack-target-line)"))
+        : ann
+          ? [ann]
+          : [];
+    for (const el of annParts)
+      animations.push(
+        el.animate([{ opacity: 0 }, { opacity: 1 }], {
           duration: 350,
           delay: after,
           fill: "backwards",
@@ -318,7 +433,13 @@ export function StackStage({
           animateHeight &&
           "motion-safe:transition-[height] motion-safe:duration-300",
       )}
-      style={objectHeight ? { height: objectHeight } : undefined}
+      style={
+        objectHeight
+          ? { height: objectHeight }
+          : fixedHeight
+            ? { height: fixedHeight }
+            : undefined
+      }
     >
       {scene && (
         <svg
@@ -331,6 +452,26 @@ export function StackStage({
           className="block overflow-visible"
         >
           <SceneNodes items={scene.items} />
+          {celebrate && enteringLogId && (
+            <g ref={sparkRef} opacity={0} aria-hidden="true">
+              {sparkLines(
+                (scene.stack.left + scene.stack.right) / 2,
+                scene.stack.top,
+                scene.stack.right - scene.stack.left,
+              ).map((d) => (
+                <path
+                  key={d}
+                  d={d}
+                  pathLength={1}
+                  strokeDasharray="1"
+                  stroke={COLORS.ink}
+                  strokeWidth={1.6}
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              ))}
+            </g>
+          )}
         </svg>
       )}
       {scene && books.length > 0 && onStackClick && (

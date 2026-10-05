@@ -635,7 +635,35 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       y1: y + size / 2 + u,
     };
   };
-  const bubbleBottom = Math.min(fy, artTop) + 6 * u;
+  // 쌓은 책이 세운 것보다 높으면 말풍선이 책을 덮는다. 책 오른쪽으로 비키고, 자리가 없으면 꼭대기 위로 올린다
+  let bubbleBottom = Math.min(fy, artTop) + 6 * u;
+  let bubbleMinX = rulerW + 4 * u;
+  if (target && books.length) {
+    const r0 = bubbleRect(
+      fcx,
+      bubbleBottom,
+      labels.bubble,
+      u,
+      bubbleW,
+      bubbleMinX,
+      measure,
+    );
+    const overStack =
+      r0.x < right + 2 * u && r0.x + r0.w > left - 2 * u && r0.y + r0.h > topY;
+    if (overStack) {
+      const r1 = bubbleRect(
+        fcx,
+        bubbleBottom,
+        labels.bubble,
+        u,
+        bubbleW,
+        right + 6 * u,
+        measure,
+      );
+      if (r1.x + r1.w <= bubbleW - 3 * u) bubbleMinX = right + 6 * u;
+      else bubbleBottom = Math.min(bubbleBottom, topY - 8 * u);
+    }
+  }
 
   // 쌓은 높이는 늘 맨 위 책 왼쪽, 꼭대기 높이에 둔다. 좁은 화면에서는 눈금자에 조금 걸쳐도 된다
   // (글자 테두리가 선을 덮어 읽힌다). 눈금 숫자(눈금자 왼쪽)만은 덮지 않는다
@@ -679,6 +707,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   if (target) {
     const lineEnd = figure ? fx + 92 * k : targetLeft + 4 * u;
     A(`M${f1(rx)},${f1(fy)} L${f1(lineEnd)},${f1(fy)}`, {
+      cls: "stack-target-line",
       stroke: C.pen,
       sw: 1.6 * u,
       dash: [5 * u, 4 * u],
@@ -690,7 +719,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       labels.bubble,
       u,
       bubbleW,
-      rulerW + 4 * u,
+      bubbleMinX,
       measure,
     );
     const bubble: Box[] = [
@@ -827,7 +856,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         C,
         u,
         bubbleW,
-        rulerW + 4 * u,
+        bubbleMinX,
         measure,
         o.boil ?? false,
       ),
