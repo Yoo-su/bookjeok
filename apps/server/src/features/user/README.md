@@ -11,6 +11,7 @@
 - **`decorators/current-user.decorator.ts`**: `req.user`를 `@CurrentUser()`로 꺼냅니다.
 - **`utils/nickname-generator.ts`**: 신규 사용자에게 "형용사 + 명사" 패턴 닉네임(15×15조합)을 부여합니다.
 - **`listeners/user-cleanup.listener.ts`**: `user.withdrawn`을 받아 사용자 행을 익명화합니다. 탈퇴 리스너 목록은 [`shared/README.md`](../../shared/README.md#회원-탈퇴-캐스케이드).
+- **`mail/verification.mail.ts`**: 가입·이메일 변경·재발송이 공유하는 인증 메일 정의(입력·수신 정책·본문). 공통 `MailService.send()`가 렌더링·전달·실패 로그를 처리합니다. 이메일 변경은 비동기 발송을 유지하고 재발송은 실패를 503 `AUTH_VERIFICATION_EMAIL_SEND_FAILED`로 전달합니다. 토큰은 먼저 저장하며 발송 실패 시에도 되돌리지 않습니다.
 - **`constants.ts`**: 공개 프로필 노출 개수 상한, `USER_SELF_GROUP`.
 
 ## 2. API 엔드포인트
@@ -40,7 +41,7 @@
 | `ageRange`        | `0-9` ~ `60-` 7개 값 또는 `null`                                                                                                                                                                        |
 | `profileImageUrl` | 기본 이미지 식별자(`default_profile1~10`) 또는 Vercel Blob(`https://*.public.blob.vercel-storage.com/...`) 주소, 또는 `null`. 가입 시 받은 소셜 프로필 주소는 그대로 두면 유지됩니다.                   |
 
-회원가입(`RegisterDto`)의 닉네임 규칙은 2~10자·공백 불가로 더 엄격합니다. 자동 생성 닉네임("행복한 판다")에 공백이 있어 수정 규칙에서는 공백을 허용합니다.
+회원가입(`RegisterDto`)과 프로필 수정(`UpdateUserDto`)은 같은 닉네임 규칙을 씁니다(`dtos/nickname-rules.decorator.ts`의 `@NicknameRules()`): NFC 정규화·앞뒤 공백 제거 후 2~20자, 한글·영문·숫자·밑줄, 단어 사이 공백 한 칸. 값은 core의 `NICKNAME_*` 상수이고 웹 가입 폼·프로필 모달도 core `validateNickname`으로 같은 검사를 합니다. 2026-10-05 이전에는 가입만 2~10자·공백 불가였습니다.
 
 ## 3. `User` 엔티티 주요 컬럼
 
@@ -66,9 +67,18 @@
 
 ## 4. 회원 탈퇴
 
-`UserService.withdraw`는 한 트랜잭션에서 상태를 바꾼 뒤 `user.withdrawn` 이벤트로 각 도메인이 자기 데이터를 정리하게 합니다. 활성 결제 주문이 있거나 판매자로서 예약 중인 판매글이 있으면 탈퇴를 막고, 구매자로 예약된 남의 판매글은 판매중으로 되돌립니다(커밋 후 `trade.reservation_cancelled` 발행). 자세한 규칙은 [`shared/README.md`의 「회원 탈퇴 캐스케이드」](../../shared/README.md#회원-탈퇴-캐스케이드)에 있습니다.
+`UserService.withdraw`는 탈퇴 트랜잭션 안에서 `user.withdrawn` 이벤트의 정리를 기다려 각 도메인이 같은 트랜잭션으로 자기 데이터를 정리하게 합니다. 활성 결제 주문이 있거나 판매자로서 예약 중인 판매글이 있으면 탈퇴를 막고, 구매자로 예약된 남의 판매글은 판매중으로 되돌립니다(커밋 후 `trade.reservation_cancelled` 발행). 자세한 규칙은 [`shared/README.md`의 「회원 탈퇴 캐스케이드」](../../shared/README.md#회원-탈퇴-캐스케이드)에 있습니다.
 
 ## 5. 관련
 
 - 웹: [`features/user`](../../../../web/src/features/user/README.md)
 - 인증·가드: [`features/auth`](../auth/README.md)
+
+## 도메인 이벤트 계약
+
+[`events/user-withdrawn.event.ts`](events/user-withdrawn.event.ts)가 `USER_WITHDRAWN_EVENT`의
+문자열 값·`UserWithdrawnEvent`·`userWithdrawnEvent`를 소유합니다. 서비스는 탈퇴 트랜잭션 안에서
+`emitDomainEventAsync`를 기다리고 같은 `EntityManager`를 10개 정리 리스너에 전달합니다.
+리스너는 `@OnDomainEvent(userWithdrawnEvent, { suppressErrors: false })`로 구독하고 에러를
+다시 던져 롤백을 유지합니다. 예약 해제 알림은 커밋 후 trade의 `TradeEvents.reservation_cancelled`로
+발행합니다. 두 이벤트를 같은 발행 시점으로 합치지 않습니다.

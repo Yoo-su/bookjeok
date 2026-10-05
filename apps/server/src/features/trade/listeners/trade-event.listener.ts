@@ -1,12 +1,17 @@
+import { NotificationType } from '@bookjeok/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 
 import { ChatMessageType } from '@/features/chat/entities/chat-message.entity';
 import { ChatService } from '@/features/chat/services/chat.service';
-import { NotificationType } from '@/features/notification/entities/notification.entity';
 import { NotificationService } from '@/features/notification/services/notification.service';
-
-import { TradeCompletionMethod } from '../entities/trade-completion.entity';
+import {
+  TradeCompletedEvent,
+  TradeEvents,
+  TradeReservationCancelledEvent,
+  TradeReservedEvent,
+  TradeSaleSoldEvent,
+} from '@/features/trade/events/trade.events';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 
 /**
  * 직거래 예약·완료에 따르는 알림과 채팅 시스템 메시지.
@@ -25,13 +30,8 @@ export class TradeEventListener {
   /**
    * 판매자가 거래 상대를 지정했을 때
    */
-  @OnEvent('trade.reserved')
-  async handleReserved(event: {
-    saleId: number;
-    sellerId: number;
-    buyerId: number;
-    chatRoomId?: number | null;
-  }) {
+  @OnDomainEvent(TradeEvents.reserved)
+  async handleReserved(event: TradeReservedEvent) {
     try {
       await this.notificationService.createNotification(
         event.buyerId,
@@ -64,12 +64,8 @@ export class TradeEventListener {
   /**
    * 판매자가 예약을 취소했을 때
    */
-  @OnEvent('trade.reservation_cancelled')
-  async handleReservationCancelled(event: {
-    saleId: number;
-    sellerId: number;
-    buyerId: number | null;
-  }) {
+  @OnDomainEvent(TradeEvents.reservation_cancelled)
+  async handleReservationCancelled(event: TradeReservationCancelledEvent) {
     try {
       if (!event.buyerId) return;
 
@@ -87,12 +83,8 @@ export class TradeEventListener {
    * 거래가 성사된 방에는 아래 `trade.completed`가 완료 안내를 보내므로,
    * 여기서는 나머지 방들만 챙깁니다.
    */
-  @OnEvent('trade.sale_sold')
-  async handleSaleSold(event: {
-    saleId: number;
-    sellerId: number;
-    chatRoomId?: number | null;
-  }) {
+  @OnDomainEvent(TradeEvents.sale_sold)
+  async handleSaleSold(event: TradeSaleSoldEvent) {
     try {
       await this.chatService.notifySaleSold(event.saleId, event.chatRoomId);
     } catch (error) {
@@ -105,15 +97,8 @@ export class TradeEventListener {
   /**
    * 직거래가 완료됐을 때
    */
-  @OnEvent('trade.completed')
-  async handleCompleted(event: {
-    completionId: number;
-    saleId: number;
-    sellerId: number;
-    buyerId: number;
-    chatRoomId?: number | null;
-    method: TradeCompletionMethod;
-  }) {
+  @OnDomainEvent(TradeEvents.completed)
+  async handleCompleted(event: TradeCompletedEvent) {
     try {
       await this.notificationService.createNotification(
         event.buyerId,

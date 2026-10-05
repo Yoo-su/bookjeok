@@ -11,6 +11,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 
+import { FeedbackEvents } from '@/features/feedback/events/feedback.events';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 
 import { CreateFeedbackDto } from '../dtos/create-feedback.dto';
@@ -20,17 +22,6 @@ import { Feedback, FeedbackDetails } from '../entities/feedback.entity';
 
 const USER_AGENT_MAX_LENGTH = 300;
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-export interface FeedbackCreatedEvent {
-  feedbackId: number;
-}
-
-export interface FeedbackRepliedEvent {
-  feedbackId: number;
-  userId: number;
-  type: FeedbackType;
-  bookTitle?: string;
-}
 
 /** 빈 문자열은 지우기로 본다 */
 const toNullable = (value: string) => value.trim() || null;
@@ -101,9 +92,9 @@ export class FeedbackService {
       }),
     );
 
-    this.eventEmitter.emit('feedback.created', {
+    emitDomainEvent(this.eventEmitter, FeedbackEvents.created, {
       feedbackId: saved.id,
-    } satisfies FeedbackCreatedEvent);
+    });
 
     return { id: saved.id };
   }
@@ -170,12 +161,12 @@ export class FeedbackService {
     const saved = await this.feedbackRepository.save(feedback);
 
     if (replied && saved.userId !== null) {
-      this.eventEmitter.emit('feedback.replied', {
+      emitDomainEvent(this.eventEmitter, FeedbackEvents.replied, {
         feedbackId: saved.id,
         userId: saved.userId,
         type: saved.type,
         bookTitle: saved.details?.bookTitle,
-      } satisfies FeedbackRepliedEvent);
+      });
     }
 
     return this.toAdminFeedback(saved);

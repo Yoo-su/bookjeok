@@ -12,14 +12,20 @@ import { Order } from '@/features/order/entities/order.entity';
 import { ReadingLog } from '@/features/reading-log/entities/reading-log.entity';
 import { Review } from '@/features/review/entities/review.entity';
 import { TradeCompletion } from '@/features/trade/entities/trade-completion.entity';
+import { TradeEvents } from '@/features/trade/events/trade.events';
 import {
   SaleStatus,
   UsedBookSale,
 } from '@/features/used-book-sale/entities/used-book-sale.entity';
 import {
-  USER_WITHDRAWN_EVENT,
   UserWithdrawnEvent,
-} from '@/shared/events/user-withdrawn.event';
+  userWithdrawnEvent,
+} from '@/features/user/events/user-withdrawn.event';
+import { verificationMail } from '@/features/user/mail/verification.mail';
+import {
+  emitDomainEvent,
+  emitDomainEventAsync,
+} from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 import { MailService } from '@/shared/mail/mail.service';
 
@@ -252,18 +258,11 @@ export class UserService implements OnModuleInit {
 
     // 이메일이 변경된 경우 새 주소로 인증 메일 발송
     if (newVerificationToken && savedUser.email) {
-      this.mailService
-        .sendVerificationEmail(
-          savedUser.email,
-          savedUser.nickname,
-          newVerificationToken,
-        )
-        .catch((err) =>
-          this.logger.error(
-            'Failed to send verification email on email change:',
-            err,
-          ),
-        );
+      void this.mailService.send(verificationMail, {
+        email: savedUser.email,
+        nickname: savedUser.nickname,
+        token: newVerificationToken,
+      });
     }
 
     return savedUser;
@@ -533,7 +532,7 @@ export class UserService implements OnModuleInit {
 
     // 커밋 후 발행. 같은 판매글의 다른 채팅방에 판매 재개 안내
     for (const sale of releasedSales) {
-      this.eventEmitter.emit('trade.reservation_cancelled', {
+      emitDomainEvent(this.eventEmitter, TradeEvents.reservation_cancelled, {
         saleId: sale.id,
         sellerId: sale.user.id,
         buyerId: userId,
@@ -611,7 +610,7 @@ export class UserService implements OnModuleInit {
     }
 
     // 3. 도메인 클린업 이벤트 동기식 발행 (EntityManager 주입)
-    await this.eventEmitter.emitAsync(USER_WITHDRAWN_EVENT, {
+    await emitDomainEventAsync(this.eventEmitter, userWithdrawnEvent, {
       userId,
       entityManager: manager,
     } satisfies UserWithdrawnEvent);
@@ -701,10 +700,16 @@ export class UserService implements OnModuleInit {
     );
 
     await this.userRepository.save(user);
-    await this.mailService.sendVerificationEmail(
-      user.email,
-      user.nickname,
+    const result = await this.mailService.send(verificationMail, {
+      email: user.email,
+      nickname: user.nickname,
       token,
-    );
+    });
+    if (result.status !== 'sent' && result.status !== 'logged') {
+      throw new BusinessException(
+        'AUTH_VERIFICATION_EMAIL_SEND_FAILED',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
   }
 }

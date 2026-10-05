@@ -85,6 +85,8 @@ upload-progress-modal 로 진행률 표시, 실패 시 개별 재시도
 
 - 서버 액션은 누구나 호출할 수 있는 공개 엔드포인트입니다. `delete-action`은 액세스 토큰으로 요청자를 확인하고 **본인 디렉터리(`{provider}-{id}/`)의 URL만** 지웁니다(`shared/libs/blob-owner.ts`).
 - 이미지는 **저장 API가 성공한 뒤에** 지웁니다. 먼저 지우면 수정·삭제가 409(거래 중·거래 완료)로 실패했을 때 글은 남고 이미지만 사라집니다. 삭제 실패는 고아 파일만 남기고 결과에는 영향이 없습니다.
+- 등록·수정 훅(`mutations/index.tsx`)은 인증 확인 → 압축 → 업로드를 공유 뮤테이션 **밖에서** 먼저 수행합니다. 그래서 이 단계의 실패는 공유 훅의 `onError`를 거치지 않았고, 진행 모달만 닫힌 채 아무 안내가 없었습니다. 지금은 `prepareOrReport`가 같은 `handleMutationError`로 토스트를 띄우고, 저장 API 실패는 기존대로 공유 훅이 알려 어느 경우든 한 번만 안내합니다. 진행 모달 상태(단계·진행률·열림)와 실패 시 초기화는 등록·수정 폼이 함께 쓰는 `hooks/use-sale-upload-progress.ts`의 `trackUpload`가 맡습니다. 뮤테이션의 `isPending`은 저장 API 구간만 뜻하므로 버튼 잠금에는 이 훅의 `isModalOpen`을 함께 씁니다(회귀 테스트 `__tests__/sale-upload-errors.test.tsx`, `sale-upload-progress.test.tsx`).
+- 제목·본문 길이와 이미지 개수 제한은 core의 `SALE_*` 상수 하나를 서버 DTO와 웹 스키마·안내 문구(`{min}`·`{max}` 자리표시자)가 함께 씁니다.
 - 업로드 토큰(`/api/upload`)에는 `maximumSizeInBytes`로 20MB 상한을 겁니다. 클라이언트가 허용하는 가장 큰 원본(프로필 이미지)과 같습니다(`shared/constants/upload.ts`).
 
 ### 위치 기반 탐색

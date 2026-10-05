@@ -24,7 +24,8 @@ export class BookSummaryDto {
   @IsString()
   @IsOptional()
   @ApiProperty({
-    description: 'ISBN (선택 사항)',
+    description:
+      'ISBN (선택 사항). 있으면 제목·저자·소개·출판사 대신 DB 서지로 생성하고 저장합니다.',
     example: '9788937460777',
     required: false,
   })

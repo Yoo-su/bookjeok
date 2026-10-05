@@ -1,13 +1,13 @@
 # 📚 @bookjeok/web (Frontend)
 
 **Next.js 15 (App Router) & React 19** 기반의 북적 사용자 웹 서비스입니다.
-도서 검색·AI 추천, 독서 기록, 중고책 거래와 에스크로 결제, 실시간 채팅·알림, 리뷰 커뮤니티를 다국어 반응형 UI로 제공합니다.
+도서 검색·AI 요약, 독서 기록, 중고책 거래와 에스크로 결제, 실시간 채팅·알림, 리뷰 커뮤니티를 다국어 반응형 UI로 제공합니다.
 
 ---
 
 ## 🚀 주요 기능 (Key Features)
 
-- **🤖 대화형 AI 도서 탐색 (SSE)** — `fetch` + `ReadableStream` 기반 커스텀 SSE 클라이언트로 추천 결과를 조각 단위 렌더링
+- **🤖 AI 도서 요약** — 도서 상세에서 Gemini 요약을 조회·생성. 대화형 AI 추천(SSE)은 2026-09-29부터 화면에 연결하지 않고 코드만 보존 ([book README](src/features/book/README.md#ai-대화형-추천-sse))
 - **💳 에스크로 결제 & 거래 관리** — 토스페이먼츠 SDK 연동, 주문 상태 타임라인, 배송/분쟁/구매확정 및 직거래/택배 거래 완료·후기 관리
 - **💬 실시간 소통** — Socket.IO 1:1 거래 채팅(타이핑 인디케이터·읽음 표시)과 전역 실시간 알림 17종
 - **📖 독서 기록 & 라운지** — 월별 캘린더, 통계, 독서 키재기(읽은 책을 실제 두께로 쌓아 사물·작가 키와 비교, 이미지 공유), 공개 피드
@@ -63,7 +63,7 @@ src/
 ├── views/                    # 페이지 단위 조립 뷰 ([feature]-view/)
 ├── features/                 # 도메인별 기능 UI & 상태
 │   ├── auth/                 # 로그인·회원가입·티켓 교환·이메일 인증·가드
-│   ├── book/                 # 검색, 상세, AI 챗(SSE), 최근 본 책
+│   ├── book/                 # 검색, 상세, AI 요약, 최근 본 책 (AI 챗은 미연결 보존)
 │   ├── book-sale/            # 판매글 등록/수정/탐색/상세, 지도, 비디오 히어로, 이미지 업로드
 │   ├── order/                # 에스크로 결제, 주문 상세, 배송/분쟁 모달
 │   ├── trade/                # 직거래/택배 거래 완료 내역, 양방향 거래 후기, 신뢰 지표 배지/통계 (seller-trust-badge·seller-stats-card)
@@ -106,14 +106,14 @@ src/
 4. **문맥 기반 그룹화** — `features/[feature]/components/` 하위는 `list-view/`, `detail-view/`, `forms/`, `widgets/`, `common/` 등 문맥 폴더로 묶습니다.
 5. **HTML 렌더링 정제** — 사용자 입력 HTML은 `sanitize-review-content`를 거쳐 렌더링합니다.
 6. **번역 키 사용** — 사용자에게 보이는 문구는 `next-intl` 번역 키로 관리하고 하드코딩하지 않습니다.
-7. **토큰 직접 관리 금지** — 토큰 갱신은 `@bookjeok/api-client` 인터셉터가 전담합니다.
+7. **토큰 직접 관리 금지** — 토큰 첨부·갱신은 `shared/libs/axios.ts`가 `@bookjeok/api-client`의 인스턴스에 붙이는 인터셉터가 전담합니다(공용 패키지에는 인터셉터 없음).
 
 ---
 
 ## ⚙️ 실행
 
 ```bash
-pnpm dev:web              # 웹 + 서버 + core 동시 실행 (http://localhost:3000)
+pnpm dev:web              # 웹 + 서버 + core·api-client·react-query watch (http://localhost:3000)
 pnpm --filter @bookjeok/web test           # Vitest
 pnpm --filter @bookjeok/web test:watch
 pnpm storybook            # http://localhost:6006

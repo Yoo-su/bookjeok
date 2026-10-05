@@ -12,6 +12,11 @@ import {
 } from 'typeorm';
 
 import { ChatParticipant } from '@/features/chat/entities/chat-participant.entity';
+import {
+  emitPendingOrderEvent,
+  OrderEvents,
+  PendingOrderEvent,
+} from '@/features/order/events/order.events';
 import { TradeCompletionService } from '@/features/trade/services/trade-completion.service';
 import {
   SaleStatus,
@@ -41,10 +46,6 @@ import { TossPaymentsService } from './toss-payments.service';
  * 그래서 상태 변경은 `persist*` 프라이빗 메서드가 트랜잭션 안에서 하고,
  * 발행은 공개 메서드가 그 결과를 받아 커밋 뒤에 한다.
  */
-interface PendingOrderEvent {
-  name: string;
-  payload: Record<string, unknown>;
-}
 
 /** 트랜잭션 안에서 처리한 주문과, 커밋 뒤에 발행할 이벤트 */
 interface PersistedOrder {
@@ -109,7 +110,7 @@ export class OrderService {
       createOrderDto,
       sellerId,
     );
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -225,7 +226,7 @@ export class OrderService {
     await manager.save(UsedBookSale, sale);
 
     const event: PendingOrderEvent = {
-      name: 'order.buyer_selected',
+      name: OrderEvents.buyer_selected.name,
       payload: {
         orderId: savedOrder.id,
         saleId: savedOrder.saleId,
@@ -248,7 +249,7 @@ export class OrderService {
       orderId,
       sellerId,
     );
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -290,7 +291,7 @@ export class OrderService {
     }
 
     const event: PendingOrderEvent = {
-      name: 'order.cancelled',
+      name: OrderEvents.cancelled.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,
@@ -338,7 +339,7 @@ export class OrderService {
       throw error;
     }
 
-    this.eventEmitter.emit(persisted.event.name, persisted.event.payload);
+    emitPendingOrderEvent(this.eventEmitter, persisted.event);
     return persisted.order;
   }
 
@@ -442,7 +443,7 @@ export class OrderService {
     const savedOrder = await this.saveOrder(manager, order);
 
     const event: PendingOrderEvent = {
-      name: 'order.payment_completed',
+      name: OrderEvents.payment_completed.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,
@@ -469,7 +470,7 @@ export class OrderService {
       sellerId,
       dto,
     );
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -517,7 +518,7 @@ export class OrderService {
     const savedOrder = await this.saveOrder(manager, order);
 
     const event: PendingOrderEvent = {
-      name: 'order.shipping_started',
+      name: OrderEvents.shipping_started.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,
@@ -537,7 +538,7 @@ export class OrderService {
    */
   async markDelivered(orderId: string): Promise<Order> {
     const { order, event } = await this.persistMarkDelivered(orderId);
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -566,7 +567,7 @@ export class OrderService {
     const savedOrder = await this.saveOrder(manager, order);
 
     const event: PendingOrderEvent = {
-      name: 'order.delivery_completed',
+      name: OrderEvents.delivery_completed.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,
@@ -588,7 +589,7 @@ export class OrderService {
       orderId,
       buyerId,
     );
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -640,7 +641,7 @@ export class OrderService {
     await this.recordCompletion(savedOrder);
 
     const event: PendingOrderEvent = {
-      name: 'order.confirmed',
+      name: OrderEvents.confirmed.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,
@@ -666,7 +667,7 @@ export class OrderService {
       buyerId,
       dto,
     );
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -712,7 +713,7 @@ export class OrderService {
     const savedOrder = await this.saveOrder(manager, order);
 
     const event: PendingOrderEvent = {
-      name: 'order.disputed',
+      name: OrderEvents.disputed.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,
@@ -742,7 +743,7 @@ export class OrderService {
       userId,
       dto,
     );
-    this.eventEmitter.emit(event.name, event.payload);
+    emitPendingOrderEvent(this.eventEmitter, event);
     return order;
   }
 
@@ -808,7 +809,7 @@ export class OrderService {
     }
 
     const event: PendingOrderEvent = {
-      name: 'order.cancelled',
+      name: OrderEvents.cancelled.name,
       payload: {
         orderId: savedOrder.id,
         saleId: order.saleId,

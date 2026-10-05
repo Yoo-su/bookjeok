@@ -1,11 +1,16 @@
+import { NotificationType } from '@bookjeok/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 
-import { NotificationType } from '@/features/notification/entities/notification.entity';
+import {
+  CommentCreatedEvent,
+  CommentEvents,
+  CommentLikedEvent,
+} from '@/features/comment/events/comment.events';
 import { NotificationService } from '@/features/notification/services/notification.service';
 import { ReviewService } from '@/features/review/services/review.service';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 
-import { Comment, CommentTargetType } from '../entities/comment.entity';
+import { CommentTargetType } from '../entities/comment.entity';
 
 @Injectable()
 export class CommentNotificationListener {
@@ -19,8 +24,8 @@ export class CommentNotificationListener {
   /**
    * 댓글 생성 시 리뷰 작성자에게 알림을 발송합니다.
    */
-  @OnEvent('comment.created')
-  async handleCommentCreated(event: { comment: Comment }) {
+  @OnDomainEvent(CommentEvents.created)
+  async handleCommentCreated(event: CommentCreatedEvent) {
     const { comment } = event;
 
     try {
@@ -56,12 +61,8 @@ export class CommentNotificationListener {
   /**
    * 댓글 좋아요 클릭 시 댓글 작성자에게 알림을 발송합니다.
    */
-  @OnEvent('comment.liked')
-  async handleCommentLiked(event: {
-    comment: Comment;
-    actorId: number;
-    isLiked: boolean;
-  }) {
+  @OnDomainEvent(CommentEvents.liked)
+  async handleCommentLiked(event: CommentLikedEvent) {
     const { comment, actorId, isLiked } = event;
 
     try {

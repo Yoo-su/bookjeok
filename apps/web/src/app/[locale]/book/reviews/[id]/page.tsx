@@ -14,7 +14,7 @@ import { getQueryClient } from "@/shared/libs/query-client";
 import { isNotFoundError } from "@/shared/utils/api-error";
 import { ReviewDetailView } from "@/views/review-detail-view";
 
-// 본문 수정은 /api/revalidate 웹훅이 즉시 걷어낸다. 상호작용 중인 사용자는
+// 본문 수정·삭제는 서버 액션 revalidateReview가 즉시 걷어낸다. 상호작용 중인 사용자는
 // refetchOnMount가 교정하므로 시간 기반 주기는 크롤러용으로만 남긴다.
 export const revalidate = 86400; // 24시간
 

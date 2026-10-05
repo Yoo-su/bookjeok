@@ -1,4 +1,5 @@
 import * as apis from "@bookjeok/api-client";
+import { NICKNAME_MIN_LENGTH } from "@bookjeok/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -127,7 +128,11 @@ describe("ProfileEditModal 닉네임", () => {
     openModal();
     typeNickname("   ");
 
-    expect(await screen.findByText(messages.nickname_min)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        messages.nickname_min.replace("{min}", String(NICKNAME_MIN_LENGTH)),
+      ),
+    ).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
   });
 

@@ -1,19 +1,57 @@
+import {
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_MIN_LENGTH,
+  type NicknameError,
+  normalizeNickname,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_PATTERN,
+  USER_NAME_MAX_LENGTH,
+  validateNickname,
+} from "@bookjeok/core";
 import { z } from "zod";
 
-export const createSignupSchema = (t: (key: string) => string) =>
+type Translate = (key: string, values?: Record<string, number>) => string;
+
+const nicknameMessage = (t: Translate, error: NicknameError) => {
+  switch (error) {
+    case "too_short":
+      return t("nickname_min", { min: NICKNAME_MIN_LENGTH });
+    case "too_long":
+      return t("nickname_max", { max: NICKNAME_MAX_LENGTH });
+    case "invalid_chars":
+      return t("nickname_invalid");
+  }
+};
+
+export const createSignupSchema = (t: Translate) =>
   z
     .object({
       email: z.string().email(t("email_invalid")),
       password: z
         .string()
-        .min(8, t("password_min"))
-        .regex(
-          /^(?=.*[a-zA-Z])(?=.*[!@#$%^&*+=-])(?=.*[0-9]).{8,20}$/,
-          t("password_regex"),
-        ),
+        .min(
+          PASSWORD_MIN_LENGTH,
+          t("password_min", { min: PASSWORD_MIN_LENGTH }),
+        )
+        .regex(PASSWORD_PATTERN, t("password_regex")),
       passwordConfirm: z.string(),
-      nickname: z.string().min(2, t("nickname_min")).max(10, t("nickname_max")),
-      name: z.string().min(1, t("name_required")).max(50, t("name_max")),
+      // 프로필 수정과 같은 규칙(core validateNickname)
+      nickname: z.string().superRefine((value, ctx) => {
+        const error = validateNickname(normalizeNickname(value));
+        if (error) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: nicknameMessage(t, error),
+          });
+        }
+      }),
+      name: z
+        .string()
+        .min(1, t("name_required"))
+        .max(
+          USER_NAME_MAX_LENGTH,
+          t("name_max", { max: USER_NAME_MAX_LENGTH }),
+        ),
       gender: z.string().optional().nullable(),
       ageRange: z.string().optional().nullable(),
     })
@@ -22,7 +60,7 @@ export const createSignupSchema = (t: (key: string) => string) =>
       path: ["passwordConfirm"],
     });
 
-export const createLoginSchema = (t: (key: string) => string) =>
+export const createLoginSchema = (t: Translate) =>
   z.object({
     email: z.string().email(t("email_invalid")),
     password: z.string().min(1, t("password_required")),

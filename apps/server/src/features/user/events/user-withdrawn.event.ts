@@ -1,5 +1,7 @@
 import { EntityManager } from 'typeorm';
 
+import { defineDomainEvent } from '@/shared/events/domain-event';
+
 /**
  * 회원 탈퇴 이벤트. 도메인별 정리 리스너가 받습니다.
  * `emitAsync`로 동기 발행하므로 리스너는 `{ suppressErrors: false }`로 등록하고
@@ -12,3 +14,6 @@ export interface UserWithdrawnEvent {
   /** 탈퇴 트랜잭션. 리스너는 이 매니저로만 DB를 건드린다 */
   entityManager: EntityManager;
 }
+
+export const userWithdrawnEvent =
+  defineDomainEvent<UserWithdrawnEvent>()(USER_WITHDRAWN_EVENT);

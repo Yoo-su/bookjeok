@@ -12,7 +12,7 @@ notification/
 ├── gateways/
 │   ├── notification.gateway.ts        # Socket.IO 실시간 푸시
 │   └── notification.gateway.spec.ts
-├── entities/notification.entity.ts    # Notification, NotificationType
+├── entities/notification.entity.ts    # Notification (enum은 core 재사용)
 ├── listeners/notification-cleanup.listener.ts  # user.withdrawn
 └── dtos/
     ├── get-notifications-query.dto.ts
@@ -39,13 +39,26 @@ FeedbackService    ──emit──▶ feedback.replied ──▶ FeedbackReplyN
 
 ### 새 알림 추가 방법
 
-1. `NotificationType` enum에 타입 추가
-2. `@bookjeok/core`의 알림 타입에도 동일하게 추가
-3. 발행 측 서비스에서 이벤트 emit
-4. 해당 도메인의 `*-notification.listener.ts`(또는 `*-event.listener.ts`)에 `@OnEvent` 핸들러 추가
-5. 웹의 `features/notification/utils/index.ts`에 문구·아이콘·이동 경로 매핑 추가
+1. `@bookjeok/core`의 `NotificationType`에 값을 추가하고 `NotificationMetadataMap`에 필수 metadata를 정의합니다. 서버는 core enum을 직접 사용합니다.
+2. 운영 DB enum에 새 값을 수동 적용하고 `docs/manual-ddl-log.md`에 기록합니다. 현재 17종 값·컬럼 정의는 변경하지 않았으므로 이번 정리에는 DDL이 없습니다.
+3. 해당 도메인에서 이벤트를 발행하고 리스너가 `createNotification(recipientId, actorId, type, metadata)`를 호출합니다. 종류와 metadata의 tuple union 계약이 필수 필드 누락·종류 혼합을 거부합니다.
+4. 웹 `features/notification/utils/definitions.ts`에 번역 키·보간 인자·이동 경로·시스템 표시 여부를 등록하고 한영 번역을 추가합니다. enum 전체를 요구하는 mapped type이 등록 누락을 잡습니다.
+5. core의 최소 입력 예시·음성 타입 계약과 웹의 전 종류 표현 계약 예시를 갱신하고 core 빌드 후 서버·웹 타입 검사 및 계약 테스트를 실행합니다.
 
-> 5번을 빠뜨리면 알림은 도착하지만 문구와 링크가 비어 보입니다.
+`hasNotification()`은 같은 종류 metadata의 **부분 조건**만 받습니다(기존 jsonb 포함 검색 유지).
+`NotificationMetadataMap`에는 실제 생성 필드를 정의하며, 댓글 좋아요의 `reviewId`는 nullable,
+배송의 운송장 정보는 선택입니다. 거래 후기는 직거래에서도 쓰므로 `orderId`가 선택입니다.
+`OTHER_BUYER_TRADING`은 현재 알림 생성 호출이 없고 metadata가 필요 없는 기존 문구·라운지 경로를 유지합니다.
+
+생성 후 DB 저장 → actor 조회 → 기존 `newNotification` 푸시 순서, 자기 행동 억제,
+행위자 없는 알림·커서·읽음·삭제 동작은 그대로입니다. 런타임 DB 행 검증·전달 재시도는 추가하지 않습니다.
+
+### 계약 검증
+
+- core `features/notification/__tests__/contract.test.ts`: 17종 enum 값 고정, 종류별 최소 입력과 `@ts-expect-error` 음성 계약(`tsc`로 검사).
+- 서버 `notification.entity.spec.ts`: TypeORM enum 컬럼이 core enum 객체를 직접 사용함을 확인.
+- 서버 `notification.service.spec.ts`: 실제 생성 입구의 타입 거부(ts-jest), actor 유무·자기 행동·저장 후 전달·저장 실패 시 미전달 검증.
+- 웹 `features/notification/__tests__/definitions.test.ts`: 모든 타입의 문구·경로·시스템 표시와 한영 보간 계약, 기존 대체 표시 검증.
 
 ## 3. 알림 타입 (17종)
 
@@ -105,3 +118,7 @@ FeedbackService    ──emit──▶ feedback.replied ──▶ FeedbackReplyN
 
 - 웹: [`features/notification`](../../../../web/src/features/notification/README.md)
 - 거래 알림 발행 지점: [`features/order`](../order/README.md#이벤트--알림-팬아웃)
+
+회원 탈퇴 정리 리스너는 [user 소유 이벤트 계약](../user/events/user-withdrawn.event.ts)의
+`userWithdrawnEvent`·`UserWithdrawnEvent`로 발행자와 타입을 공유합니다.
+`@OnDomainEvent(..., { suppressErrors: false })`와 같은 트랜잭션 매니저·오류 전파를 유지합니다.

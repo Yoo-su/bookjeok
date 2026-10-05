@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "북적 (Bookjeok)",
     short_name: "북적",
     description:
-      "AI 도서 추천·요약, 독서 기록, 리뷰, 중고책 거래 통합 도서 플랫폼",
+      "독서 기록, 도서 검색·AI 요약, 리뷰, 중고책 거래 통합 도서 플랫폼",
     start_url: "/",
     scope: "/",
     display: "standalone",

@@ -34,6 +34,14 @@ refetchOnWindowFocus: false,
 
 개별 쿼리에서 `staleTime`을 덮어쓰는 건 자유롭습니다. 진짜 변하지 않는 데이터(AI 도서 요약 등)는 `staleTime: Infinity`가 정답입니다.
 
+## 거래 변경의 클라이언트 캐시 갱신
+
+`@bookjeok/react-query`의 `invalidateTradeCaches`가 판매글·채팅방 목록·거래 완료·거래 후기·사용자·주문 쿼리의 무효화 범위를 소유합니다. 로컬 예약·취소·완료 뮤테이션의 `onSettled`와 원격 `TRADE_ACTION`·`TRADE_STATUS` 메시지 수신은 이 함수를 함께 사용합니다. 뮤테이션은 활성 조회 갱신까지 기다리고 소켓 핸들러는 갱신을 시작한 뒤 다음 이벤트를 처리합니다.
+
+완료 기록과 후기 작성 자격은 폴링하지 않습니다. 상대방의 완료 메시지로 판매글 상태만 갱신하면 완료 캐시의 `null`이 남아 후기 버튼이 뜨지 않을 수 있으므로 두 캐시도 함께 무효화합니다. 일반 채팅 메시지는 기존 메시지·방 목록 캐시만 업데이트합니다. 이 정책은 TanStack Query만 다루며 ISR·Router Cache의 재검증을 대신하지 않습니다.
+
+채팅 메시지 기록은 이 정책으로 재조회하지 않습니다. 소켓 수신 시 기존 캐시에 병합해 전송 중·실패 상태의 메시지를 보존합니다. 메시지 누락에 대한 재연결 보정은 별도 채팅 경로의 책임입니다.
+
 ## 표면 대장
 
 서버가 구워서 클라이언트로 넘기는 캐시 항목의 전부입니다. **이 목록 밖의 쿼리는 ISR과 얽히지 않습니다.**
@@ -59,7 +67,9 @@ refetchOnWindowFocus: false,
 | `review.detail(id)`              | `/book/reviews/[id]`  | 24시간  | 전역                             |
 | `bookSale.saleDetail(id)`        | `/book/sales/[id]`    | 1시간   | 전역                             |
 
-홈의 `review.list`는 **화면에 5건만 보이지만 20건을 시드합니다.** 최신 리뷰 티커가 순환시킬 풀이라 그렇습니다. 개수는 `features/review/components/recent-review-list`의 `TICKER_POOL_SIZE`와 홈 페이지의 `queryFn`이 함께 가지며, 어긋나면 키가 달라져 시드가 통째로 버려집니다.
+`book.summary(isbn)`은 저장본 없음(`null`)만 시드합니다. 조회 실패를 `null`로 바꾸면 30일 ISR과 `staleTime: Infinity` 때문에 장애가 "요약 없음"으로 굳으므로, 실패는 에러 상태로 두어 시드에서 빠지고 클라이언트가 다시 조회합니다.
+
+홈의 `review.list`는 **화면에 5건만 보이지만 20건을 시드합니다.** 최신 리뷰 티커가 순환시킬 풀이라 그렇습니다. 시드와 화면 훅이 같은 키를 만들도록 조회 개수는 각 feature의 `constants/queries.ts` 한 곳에 둡니다 — `REVIEW_TICKER_POOL_SIZE`(티커 20), `RECENT_SALES_LIMIT`(홈 슬라이더·마켓 히어로 25), `HOME_PUBLISHER_BOOKS_DISPLAY`(출판사 실린더 18). 서버 페이지와 클라이언트 컴포넌트가 모두 이 상수를 import하므로 한쪽만 바꿔 시드가 버려지는 일이 없습니다. 상수 파일에는 `"use client"`나 클라이언트 전용 import를 두지 마세요(RSC 페이지가 함께 읽습니다).
 
 `readingLog.loungePopular`는 두 라우트가 각각 독립된 시각에 굽습니다. 스냅샷의 `dataUpdatedAt`은 0이라(아래 「시드의 시각 필드」) 이미 캐시에 있는 값을 덮지 않고, 먼저 들어온 값이 마운트 시 refetch로 교정됩니다.
 
@@ -80,6 +90,7 @@ Vercel은 재검증 결과가 이전과 같으면 ISR 쓰기를 과금하지 않
 
 - **아이템 상세만 즉시 재검증한다.** 그 페이지의 주제가 바뀐 것이므로.
 - **목록·홈 같은 집계는 시간 기반 `revalidate`에 위임한다.** 쓰기마다 파기하면 트래픽이 늘수록 적중률이 0에 수렴해 ISR이 사실상 SSR로 퇴화합니다. 상호작용 중인 사용자는 쿼리 무효화 + `refetchOnMount`로 이미 최신을 봅니다.
+- 판매글은 수정·상태 변경과 거래 예약·예약 취소·직거래 완료(`features/trade/mutations`)가 상세를 비우고, 리뷰는 수정이, 프로필은 수정·탈퇴가 비웁니다.
 - **삭제만 예외로 집계까지 비운다.** 목록에 남은 링크가 404로 이어지기 때문입니다.
 - **생성은 재검증 대상이 없다.** 방금 만든 id의 상세 경로는 아직 ISR에 없어 비울 것이 없고, 집계는 위 규칙대로 시간 기반에 위임합니다. 판매글 생성이 `revalidateBookSale({ saleId })`를 부르고 있었는데, 그 호출은 서버 액션 왕복만 한 번 더 만들 뿐 아무것도 비우지 않았습니다 (2026-09-16 제거).
 
@@ -116,7 +127,7 @@ Vercel은 재검증 결과가 이전과 같으면 ISR 쓰기를 과금하지 않
 | `book/components/common/book-card`                     | 검색 결과 20 · 연관 도서 5~10     |
 | `book/components/book-slider/main-book-slider`         | 홈 출판사 서가 18                 |
 | `book/components/book-slider/popular-book-slider`      | 홈 인기책 목록 2벌 + 히어로       |
-| `book/components/book-search/ai-book-recommend-slider` | AI 추천 N                         |
+| `book/components/book-search/ai-book-recommend-slider` | AI 추천 N (현재 화면 미연결)      |
 | `book/components/recent-books/recent-books-panel`      | 최근 본 책 N                      |
 | `book-sale/components/common/book-sale-item/root`      | 마켓 무한목록 · 홈 최근 판매      |
 | `review/components/common/review-card/root`            | 리뷰 목록 · 홈 리뷰 섹션          |

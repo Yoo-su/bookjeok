@@ -25,7 +25,7 @@ vi.mock("@/features/book-sale/mutations", () => ({
 const mockReserve = vi.fn();
 const mockComplete = vi.fn();
 
-vi.mock("@bookjeok/react-query", () => ({
+vi.mock("@/features/trade/mutations", () => ({
   useCompleteDirectTradeMutation: () => ({
     mutate: mockComplete,
     isPending: false,
@@ -35,6 +35,9 @@ vi.mock("@bookjeok/react-query", () => ({
     mutate: vi.fn(),
     isPending: false,
   }),
+}));
+
+vi.mock("@bookjeok/react-query", () => ({
   useTradeCandidatesQuery: () => ({
     data: [
       {

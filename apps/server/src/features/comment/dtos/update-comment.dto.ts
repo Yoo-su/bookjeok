@@ -1,3 +1,4 @@
+import { MAX_COMMENT_LENGTH } from '@bookjeok/core';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
 
 /**
@@ -6,6 +7,8 @@ import { IsOptional, IsString, MaxLength } from 'class-validator';
 export class UpdateCommentDto {
   @IsOptional()
   @IsString()
-  @MaxLength(1000, { message: '댓글은 최대 1000자까지 작성 가능합니다.' })
+  @MaxLength(MAX_COMMENT_LENGTH, {
+    message: `댓글은 최대 ${MAX_COMMENT_LENGTH}자까지 작성 가능합니다.`,
+  })
   content?: string;
 }

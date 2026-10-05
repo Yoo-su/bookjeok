@@ -1,3 +1,4 @@
+import { OrderStatus } from '@bookjeok/core';
 import {
   Column,
   CreateDateColumn,
@@ -14,15 +15,8 @@ import { ChatRoom } from '@/features/chat/entities/chat-room.entity';
 import { UsedBookSale } from '@/features/used-book-sale/entities/used-book-sale.entity';
 import { User } from '@/features/user/entities/user.entity';
 
-export enum OrderStatus {
-  AWAITING_PAYMENT = 'AWAITING_PAYMENT',
-  PAID = 'PAID',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CONFIRMED = 'CONFIRMED',
-  DISPUTED = 'DISPUTED',
-  CANCELLED = 'CANCELLED',
-}
+// 정의는 core 한 곳. 기존 서버 import 경로를 위해 다시 내보냄
+export { OrderStatus };
 
 @Entity({ name: 'orders' })
 // 이름은 운영에 이미 만들어진 것과 맞춘다.

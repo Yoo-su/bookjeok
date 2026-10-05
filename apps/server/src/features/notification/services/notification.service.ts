@@ -1,12 +1,13 @@
+import {
+  type CreateNotificationArgs,
+  type NotificationFilterArgs,
+} from '@bookjeok/core';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import {
-  Notification,
-  NotificationType,
-} from '../entities/notification.entity';
-import { NotificationGateway } from '../gateways/notification.gateway';
+import { Notification } from '@/features/notification/entities/notification.entity';
+import { NotificationGateway } from '@/features/notification/gateways/notification.gateway';
 
 @Injectable()
 export class NotificationService {
@@ -29,8 +30,7 @@ export class NotificationService {
   async createNotification(
     recipientId: number,
     actorId: number | null,
-    type: NotificationType,
-    metadata: Record<string, unknown>,
+    ...[type, metadata]: CreateNotificationArgs
   ) {
     // 자기 행동으로 자기에게 가는 알림만 막는다. 행위자 없는 알림은 운영자 본인에게도 간다
     if (actorId !== null && recipientId === actorId) return;
@@ -108,8 +108,7 @@ export class NotificationService {
   async hasNotification(
     recipientId: number,
     actorId: number,
-    type: NotificationType,
-    metadata: Record<string, unknown>,
+    ...[type, metadata]: NotificationFilterArgs
   ) {
     return this.notificationRepository
       .createQueryBuilder('notification')

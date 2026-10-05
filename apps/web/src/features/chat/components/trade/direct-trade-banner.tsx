@@ -7,10 +7,7 @@ import {
   TradeCompletionMethod,
 } from "@bookjeok/core";
 import {
-  useCancelSaleReservationMutation,
-  useCompleteDirectTradeMutation,
   useMyTradeReviewEligibilityQuery,
-  useReserveSaleMutation,
   useTradeCompletionByRoomQuery,
 } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
@@ -22,6 +19,11 @@ import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { useChatStore } from "@/features/chat/stores/use-chat-store";
 import { useConfirm } from "@/features/confirm";
 import { TradeReviewModal } from "@/features/trade/components/review/trade-review-modal";
+import {
+  useCancelSaleReservationMutation,
+  useCompleteDirectTradeMutation,
+  useReserveSaleMutation,
+} from "@/features/trade/mutations";
 import { ShoppingBagIcon } from "@/shared/components/icons";
 import {
   AlertTriangle,

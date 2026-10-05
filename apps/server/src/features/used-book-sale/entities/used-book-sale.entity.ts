@@ -1,3 +1,4 @@
+import { SaleStatus as PublicSaleStatus, TradeMethod } from '@bookjeok/core';
 import {
   Column,
   CreateDateColumn,
@@ -14,18 +15,18 @@ import { Book } from '@/features/book/entities/book.entity';
 import { ChatRoom } from '@/features/chat/entities/chat-room.entity';
 import { User } from '@/features/user/entities/user.entity';
 
-export enum SaleStatus {
-  FOR_SALE = 'FOR_SALE', // 판매중
-  RESERVED = 'RESERVED', // 예약중
-  SOLD = 'SOLD', // 판매완료
-  WITHDRAWN = 'WITHDRAWN', // 탈퇴로 인한 숨김
-}
+/**
+ * 판매 상태. 공개 값(판매중·예약중·판매완료)은 core 정의를 쓰고,
+ * 탈퇴로 숨긴 `WITHDRAWN`만 서버 내부 상태로 덧붙인다(API로 내보내지 않음).
+ */
+export const SaleStatus = {
+  ...PublicSaleStatus,
+  WITHDRAWN: 'WITHDRAWN',
+} as const;
+export type SaleStatus = (typeof SaleStatus)[keyof typeof SaleStatus];
 
-export enum TradeMethod {
-  DIRECT_ONLY = 'DIRECT_ONLY',
-  DELIVERY_ONLY = 'DELIVERY_ONLY',
-  BOTH = 'BOTH',
-}
+// 정의는 core 한 곳. 기존 서버 import 경로를 위해 다시 내보냄
+export { TradeMethod };
 
 @Entity({ name: 'used_book_sales' })
 // 이름은 운영에 이미 만들어진 것과 맞춘다.

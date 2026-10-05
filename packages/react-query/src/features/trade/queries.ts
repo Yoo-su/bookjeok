@@ -40,7 +40,7 @@ export const useMyTradeCompletionsQuery = (
  * 채팅방에서 성사된 거래 완료 기록 조회.
  *
  * 주문 폴링과 달리 완료는 한 번 생기면 바뀌지 않으므로 폴링하지 않습니다.
- * 완료 직후 갱신은 뮤테이션의 캐시 무효화가 담당합니다.
+ * 완료 직후 갱신은 로컬 뮤테이션과 원격 거래 메시지의 공통 캐시 정책이 담당합니다.
  */
 export const useTradeCompletionByRoomQuery = (
   roomId?: number,

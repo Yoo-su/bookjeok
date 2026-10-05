@@ -11,6 +11,9 @@ import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
+import { activityLogCreatedEvent } from '@/shared/activity/events/activity-log-created.event';
+import { emitDomainEvent } from '@/shared/events/domain-event';
+
 import {
   TRACK_ACTIVITY_KEY,
   TrackActivityMetadata,
@@ -78,7 +81,7 @@ export class ActivityTrackingInterceptor implements NestInterceptor {
         details: details && Object.keys(details).length > 0 ? details : null,
       };
 
-      this.eventEmitter.emit('ACTIVITY_LOG.CREATED', logData);
+      emitDomainEvent(this.eventEmitter, activityLogCreatedEvent, logData);
     } catch (error: unknown) {
       this.logger.error(
         `Failed to dispatch activity log for ${activityType}: ${error instanceof Error ? error.message : String(error)}`,

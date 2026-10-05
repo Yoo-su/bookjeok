@@ -1,3 +1,4 @@
+import { TradeCompletionMethod } from '@bookjeok/core';
 import {
   Column,
   CreateDateColumn,
@@ -17,12 +18,8 @@ import { User } from '@/features/user/entities/user.entity';
 
 import { TradeReview } from './trade-review.entity';
 
-export enum TradeCompletionMethod {
-  /** 채팅으로 약속을 잡고 직접 만나 거래 (결제 없음) */
-  DIRECT = 'DIRECT',
-  /** 에스크로 결제 + 택배 배송 거래 */
-  DELIVERY = 'DELIVERY',
-}
+// 정의는 core 한 곳. 기존 서버 import 경로를 위해 다시 내보냄
+export { TradeCompletionMethod };
 
 /**
  * "거래가 성사됐다"는 사실 그 자체.

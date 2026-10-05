@@ -1,5 +1,7 @@
 /**
  * 댓글 타겟 타입
+ * BOOK: 도서 상세 페이지 댓글 (targetId = ISBN)
+ * REVIEW: 리뷰 상세 페이지 댓글 (targetId = 리뷰 ID 문자열)
  */
 export enum CommentTargetType {
   BOOK = "BOOK",

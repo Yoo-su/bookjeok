@@ -1,4 +1,5 @@
 import {
+  SALE_IMAGE_MAX_COUNT,
   TradeMethod,
   UpdateBookSaleParams,
   UsedBookSale,
@@ -11,12 +12,12 @@ import { toast } from "sonner";
 
 import { useImageUpload } from "@/shared/hooks/use-image-upload";
 
-import { UploadStep } from "../components/common/upload-progress-modal";
 import {
   createEditFormSchema,
   EditFormValues,
 } from "../components/sale-form/book-sale-edit-form/schema";
 import { useUpdateBookSaleMutation } from "../mutations";
+import { useSaleUploadProgress } from "./use-sale-upload-progress";
 
 interface UseBookSaleEditFormProps {
   sale: UsedBookSale;
@@ -26,9 +27,8 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
   const t = useTranslations("market.validation");
   const { mutateAsync, isPending, isSuccess } = useUpdateBookSaleMutation();
 
-  const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { uploadStep, uploadProgress, isModalOpen, trackUpload } =
+    useSaleUploadProgress();
 
   const isSubmitDisabled = isPending || isSuccess || isModalOpen;
 
@@ -42,7 +42,7 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
     handleNewImageRemove,
     handleExistingImageRemove,
   } = useImageUpload({
-    maxFiles: 5,
+    maxFiles: SALE_IMAGE_MAX_COUNT,
     initialExistingImages: sale.imageUrls,
     onFilesChange: (files) => {
       setNewImageFiles(files);
@@ -96,28 +96,15 @@ export const useBookSaleEditForm = ({ sale }: UseBookSaleEditFormProps) => {
       imageUrls: existingImages,
     };
 
-    setIsModalOpen(true);
-    setUploadStep("compressing");
-    setUploadProgress(10);
-
-    try {
-      await mutateAsync({
+    await trackUpload((onProgressState) =>
+      mutateAsync({
         saleId: sale.id,
         payload,
         newImageFiles,
         deletedImageUrls: deletedImages,
-        onProgressState: (step, percent) => {
-          setUploadStep(step);
-          setUploadProgress(percent);
-        },
-      });
-      setUploadStep("success");
-      setUploadProgress(100);
-    } catch (error) {
-      setIsModalOpen(false);
-      setUploadStep("idle");
-      setUploadProgress(0);
-    }
+        onProgressState,
+      }),
+    );
   };
 
   return {

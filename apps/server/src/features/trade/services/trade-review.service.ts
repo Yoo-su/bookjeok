@@ -9,7 +9,9 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { tradeReviewCreatedEvent } from '@/features/trade/events/trade-review-created.event';
 import { User } from '@/features/user/entities/user.entity';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 
 import { REVIEW_EXPIRATION_MS } from '../constants';
@@ -90,7 +92,7 @@ export class TradeReviewService {
 
     const savedReview = await this.tradeReviewRepository.save(review);
 
-    this.eventEmitter.emit('trade_review.created', {
+    emitDomainEvent(this.eventEmitter, tradeReviewCreatedEvent, {
       reviewId: savedReview.id,
       completionId,
       targetUserId,

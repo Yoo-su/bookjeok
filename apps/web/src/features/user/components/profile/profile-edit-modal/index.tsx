@@ -1,6 +1,7 @@
 import { checkNickname } from "@bookjeok/api-client";
 import {
   NICKNAME_MAX_LENGTH,
+  NICKNAME_MIN_LENGTH,
   type NicknameError,
   normalizeNickname,
   type UpdateUserProfileParams,
@@ -58,6 +59,11 @@ const DEFAULT_PROFILE_IMAGES = [
   "default_profile10",
 ];
 
+const NICKNAME_LENGTH_VALUES = {
+  min: NICKNAME_MIN_LENGTH,
+  max: NICKNAME_MAX_LENGTH,
+};
+
 const NICKNAME_ERROR_KEYS = {
   too_short: "nickname_min",
   too_long: "nickname_max",
@@ -108,7 +114,9 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
   );
   const [nicknameErrorKey, setNicknameErrorKey] =
     useState<NicknameErrorKey | null>(null);
-  const nicknameError = nicknameErrorKey ? t(nicknameErrorKey) : null;
+  const nicknameError = nicknameErrorKey
+    ? t(nicknameErrorKey, NICKNAME_LENGTH_VALUES)
+    : null;
 
   // 저장 상태
   const [isSaving, setIsSaving] = useState(false);
@@ -443,7 +451,7 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
                 id="nickname"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder={t("nickname_placeholder")}
+                placeholder={t("nickname_placeholder", NICKNAME_LENGTH_VALUES)}
                 maxLength={NICKNAME_MAX_LENGTH}
                 className={`h-10 bg-stone-50 border-stone-200 focus:bg-white text-base md:text-sm ${
                   nicknameError
@@ -470,7 +478,9 @@ export const ProfileEditModal = ({ trigger }: ProfileEditModalProps) => {
                 {t("nickname_available")}
               </p>
             ) : (
-              <p className="text-[11px] text-stone-500">{t("nickname_help")}</p>
+              <p className="text-[11px] text-stone-500">
+                {t("nickname_help", NICKNAME_LENGTH_VALUES)}
+              </p>
             )}
           </div>
 

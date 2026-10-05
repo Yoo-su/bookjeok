@@ -12,8 +12,8 @@ import { createPageMetadata } from "@/shared/config/metadata";
 import { getQueryClient } from "@/shared/libs/query-client";
 import { BookDetailView } from "@/views/book-detail-view";
 
-// 서지 정보는 운영자가 수집 스크립트를 돌릴 때만 바뀐다.
-// 변경분은 /api/revalidate 웹훅이 즉시 걷어내므로 시간 기반 주기는 길게 둔다.
+// 서지 정보는 운영자가 적재 도구를 돌릴 때만 바뀌므로 시간 기반 주기를 길게 둔다.
+// 즉시 비우는 경로는 없다. 급하면 /api/revalidate 웹훅을 직접 호출
 export const revalidate = 2592000; // 30일 (60 * 60 * 24 * 30)
 
 // ISR 활성화용 빈 파라미터 목록

@@ -1,4 +1,5 @@
-import { NotificationType } from '@/features/notification/entities/notification.entity';
+import { NotificationType } from '@bookjeok/core';
+
 import { NotificationService } from '@/features/notification/services/notification.service';
 import { ReviewResponseDto } from '@/features/review/dtos/review-response.dto';
 

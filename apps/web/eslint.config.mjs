@@ -43,6 +43,25 @@ const eslintConfig = tseslint.config(
           ],
         },
       ],
+      // 4. 라우트 경로는 PATHS 상수로 (루트 "/"와 외부 "//"는 허용)
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.object.name='router'][callee.property.name=/^(push|replace|prefetch)$/] > Literal[value=/^\\x2F(?!\\x2F)./]",
+          message: "라우트 경로는 PATHS 상수를 사용하세요.",
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='router'][callee.property.name=/^(push|replace|prefetch)$/] > TemplateLiteral > TemplateElement:first-child[value.raw=/^\\x2F(?!\\x2F)./]",
+          message: "라우트 경로는 PATHS 상수를 사용하세요.",
+        },
+        {
+          selector:
+            "JSXAttribute[name.name='href'] > Literal[value=/^\\x2F(?!\\x2F)./]",
+          message: "라우트 경로는 PATHS 상수를 사용하세요.",
+        },
+      ],
     },
   },
 );

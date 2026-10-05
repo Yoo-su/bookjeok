@@ -162,3 +162,12 @@ Tiptap 본문에서 이미지 URL을 추출해, 수정·삭제 시 더 이상 �
 - `BookModule` — ISBN 기준 도서 연결
 - `NotificationModule` — 리액션 알림
 - 댓글은 `CommentModule`이 담당하며, `comment.created` 이벤트로 리뷰 작성자에게 알림이 전달됩니다.
+
+## 도메인 이벤트 계약
+
+[`events/review.events.ts`](events/review.events.ts)가 `ReviewEvents.reacted`의 이름과
+`review: ReviewResponseDto`·`actorId`·`isAdded` 계약을 소유합니다. 서비스는 리액션 토글
+트랜잭션의 커밋 후 상세를 읽고 `emitDomainEvent`로 발행하며 알림 리스너가
+`@OnDomainEvent`로 같은 계약을 받습니다. Nest 옵션은 기본값이고 알림 중복 검사·오류 로깅을 유지합니다.
+
+탈퇴 정리 구독은 [user 소유 계약](../user/events/user-withdrawn.event.ts)을 사용합니다.

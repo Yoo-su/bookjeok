@@ -7,6 +7,7 @@ import {
 import { bookSaleKeys } from "@bookjeok/core";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { RECENT_SALES_LIMIT } from "@/features/book-sale/constants/queries";
 import { BreadcrumbJsonLd } from "@/shared/components/breadcrumb-json-ld";
 import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
@@ -53,9 +54,6 @@ export default async function Page({
     { name: t("nav.menu_market"), url: `/${locale}/book/market` },
   ];
 
-  /** useMarketHeroStats의 RECENT_LIMIT과 같아야 캐시가 맞는다. */
-  const HERO_RECENT_LIMIT = 25;
-
   const queries = [
     {
       queryKey: bookSaleKeys.popularSales.queryKey,
@@ -66,8 +64,8 @@ export default async function Page({
       방문자에게 지표 행이 리빌 뒤에 나타나며 CTA를 아래로 밀어낸다.
     */
     {
-      queryKey: bookSaleKeys.recentSales(HERO_RECENT_LIMIT).queryKey,
-      queryFn: () => getRecentBookSales(HERO_RECENT_LIMIT),
+      queryKey: bookSaleKeys.recentSales(RECENT_SALES_LIMIT).queryKey,
+      queryFn: () => getRecentBookSales(RECENT_SALES_LIMIT),
     },
     {
       queryKey: bookSaleKeys.availableRegions.queryKey,

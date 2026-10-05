@@ -1,15 +1,15 @@
 "use client";
 
 import { SaleStatus, UsedBookSale } from "@bookjeok/core";
-import {
-  useCompleteDirectTradeMutation,
-  useReserveSaleMutation,
-  useTradeCandidatesQuery,
-} from "@bookjeok/react-query";
+import { useTradeCandidatesQuery } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  useCompleteDirectTradeMutation,
+  useReserveSaleMutation,
+} from "@/features/trade/mutations";
 import { Check, Loader2 } from "@/shared/components/icons/iconsax";
 import {
   Avatar,

@@ -182,3 +182,7 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 - 웹: [`features/reading-log`](../../../../web/src/features/reading-log/README.md)
 - 독서 키재기 화면: `apps/web` `features/reading-log/components/stack-view`
+
+회원 탈퇴 정리 리스너는 [user 소유 이벤트 계약](../user/events/user-withdrawn.event.ts)의
+`userWithdrawnEvent`·`UserWithdrawnEvent`로 발행자와 타입을 공유합니다.
+`@OnDomainEvent(..., { suppressErrors: false })`와 같은 트랜잭션 매니저·오류 전파를 유지합니다.

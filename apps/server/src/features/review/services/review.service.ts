@@ -19,6 +19,8 @@ import {
   ReviewReactionType,
 } from '@/features/review/entities/review-reaction.entity';
 import { Tag } from '@/features/review/entities/tag.entity';
+import { ReviewEvents } from '@/features/review/events/review.events';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions';
 import { adjustCounter } from '@/shared/utils/adjust-counter';
 
@@ -681,7 +683,7 @@ export class ReviewService {
     const result = await this.findOne(id);
 
     // 종류만 바꾼 경우는 새 반응이 아니므로 알림 대상이 아니다.
-    this.eventEmitter.emit('review.reacted', {
+    emitDomainEvent(this.eventEmitter, ReviewEvents.reacted, {
       review: result,
       actorId: userId,
       isAdded: outcome === 'added',

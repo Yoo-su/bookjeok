@@ -1,3 +1,4 @@
+import { HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -5,7 +6,9 @@ import { TransactionHost } from '@nestjs-cls/transactional';
 import { Repository } from 'typeorm';
 
 import { BookService } from '@/features/book/services/book.service';
+import { Review } from '@/features/review/entities/review.entity';
 import { ReviewService } from '@/features/review/services/review.service';
+import { BusinessException } from '@/shared/exceptions';
 import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Comment, CommentTargetType } from '../entities/comment.entity';
@@ -67,6 +70,7 @@ describe('CommentService', () => {
     };
 
     bookService = {
+      resolveBook: jest.fn(),
       findBookByIsbn: jest.fn(),
       findBooksByIsbns: jest.fn().mockResolvedValue([]),
     };
@@ -298,6 +302,118 @@ describe('CommentService', () => {
         'comment.liked',
         expect.objectContaining({ isLiked: false }),
       );
+    });
+  });
+  describe('createComment', () => {
+    const saved = { id: 7 } as Comment;
+
+    beforeEach(() => {
+      (commentRepository.create as jest.Mock).mockImplementation(
+        (data: Partial<Comment>) => data,
+      );
+      (commentRepository.save as jest.Mock).mockResolvedValue(saved);
+      (commentRepository.findOne as jest.Mock).mockResolvedValue({
+        ...saved,
+        userId: 1,
+      });
+    });
+
+    it('리뷰 대상이 있으면 정식 리뷰 ID로 저장하고 이벤트를 발행한다', async () => {
+      (reviewService.findReviewById as jest.Mock).mockResolvedValue({
+        id: 12,
+      } as Review);
+
+      await service.createComment(
+        {
+          content: '좋은 리뷰',
+          targetType: CommentTargetType.REVIEW,
+          targetId: '012',
+        },
+        1,
+      );
+
+      expect(reviewService.findReviewById).toHaveBeenCalledWith(12);
+      expect(commentRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ targetId: '12', userId: 1 }),
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        'comment.created',
+        expect.anything(),
+      );
+    });
+
+    it('없는 리뷰에는 저장하지 않고 REVIEW_NOT_FOUND를 던진다', async () => {
+      (reviewService.findReviewById as jest.Mock).mockResolvedValue(null);
+
+      await expect(
+        service.createComment(
+          {
+            content: '댓글',
+            targetType: CommentTargetType.REVIEW,
+            targetId: '999',
+          },
+          1,
+        ),
+      ).rejects.toMatchObject({ errorCode: 'REVIEW_NOT_FOUND' });
+
+      expect(commentRepository.save).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
+    });
+
+    it.each(['no-such-review', '12abc', '-1', '1.5', ''])(
+      '숫자가 아닌 리뷰 ID(%p)는 조회 없이 거부한다',
+      async (targetId) => {
+        await expect(
+          service.createComment(
+            { content: '댓글', targetType: CommentTargetType.REVIEW, targetId },
+            1,
+          ),
+        ).rejects.toMatchObject({ errorCode: 'REVIEW_NOT_FOUND' });
+
+        expect(reviewService.findReviewById).not.toHaveBeenCalled();
+        expect(commentRepository.save).not.toHaveBeenCalled();
+      },
+    );
+
+    it('도서 대상은 DB 도서의 ISBN으로 저장한다', async () => {
+      (bookService.resolveBook as jest.Mock).mockResolvedValue({
+        isbn: '9788937460777',
+      });
+
+      await service.createComment(
+        {
+          content: '댓글',
+          targetType: CommentTargetType.BOOK,
+          targetId: '9788937460777',
+        },
+        1,
+      );
+
+      expect(bookService.resolveBook).toHaveBeenCalledWith('9788937460777');
+      expect(commentRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ targetId: '9788937460777' }),
+      );
+    });
+
+    it('없는 도서에는 저장하지 않는다', async () => {
+      const notFound = new BusinessException(
+        'BOOK_NOT_FOUND',
+        HttpStatus.NOT_FOUND,
+      );
+      (bookService.resolveBook as jest.Mock).mockRejectedValue(notFound);
+
+      await expect(
+        service.createComment(
+          {
+            content: '댓글',
+            targetType: CommentTargetType.BOOK,
+            targetId: '0000000000000',
+          },
+          1,
+        ),
+      ).rejects.toBe(notFound);
+
+      expect(commentRepository.save).not.toHaveBeenCalled();
     });
   });
 });

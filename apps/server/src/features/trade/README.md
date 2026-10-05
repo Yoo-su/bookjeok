@@ -247,3 +247,19 @@ FOR_SALE ──[채팅방: 이 분과 거래하기]──> RESERVED (+ reservedF
 - [docs/used-book-pay-implementation.md](../../../../../docs/used-book-pay-implementation.md) — 에스크로 결제 도입 계획
 - [docs/manual-ddl-log.md](../../../../../docs/manual-ddl-log.md) — 이 모듈의 운영 DDL
 - [order/README.md](../order/README.md) — 결제·배송 쪽
+
+## 도메인 이벤트 계약
+
+[`events/trade.events.ts`](events/trade.events.ts)가 예약·예약 취소·완료·판매완료 계약을,
+[`events/trade-review-created.event.ts`](events/trade-review-created.event.ts)가 후기 계약을 소유합니다.
+발행자는 `emitDomainEvent`, 거래 리스너와 order의 후기 알림 리스너는 같은 계약의
+`@OnDomainEvent`를 사용합니다. Nest 옵션은 기본값이며 기존 catch·알림·채팅 처리는 유지합니다.
+
+- 예약 취소의 `buyerId`는 `number | null`입니다. 예약 상대가 없으면 리스너가 기존처럼 종료합니다.
+  회원 탈퇴에서도 user 서비스가 이 **trade 소유 계약**으로 커밋 후 발행합니다.
+- 채팅방이 없을 수 있어 `chatRoomId`는 선택·nullable 계약을 유지합니다.
+- 완료 기록이 있으면 `trade.completed`, 이어서 기록 유무와 무관하게 `trade.sale_sold`를 발행합니다.
+  거래 상태 이벤트는 기존 `persist*` 커밋 후, 후기 이벤트는 후기 저장 후 발행합니다.
+- 후기 payload는 `reviewId`·`completionId`·`targetUserId`·`reviewerId`가 필수입니다.
+  현재 발행자는 `orderId`를 보내지 않습니다. 기존 소비자의 선택 `orderId`는 유지하며 주문 ID를
+  새로 조회·추가하지 않습니다. order 리스너는 이 계약을 받아 기존 알림 metadata를 만듭니다.

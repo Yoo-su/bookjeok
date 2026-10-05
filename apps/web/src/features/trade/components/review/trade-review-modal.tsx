@@ -2,6 +2,7 @@
 
 import {
   getAvailableTradeReviewTags,
+  TRADE_REVIEW_CONTENT_MAX_LENGTH,
   TRADE_REVIEW_TAG_SPECS,
   TradeCompletionMethod,
   TradeReview,
@@ -145,8 +146,10 @@ export const TradeReviewModal = ({
       return;
     }
 
-    if (content.length > 500) {
-      setValidationError(t("errors.content_max"));
+    if (content.length > TRADE_REVIEW_CONTENT_MAX_LENGTH) {
+      setValidationError(
+        t("errors.content_max", { max: TRADE_REVIEW_CONTENT_MAX_LENGTH }),
+      );
       return;
     }
 
@@ -269,7 +272,7 @@ export const TradeReviewModal = ({
                 {t("content_label")}
               </Label>
               <span className="text-[11px] text-stone-400 font-mono">
-                {content.length}/500
+                {content.length}/{TRADE_REVIEW_CONTENT_MAX_LENGTH}
               </span>
             </div>
             <Textarea
@@ -277,7 +280,7 @@ export const TradeReviewModal = ({
               onChange={(e) => setContent(e.target.value)}
               placeholder={t("content_placeholder")}
               rows={3}
-              maxLength={500}
+              maxLength={TRADE_REVIEW_CONTENT_MAX_LENGTH}
               className="text-base md:text-xs resize-none border-stone-200 dark:border-stone-700"
             />
           </div>

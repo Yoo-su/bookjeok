@@ -1,11 +1,11 @@
 import { Global, Module } from '@nestjs/common';
 
-import { MailEventListener } from './listeners/mail-event.listener';
-import { MailService } from './mail.service';
+import { MailService } from '@/shared/mail/mail.service';
+import { ResendMailDelivery } from '@/shared/mail/resend-mail-delivery';
 
 @Global()
 @Module({
-  providers: [MailService, MailEventListener],
+  providers: [MailService, ResendMailDelivery],
   exports: [MailService],
 })
 export class MailModule {}

@@ -177,4 +177,23 @@ describe('ChatGateway', () => {
       });
     });
   });
+  describe('emitNewMessage', () => {
+    it('서버 메시지를 방에 직렬화해 브로드캐스트한다', () => {
+      const emit = jest.fn();
+      const to = jest.fn(() => ({ emit }));
+      gateway.server = { to } as never;
+      const message = { id: 5, content: '거래 완료' };
+
+      gateway.emitNewMessage(7, message as never);
+
+      expect(to).toHaveBeenCalledWith('7');
+      expect(emit).toHaveBeenCalledWith('newMessage', message);
+    });
+
+    it('게이트웨이 초기화 전이면 건너뛴다', () => {
+      gateway.server = undefined as never;
+
+      expect(() => gateway.emitNewMessage(7, { id: 5 } as never)).not.toThrow();
+    });
+  });
 });

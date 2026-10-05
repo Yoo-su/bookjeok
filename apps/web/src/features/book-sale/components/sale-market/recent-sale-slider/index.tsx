@@ -16,6 +16,7 @@ import { Link, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { signalNavigationStart } from "@/shared/utils/navigation-progress";
 
+import { RECENT_SALES_LIMIT } from "../../../constants/queries";
 import { RecentSaleCard } from "./recent-sale-card";
 import { RecentSalesSliderSkeleton } from "./skeleton";
 
@@ -27,7 +28,8 @@ const toFieldImage = (src: string) =>
 
 export const RecentSalesSlider = () => {
   const t = useTranslations("home.sections.recent_sales");
-  const { data, isLoading, isError } = useRecentBookSalesQuery();
+  const { data, isLoading, isError } =
+    useRecentBookSalesQuery(RECENT_SALES_LIMIT);
   // 훅은 조기 반환보다 먼저 돌기 때문에 렌더 가드로는 늦다. 진입 지점에서 한 번 정규화한다.
   const sales = useMemo(() => (Array.isArray(data) ? data : []), [data]);
   const router = useRouter();

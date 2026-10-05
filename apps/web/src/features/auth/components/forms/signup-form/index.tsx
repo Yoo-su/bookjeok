@@ -1,5 +1,6 @@
 "use client";
 
+import { normalizeNickname } from "@bookjeok/core";
 import { useEmailSignupMutation } from "@bookjeok/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
@@ -40,7 +41,9 @@ export const SignupForm = () => {
   const router = useRouter();
 
   const form = useForm<SignupSchemaType>({
-    resolver: zodResolver(createSignupSchema((key) => tValidation(key))),
+    resolver: zodResolver(
+      createSignupSchema((key, values) => tValidation(key, values)),
+    ),
     defaultValues: {
       email: "",
       password: "",
@@ -86,7 +89,7 @@ export const SignupForm = () => {
     signup({
       email: values.email,
       password: values.password,
-      nickname: values.nickname,
+      nickname: normalizeNickname(values.nickname),
       name: values.name,
       gender: values.gender === "U" || !values.gender ? null : values.gender,
       ageRange: values.ageRange ? values.ageRange : null,

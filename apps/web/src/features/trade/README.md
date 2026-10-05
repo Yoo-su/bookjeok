@@ -2,7 +2,7 @@
 
 결제(Order)와 분리된 **거래 완료(`TradeCompletion`)** 기록을 바탕으로 양방향 거래 후기, 판매자 신뢰 지표, 거래 내역 조회를 담당하는 프론트엔드 모듈입니다.
 
-서버의 [`trade` 모듈](../../../../server/src/features/trade/README.md)과 짝을 이루며, 데이터 통신은 전부 `@bookjeok/react-query`의 `useTrade*`, `useMyTrade*` 훅을 통합니다.
+서버의 [`trade` 모듈](../../../../server/src/features/trade/README.md)과 짝을 이루며, 데이터 통신은 전부 `@bookjeok/react-query`의 `useTrade*`, `useMyTrade*` 훅을 통합니다. 예약·예약 취소·직거래 완료만 이 폴더의 `mutations/` 래퍼를 거칩니다(아래 「판매글 상세 ISR 재검증」).
 
 ---
 
@@ -11,6 +11,7 @@
 ```
 trade/
 ├── index.ts                             # 배럴 export
+├── mutations/index.ts                   # 예약·취소·완료 래퍼 (공유 훅 + 판매글 상세 ISR 재검증)
 ├── components/
 │   ├── review/
 │   │   ├── trade-review-modal.tsx       # 거래 후기 작성/수정 모달
@@ -24,7 +25,8 @@ trade/
 │       └── trade-history-skeleton.tsx
 └── __tests__/                           # Vitest 기반 단위/통합 테스트
     ├── trade-review.test.tsx
-    └── trade-history.test.tsx
+    ├── trade-history.test.tsx
+    └── trade-mutations-revalidate.test.tsx
 ```
 
 ---
@@ -39,6 +41,18 @@ trade/
 - **택배거래**: 구매자가 에스크로 구매확정(`CONFIRMED`)
 
 후기와 신뢰 지표는 결제 여부와 무관하게 이 `TradeCompletion`만 바라보며 단일 경로로 동작합니다.
+
+### 로컬·원격 거래 변경의 캐시 갱신
+
+`@bookjeok/react-query`의 `invalidateTradeCaches(queryClient)`가 판매글·채팅방 목록·거래 완료·거래 후기·사용자·주문 캐시의 무효화를 함께 담당합니다. 예약·예약 취소·직거래 완료 뮤테이션은 `onSettled`에서 이 정책을 호출하며, 채팅의 `TRADE_ACTION`·`TRADE_STATUS` 수신도 같은 정책을 사용합니다.
+
+거래 완료 조회는 폴링하지 않으므로 상대방의 완료 메시지를 받았을 때도 완료 기록과 후기 작성 자격을 갱신해야 합니다. 새 거래 변경 경로를 추가할 때 호출부에 키 목록을 복제하지 말고 공통 정책을 호출하세요. 뮤테이션은 활성 조회의 갱신이 끝날 때까지 기다리며, 실패한 요청도 서버 상태를 다시 확인합니다. ISR·Router Cache 재검증은 별도 웹 정책입니다.
+
+### 판매글 상세 ISR 재검증
+
+예약·예약 취소·직거래 완료는 판매 상태 배지를 바꾸므로 판매글 상세(`/book/sales/{id}`)의 ISR HTML도 비워야 합니다. 공유 패키지 훅은 서버 액션을 부를 수 없어 `mutations/index.ts`의 `useReserveSaleMutation`·`useCancelSaleReservationMutation`·`useCompleteDirectTradeMutation`이 공유 훅을 감싸, 성공 시 호출부 `onSuccess` 뒤에 `revalidateBookSale`과 `router.refresh()`를 실행합니다(판매 상태 직접 변경의 `useUpdateBookSaleStatusMutation`과 같은 방식). 채팅 거래 배너·거래 상대 모달·판매 상태 선택은 공유 훅 대신 이 래퍼를 import합니다. 원격 거래 메시지 수신 쪽은 행위자가 이미 비웠으므로 재검증하지 않습니다. 회귀 테스트는 `__tests__/trade-mutations-revalidate.test.tsx`입니다.
+
+채팅은 방 목록만 무효화합니다. 메시지 기록은 소켓 수신 시 병합하며, 거래 갱신 때문에 전송 중·실패 상태의 메시지가 사라지지 않도록 기록 전체를 재조회하지 않습니다.
 
 ### 거래 후기 작성 규칙
 
@@ -62,6 +76,8 @@ trade/
 | ------------------------ | ---------------------------------------------------------- |
 | `trade-review.test.tsx`  | 후기 모달 작성/수정, 태그 선택, 유효성 검증                |
 | `trade-history.test.tsx` | 거래 내역 목록 필터(ALL/BUYER/SELLER), 후기 작성 버튼 노출 |
+
+채팅의 `trade-cache-sync.test.tsx`는 실제 QueryClient와 거래 배너로 원격 완료 수신 후 후기 버튼 표시, 전송 중 메시지 보존, 일반 메시지의 거래 재조회 제외, 로컬 완료와 실패 요청의 상태 재확인을 검증합니다.
 
 ```bash
 pnpm --filter @bookjeok/web test

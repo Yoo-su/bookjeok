@@ -34,10 +34,16 @@ interface IdempotencyRecord {
  *
  * 키는 사용자별로 격리합니다. 전역 네임스페이스에 두면 남이 쓴 키와 충돌해
  * 엉뚱한 응답을 받을 수 있습니다.
+ *
+ * 조회~처리 중 기록 사이는 프로세스 안에서만 원자적입니다. 여러 인스턴스로
+ * 늘리면 공유 저장소의 원자적 쓰기로 바꿔야 합니다.
  */
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
   private readonly logger = new Logger(IdempotencyInterceptor.name);
+
+  /** 캐시 조회부터 처리 중 기록까지 점유 중인 키 */
+  private readonly acquiring = new Set<string>();
 
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
@@ -55,22 +61,34 @@ export class IdempotencyInterceptor implements NestInterceptor {
     }
 
     const cacheKey = this.buildCacheKey(idempotencyKey, request.user?.id);
-    const cached = await this.cacheManager.get<IdempotencyRecord>(cacheKey);
 
-    if (cached?.status === 'processing') {
+    // get과 set 사이 await에 같은 키가 끼어들지 않게 동기 점유
+    if (this.acquiring.has(cacheKey)) {
       throw new BusinessException('REQUEST_IN_PROGRESS', HttpStatus.CONFLICT);
     }
+    this.acquiring.add(cacheKey);
 
-    if (cached?.status === 'completed') {
-      // 처음 응답을 그대로 재생한다. 핸들러는 다시 실행하지 않는다.
-      return of(cached.response);
+    try {
+      const cached = await this.cacheManager.get<IdempotencyRecord>(cacheKey);
+
+      if (cached?.status === 'processing') {
+        throw new BusinessException('REQUEST_IN_PROGRESS', HttpStatus.CONFLICT);
+      }
+
+      if (cached?.status === 'completed') {
+        // 처음 응답을 그대로 재생한다. 핸들러는 다시 실행하지 않는다.
+        return of(cached.response);
+      }
+
+      await this.cacheManager.set(
+        cacheKey,
+        { status: 'processing' } satisfies IdempotencyRecord,
+        IDEMPOTENCY_TTL_MS,
+      );
+    } finally {
+      // 이후 중복은 캐시의 processing 기록이 막음
+      this.acquiring.delete(cacheKey);
     }
-
-    await this.cacheManager.set(
-      cacheKey,
-      { status: 'processing' } satisfies IdempotencyRecord,
-      IDEMPOTENCY_TTL_MS,
-    );
 
     return next.handle().pipe(
       tap({

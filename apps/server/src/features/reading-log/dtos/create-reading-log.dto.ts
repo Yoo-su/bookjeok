@@ -1,3 +1,4 @@
+import { MAX_MEMO_LENGTH } from '@bookjeok/core';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,
@@ -19,13 +20,13 @@ export class CreateReadingLogDto {
   date: string;
 
   @ApiProperty({
-    description: '한 줄 메모 (선택, 최대 50자)',
+    description: `한 줄 메모 (선택, 최대 ${MAX_MEMO_LENGTH}자)`,
     example: '깊은 울림을 주는 책이었다.',
     required: false,
-    maxLength: 50,
+    maxLength: MAX_MEMO_LENGTH,
   })
   @IsString()
   @IsOptional()
-  @MaxLength(50)
+  @MaxLength(MAX_MEMO_LENGTH)
   memo?: string;
 }

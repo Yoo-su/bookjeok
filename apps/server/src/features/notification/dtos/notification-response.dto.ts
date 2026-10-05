@@ -1,8 +1,7 @@
+import { type NotificationMetadata, NotificationType } from '@bookjeok/core';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { User } from '@/features/user/entities/user.entity';
-
-import { NotificationType } from '../entities/notification.entity';
 
 export class NotificationResponseDto {
   @ApiProperty({ description: '알림 ID' })
@@ -28,7 +27,7 @@ export class NotificationResponseDto {
     description: '메타데이터 (JSON)',
     example: { reviewId: 1, content: '...' },
   })
-  metadata: Record<string, unknown>;
+  metadata: NotificationMetadata;
 
   @ApiProperty({ description: '읽음 여부' })
   isRead: boolean;

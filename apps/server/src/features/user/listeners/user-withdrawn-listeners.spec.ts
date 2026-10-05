@@ -11,8 +11,8 @@ import { NotificationCleanupListener } from '@/features/notification/listeners/n
 import { ReadingLogCleanupListener } from '@/features/reading-log/listeners/reading-log-cleanup.listener';
 import { ReviewCleanupListener } from '@/features/review/listeners/review-cleanup.listener';
 import { UsedBookSaleCleanupListener } from '@/features/used-book-sale/listeners/used-book-sale-cleanup.listener';
+import { USER_WITHDRAWN_EVENT } from '@/features/user/events/user-withdrawn.event';
 import { ActivityCleanupListener } from '@/shared/activity/listeners/activity-cleanup.listener';
-import { USER_WITHDRAWN_EVENT } from '@/shared/events/user-withdrawn.event';
 
 import { UserCleanupListener } from './user-cleanup.listener';
 

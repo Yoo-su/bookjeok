@@ -6,7 +6,9 @@ import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-t
 import { Repository } from 'typeorm';
 
 import { BookService } from '@/features/book/services/book.service';
+import { CommentEvents } from '@/features/comment/events/comment.events';
 import { ReviewService } from '@/features/review/services/review.service';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions';
 import { adjustCounter } from '@/shared/utils/adjust-counter';
 import { clampNumber } from '@/shared/utils/clamp-number';
@@ -225,8 +227,10 @@ export class CommentService {
    * 댓글을 생성합니다.
    */
   async createComment(dto: CreateCommentDto, userId: number) {
+    const targetId = await this.resolveTargetId(dto.targetType, dto.targetId);
     const comment = this.commentRepository.create({
       ...dto,
+      targetId,
       userId,
     });
 
@@ -238,7 +242,9 @@ export class CommentService {
     });
 
     if (result) {
-      this.eventEmitter.emit('comment.created', { comment: result });
+      emitDomainEvent(this.eventEmitter, CommentEvents.created, {
+        comment: result,
+      });
     }
 
     return result;
@@ -290,7 +296,7 @@ export class CommentService {
     });
 
     if (updatedComment) {
-      this.eventEmitter.emit('comment.liked', {
+      emitDomainEvent(this.eventEmitter, CommentEvents.liked, {
         comment: updatedComment,
         actorId: userId,
         isLiked,
@@ -365,6 +371,34 @@ export class CommentService {
       where: { commentId, userId },
     });
     return !!like;
+  }
+
+  /**
+   * 댓글 대상이 존재하는지 확인하고 저장할 정식 targetId를 반환합니다.
+   * 대상의 공개 여부는 보지 않습니다(비공개 리뷰 댓글 정책 유지).
+   * @throws BOOK_NOT_FOUND, REVIEW_NOT_FOUND
+   */
+  private async resolveTargetId(
+    targetType: CommentTargetType,
+    targetId: string,
+  ): Promise<string> {
+    switch (targetType) {
+      case CommentTargetType.BOOK: {
+        const book = await this.bookService.resolveBook(targetId);
+        return book.isbn;
+      }
+      case CommentTargetType.REVIEW: {
+        // parseInt는 '12abc'도 12로 읽으므로 숫자 문자열만 허용
+        const reviewId = /^\d+$/.test(targetId) ? Number(targetId) : NaN;
+        const review = Number.isSafeInteger(reviewId)
+          ? await this.reviewService.findReviewById(reviewId)
+          : null;
+        if (!review) {
+          throw new BusinessException('REVIEW_NOT_FOUND', HttpStatus.NOT_FOUND);
+        }
+        return String(review.id);
+      }
+    }
   }
 
   /**

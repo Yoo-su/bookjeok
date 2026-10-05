@@ -1,3 +1,4 @@
+import { SALE_IMAGE_MAX_COUNT } from "@bookjeok/core";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -244,7 +245,7 @@ export const BookSaleForm = () => {
                         previews={imagePreviews}
                         onImagesAdd={handleImagesAdd}
                         onImageRemove={handleImageRemove}
-                        maxFiles={5}
+                        maxFiles={SALE_IMAGE_MAX_COUNT}
                       />
                     </FormControl>
                     <div className="mt-1 min-h-5">
