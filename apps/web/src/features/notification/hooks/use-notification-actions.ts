@@ -10,10 +10,15 @@ export const useNotificationActions = () => {
   const t = useTranslations("notification");
   const queryClient = useQueryClient();
 
+  /** 알림 목록과 안 읽은 개수를 서버 기준으로 다시 조회합니다. */
+  const syncNotifications = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: notificationKeys._def });
+  }, [queryClient]);
+
   const handleNewNotification = useCallback(
     (notification: Notification) => {
       // 1. 데이터 갱신 (Refetch)
-      queryClient.invalidateQueries({ queryKey: notificationKeys._def });
+      syncNotifications();
 
       // 2. UI 피드백 (Toast)
       const { key, params } = getNotificationMessageParams(notification, {
@@ -24,10 +29,11 @@ export const useNotificationActions = () => {
 
       toast.info(message);
     },
-    [queryClient, t],
+    [syncNotifications, t],
   );
 
   return {
     handleNewNotification,
+    syncNotifications,
   };
 };

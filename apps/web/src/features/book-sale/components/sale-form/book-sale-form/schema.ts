@@ -1,10 +1,28 @@
-import { TradeMethod } from "@bookjeok/core";
+import {
+  SALE_CONTENT_MAX_LENGTH,
+  SALE_CONTENT_MIN_LENGTH,
+  SALE_IMAGE_MAX_COUNT,
+  SALE_TITLE_MAX_LENGTH,
+  SALE_TITLE_MIN_LENGTH,
+  TradeMethod,
+} from "@bookjeok/core";
 import { z } from "zod";
 
-export const createSellFormSchema = (t: (key: string) => string) =>
+export const createSellFormSchema = (
+  t: (key: string, values?: Record<string, number>) => string,
+) =>
   z
     .object({
-      title: z.string().min(5, t("title_min")).max(50, t("title_max")),
+      title: z
+        .string()
+        .min(
+          SALE_TITLE_MIN_LENGTH,
+          t("title_min", { min: SALE_TITLE_MIN_LENGTH }),
+        )
+        .max(
+          SALE_TITLE_MAX_LENGTH,
+          t("title_max", { max: SALE_TITLE_MAX_LENGTH }),
+        ),
       price: z
         .string()
         .refine((val) => /^\d+$/.test(val), t("price_number"))
@@ -15,11 +33,23 @@ export const createSellFormSchema = (t: (key: string) => string) =>
       latitude: z.number(),
       longitude: z.number(),
       placeName: z.string().min(1, t("location_required")),
-      content: z.string().min(10, t("content_min")).max(1000, t("content_max")),
+      content: z
+        .string()
+        .min(
+          SALE_CONTENT_MIN_LENGTH,
+          t("content_min", { min: SALE_CONTENT_MIN_LENGTH }),
+        )
+        .max(
+          SALE_CONTENT_MAX_LENGTH,
+          t("content_max", { max: SALE_CONTENT_MAX_LENGTH }),
+        ),
       images: z
         .custom<FileList>()
         .refine((files) => files && files.length > 0, t("images_min"))
-        .refine((files) => files && files.length <= 5, t("images_max")),
+        .refine(
+          (files) => files && files.length <= SALE_IMAGE_MAX_COUNT,
+          t("images_max", { max: SALE_IMAGE_MAX_COUNT }),
+        ),
       book: z
         .object({
           isbn: z.string(),

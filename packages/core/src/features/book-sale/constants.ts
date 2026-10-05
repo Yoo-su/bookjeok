@@ -15,6 +15,13 @@ export const VALID_SORT_ORDER_LIST: SortOrder[] = ["ASC", "DESC"];
  */
 export const VALID_SALE_STATUSES_LIST = ["SALE", "RESERVED", "SOLD"] as const;
 
+// 판매글 입력 제한
+export const SALE_TITLE_MIN_LENGTH = 5;
+export const SALE_TITLE_MAX_LENGTH = 50;
+export const SALE_CONTENT_MIN_LENGTH = 10;
+export const SALE_CONTENT_MAX_LENGTH = 1000;
+export const SALE_IMAGE_MAX_COUNT = 5;
+
 // 중고책 마켓 필터 및 정렬 상수
 export const MAX_MARKET_PRICE = 100000;
 export const FILTER_ALL = "all" as const;

@@ -1,6 +1,6 @@
 # Frontend Feature: Book
 
-도서 검색, 도서 상세, 인기 도서, 최근 본 책, AI 도서 요약, AI 대화형 추천, 인기 검색어를 담당합니다. 중고책 판매 로직은 [`book-sale`](../book-sale/README.md)로 분리되어 있습니다.
+도서 검색, 도서 상세, 인기 도서, 최근 본 책, AI 도서 요약, 인기 검색어를 담당합니다. AI 대화형 추천은 화면에 연결하지 않고 코드만 남겨 두었습니다(아래 「AI 대화형 추천」). 중고책 판매 로직은 [`book-sale`](../book-sale/README.md)로 분리되어 있습니다.
 
 > **데이터 훅은 이 폴더에 없습니다.** 쿼리/뮤테이션 훅은 전부 `@bookjeok/react-query`에, API 호출 함수는 `@bookjeok/api-client`에, 타입·쿼리 키는 `@bookjeok/core`에 있습니다. 이 폴더에는 UI와 화면 전용 로직만 둡니다.
 
@@ -104,6 +104,8 @@ sse-chat-client ──▶ POST /search/ai/stream (fetch + ReadableStream)
 2. `use-book-view`가 백그라운드로 조회수 기록(`POST /book/:isbn/view`)
 3. `use-recent-book-store`에 최근 본 책으로 적재 → 하단 dock의 최근 본 책 버튼이 `recent-books-panel`을 엶
 4. `ai-summary`가 캐시된 AI 요약을 조회, 없으면 생성 요청
+
+저장 요약 조회는 저장본 없음(`null`)만 캐싱합니다. 5xx·네트워크 실패는 에러 상태로 남아 시드(`dehydrate`)에서 빠지고 다음 마운트에 다시 조회합니다. 실패 중에는 생성 버튼이 보이며, 저장본이 있으면 서버가 생성 대신 그 저장본을 돌려줍니다. 서버는 ISBN이 있으면 요청 본문이 아닌 DB 서지로 요약을 만듭니다([llm README](../../../../server/src/features/llm/README.md)).
 
 ### 검색 파라미터
 

@@ -18,6 +18,13 @@ import { AiBookSummary } from '../entities/ai-book-summary.entity';
 import { AiRequestLog } from '../entities/ai-request-log.entity';
 import { getPromptText } from '../utils/get-prompt-text';
 
+interface SummarySource {
+  title: string;
+  author: string;
+  description?: string;
+  publisher?: string;
+}
+
 @Injectable()
 export class LlmService {
   private readonly logger = new Logger(LlmService.name);
@@ -51,7 +58,8 @@ export class LlmService {
   }
 
   /**
-   * 책 제목과 저자를 기반으로 AI 요약 및 후기를 생성하거나 기존 결과를 반환합니다.
+   * ISBN이 있으면 저장본을 우선 반환하고, 없을 때만 DB의 정식 서지로 생성해 저장합니다.
+   * ISBN 없는 요청은 전달받은 서지로 생성만 하고 저장하지 않습니다.
    */
   async generateBookSummary(
     title: string,
@@ -61,19 +69,47 @@ export class LlmService {
     publisher?: string,
     userId?: string | number,
   ): Promise<BookSummaryResponseDto> {
-    // 1. 이미 저장된 요약이 있는지 확인
-    if (isbn) {
-      const saved = await this.getSavedSummary(isbn);
-      if (saved) {
-        return {
-          summary: saved.summary,
-          keyPoints: saved.keyPoints,
-          targetAudience: saved.targetAudience,
-          keywords: saved.keywords,
-        };
-      }
+    if (!isbn) {
+      return this.summarize(
+        { title, author, description, publisher },
+        null,
+        userId,
+      );
     }
 
+    const saved = await this.getSavedSummary(isbn);
+    if (saved) {
+      return {
+        summary: saved.summary,
+        keyPoints: saved.keyPoints,
+        targetAudience: saved.targetAudience,
+        keywords: saved.keywords,
+      };
+    }
+
+    // 공유 저장본의 정체성은 요청 본문이 아니라 DB 서지
+    const book = await this.bookService.resolveBook(isbn);
+    return this.summarize(
+      {
+        title: book.title,
+        author: book.author,
+        description: book.description || undefined,
+        publisher: book.publisher || undefined,
+      },
+      book.isbn,
+      userId,
+    );
+  }
+
+  /**
+   * 모델로 요약을 생성하고 로그를 남깁니다. `isbn`이 있으면 결과를 그 ISBN의 저장본으로 캐싱합니다.
+   */
+  private async summarize(
+    source: SummarySource,
+    isbn: string | null,
+    userId?: string | number,
+  ): Promise<BookSummaryResponseDto> {
+    const { title, author, description, publisher } = source;
     const startTime = Date.now();
     const parsedUserId =
       userId !== undefined && userId !== null && !isNaN(Number(userId))
@@ -160,11 +196,9 @@ export class LlmService {
         this.logger.error('Failed to save AI log for BOOK_SUMMARY:', logErr);
       }
 
-      // 2. 생성에 성공하고 isbn이 존재하는 경우 DB에 캐싱 저장
+      // 생성 성공 시 ISBN 저장본으로 캐싱
       if (isbn && parsedSummary.summary) {
         try {
-          await this.bookService.resolveBook(isbn);
-
           const summaryEntity = this.aiBookSummaryRepository.create({
             isbn,
             summary: parsedSummary.summary,

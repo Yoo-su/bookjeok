@@ -1,3 +1,11 @@
+import {
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_PATTERN,
+  USER_NAME_MAX_LENGTH,
+} from '@bookjeok/core';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
@@ -6,6 +14,8 @@ import {
   Length,
   Matches,
 } from 'class-validator';
+
+import { NicknameRules } from '@/features/user/dtos/nickname-rules.decorator';
 
 export class RegisterDto {
   @ApiProperty({
@@ -17,24 +27,22 @@ export class RegisterDto {
 
   @ApiProperty({
     example: 'password123',
-    description: '비밀번호 (최소 8자)',
+    description: `비밀번호 (${PASSWORD_MIN_LENGTH}~${PASSWORD_MAX_LENGTH}자)`,
   })
   @IsString()
-  @Length(8, 20, { message: '비밀번호는 8자 이상 20자 이하로 입력해주세요.' })
-  @Matches(/^(?=.*[a-zA-Z])(?=.*[!@#$%^&*+=-])(?=.*[0-9]).{8,20}$/, {
+  @Length(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH, {
+    message: `비밀번호는 ${PASSWORD_MIN_LENGTH}자 이상 ${PASSWORD_MAX_LENGTH}자 이하로 입력해주세요.`,
+  })
+  @Matches(PASSWORD_PATTERN, {
     message: '비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다.',
   })
   password!: string;
 
   @ApiProperty({
     example: 'booklover',
-    description: '닉네임 (2~10자)',
+    description: `닉네임 (${NICKNAME_MIN_LENGTH}~${NICKNAME_MAX_LENGTH}자, 한글·영문·숫자·_, 단어 사이 공백 한 칸)`,
   })
-  @IsString()
-  @Length(2, 10, { message: '닉네임은 2자 이상 10자 이하로 입력해주세요.' })
-  @Matches(/^[a-zA-Z0-9가-힣]+$/, {
-    message: '닉네임은 한글, 영문, 숫자만 사용할 수 있습니다.',
-  })
+  @NicknameRules()
   nickname!: string;
 
   @ApiProperty({
@@ -42,7 +50,7 @@ export class RegisterDto {
     description: '회원 실명',
   })
   @IsString()
-  @Length(1, 50, { message: '이름을 올바르게 입력해주세요.' })
+  @Length(1, USER_NAME_MAX_LENGTH, { message: '이름을 올바르게 입력해주세요.' })
   name!: string;
 
   @ApiProperty({

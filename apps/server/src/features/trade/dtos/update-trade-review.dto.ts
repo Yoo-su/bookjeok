@@ -1,4 +1,7 @@
-import { TradeReviewTag } from '@bookjeok/core';
+import {
+  TRADE_REVIEW_CONTENT_MAX_LENGTH,
+  TradeReviewTag,
+} from '@bookjeok/core';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   ArrayNotEmpty,
@@ -23,11 +26,11 @@ export class UpdateTradeReviewDto {
   tags?: TradeReviewTag[];
 
   @ApiPropertyOptional({
-    description: '수정할 후기 내용 (최대 500자)',
+    description: `수정할 후기 내용 (최대 ${TRADE_REVIEW_CONTENT_MAX_LENGTH}자)`,
     example: '포장도 깔끔하고 친절하셨어요.',
   })
   @IsString()
   @IsOptional()
-  @MaxLength(500)
+  @MaxLength(TRADE_REVIEW_CONTENT_MAX_LENGTH)
   content?: string;
 }

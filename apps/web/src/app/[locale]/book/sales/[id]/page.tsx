@@ -15,7 +15,7 @@ import { getQueryClient } from "@/shared/libs/query-client";
 import { isNotFoundError } from "@/shared/utils/api-error";
 import { BookSaleDetailView } from "@/views/book-sale-detail-view";
 
-// 판매 상태 변경은 /api/revalidate 웹훅이 즉시 걷어낸다.
+// 판매글 수정·상태 변경·삭제와 거래 예약·취소·완료는 서버 액션 revalidateBookSale이 즉시 걷어낸다.
 // 5분 주기는 쓰기만 늘리고 적중률을 떨어뜨려 ISR을 SSR로 퇴화시킨다.
 export const revalidate = 3600; // 1시간
 

@@ -1,8 +1,8 @@
+import { NotificationType } from '@bookjeok/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { ChatMessageType } from '@/features/chat/entities/chat-message.entity';
 import { ChatService } from '@/features/chat/services/chat.service';
-import { NotificationType } from '@/features/notification/entities/notification.entity';
 import { NotificationService } from '@/features/notification/services/notification.service';
 
 import { OrderEventListener } from './order-event.listener';
@@ -278,9 +278,26 @@ describe('OrderEventListener', () => {
       );
     });
 
+    it('orderId 없는 현재 직거래 후기 payload로 알림을 만든다', async () => {
+      await listener.handleTradeReviewCreated({
+        reviewId: 100,
+        completionId: 99,
+        targetUserId: 1,
+        reviewerId: 2,
+      });
+
+      expect(mockNotificationService.createNotification).toHaveBeenCalledWith(
+        1,
+        2,
+        NotificationType.TRADE_REVIEW_RECEIVED,
+        { reviewId: 100, orderId: undefined },
+      );
+    });
+
     it('거래 후기 등록 수신 시 판매자에게 알림을 발송한다', async () => {
       await listener.handleTradeReviewCreated({
         reviewId: 100,
+        completionId: 99,
         targetUserId: 1,
         reviewerId: 2,
         orderId: 'ORD-10',

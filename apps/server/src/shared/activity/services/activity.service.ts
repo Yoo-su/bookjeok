@@ -1,26 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ActivityType } from '../activity-type.enum';
-import { ActivityLog } from '../entities/activity-log.entity';
+import {
+  ActivityLogCreatedEvent,
+  activityLogCreatedEvent,
+} from '@/shared/activity/events/activity-log-created.event';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 
-/** 인터셉터에서 이벤트로 전달되는 로그 데이터 형태 기록 */
-interface ActivityLogPayload {
-  userId: number | null;
-  activityType: ActivityType;
-  method: string;
-  path: string;
-  ip: string;
-  userAgent: string;
-  details: Record<string, unknown> | null;
-}
+import { ActivityLog } from '../entities/activity-log.entity';
 
 @Injectable()
 export class ActivityService {
   private readonly logger = new Logger(ActivityService.name);
-  private buffer: ActivityLogPayload[] = [];
+  private buffer: ActivityLogCreatedEvent[] = [];
   private readonly MAX_BUFFER_SIZE = 50;
   private readonly FLUSH_INTERVAL_MS = 1000;
   private flushTimer: NodeJS.Timeout | null = null;
@@ -30,8 +23,8 @@ export class ActivityService {
     private readonly activityLogRepository: Repository<ActivityLog>,
   ) {}
 
-  @OnEvent('ACTIVITY_LOG.CREATED', { async: true })
-  handleActivityCreatedEvent(payload: ActivityLogPayload) {
+  @OnDomainEvent(activityLogCreatedEvent, { async: true })
+  handleActivityCreatedEvent(payload: ActivityLogCreatedEvent) {
     this.buffer.push(payload);
 
     if (this.buffer.length >= this.MAX_BUFFER_SIZE) {

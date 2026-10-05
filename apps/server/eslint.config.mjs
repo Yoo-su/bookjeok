@@ -28,4 +28,39 @@ export default tseslint.config(
       },
     },
   },
+  // 체크리스트 3·9번과 의존 방향을 자동 검사
+  {
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@bookjeok/api-client',
+              message: '서버는 core만 공유합니다.',
+            },
+            {
+              name: '@bookjeok/react-query',
+              message: '서버는 core만 공유합니다.',
+            },
+          ],
+          patterns: [
+            {
+              regex: '^\\.\\./\\.\\./',
+              message: '@/features/... · @/shared/... 별칭을 사용하세요.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'NewExpression[callee.name=/^(HttpException|BadRequestException|UnauthorizedException|ForbiddenException|NotFoundException|ConflictException|UnprocessableEntityException|InternalServerErrorException|ServiceUnavailableException)$/]',
+          message:
+            'ERROR_CODES에 코드를 등록하고 BusinessException을 던지세요.',
+        },
+      ],
+    },
+  },
 );

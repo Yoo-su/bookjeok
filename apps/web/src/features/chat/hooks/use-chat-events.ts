@@ -1,15 +1,14 @@
 "use client";
 
 import {
-  bookSaleKeys,
   chatKeys,
   ChatMessage,
   ChatMessageType,
   ChatRoom,
   MessagesReadEvent,
-  orderKeys,
   TypingEvent,
 } from "@bookjeok/core";
+import { invalidateTradeCaches } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
@@ -80,14 +79,12 @@ export const useChatEvents = () => {
         Boolean(isChatVisible || isMyMessage),
       );
 
-      // 거래 관련 상태 변경 메시지 수신 시 주문/판매글/채팅방목록 쿼리 캐시 즉시 동기화
+      // 로컬 거래 변경과 동일한 정책으로 완료 기록·후기 자격까지 갱신한다.
       if (
         newMessage.type === ChatMessageType.TRADE_STATUS ||
         newMessage.type === ChatMessageType.TRADE_ACTION
       ) {
-        queryClient.invalidateQueries({ queryKey: orderKeys._def });
-        queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
-        queryClient.invalidateQueries({ queryKey: chatKeys.rooms.queryKey });
+        void invalidateTradeCaches(queryClient);
       }
     },
     [queryClient],

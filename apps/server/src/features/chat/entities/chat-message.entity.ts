@@ -1,3 +1,4 @@
+import { ChatMessageType } from '@bookjeok/core';
 import {
   Column,
   CreateDateColumn,
@@ -11,13 +12,8 @@ import { User } from '@/features/user/entities/user.entity';
 
 import { ChatRoom } from './chat-room.entity';
 
-export enum ChatMessageType {
-  TEXT = 'TEXT',
-  SYSTEM = 'SYSTEM',
-  TRADE_STATUS = 'TRADE_STATUS',
-  TRADE_ACTION = 'TRADE_ACTION',
-  IMAGE = 'IMAGE',
-}
+// 정의는 core 한 곳. 기존 서버 import 경로를 위해 다시 내보냄
+export { ChatMessageType };
 
 // 방별 최신순 조회(마지막 메시지, 커서 페이지네이션, 안 읽음 집계)가
 // 모든 채팅 쿼리의 기본 접근 경로이므로 복합 인덱스 적용

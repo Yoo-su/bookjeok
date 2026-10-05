@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule } from '@/features/auth/auth.module';
 import { BookModule } from '@/features/book/book.module';
+import { ChatMailListener } from '@/features/chat/listeners/chat-mail.listener';
 import { Order } from '@/features/order/entities/order.entity';
 import { UsedBookSaleModule } from '@/features/used-book-sale/used-book-sale.module';
 import { UserModule } from '@/features/user/user.module';
@@ -23,7 +24,7 @@ import { ChatService } from './services/chat.service';
     BookModule,
     UsedBookSaleModule,
   ],
-  providers: [ChatGateway, ChatService, ChatCleanupListener],
+  providers: [ChatGateway, ChatService, ChatCleanupListener, ChatMailListener],
   controllers: [ChatController],
   exports: [ChatService, ChatGateway],
 })

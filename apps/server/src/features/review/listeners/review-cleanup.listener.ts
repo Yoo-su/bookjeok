@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { In } from 'typeorm';
 
 import { CommentTargetType } from '@/features/comment/entities/comment.entity';
 import { deleteTargetComments } from '@/features/comment/utils/delete-target-comments';
 import {
-  USER_WITHDRAWN_EVENT,
   UserWithdrawnEvent,
-} from '@/shared/events/user-withdrawn.event';
+  userWithdrawnEvent,
+} from '@/features/user/events/user-withdrawn.event';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Review } from '../entities/review.entity';
@@ -22,7 +22,7 @@ export class ReviewCleanupListener {
    * 남의 리뷰에 남긴 리액션은 reactionCount도 되돌립니다.
    */
   // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
-  @OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })
+  @OnDomainEvent(userWithdrawnEvent, { suppressErrors: false })
   async handleUserWithdrawn(event: UserWithdrawnEvent) {
     const { userId, entityManager } = event;
 

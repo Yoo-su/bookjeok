@@ -1,19 +1,23 @@
-import { BookInfo, CreateBookSaleParams, TradeMethod } from "@bookjeok/core";
+import {
+  BookInfo,
+  CreateBookSaleParams,
+  SALE_IMAGE_MAX_COUNT,
+  TradeMethod,
+} from "@bookjeok/core";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { useImageUpload } from "@/shared/hooks/use-image-upload";
 import { useSafeSubmit } from "@/shared/hooks/use-safe-submit";
 
-import { UploadStep } from "../components/common/upload-progress-modal";
 import {
   createSellFormSchema,
   SellFormValues,
 } from "../components/sale-form/book-sale-form/schema";
 import { useCreateBookSaleMutation } from "../mutations";
+import { useSaleUploadProgress } from "./use-sale-upload-progress";
 
 export const useBookSaleForm = () => {
   const t = useTranslations("market.validation");
@@ -21,9 +25,8 @@ export const useBookSaleForm = () => {
   const { mutateAsync, isPending, isSuccess } = useCreateBookSaleMutation();
   const { executeSafeSubmit } = useSafeSubmit();
 
-  const [uploadStep, setUploadStep] = useState<UploadStep>("idle");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { uploadStep, uploadProgress, isModalOpen, trackUpload } =
+    useSaleUploadProgress();
 
   const isSubmitDisabled = isPending || isSuccess || isModalOpen;
 
@@ -53,7 +56,7 @@ export const useBookSaleForm = () => {
     handleImagesAdd,
     handleNewImageRemove,
   } = useImageUpload({
-    maxFiles: 5,
+    maxFiles: SALE_IMAGE_MAX_COUNT,
     onFilesChange: (files: File[]) => {
       const dataTransfer = new DataTransfer();
       files.forEach((file) => dataTransfer.items.add(file));
@@ -84,30 +87,11 @@ export const useBookSaleForm = () => {
       isbn: data.book.isbn,
     };
 
-    setIsModalOpen(true);
-    setUploadStep("compressing");
-    setUploadProgress(10);
-
-    executeSafeSubmit(async (idempotencyKey) => {
-      try {
-        await mutateAsync({
-          imageFiles,
-          payload,
-          idempotencyKey,
-          onProgressState: (step, percent) => {
-            setUploadStep(step);
-            setUploadProgress(percent);
-          },
-        });
-        setUploadStep("success");
-        setUploadProgress(100);
-      } catch (error) {
-        setIsModalOpen(false);
-        setUploadStep("idle");
-        setUploadProgress(0);
-        throw error;
-      }
-    });
+    executeSafeSubmit((idempotencyKey) =>
+      trackUpload((onProgressState) =>
+        mutateAsync({ imageFiles, payload, idempotencyKey, onProgressState }),
+      ),
+    );
   };
 
   return {

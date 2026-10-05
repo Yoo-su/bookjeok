@@ -2,7 +2,7 @@
 
 **책과 지식의 선순환 플랫폼**
 
-> AI 도서 추천·요약, 키워드 도서 검색, 독서 기록 관리, 에스크로 결제 기반 중고책 거래, 실시간 채팅, 도서 리뷰, 독자 커뮤니티가 결합된 통합 도서 플랫폼.
+> 키워드 도서 검색, AI 도서 요약, 독서 기록 관리, 에스크로 결제 기반 중고책 거래, 실시간 채팅, 도서 리뷰, 독자 커뮤니티가 결합된 통합 도서 플랫폼.
 
 [![Live Demo](https://img.shields.io/badge/Live-bookjeok.com-4f46e5?style=flat-square)](https://bookjeok.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
@@ -42,8 +42,8 @@
 | **구성**       | Turborepo 모노레포 — 앱 3개(web / server / admin), 공용 패키지 3개(core / api-client / react-query), 운영자 도구 1개(tools/book-ingest) |
 | **프론트엔드** | Next.js 15 App Router + React 19, 한국어/영어 다국어, ISR + On-Demand Revalidation                                                      |
 | **백엔드**     | NestJS 11 + TypeORM + PostgreSQL(pgvector, cube/earthdistance)                                                                          |
-| **AI**         | Google Gemini — Function Calling 의도 분류 → pgvector 벡터 검색 → RAG 리랭킹                                                            |
-| **실시간**     | Socket.IO 채팅·알림 게이트웨이, SSE 기반 AI 추천 스트리밍                                                                               |
+| **AI**         | Google Gemini — 도서 요약. RAG 대화형 추천(의도 분류 → pgvector 검색 → 리랭킹)은 서버에 유지하되 웹 UI 비노출                         |
+| **실시간**     | Socket.IO 채팅·알림 게이트웨이                                                                                                          |
 | **결제**       | 토스페이먼츠 에스크로 + Delivery Tracker 배송 추적 + 스케줄러 기반 자동 확정/환불                                                       |
 | **인프라**     | Vercel(web) · Azure Container Apps(server) · Supabase PostgreSQL                                                                        |
 
@@ -102,6 +102,9 @@
   └────────────────────────────────────────────────────────────────────────┘
 ```
 
+> 그림의 SSE 경로와 Gemini 임베딩은 RAG 대화형 추천용입니다. 추천은 2026-09-29에 웹 UI에서
+> 내렸으므로 지금은 브라우저가 이 경로를 쓰지 않습니다(서버 엔드포인트는 유지).
+
 ---
 
 ## Features
@@ -112,7 +115,13 @@
 
 ---
 
-### RAG 기반 AI 도서 추천
+### RAG 기반 AI 도서 추천 (웹 UI 비노출)
+
+> **2026-09-29부터 웹에 노출하지 않습니다.** 검색 화면의 AI 추천 탭을 내렸고 `?mode=ai`도
+> 키워드 검색으로 보입니다. 서버 모듈·엔드포인트(`/search/ai`, `/search/ai/stream`)와 웹
+> 컴포넌트는 되살릴 때를 위해 남겨 두었습니다. 비용과 Supabase 무료 티어 용량 때문에
+> `books.embedding` 컬럼은 유지하되 값은 비워 두었으므로, 다시 켜려면 임베딩 재생성이 먼저입니다.
+> 아래는 구현된 설계입니다.
 
 사용자가 "주말에 가볍게 읽을 만한 에세이 찾고 있어요" 같은 자연어를 입력하면, 도서 DB에서 의미론적 유사도를 기반으로 도서를 찾아 추천합니다.
 
@@ -160,13 +169,13 @@
    응답을 조각 단위로 브라우저에 즉시 전달
 ```
 
-결과는 `POST /search/ai`(일괄 응답)와 `POST /search/ai/stream`(SSE 스트리밍) 두 가지로 제공되며, 웹에서는 커스텀 `sse-chat-client`가 스트림을 파싱해 챗 UI에 점진적으로 렌더링합니다.
+결과는 `POST /search/ai`(일괄 응답)와 `POST /search/ai/stream`(SSE 스트리밍) 두 가지로 제공됩니다. 웹의 커스텀 `sse-chat-client`가 스트림을 파싱해 챗 UI에 점진적으로 렌더링하도록 구현돼 있으나, 현재 그 챗 UI는 화면에 연결돼 있지 않습니다.
 
 ---
 
 ### AI 도서 핵심 요약
 
-도서 상세 페이지에서 Gemini에 제목·저자·줄거리·출판사 정보를 전달하여, 단순 소개글과 차별화된 분석적 요약을 생성합니다.
+도서 상세 페이지에서 요청하면 서버가 ISBN으로 DB의 제목·저자·소개·출판사를 읽어 Gemini에 전달하고, 단순 소개글과 차별화된 분석적 요약을 생성합니다. 요청 본문의 서지는 저장할 요약의 기준으로 쓰지 않습니다.
 
 - **summary** — 책의 고유한 서사적 갈등과 핵심 사건을 담은 250~350자 완성형 문단
 - **keyPoints** — 핵심 인사이트 3가지
@@ -226,8 +235,10 @@
 Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 - **채팅** — 판매글별 1:1 채팅방, 이미지 전송, 타이핑 인디케이터, **읽음 워터마크**(참가자별 `lastReadMessageId`) 기반 안 읽은 개수 계산, 핸드셰이크 단계 JWT 검증(`authenticateSocket`)
-- **알림** — 리뷰 리액션·리뷰 댓글·댓글 좋아요에 더해 중고거래·직거래 13종과 문의 답변을 포함한 **17종 알림 타입**을 실시간 푸시. 도메인 서비스는 `EventEmitter` 이벤트만 발행하고, 리스너가 알림 생성·채팅 시스템 메시지·메일 발송을 비동기로 처리합니다.
-- **메일** — Resend로 회원가입 이메일 인증 링크와 채팅방 개설 알림을 발송합니다(`chat.room_created` 이벤트 → `MailEventListener`, `async: true`). 사용자 문의·제보가 접수되면 운영자(`FEEDBACK_NOTIFY_EMAIL`)에게도 보냅니다(`feedback.created` → `FeedbackNotifyListener`).
+- **거래 캐시 갱신** — 로컬 예약·취소·완료와 원격 거래 메시지가 `@bookjeok/react-query`의 `invalidateTradeCaches`를 함께 사용합니다. 거래 완료·후기 작성 자격까지 갱신해 상대방의 열린 채팅방에도 후기 진입점이 반영됩니다.
+- **알림** — 리뷰 리액션·리뷰 댓글·댓글 좋아요에 더해 중고거래·직거래 13종과 문의 답변을 포함한 **17종 알림 타입**을 실시간 푸시. 소켓이 끊겼다 다시 붙으면 웹이 토스트 없이 목록·안 읽은 개수를 재조회해 끊긴 사이의 알림을 반영합니다. 도메인 서비스는 `EventEmitter` 이벤트만 발행하고, 리스너가 알림 생성·채팅 시스템 메시지·메일 발송을 비동기로 처리합니다.
+- **알림 계약** — core의 단일 `NotificationType`·종류별 필수 metadata를 서버 생성 입구에서 검사하고, 웹 등록부가 17종의 문구·이동 경로·시스템 표시를 집중 관리합니다. 타입 검사와 전 종류·한영 계약 테스트로 누락을 검증하며 기존 DB enum·저장·실시간 전달 동작은 유지합니다.
+- **메일** — Resend로 회원가입 이메일 인증 링크와 채팅방 개설 알림을 발송합니다(`chat.room_created` 이벤트 → `ChatMailListener`, `async: true`). 사용자 문의·제보가 접수되면 운영자(`FEEDBACK_NOTIFY_EMAIL`)에게도 보냅니다(`feedback.created` → `FeedbackNotifyListener`). 도메인별 발송 정의와 공통 렌더링·수신 정책·전달 결과를 사용하며, 인증 재발송 실패는 503으로 전달합니다(가입·이메일 변경·이벤트 발송은 비동기 유지).
 
 ---
 
@@ -342,7 +353,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 ### 3. 멱등성 인터셉터
 
-`x-idempotency-key` 헤더가 있는 요청은 캐시에 `processing` 락을 걸고 중복 요청을 409로 차단합니다. 결제처럼 재시도가 곧 이중 과금이 되는 경로를 방어합니다.
+`x-idempotency-key` 헤더가 있는 요청은 캐시에 `processing` 락을 걸어 처리 중인 중복 요청을 409로 차단하고, 완료된 요청은 최초 응답을 재생합니다. 같은 키의 동시 요청도 핸들러를 한 번만 실행합니다(단일 인스턴스 기준). 결제처럼 재시도가 곧 이중 과금이 되는 경로와 댓글·리뷰·판매글·독서기록·직거래 등록을 방어합니다.
 
 ### 4. 표준화된 에러 체계
 
@@ -352,9 +363,15 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 탈퇴 시 `user.withdrawn` 이벤트 하나만 발행하면 chat · comment · feedback · llm · notification · reading-log · review · used-book-sale · user · activity 10개 리스너가 각자의 데이터를 정리합니다. 도메인 모듈 간 직접 의존 없이 정리 로직을 확장할 수 있습니다.
 
+이벤트 이름·payload는 서버의 각 `features/*/events/`가 소유하고 발행자와 리스너가 같은 계약을
+사용합니다. `emitDomainEvent`·`emitDomainEventAsync`·`@OnDomainEvent`가 필수 payload와 구독 타입을
+검사하며 주문의 커밋 후 대기 이벤트도 이름별 payload를 연결합니다. 현재 26개 이름·리스너 옵션·오류
+전파를 계약 테스트로 확인합니다. 탈퇴는 트랜잭션 안에서 `emitAsync`를 기다리고 거래 상태 이벤트는
+기존 커밋 후 순서를 유지합니다. 상세는 [서버 공용 문서](apps/server/src/shared/README.md#도메인-이벤트-계약-eventsdomain-eventts)에 있습니다.
+
 ### 6. 선언적 트랜잭션 (CLS)
 
-`@nestjs-cls/transactional`로 `QueryRunner`를 서비스 시그니처에 끌고 다니지 않고 트랜잭션을 전파합니다. 판매글 생성 + 도서 메타데이터 매핑, 주문 생성 + 판매 상태 변경처럼 복수 엔티티가 얽힌 작업에 적용됩니다.
+`@nestjs-cls/transactional`로 `QueryRunner`를 서비스 시그니처에 끌고 다니지 않고 트랜잭션을 전파합니다. 채팅방 + 참가자 생성, 주문 생성 + 판매 상태 변경, 거래 완료 기록, 리뷰 본문 + 태그 + 카운터, 회원 탈퇴 정리처럼 복수 엔티티가 얽힌 작업에 적용됩니다.
 
 ### 7. 활동 로그 인터셉터
 
@@ -374,7 +391,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 ### 11. ISR + On-Demand Revalidation
 
-목록·상세 페이지를 ISR로 정적 서빙하고, 관리자 포털의 캐시 제어 센터가 시크릿 토큰 기반 웹훅(`/api/revalidate`)을 호출해 즉시 갱신합니다. 검수로 삭제한 게시물이 캐시에 남는 문제를 해결합니다.
+목록·상세 페이지를 ISR로 정적 서빙합니다. 판매글 수정·거래 상태 변경, 리뷰 수정, 회원 탈퇴처럼 상세 HTML이 바로 틀려지는 쓰기는 웹 뮤테이션이 서버 액션(`shared/actions/revalidate.ts`)으로 해당 경로를 즉시 비우고, 목록·집계는 시간 기반 `revalidate`에 맡깁니다. 시크릿 토큰 기반 웹훅(`/api/revalidate`)도 있으나 호출하는 관리자 포털이 미배포라 지금은 쓰이지 않습니다. 규칙은 [apps/web/docs/CACHING.md](apps/web/docs/CACHING.md)에 있습니다.
 
 ### 12. Feature Flag 기반 안전 배포
 
@@ -387,7 +404,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | 서비스                                | 용도                                                      | 사용 위치                               |
 | ------------------------------------- | --------------------------------------------------------- | --------------------------------------- |
 | **네이버 / 카카오 OAuth**             | 소셜 로그인                                               | `server: auth` (Passport 전략)          |
-| **Google Gemini**                     | 의도 분류·RAG 합성(Flash), 임베딩(`gemini-embedding-001`) | `server: llm, search`                   |
+| **Google Gemini**                     | 도서 요약. RAG 추천의 의도 분류·합성·임베딩(웹 UI 비노출) | `server: llm, search`                   |
 | **토스페이먼츠**                      | 에스크로 결제 승인·취소·웹훅                              | `server: order`, `web: order`           |
 | **Delivery Tracker**                  | 택배 배송 상태 조회 및 30분 주기 폴링                     | `server: order`                         |
 | **Resend**                            | 인증 링크·채팅 개설 알림·운영자 문의 알림 메일            | `server: shared/mail`                   |
@@ -418,8 +435,8 @@ Monorepo `packages/` 디렉토리에 도메인 모델과 통신 클라이언트�
 
 | Package                                         | Role                                                                                                |
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [`@bookjeok/core`](packages/core)               | 데이터 모델 인터페이스, API 경로 상수(`API_PATHS`), 포맷터, 쿼리 키 팩토리 (런타임 0B 순수 TS 계약) |
-| [`@bookjeok/api-client`](packages/api-client)   | Axios 클라이언트(`publicApiClient`, `privateApiClient`), 토큰 인터셉터, API 호출 모듈               |
+| [`@bookjeok/core`](packages/core)               | 데이터 모델 인터페이스, 서버와 공유하는 enum·입력 제한·에러 코드, API 경로 상수(`API_PATHS`), 포맷터, 쿼리 키 팩토리 (브라우저·Node 전용 API 없음) |
+| [`@bookjeok/api-client`](packages/api-client)   | 빈 Axios 인스턴스(`publicApiClient`, `privateApiClient`)와 API 호출 모듈. baseURL·응답 봉투·토큰 갱신 인터셉터는 웹(`shared/libs/axios.ts`)이 붙임 |
 | [`@bookjeok/react-query`](packages/react-query) | TanStack Query 쿼리/뮤테이션 훅과 캐시 무효화 규칙                                                  |
 
 ---
@@ -457,7 +474,7 @@ bookjeok/
 │           ├── exceptions/       # BusinessException, ERROR_CODES
 │           ├── filters/          # GlobalExceptionFilter
 │           ├── interceptors/     # Transform, Logging, Idempotency, ViewCount
-│           └── mail/             # Resend 메일 서비스 & 이벤트 리스너
+│           └── mail/             # 공통 메일 렌더링·수신 정책·Resend 전달
 │
 ├── packages/
 │   ├── core/                     # @bookjeok/core
@@ -504,12 +521,12 @@ bookjeok/
 
 | 항목             | 현황                                                                                                  |
 | ---------------- | ----------------------------------------------------------------------------------------------------- |
-| 서버 단위 테스트 | Jest — 47개 spec (주문 서비스·스케줄러·토스 연동·채팅 게이트웨이·가드 등)                             |
-| 웹 테스트        | Vitest 4 + Testing Library — 102개 테스트 파일 (결제 플로우, 주문 상세, 배송/분쟁 모달, 거래 후기 등) |
-| 컴포넌트 문서    | Storybook 8 — 25개 스토리                                                                             |
+| 서버 단위 테스트 | Jest — 55개 spec (주문 서비스·스케줄러·토스 연동·채팅 게이트웨이·가드·도메인 이벤트 계약 등)          |
+| 웹 테스트        | Vitest 4 + Testing Library — 118개 테스트 파일 (결제 플로우, 주문 상세, 배송/분쟁 모달, 거래 후기 등) |
+| 컴포넌트 문서    | Storybook 8 — 27개 스토리                                                                             |
 | 타입 안전성      | `tsc --noEmit` 게이트 (server / web / admin)                                                          |
-| 정적 분석        | ESLint 9 Flat Config + Prettier                                                                       |
-| CI               | GitHub Actions에서 `pnpm turbo lint test` → `pnpm turbo build`                                        |
+| 정적 분석        | ESLint 9 Flat Config + Prettier. 패키지 의존 방향·서버 alias import·`BusinessException`·웹 `PATHS` 사용을 규칙으로 검사 (`.agents/rules/04-checklist.md`) |
+| CI               | GitHub Actions에서 `pnpm turbo lint test` → `pnpm turbo build`. lint는 수정 없이 검사만(고칠 때는 `pnpm lint:fix`) |
 
 ```bash
 pnpm lint
@@ -524,9 +541,11 @@ pnpm build
 | 대상                | 방식                                                                                                                                                                           |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **apps/web**        | Vercel — ISR 정적 재검증 + `/api/revalidate` 온디맨드 갱신                                                                                                                     |
-| **apps/server**     | GitHub Actions가 `apps/server/Dockerfile`을 모노레포 루트 컨텍스트로 빌드 → Azure Container Registry 푸시 → Azure Container Apps 배포 (`main`/`develop` push 또는 수동 트리거) |
+| **apps/server**     | GitHub Actions가 같은 커밋에서 서버와 의존 패키지(core)를 lint·test·build로 검증한 뒤(`verify` job), `apps/server/Dockerfile`을 모노레포 루트 컨텍스트로 빌드 → Azure Container Registry 푸시 → Azure Container Apps 배포. `main`/`develop` push 중 서버 이미지 입력(`apps/server`·`packages/core`·공용 tsconfig/tsup/turbo 설정·lockfile)이 바뀐 경우 또는 수동 트리거 |
 | **DB**              | Supabase PostgreSQL. 운영은 `synchronize: false`이며 **마이그레이션 도구 없이 DDL을 수동 적용**합니다 — 반드시 [docs/manual-ddl-log.md](docs/manual-ddl-log.md)에 기록         |
 | **컨테이너 이미지** | GitLab CI에서도 web/server 이미지를 빌드해 GitLab Container Registry에 푸시                                                                                                    |
+
+> 서버는 **단일 인스턴스 전제**로 캐시·멱등성 키·채팅방 생성 합치기·Socket.IO room·이벤트를 프로세스 메모리에 둡니다. replica를 늘리기 전에 [서버 공용 문서의 「다중 인스턴스 전제」](apps/server/src/shared/README.md#다중-인스턴스-전제)를 확인하세요.
 
 > 서버는 Azure 환경에서 Supabase IPv6 `ENETUNREACH`를 피하기 위해 `main.ts`에서 `dns.setDefaultResultOrder("ipv4first")`를 강제합니다.
 
@@ -556,9 +575,14 @@ pnpm --filter @bookjeok/api-client build
 pnpm --filter @bookjeok/react-query build
 
 # 5. 개발 서버 실행
-pnpm dev:web      # 웹 + 서버 + core (웹 http://localhost:3000)
-pnpm dev:server   # 서버 + core      (http://localhost:8000)
+pnpm dev:web      # 웹 + 서버 + 웹·서버가 의존하는 공용 패키지 watch (웹 http://localhost:3000)
+pnpm dev:server   # 서버 + core watch (http://localhost:8000)
 pnpm dev          # 전체 워크스페이스
+
+# dev:web·dev:server는 turbo의 `패키지...` 필터로 의존 패키지를 함께 띄웁니다.
+# web은 api-client·react-query를 소스가 아니라 dist로 소비하므로 이 watch가 있어야
+# 공용 API·훅 수정이 재시작 없이 반영됩니다. 4번의 초기 빌드는 첫 실행 때 dist가
+# 아직 없어 웹이 먼저 실패하는 것을 막습니다.
 
 # 6. 부가 도구
 pnpm storybook    # Storybook (http://localhost:6006)
@@ -593,8 +617,8 @@ pnpm test
 | `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                                                |
 | `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 적재 도구의 알라딘 공급처 전용(10/30까지) — 지우지 말 것               |
 | `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                                                |
-| `GEMINI_MODEL_NAME`                                  |      | AI 도서 추천(search)의 Gemini 모델명. 기본 `gemini-3.1-flash-lite`, AI 요약(llm)은 상수 사용 |
-| `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30)                                                          |
+| `GEMINI_MODEL_NAME`                                  |      | AI 도서 추천(search, 웹 UI 비노출)의 Gemini 모델명. 기본 `gemini-3.1-flash-lite`, AI 요약(llm)은 상수 사용 |
+| `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30, 웹 UI 비노출)                                           |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL`               |  ✅  | 이메일 인증·알림 발송                                                                        |
 | `FEEDBACK_NOTIFY_EMAIL`                              |      | 사용자 문의·제보 알림을 받을 운영자 메일. 비우면 DB에만 쌓임                                 |
 | `BLOB_READ_WRITE_TOKEN`                              |  ✅  | Vercel Blob 이미지 업로드                                                                    |

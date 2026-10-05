@@ -104,6 +104,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   /**
+   * 서버가 만든 메시지(거래 상태 등)를 방에 브로드캐스트합니다.
+   * 게이트웨이 초기화 전(배치·부팅 중)이면 건너뜁니다.
+   */
+  emitNewMessage(roomId: number, message: ChatMessage) {
+    this.server
+      ?.to(String(roomId))
+      .emit('newMessage', toSocketPayload(message));
+  }
+
+  /**
    * 유저가 채팅방에 다시 참여했음을 알립니다.
    * ChatService에서 호출됩니다.
    */

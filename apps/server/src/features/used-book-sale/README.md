@@ -132,3 +132,7 @@ enum TradeMethod {
 
 - 웹: [`features/book-sale`](../../../../web/src/features/book-sale/README.md)
 - 결제·주문: [`features/order`](../order/README.md)
+
+회원 탈퇴 정리 리스너는 [user 소유 이벤트 계약](../user/events/user-withdrawn.event.ts)의
+`userWithdrawnEvent`·`UserWithdrawnEvent`로 발행자와 타입을 공유합니다.
+`@OnDomainEvent(..., { suppressErrors: false })`와 같은 트랜잭션 매니저·오류 전파를 유지합니다.

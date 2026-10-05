@@ -216,10 +216,10 @@ describe("답변 알림", () => {
     recipientId: 1,
     actorId: null,
     type: NotificationType.FEEDBACK_REPLIED,
-    metadata: { feedbackId: 5 },
+    metadata: { feedbackId: 5, feedbackType: FeedbackType.OTHER },
     isRead: false,
     createdAt: "2026-09-28T01:00:00.000Z",
-  } as Notification;
+  } satisfies Notification;
 
   it("북적이 보낸 알림이고 나의 문의로 이동한다", () => {
     expect(isSystemNotification(notification)).toBe(true);
@@ -237,6 +237,7 @@ describe("답변 알림", () => {
       isSystemNotification({
         ...notification,
         type: NotificationType.COMMENT_LIKE,
+        metadata: { commentId: 7, reviewId: null },
       }),
     ).toBe(false);
   });

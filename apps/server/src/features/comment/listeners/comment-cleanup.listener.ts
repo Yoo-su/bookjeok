@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { In } from 'typeorm';
 
 import {
-  USER_WITHDRAWN_EVENT,
   UserWithdrawnEvent,
-} from '@/shared/events/user-withdrawn.event';
+  userWithdrawnEvent,
+} from '@/features/user/events/user-withdrawn.event';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 import { adjustCounter } from '@/shared/utils/adjust-counter';
 
 import { Comment } from '../entities/comment.entity';
@@ -20,7 +20,7 @@ export class CommentCleanupListener {
    * 작성한 댓글(Comment)의 userId를 null로 일괄 업데이트하여 익명화합니다.
    */
   // 기본값(true)은 에러를 삼켜 탈퇴 트랜잭션 롤백 불가
-  @OnEvent(USER_WITHDRAWN_EVENT, { suppressErrors: false })
+  @OnDomainEvent(userWithdrawnEvent, { suppressErrors: false })
   async handleUserWithdrawn(event: UserWithdrawnEvent) {
     const { userId, entityManager } = event;
 

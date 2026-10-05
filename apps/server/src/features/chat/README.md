@@ -12,9 +12,9 @@
 ## 2. 주요 파일 및 역할
 
 - **`controllers/chat.controller.ts`**: `/chat` 경로의 REST API 엔드포인트를 정의합니다. 채팅방 목록, 이전 메시지 조회, 채팅방 생성/나가기 등의 기능을 제공합니다.
-- **`gateways/chat.gateway.ts`**: `@WebSocketGateway` 데코레이터를 사용하여 웹소켓 서버를 구현합니다. 클라이언트와의 연결 수립/종료, 메시지 수신 및 브로드캐스팅, 특정 `room`으로의 이벤트 전송 등을 담당합니다.
+- **`gateways/chat.gateway.ts`**: `@WebSocketGateway` 데코레이터를 사용하여 웹소켓 서버를 구현합니다. 클라이언트와의 연결 수립/종료, 메시지 수신 및 브로드캐스팅, 특정 `room`으로의 이벤트 전송 등을 담당합니다. 서비스가 만든 메시지·방의 발행(`emitNewMessage`·`emitUserRejoined`·`notifyNewRoom`·`joinRoom`)도 여기 있어, `ChatService`는 Socket.IO `server`·room 이름·직렬화를 직접 다루지 않습니다(두 클래스의 `forwardRef` 상호 의존은 유지).
 - **`services/chat.service.ts`**: 채팅 관련 핵심 비즈니스 로직을 처리합니다.
-  - `getChatRoom`: 판매글 ID와 구매자 ID를 받아 기존 채팅방을 찾거나, 없으면 새로 생성하여 반환합니다.
+  - `getChatRoom`: 판매글 ID와 구매자 ID를 받아 기존 채팅방을 찾거나, 없으면 새로 생성하여 반환합니다. 같은 프로세스의 동시 요청은 `saleId:buyerId` Map으로 하나로 합칩니다. 새 방과 두 참가자는 `@Transactional()` 한 트랜잭션으로 저장해 참가자 저장이 실패하면 방도 남지 않고, 소켓 참여·신규 방 안내·`chat.room_created`는 커밋 뒤에 나갑니다. **DB 유일성 제약은 없습니다**(방에 구매자 컬럼이 없어 `(판매글, 구매자)`를 표현할 수 없음). 단일 서버에서는 위 Map이 중복 생성을 막으므로 제약을 두지 않습니다. 서버를 여러 대로 늘릴 때만 같은 쌍의 방이 둘 생길 수 있어, 그때 구매자 컬럼과 유일성 제약을 검토합니다.
   - `getChatRooms`: 특정 사용자가 참여 중인 모든 채팅방 목록과 각 방의 마지막 메시지, 안 읽은 메시지 수를 조회합니다.
   - `saveMessage`: 받은 메시지를 데이터베이스에 저장합니다. `imageUrls`가 있으면 `IMAGE` 타입으로 저장하고 `MAX_CHAT_IMAGES`(core)를 넘으면 `CHAT_IMAGE_LIMIT_EXCEEDED`로 거부합니다.
   - `sendTradeMessage`·`notifyOtherBuyersTrading`·`notifySaleSold`·`notifySaleBackOnMarket`: 거래 이벤트가 채팅방에 남기는 `SYSTEM`/`TRADE_STATUS`/`TRADE_ACTION` 메시지와 다른 구매희망자 방 안내를 만듭니다(주문·거래 리스너가 호출).
@@ -116,3 +116,22 @@ sequenceDiagram
 2.  **메시지 저장**: `ChatGateway`는 이벤트를 수신하여 `ChatService.saveMessage()`를 호출합니다. 서비스는 받은 메시지를 데이터베이스에 저장합니다.
 3.  **브로드캐스팅**: 메시지가 성공적으로 저장되면, `ChatGateway`는 해당 `roomId`를 구독하고 있는 모든 클라이언트(자기 자신 포함)에게 `newMessage` 이벤트를 통해 저장된 메시지 객체를 브로드캐스팅합니다.
 4.  **UI 업데이트**: `newMessage` 이벤트를 수신한 모든 클라이언트는 채팅창에 새로운 메시지를 렌더링합니다.
+
+## 6. 채팅방 개설 이메일
+
+`ChatService`는 도메인의 `events/chat-room-created.event.ts` 계약으로 `chat.room_created`를
+발행합니다. `ChatModule`의 `ChatMailListener`가 `async: true`로 받아
+`mail/chat-room-created.mail.ts` 정의를 공통 `MailService.send()`에 전달합니다.
+이메일이 있고 인증된 판매자에게만 보내며 `deleted_` 주소는 제외합니다. 제목·홈 이동 버튼은
+기존과 같고 판매자·구매자 닉네임과 책 제목은 공통 렌더러가 HTML 이스케이프합니다.
+발송 실패는 공통 모듈에서 기록하고 채팅방 생성 결과에는 영향을 주지 않습니다.
+
+## 7. 도메인 이벤트 계약
+
+02에서 만든 [`events/chat-room-created.event.ts`](events/chat-room-created.event.ts)의
+이름 상수와 `ChatRoomCreatedEvent`를 유지하고 `chatRoomCreatedEvent`로 발행·구독 타입을 연결합니다.
+서비스의 `emitDomainEvent`와 메일 리스너의 `@OnDomainEvent`는 동일한 계약을 사용합니다.
+필수 payload는 판매자 수신 정보·닉네임·id, 구매자 닉네임, 책 제목, 채팅방 id입니다.
+새 방 저장·참가자 조회·소켓 신규 방 안내 후 발행하는 기존 순서와 `async: true`를 유지합니다.
+
+탈퇴 정리 구독은 [user 소유 계약](../user/events/user-withdrawn.event.ts)을 사용합니다.

@@ -13,6 +13,7 @@ import {
   SaleStatus,
   UsedBookSale,
 } from '@/features/used-book-sale/entities/used-book-sale.entity';
+import { verificationMail } from '@/features/user/mail/verification.mail';
 import { MailService } from '@/shared/mail/mail.service';
 
 import { User } from '../entities/user.entity';
@@ -40,6 +41,7 @@ describe('UserService', () => {
   let mockManager: Partial<EntityManager>;
   let mockTxHost: { tx: Partial<EntityManager> };
   let mockEventEmitter: { emitAsync: jest.Mock; emit: jest.Mock };
+  let mockMailService: { send: jest.Mock };
   let mockUserRepository: {
     findOne: jest.Mock;
     merge: jest.Mock;
@@ -47,6 +49,7 @@ describe('UserService', () => {
   };
 
   beforeEach(async () => {
+    mockMailService = { send: jest.fn().mockResolvedValue({ status: 'sent' }) };
     mockUserRepository = {
       findOne: jest.fn(),
       merge: jest.fn((user: object, patch: object) =>
@@ -95,7 +98,7 @@ describe('UserService', () => {
         { provide: DataSource, useValue: { query: jest.fn() } },
         { provide: TransactionHost, useValue: mockTxHost },
         { provide: EventEmitter2, useValue: mockEventEmitter },
-        { provide: MailService, useValue: {} },
+        { provide: MailService, useValue: mockMailService },
       ],
     }).compile();
 
@@ -207,6 +210,102 @@ describe('UserService', () => {
       } as unknown as Partial<User>);
 
       expect(saved.email).toBeNull();
+    });
+
+    it('이메일 변경은 새 토큰을 저장하고 발송 완료를 기다리지 않는다', async () => {
+      mockUserRepository.findOne
+        .mockResolvedValueOnce({ ...userOf('local'), nickname: '독자' })
+        .mockResolvedValueOnce(null);
+      mockMailService.send.mockReturnValue(new Promise(() => {}));
+      const saved = await service.updateUser(1, { email: 'new@example.com' });
+      expect(saved.isEmailVerified).toBe(false);
+      expect(mockMailService.send).toHaveBeenCalledWith(verificationMail, {
+        email: 'new@example.com',
+        nickname: '독자',
+        token: saved.emailVerificationToken,
+      });
+      expect(mockUserRepository.save).toHaveBeenCalledWith(saved);
+    });
+
+    it('이메일 변경의 발송 실패는 저장 결과에 영향을 주지 않는다', async () => {
+      mockUserRepository.findOne
+        .mockResolvedValueOnce({ ...userOf('local'), nickname: '독자' })
+        .mockResolvedValueOnce(null);
+      mockMailService.send.mockResolvedValue({
+        status: 'failed',
+        reason: 'delivery',
+      });
+      await expect(
+        service.updateUser(1, { email: 'new@example.com' }),
+      ).resolves.toMatchObject({
+        email: 'new@example.com',
+        isEmailVerified: false,
+      });
+    });
+  });
+
+  describe('resendVerificationEmail', () => {
+    const recipient = () => ({
+      id: 1,
+      email: 'reader@example.com',
+      nickname: '독자',
+      isEmailVerified: false,
+    });
+
+    it.each(['sent', 'logged'])(
+      '%s이면 새 24시간 토큰을 저장하고 성공한다',
+      async (status) => {
+        const user = recipient();
+        mockUserRepository.findOne.mockResolvedValue(user);
+        mockMailService.send.mockResolvedValue({ status });
+        const startedAt = Date.now();
+        await expect(
+          service.resendVerificationEmail(1),
+        ).resolves.toBeUndefined();
+        expect(mockUserRepository.save).toHaveBeenCalledWith(
+          expect.objectContaining({
+            emailVerificationToken: expect.any(String),
+            emailVerificationExpiresAt: expect.any(Date),
+          }),
+        );
+        const saved = mockUserRepository.save.mock.calls[0][0];
+        expect(
+          saved.emailVerificationExpiresAt.getTime(),
+        ).toBeGreaterThanOrEqual(startedAt + 24 * 60 * 60 * 1000);
+        expect(mockMailService.send).toHaveBeenCalledWith(verificationMail, {
+          email: user.email,
+          nickname: user.nickname,
+          token: saved.emailVerificationToken,
+        });
+        expect(
+          mockUserRepository.save.mock.invocationCallOrder[0],
+        ).toBeLessThan(mockMailService.send.mock.invocationCallOrder[0]);
+      },
+    );
+
+    it.each(['delivery', 'rendering'])(
+      '%s 실패를 503 비즈니스 오류로 전달한다',
+      async (reason) => {
+        mockUserRepository.findOne.mockResolvedValue(recipient());
+        mockMailService.send.mockResolvedValue({ status: 'failed', reason });
+        await expect(service.resendVerificationEmail(1)).rejects.toMatchObject({
+          errorCode: 'AUTH_VERIFICATION_EMAIL_SEND_FAILED',
+          status: 503,
+        });
+      },
+    );
+
+    it.each([
+      [null, 'USER_NOT_FOUND'],
+      [{ ...recipient(), isEmailVerified: true }, 'ALREADY_VERIFIED'],
+      [{ ...recipient(), email: null }, 'EMAIL_NOT_FOUND'],
+    ])('기존 인증 조건 %j는 %s로 거절한다', async (user, errorCode) => {
+      mockUserRepository.findOne.mockResolvedValue(user);
+      await expect(service.resendVerificationEmail(1)).rejects.toMatchObject({
+        errorCode,
+      });
+      expect(mockMailService.send).not.toHaveBeenCalled();
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
   });
 });

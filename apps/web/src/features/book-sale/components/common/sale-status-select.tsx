@@ -1,10 +1,10 @@
 "use client";
 
 import { SaleStatus, UsedBookSale } from "@bookjeok/core";
-import { useCancelSaleReservationMutation } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { useCancelSaleReservationMutation } from "@/features/trade/mutations";
 import {
   Select,
   SelectContent,

@@ -195,10 +195,10 @@ export const ReplyNotification: Story = {
             recipientId: 3,
             actorId: null,
             type: NotificationType.FEEDBACK_REPLIED,
-            metadata: { feedbackId: 12 },
+            metadata: { feedbackId: 12, feedbackType: FeedbackType.OTHER },
             isRead: false,
             createdAt: daysAgo(0),
-          } as Notification
+          } satisfies Notification
         }
       />
     </div>

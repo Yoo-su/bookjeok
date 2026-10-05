@@ -1,4 +1,4 @@
-import { UsedBookSale } from "@bookjeok/core";
+import { SALE_IMAGE_MAX_COUNT, UsedBookSale } from "@bookjeok/core";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -181,7 +181,7 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
                         onImagesAdd={handleImagesAdd}
                         onImageRemove={handleNewImageRemove}
                         onExistingImageRemove={handleExistingImageRemove}
-                        maxFiles={5}
+                        maxFiles={SALE_IMAGE_MAX_COUNT}
                       />
                     </FormControl>
                     <div className="mt-1 min-h-5">

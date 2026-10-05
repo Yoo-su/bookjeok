@@ -1,9 +1,12 @@
+import { NotificationType } from '@bookjeok/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 
-import { NotificationType } from '@/features/notification/entities/notification.entity';
 import { NotificationService } from '@/features/notification/services/notification.service';
-import { ReviewResponseDto } from '@/features/review/dtos/review-response.dto';
+import {
+  ReviewEvents,
+  ReviewReactedEvent,
+} from '@/features/review/events/review.events';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 
 @Injectable()
 export class ReviewNotificationListener {
@@ -14,12 +17,8 @@ export class ReviewNotificationListener {
   /**
    * 리뷰 리액션 추가 시 리뷰 작성자에게 알림을 발송합니다.
    */
-  @OnEvent('review.reacted')
-  async handleReviewReacted(event: {
-    review: ReviewResponseDto;
-    actorId: number;
-    isAdded: boolean;
-  }) {
+  @OnDomainEvent(ReviewEvents.reacted)
+  async handleReviewReacted(event: ReviewReactedEvent) {
     const { review, actorId, isAdded } = event;
 
     try {

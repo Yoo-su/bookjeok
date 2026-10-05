@@ -10,7 +10,8 @@
 
 - **`publicApiClient`**: 인증 헤더가 필요 없는 공개 API 호출용 (도서 검색, 인사이트 조회, 라운지 피드 등).
 - **`privateApiClient`**: JWT Access Token 인증이 필요한 보호된 API 호출용 (독서 기록, 중고책 등록, 리뷰 작성, 주문·결제, 프로필 수정 등).
-- 토큰 만료 시 Refresh Token을 통한 **Silent Token Refresh 인터셉터**가 내장되어 있어 호출부에서 토큰 갱신을 신경 쓸 필요가 없습니다. 갱신까지 실패하면 세션을 정리하고 로그인 플로우로 위임합니다.
+- 이 패키지의 두 인스턴스는 **설정 없이 비어 있는 Axios**입니다(`src/client.ts`). baseURL, 응답 봉투(`{ success, data }`) 벗기기, 토큰 첨부, **Silent Token Refresh**는 소비 앱이 사후에 붙입니다. 웹은 `apps/web/src/shared/libs/axios.ts`를 import해 설정하며, 갱신까지 실패하면 세션을 정리하고 로그인 플로우로 위임합니다.
+- 새 소비자(스크립트·다른 앱)가 초기화 없이 API 함수를 부르면 baseURL이 없고 반환값이 봉투째 나옵니다. 현재 소비자는 웹뿐이라 공용 초기화 함수는 두지 않았습니다. 두 번째 소비자가 생기면 baseURL·봉투 처리를 이 패키지로 옮기고 토큰·갱신만 앱 어댑터에 남기세요.
 - 서버의 `GlobalExceptionFilter`가 내려주는 표준 에러 형태를 그대로 다루므로, 호출부는 `ERROR_CODES`의 `code` 값으로 분기할 수 있습니다.
 
 ### 2. 표준 API 함수 인터페이스

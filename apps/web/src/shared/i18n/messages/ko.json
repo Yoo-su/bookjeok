@@ -326,14 +326,15 @@
     },
     "validation": {
       "email_invalid": "올바른 이메일 형식이 아닙니다.",
-      "password_min": "비밀번호는 최소 8자 이상이어야 합니다.",
+      "password_min": "비밀번호는 최소 {min}자 이상이어야 합니다.",
       "password_regex": "영문, 숫자, 특수문자를 모두 포함해야 합니다.",
       "password_mismatch": "비밀번호가 일치하지 않습니다.",
-      "nickname_min": "닉네임은 최소 2자 이상이어야 합니다.",
-      "nickname_max": "닉네임은 최대 10자까지 가능합니다.",
+      "nickname_min": "닉네임은 최소 {min}자 이상이어야 합니다.",
+      "nickname_max": "닉네임은 최대 {max}자까지 가능합니다.",
+      "nickname_invalid": "한글, 영문, 숫자, 밑줄(_)만 쓸 수 있고 띄어쓰기는 한 칸까지 됩니다.",
       "password_required": "비밀번호를 입력해주세요.",
       "name_required": "이름을 입력해주세요.",
-      "name_max": "이름은 50자 이하로 입력해주세요."
+      "name_max": "이름은 {max}자 이하로 입력해주세요."
     }
   },
   "hero": {
@@ -453,7 +454,7 @@
       "title": "도서 검색",
       "subtitle": "찾고 싶은 책의 제목, 저자, 출판사를 검색해보세요.",
       "hero": {
-        "placeholder": "제목, 저자, ISBN 검색",
+        "placeholder": "제목, 저자, 출판사 검색",
         "play": "배경 영상 재생",
         "pause": "배경 영상 일시정지",
         "clear": "검색어 지우기",
@@ -478,8 +479,8 @@
       "popular_top": "인기 검색어 TOP {count}",
       "popular_label": "인기",
       "metadata": {
-        "title": "도서 검색 · 맞춤 책 추천",
-        "description": "제목·저자·ISBN으로 책을 찾고, 읽고 싶은 분위기나 독서 취향을 적어 맞춤 책을 추천받아 보세요."
+        "title": "도서 검색 · 제목·저자·출판사로 책 찾기",
+        "description": "제목·저자·출판사로 책을 찾고, 요즘 많이 찾는 검색어와 책 정보·AI 요약을 확인해 보세요."
       },
       "error": "오류가 발생했습니다: {message}"
     },
@@ -651,7 +652,7 @@
       "book_selection": {
         "label": "리뷰할 책",
         "empty_title": "리뷰할 책을 선택해주세요",
-        "empty_description": "ISBN, 제목, 저자명으로 검색하여 리뷰할 책을 선택할 수 있습니다.",
+        "empty_description": "제목, 저자, 출판사로 검색하여 리뷰할 책을 선택할 수 있습니다.",
         "search_button": "책 검색하기",
         "change_button": "다른 책 선택"
       },
@@ -1279,15 +1280,15 @@
       "edit": "수정",
       "title": "프로필 수정",
       "nickname_label": "닉네임",
-      "nickname_placeholder": "닉네임을 입력하세요 (2-20자)",
-      "nickname_min": "닉네임은 2자 이상이어야 합니다.",
-      "nickname_max": "닉네임은 20자 이하여야 합니다.",
+      "nickname_placeholder": "닉네임을 입력하세요 ({min}-{max}자)",
+      "nickname_min": "닉네임은 {min}자 이상이어야 합니다.",
+      "nickname_max": "닉네임은 {max}자 이하여야 합니다.",
       "nickname_invalid": "한글, 영문, 숫자, 밑줄(_)만 쓸 수 있고 띄어쓰기는 한 칸까지 됩니다.",
       "nickname_taken": "이미 사용 중인 닉네임입니다.",
       "nickname_error": "중복 확인 중 오류가 발생했습니다.",
       "nickname_check": "닉네임 중복 확인을 해주세요.",
       "nickname_available": "사용 가능한 닉네임입니다.",
-      "nickname_help": "한글, 영문, 숫자, 밑줄(_) 2-20자",
+      "nickname_help": "한글, 영문, 숫자, 밑줄(_) {min}-{max}자",
       "name_label": "이름 (실명)",
       "name_placeholder": "실명을 입력하세요",
       "email_label": "이메일 주소",
@@ -1507,7 +1508,7 @@
       "book": {
         "label": "판매할 책",
         "empty_title": "판매할 책을 선택해주세요",
-        "empty_desc": "ISBN, 제목, 저자명으로 검색하여 판매할 책을 등록할 수 있습니다.",
+        "empty_desc": "제목, 저자, 출판사로 검색하여 판매할 책을 등록할 수 있습니다.",
         "search": "책 검색하기",
         "change": "다른 책 선택",
         "error_required": "판매할 책을 선택해주세요."
@@ -1542,19 +1543,19 @@
       ]
     },
     "validation": {
-      "title_min": "제목은 5자 이상 입력해주세요.",
-      "title_max": "제목은 50자를 초과할 수 없습니다.",
+      "title_min": "제목은 {min}자 이상 입력해주세요.",
+      "title_max": "제목은 {max}자를 초과할 수 없습니다.",
       "price_number": "숫자만 입력 가능합니다.",
       "price_min": "가격은 0보다 커야 합니다.",
       "book_required": "판매할 책을 선택해주세요.",
       "city_required": "시/도를 선택해주세요.",
       "district_required": "시/군/구를 선택해주세요.",
       "location_required": "거래 희망 위치를 선택해주세요.",
-      "content_min": "상세 내용은 10자 이상 입력해주세요.",
-      "content_max": "상세 내용은 1,000자를 초과할 수 없습니다.",
+      "content_min": "상세 내용은 {min}자 이상 입력해주세요.",
+      "content_max": "상세 내용은 {max, number}자를 초과할 수 없습니다.",
       "images_min": "이미지를 1개 이상 등록해주세요.",
-      "images_max": "이미지는 최대 5개까지 등록할 수 있습니다.",
-      "images_edit_max": "새로 추가하는 이미지는 최대 5개까지 등록할 수 있습니다.",
+      "images_max": "이미지는 최대 {max}개까지 등록할 수 있습니다.",
+      "images_edit_max": "새로 추가하는 이미지는 최대 {max}개까지 등록할 수 있습니다.",
       "submit_error": "입력 정보를 다시 확인해주세요. (필수 항목 누락 등)"
     },
     "detail": {
@@ -2397,7 +2398,7 @@
       "success": "거래 후기가 성공적으로 등록되었습니다.",
       "errors": {
         "tag_required": "최소 1개 이상의 태그를 선택해주세요.",
-        "content_max": "후기는 500자 이하로 작성해주세요.",
+        "content_max": "후기는 {max}자 이하로 작성해주세요.",
         "submit_failed": "거래 후기 처리 중 오류가 발생했습니다."
       },
       "stats": {

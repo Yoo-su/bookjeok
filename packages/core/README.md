@@ -9,13 +9,16 @@
 ### 1. 도메인 타입 (`src/features/*/types.ts`)
 
 - **15개 도메인**: `auth`, `book`, `book-sale`, `chat`, `comment`, `feedback`, `insights`, `intro`, `llm`, `notification`, `order`, `reading-log`, `review`, `trade`, `user`
+- **알림 계약**: `NotificationType`은 서버 엔티티가 직접 import해 씁니다. `NotificationMetadataMap`은 17종의 필수 생성 필드를, `CreateNotificationArgs`는 종류·metadata의 tuple union을 정의합니다. 응답 `Notification`도 판별 union이며, 새 enum/필수 필드 누락은 타입 검사와 종류별 예시에서 드러납니다. 음성 계약은 `src/features/notification/__tests__/contract.test.ts`에 있으며 `tsc --noEmit`으로 검사합니다.
 - **단일 진실 공급원(SSOT)**: 모든 요청 파라미터(`Params`), 응답 구조(`Response`), 공용 엔티티 모양 정의
 
 ### 2. 상수 및 쿼리 키 (`src/shared/constants`, `src/features/*/constants.ts`)
 
 - **API Paths (`API_PATHS`)**: 백엔드 REST API 엔드포인트 경로 상수
 - **Query Key Factories (`bookKeys`, `reviewKeys`, `orderKeys`, `tradeKeys` 등)**: `@lukemorales/query-key-factory` 기반 React Query 캐시 키 표준화
-- **도메인 Enum**: `OrderStatus`, `SaleStatus`, `TradeMethod`, `TradeReviewTag`, `NotificationType` 등 서버 enum과 1:1 대응
+- **도메인 Enum**: `ChatMessageType`, `CommentTargetType`, `NotificationType`, `OrderStatus`, `ReviewReactionType`, `SaleStatus`, `TradeCompletionMethod`, `TradeMethod`의 정의는 여기 한 곳입니다. 서버 엔티티가 import해 DB enum 컬럼에 쓰고, 기존 import 경로를 위해 엔티티 파일에서 다시 내보냅니다. `SaleStatus`만 서버가 내부 상태 `WITHDRAWN`(탈퇴로 숨김)을 덧붙여 씁니다. **값·순서를 바꾸면 운영 DB enum 타입이 어긋나므로** DDL과 함께 바꿔야 합니다.
+- **입력 제한 상수**: 비밀번호(`PASSWORD_MIN/MAX_LENGTH`·`PASSWORD_PATTERN`), 닉네임(`NICKNAME_MIN/MAX_LENGTH`·`NICKNAME_PATTERN`·`normalizeNickname`·`validateNickname`), 판매글(`SALE_TITLE_*`·`SALE_CONTENT_*`·`SALE_IMAGE_MAX_COUNT`), 거래 후기(`TRADE_REVIEW_CONTENT_MAX_LENGTH`), 댓글·메모·이름 길이. 서버 DTO와 웹 폼이 같은 값을 import하고, 웹 안내 문구는 숫자 대신 `{min}`·`{max}` 자리표시자로 받습니다.
+- **에러 코드 (`API_ERROR_CODES`)**: 웹이 분기에 쓰는 서버 에러 코드. 서버 `ERROR_CODES`의 해당 항목이 이 값을 참조하므로 번호는 여기서만 바꿉니다.
 
 ### 3. 순수 유틸리티 (`src/shared/utils`)
 

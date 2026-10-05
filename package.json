@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "turbo dev",
-    "dev:web": "turbo dev --filter=@bookjeok/web --filter=@bookjeok/server --filter=@bookjeok/core",
-    "dev:server": "turbo dev --filter=@bookjeok/server --filter=@bookjeok/core",
+    "dev:web": "turbo dev --filter=@bookjeok/web... --filter=@bookjeok/server...",
+    "dev:server": "turbo dev --filter=@bookjeok/server...",
     "dev:all": "turbo dev",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose stop db",

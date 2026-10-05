@@ -6,8 +6,8 @@ import {
 } from "@bookjeok/react-query";
 import { useMemo } from "react";
 
-/** 홈 슬라이더와 캐시를 공유하기 위해 동일한 limit 사용 */
-const RECENT_LIMIT = 25;
+import { RECENT_SALES_LIMIT } from "../constants/queries";
+
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 /** 히어로는 실시간성이 중요하므로 전역 staleTime(1분)을 더 짧게 덮어쓴다. */
 const LIVE_REFRESH_MS = 60 * 1000;
@@ -23,7 +23,7 @@ export interface MarketHeroSeller {
  */
 export function useMarketHeroStats() {
   const { data: recentSales, isLoading } = useRecentBookSalesQuery(
-    RECENT_LIMIT,
+    RECENT_SALES_LIMIT,
     {
       staleTime: LIVE_REFRESH_MS,
       refetchInterval: LIVE_REFRESH_MS,
@@ -57,7 +57,9 @@ export function useMarketHeroStats() {
     return {
       freshCount,
       newTodayLabel:
-        freshCount >= RECENT_LIMIT ? `${RECENT_LIMIT}+` : String(freshCount),
+        freshCount >= RECENT_SALES_LIMIT
+          ? `${RECENT_SALES_LIMIT}+`
+          : String(freshCount),
       regionCount: regions
         ? Object.values(regions).reduce(
             (total, districts) =>

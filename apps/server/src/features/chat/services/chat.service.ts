@@ -2,8 +2,14 @@ import { MAX_CHAT_IMAGES } from '@bookjeok/core';
 import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Transactional, TransactionHost } from '@nestjs-cls/transactional';
+import { TransactionalAdapterTypeOrm } from '@nestjs-cls/transactional-adapter-typeorm';
 import { In, Repository } from 'typeorm';
 
+import {
+  ChatRoomCreatedEvent,
+  chatRoomCreatedEvent,
+} from '@/features/chat/events/chat-room-created.event';
 import { ACTIVE_ORDER_STATUSES } from '@/features/order/constants';
 import { Order } from '@/features/order/entities/order.entity';
 import {
@@ -13,9 +19,9 @@ import {
 import { UsedBookSaleService } from '@/features/used-book-sale/services/used-book-sale.service';
 import { User } from '@/features/user/entities/user.entity';
 import { isPaymentEnabled } from '@/shared/config/feature-flags';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 import { clampNumber } from '@/shared/utils/clamp-number';
-import { toSocketPayload } from '@/shared/websocket/to-socket-payload';
 
 import { ChatMessage, ChatMessageType } from '../entities/chat-message.entity';
 import { ChatParticipant } from '../entities/chat-participant.entity';
@@ -37,6 +43,7 @@ export class ChatService {
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
     private readonly eventEmitter: EventEmitter2,
+    private readonly txHost: TransactionHost<TransactionalAdapterTypeOrm>,
   ) {}
 
   // 동일 saleId:buyerId에 대해 동시에 진행 중인 채팅방 조회/생성 작업을 관리하는 Map (Request Collapsing)
@@ -182,12 +189,13 @@ export class ChatService {
     const buyerParticipant = createdRoom.participants?.find(
       (p) => p.user?.id === buyerId,
     );
-    this.eventEmitter.emit('chat.room_created', {
+    const event: ChatRoomCreatedEvent = {
       seller: sale.user,
       buyerNickname: buyerParticipant?.user?.nickname ?? '구매자',
       bookTitle: sale.book?.title ?? '중고 도서',
       chatRoomId: createdRoom.id,
-    });
+    };
+    emitDomainEvent(this.eventEmitter, chatRoomCreatedEvent, event);
 
     return createdRoom;
   }
@@ -215,29 +223,29 @@ export class ChatService {
     return systemMessages;
   }
 
+  /**
+   * 방과 두 참가자를 한 트랜잭션으로 저장합니다. 참가자 저장이 실패하면 방도 남지 않습니다.
+   */
+  @Transactional()
   private async createNewChatRoom(
     sale: UsedBookSale,
     buyerId: number,
     sellerId: number,
   ): Promise<ChatRoom> {
-    const newRoom = this.chatRoomRepository.create({ usedBookSale: sale });
-    const room = await this.chatRoomRepository.save(newRoom);
+    const manager = this.txHost.tx;
+    const room = await manager.save(
+      manager.create(ChatRoom, { usedBookSale: sale }),
+    );
 
-    const buyerParticipant = this.chatParticipantRepository.create({
-      chatRoom: room,
-      user: { id: buyerId } as User,
-      isActive: true,
-    });
-    const sellerParticipant = this.chatParticipantRepository.create({
-      chatRoom: room,
-      user: { id: sellerId } as User,
-      isActive: true,
-    });
-
-    await this.chatParticipantRepository.save([
-      buyerParticipant,
-      sellerParticipant,
-    ]);
+    await manager.save(
+      [buyerId, sellerId].map((userId) =>
+        manager.create(ChatParticipant, {
+          chatRoom: room,
+          user: { id: userId } as User,
+          isActive: true,
+        }),
+      ),
+    );
     return room;
   }
 
@@ -644,12 +652,7 @@ export class ChatService {
 
     const savedMessage = await this.chatMessageRepository.save(message);
 
-    // 실시간 소켓 브로드캐스트
-    if (this.chatGateway?.server) {
-      this.chatGateway.server
-        .to(String(roomId))
-        .emit('newMessage', toSocketPayload(savedMessage));
-    }
+    this.chatGateway.emitNewMessage(roomId, savedMessage);
 
     return savedMessage;
   }

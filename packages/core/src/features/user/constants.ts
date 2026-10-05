@@ -9,6 +9,13 @@ export const NICKNAME_PATTERN = /^[가-힣a-zA-Z0-9_]+(?: [가-힣a-zA-Z0-9_]+)*
 
 export const USER_NAME_MAX_LENGTH = 50;
 
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 20;
+/** 영문·숫자·특수문자(!@#$%^&*+=-)를 각각 하나 이상 포함 */
+export const PASSWORD_PATTERN = new RegExp(
+  `^(?=.*[a-zA-Z])(?=.*[!@#$%^&*+=-])(?=.*[0-9]).{${PASSWORD_MIN_LENGTH},${PASSWORD_MAX_LENGTH}}$`,
+);
+
 /** 'U'는 미선택. 프로필 수정 화면은 미선택을 null로 보낸다 */
 export const USER_GENDERS = ["M", "F", "U"] as const;
 export const USER_AGE_RANGES = [

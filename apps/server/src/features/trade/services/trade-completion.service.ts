@@ -8,11 +8,13 @@ import { In, Repository } from 'typeorm';
 import { ChatParticipant } from '@/features/chat/entities/chat-participant.entity';
 import { ACTIVE_ORDER_STATUSES } from '@/features/order/constants';
 import { Order } from '@/features/order/entities/order.entity';
+import { TradeEvents } from '@/features/trade/events/trade.events';
 import {
   SaleStatus,
   UsedBookSale,
 } from '@/features/used-book-sale/entities/used-book-sale.entity';
 import { User } from '@/features/user/entities/user.entity';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 import { BusinessException } from '@/shared/exceptions/business.exception';
 
 import { REVIEW_EXPIRATION_MS } from '../constants';
@@ -60,7 +62,7 @@ export class TradeCompletionService {
       chatRoomId,
     );
 
-    this.eventEmitter.emit('trade.reserved', {
+    emitDomainEvent(this.eventEmitter, TradeEvents.reserved, {
       saleId,
       sellerId,
       buyerId,
@@ -135,7 +137,7 @@ export class TradeCompletionService {
       sellerId,
     );
 
-    this.eventEmitter.emit('trade.reservation_cancelled', {
+    emitDomainEvent(this.eventEmitter, TradeEvents.reservation_cancelled, {
       saleId,
       sellerId,
       buyerId: previousBuyerId,
@@ -197,7 +199,7 @@ export class TradeCompletionService {
     // 완료 기록은 판매글당 하나뿐이라(UQ_trade_completions_saleId) 이 지점에
     // 도달했다면 방금 만들어진 기록이다. 알림과 채팅 메시지도 한 번만 나간다.
     if (completion) {
-      this.eventEmitter.emit('trade.completed', {
+      emitDomainEvent(this.eventEmitter, TradeEvents.completed, {
         completionId: completion.id,
         saleId,
         sellerId,
@@ -210,7 +212,7 @@ export class TradeCompletionService {
     // 완료 기록 유무와 무관하게, 이 판매글로 대화하던 다른 방들도 판매가
     // 끝났다는 사실은 알아야 한다. 특히 상대를 지정하지 않고 완료한 경우
     // 예약 안내만 받고 방치되는 구매희망자가 생긴다.
-    this.eventEmitter.emit('trade.sale_sold', {
+    emitDomainEvent(this.eventEmitter, TradeEvents.sale_sold, {
       saleId,
       sellerId,
       chatRoomId: completion?.chatRoomId ?? null,

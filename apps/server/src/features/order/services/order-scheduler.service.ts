@@ -4,7 +4,9 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, IsNull, LessThanOrEqual, Not, Repository } from 'typeorm';
 
+import { OrderEvents } from '@/features/order/events/order.events';
 import { isPaymentEnabled } from '@/shared/config/feature-flags';
+import { emitDomainEvent } from '@/shared/events/domain-event';
 
 import { Order, OrderStatus } from '../entities/order.entity';
 import { DeliveryTrackerService } from './delivery-tracker.service';
@@ -56,7 +58,7 @@ export class OrderSchedulerService {
           '결제 기한(24시간) 만료로 인한 자동 취소',
         );
 
-        this.eventEmitter.emit('order.expired', {
+        emitDomainEvent(this.eventEmitter, OrderEvents.expired, {
           orderId: order.id,
           buyerId: order.buyerId,
           sellerId: order.sellerId,
@@ -109,7 +111,7 @@ export class OrderSchedulerService {
           '결제 후 3일 이내 미배송으로 인한 자동 취소 및 환불';
         await this.orderService.systemCancelOrder(order.id, cancelReason);
 
-        this.eventEmitter.emit('order.unshipped_cancelled', {
+        emitDomainEvent(this.eventEmitter, OrderEvents.unshipped_cancelled, {
           orderId: order.id,
           buyerId: order.buyerId,
           sellerId: order.sellerId,
@@ -161,7 +163,7 @@ export class OrderSchedulerService {
       try {
         await this.orderService.autoConfirmPurchase(order.id);
 
-        this.eventEmitter.emit('order.auto_confirmed', {
+        emitDomainEvent(this.eventEmitter, OrderEvents.auto_confirmed, {
           orderId: order.id,
           buyerId: order.buyerId,
           sellerId: order.sellerId,
@@ -213,14 +215,18 @@ export class OrderSchedulerService {
         const cancelReason = '분쟁 접수 후 7일 경과로 인한 자동 환불';
         await this.orderService.systemCancelOrder(order.id, cancelReason);
 
-        this.eventEmitter.emit('order.dispute_expired_refunded', {
-          orderId: order.id,
-          buyerId: order.buyerId,
-          sellerId: order.sellerId,
-          saleId: order.saleId,
-          chatRoomId: order.chatRoomId,
-          reason: cancelReason,
-        });
+        emitDomainEvent(
+          this.eventEmitter,
+          OrderEvents.dispute_expired_refunded,
+          {
+            orderId: order.id,
+            buyerId: order.buyerId,
+            sellerId: order.sellerId,
+            saleId: order.saleId,
+            chatRoomId: order.chatRoomId,
+            reason: cancelReason,
+          },
+        );
 
         processedCount++;
       } catch (error) {
@@ -320,7 +326,7 @@ export class OrderSchedulerService {
     let autoConfirmWarnings = 0;
     for (const order of autoConfirmWarningOrders) {
       try {
-        this.eventEmitter.emit('order.auto_confirm_warning', {
+        emitDomainEvent(this.eventEmitter, OrderEvents.auto_confirm_warning, {
           orderId: order.id,
           buyerId: order.buyerId,
           sellerId: order.sellerId,
@@ -348,12 +354,16 @@ export class OrderSchedulerService {
     let shippingDeadlineWarnings = 0;
     for (const order of shippingWarningOrders) {
       try {
-        this.eventEmitter.emit('order.shipping_deadline_warning', {
-          orderId: order.id,
-          buyerId: order.buyerId,
-          sellerId: order.sellerId,
-          remainingHours: 24,
-        });
+        emitDomainEvent(
+          this.eventEmitter,
+          OrderEvents.shipping_deadline_warning,
+          {
+            orderId: order.id,
+            buyerId: order.buyerId,
+            sellerId: order.sellerId,
+            remainingHours: 24,
+          },
+        );
         shippingDeadlineWarnings++;
       } catch (error) {
         this.logger.error(

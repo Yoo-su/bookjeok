@@ -1,3 +1,9 @@
+import {
+  SALE_CONTENT_MAX_LENGTH,
+  SALE_CONTENT_MIN_LENGTH,
+  SALE_TITLE_MAX_LENGTH,
+  SALE_TITLE_MIN_LENGTH,
+} from '@bookjeok/core';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
@@ -17,13 +23,13 @@ import { TradeMethod } from '../entities/used-book-sale.entity';
 export class CreateBookSaleDto {
   @IsString()
   @IsNotEmpty()
-  @MinLength(5)
-  @MaxLength(50)
+  @MinLength(SALE_TITLE_MIN_LENGTH)
+  @MaxLength(SALE_TITLE_MAX_LENGTH)
   @ApiProperty({
     description: '판매글 제목',
     example: '깨끗한 전공책 팝니다',
-    minLength: 5,
-    maxLength: 50,
+    minLength: SALE_TITLE_MIN_LENGTH,
+    maxLength: SALE_TITLE_MAX_LENGTH,
   })
   title: string;
 
@@ -62,13 +68,13 @@ export class CreateBookSaleDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(10)
-  @MaxLength(1000)
+  @MinLength(SALE_CONTENT_MIN_LENGTH)
+  @MaxLength(SALE_CONTENT_MAX_LENGTH)
   @ApiProperty({
     description: '판매글 내용',
     example: '필기감 전혀 없는 새 책입니다.',
-    minLength: 10,
-    maxLength: 1000,
+    minLength: SALE_CONTENT_MIN_LENGTH,
+    maxLength: SALE_CONTENT_MAX_LENGTH,
   })
   content: string;
 

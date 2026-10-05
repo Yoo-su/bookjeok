@@ -1,6 +1,6 @@
 # 🛠️ @bookjeok/server (Backend)
 
-북적의 백엔드 서버는 **NestJS 11**과 **TypeORM (PostgreSQL + pgvector)**을 기반으로 구축되었으며, 안정적인 데이터 관리와 실시간 WebSocket 통신, 그리고 RAG 기반 AI 기능을 제공합니다.
+북적의 백엔드 서버는 **NestJS 11**과 **TypeORM (PostgreSQL + pgvector)**을 기반으로 구축되었으며, 안정적인 데이터 관리와 실시간 WebSocket 통신, 그리고 Gemini 기반 AI 도서 요약을 제공합니다. RAG 대화형 추천 모듈(`search`)도 남아 있으나 2026-09-29부터 웹 UI에 노출하지 않습니다.
 
 ---
 
@@ -13,19 +13,19 @@
 - **`tokenVersion` 기반 즉시 무효화:** 사용자 로그아웃 또는 계정 보안 이벤트 시 DB `tokenVersion`을 증가시켜 이전 Access·Refresh Token을 즉시 만료.
 - **Rate Limiting:** `@nestjs/throttler`를 활용한 무차별 대입 공격(Brute-Force) 방어.
 
-### 2. 도서 검색 및 RAG 기반 AI 도서 추천 (Search & LLM)
+### 2. 도서 검색 및 AI (Book, Search & LLM)
 
-- **자체 도서 카탈로그 & RAG 검색:** 오프라인 파이프라인으로 적재된 자체 도서 DB 및 pg_trgm 전문 검색.
-- **3단계 RAG 파이프라인:**
+- **자체 도서 카탈로그 검색:** 운영자 적재 도구(`tools/book-ingest`)로 확보한 자체 도서 DB를 `pg_trgm` 부분일치로 검색. 런타임에 외부 도서 API를 부르지 않음.
+- **AI 도서 3단 요약:** ISBN으로 DB 서지(제목·저자·소개·출판사)를 읽어 Gemini로 요약하고 ISBN 기준으로 캐싱.
+- **RAG 대화형 추천 (웹 UI 비노출, 서버 유지):** 엔드포인트는 그대로이며 `books.embedding` 값은 비워 둔 상태라 되살리려면 임베딩 재생성이 먼저입니다. 구현된 3단계 파이프라인:
   1. 의도 분류 (Gemini Flash Function Calling)
   2. `pgvector` 코사인 유사도 벡터 검색 (`gemini-embedding-001` 768차원 임베딩)
   3. RAG 합성 및 리랭킹 (맞춤 추천 이유 `reason` 생성)
-- **SSE(Server-Sent Events) 스트리밍:** 실시간 대화형 도서 탐색 스트림 전송 (`POST /search/ai/stream`, 일괄 응답은 `POST /search/ai`).
-- **AI 도서 3단 요약:** Gemini 모델을 통한 도서별 서사 분석 및 DB 캐싱.
+  - SSE 스트리밍 `POST /search/ai/stream`, 일괄 응답 `POST /search/ai`.
 
 ### 3. 중고 도서 장터, 결제/거래 및 실시간 채팅 (Market, Order, Trade & Chat)
 
-- **중고 거래 CRUD:** 트랜잭션을 통한 도서 메타데이터 매핑 및 위치(지오코딩) 기반 판매글 관리, 상태 전이 및 잠금 규칙.
+- **중고 거래 CRUD:** DB에 있는 도서에만 판매글을 연결(`BookResolvePipe`)하는 위치(지오코딩) 기반 판매글 관리, 상태 전이 및 잠금 규칙.
 - **에스크로 주문 & 배송 관리 (`order`):** 토스페이먼츠 에스크로 결제 승인, 운송장 등록 및 배송 추적, 자동 취소/환불/확정 스케줄러.
 - **거래 완료 및 후기 (`trade`):** 직거래/에스크로 거래 완료 기록(`TradeCompletion`), 양방향 거래 후기(`TradeReview`), 신뢰 지표 집계.
 - **Socket.IO 실시간 채팅:** 판매글별 1:1 채팅방 생성, 실시간 메시지 전송, 읽음 처리, 타이핑 상태 표시, 거래 시스템 메시지.
@@ -50,11 +50,11 @@ src/
 │   ├── used-book-sale  # 중고책 판매글 관리 (거리 검색, 커서 페이지네이션)
 │   ├── order           # 토스페이먼츠 에스크로 주문, 배송 추적, 자동 환불/확정 스케줄러
 │   ├── trade           # 직거래/택배 거래 완료, 양방향 거래 후기, 신뢰 지표 집계
-│   ├── search          # RAG 벡터 검색 및 SSE 스트림
+│   ├── search          # RAG 벡터 검색 및 SSE 스트림 (웹 UI 비노출)
 │   ├── search-keyword  # 인기 검색어 실시간 집계
 │   ├── chat            # Socket.IO WebSocket 게이트웨이 & 채팅방
 │   ├── notification    # 사용자 알림 (Socket.IO 게이트웨이 + 이벤트 리스너)
-│   ├── llm             # Gemini 임베딩 및 AI 도서 요약
+│   ├── llm             # Gemini AI 도서 요약 (임베딩은 search)
 │   ├── reading-log     # 독서 기록 및 라운지 피드
 │   ├── review          # 도서 리뷰 및 리액션
 │   ├── comment         # 도서/리뷰 댓글 시스템
@@ -69,7 +69,7 @@ src/
     ├── exceptions/     # BusinessException, ERROR_CODES
     ├── filters/        # GlobalExceptionFilter
     ├── interceptors/   # Transform, Logging, Idempotency, ViewCount
-    └── mail/           # Resend 메일 서비스 & 이벤트 리스너
+    └── mail/           # 공통 메일 렌더링·수신 정책·Resend 전달 (정의·리스너는 각 도메인)
 ```
 
 ---
@@ -78,6 +78,10 @@ src/
 
 1. **DTO의 `@bookjeok/core` 계약 준수**: 모든 요청/응답 DTO는 `@bookjeok/core` 인터페이스를 `implements`하여 정의합니다.
 2. **Entity 정보 은닉**: 비밀번호, `tokenVersion` 등 내부 컬럼은 DTO 반환 시 절대 외부에 노출하지 않습니다.
-3. **트랜잭션 무결성**: 복수 엔티티의 변경이 수반되는 작업(도서 생성 + 판매글 등록, 주문 생성 + 판매 상태 변경 등)은 `@nestjs-cls/transactional`의 `@Transactional()`로 처리합니다.
+3. **트랜잭션 무결성**: 복수 엔티티의 변경이 수반되는 작업(채팅방 + 참가자 생성, 주문 생성 + 판매 상태 변경, 회원 탈퇴 정리 등)은 `@nestjs-cls/transactional`의 `@Transactional()`로 처리합니다.
 4. **에러 처리**: `HttpException`을 직접 던지지 말고 `ERROR_CODES`에 등록된 코드와 `BusinessException`을 사용합니다.
 5. **신규 모듈 등록**: 새 기능 모듈은 `src/app/app.module.ts`의 `imports`에 반드시 등록합니다.
+
+도메인 이벤트의 이름·payload는 각 `features/*/events/`가 소유합니다. 발행·구독은 같은 계약의
+`emitDomainEvent`·`emitDomainEventAsync`·`@OnDomainEvent`를 사용하며 주문 대기 객체도 타입을
+연결합니다. [공용 문서의 계약·검증 규칙](src/shared/README.md#도메인-이벤트-계약-eventsdomain-eventts)을 참고하세요.

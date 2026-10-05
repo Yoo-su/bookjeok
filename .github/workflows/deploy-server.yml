@@ -5,9 +5,16 @@ on:
     branches:
       - main
       - develop
+    # 서버 이미지 빌드 입력 전체 (apps/server/Dockerfile이 복사하는 공용 설정과 core 포함)
     paths:
       - ".github/workflows/deploy-server.yml"
       - "apps/server/**"
+      - "packages/core/**"
+      - "packages/tsconfig.json"
+      - "packages/tsup.config.base.ts"
+      - "tsconfig.base.json"
+      - "turbo.json"
+      - ".npmrc"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -20,7 +27,33 @@ env:
   RESOURCE_GROUP: "bookjeok-rg"
 
 jobs:
+  # 배포할 커밋과 같은 SHA에서 서버와 의존 패키지를 검증한다
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      # core 타입 선언 빌드가 기본 힙으로는 부족하다 (Dockerfile과 동일)
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint, Test and Build
+        run: pnpm turbo lint test build --filter=@bookjeok/server...
+
   build-and-deploy:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code

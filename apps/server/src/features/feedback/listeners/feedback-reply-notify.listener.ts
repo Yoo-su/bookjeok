@@ -1,10 +1,12 @@
+import { NotificationType } from '@bookjeok/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 
-import { NotificationType } from '@/features/notification/entities/notification.entity';
+import {
+  FeedbackEvents,
+  FeedbackRepliedEvent,
+} from '@/features/feedback/events/feedback.events';
 import { NotificationService } from '@/features/notification/services/notification.service';
-
-import { FeedbackRepliedEvent } from '../services/feedback.service';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 
 /**
  * 운영자 답변이 달리면 작성자에게 북적 알림을 보낸다 (행위자 없음)
@@ -15,7 +17,7 @@ export class FeedbackReplyNotifyListener {
 
   constructor(private readonly notificationService: NotificationService) {}
 
-  @OnEvent('feedback.replied', { async: true })
+  @OnDomainEvent(FeedbackEvents.replied, { async: true })
   async handleFeedbackReplied(event: FeedbackRepliedEvent) {
     try {
       await this.notificationService.createNotification(

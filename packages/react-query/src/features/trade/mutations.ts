@@ -8,35 +8,20 @@ import {
   updateTradeReview,
 } from "@bookjeok/api-client";
 import {
-  bookSaleKeys,
-  chatKeys,
   CompleteTradeParams,
   CompleteTradeResult,
   CreateTradeReviewParams,
   orderKeys,
   ReserveSaleParams,
-  tradeKeys,
   TradeReview,
   tradeReviewKeys,
   UpdateTradeReviewParams,
   UsedBookSale,
-  userKeys,
 } from "@bookjeok/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { useIdempotencyKeys } from "../../shared/use-idempotency-keys";
-
-/**
- * 판매글 상태·채팅방 배너·내 판매글 목록이 모두 바뀌므로 함께 비운다.
- */
-const invalidateTradeCaches = (
-  queryClient: ReturnType<typeof useQueryClient>,
-) => {
-  queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
-  queryClient.invalidateQueries({ queryKey: chatKeys._def });
-  queryClient.invalidateQueries({ queryKey: tradeKeys._def });
-  queryClient.invalidateQueries({ queryKey: userKeys._def });
-};
+import { invalidateTradeCaches } from "./cache";
 
 /**
  * 거래 상대 지정 (예약중 전환) 뮤테이션
@@ -116,11 +101,7 @@ export const useCompleteDirectTradeMutation = (options?: {
         error instanceof Error ? error : new Error(String(error)),
       );
     },
-    onSettled: () => {
-      invalidateTradeCaches(queryClient);
-      // 완료와 동시에 후기를 쓸 수 있게 되므로 신뢰 지표도 갱신한다.
-      queryClient.invalidateQueries({ queryKey: tradeReviewKeys._def });
-    },
+    onSettled: () => invalidateTradeCaches(queryClient),
   });
 };
 

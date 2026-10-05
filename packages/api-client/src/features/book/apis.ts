@@ -69,6 +69,7 @@ export const getPopularBooks = async (): Promise<BaseBookInfo[]> => {
 
 /**
  * 저장된 책 요약 정보를 조회합니다.
+ * 저장본이 없으면 `null`이고, 조회 실패는 그대로 throw합니다.
  */
 export const getSavedBookSummary = async (
   isbn: string,
@@ -76,7 +77,7 @@ export const getSavedBookSummary = async (
   const { data } = await publicApiClient.get<AiBookSummaryData | null>(
     API_PATHS.llm.getSummary(isbn),
   );
-  return data;
+  return data ?? null;
 };
 
 /**

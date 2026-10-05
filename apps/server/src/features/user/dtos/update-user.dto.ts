@@ -2,8 +2,6 @@ import {
   DEFAULT_PROFILE_IMAGE_PATTERN,
   NICKNAME_MAX_LENGTH,
   NICKNAME_MIN_LENGTH,
-  NICKNAME_PATTERN,
-  normalizeNickname,
   UPLOADED_PROFILE_IMAGE_PATTERN,
   USER_AGE_RANGES,
   USER_GENDERS,
@@ -16,14 +14,12 @@ import {
   IsIn,
   IsOptional,
   IsString,
-  Length,
   Matches,
   MaxLength,
   ValidateIf,
 } from 'class-validator';
 
-const toNickname = ({ value }: { value: unknown }) =>
-  typeof value === 'string' ? normalizeNickname(value) : value;
+import { NicknameRules } from './nickname-rules.decorator';
 
 /** 공백뿐인 실명은 미입력(null)으로 본다 */
 const toName = ({ value }: { value: unknown }) =>
@@ -42,16 +38,8 @@ export class UpdateUserDto {
     description: `닉네임 (${NICKNAME_MIN_LENGTH}~${NICKNAME_MAX_LENGTH}자, 한글·영문·숫자·_, 단어 사이 공백 한 칸)`,
     required: false,
   })
-  @Transform(toNickname)
   @ValidateIf((_, value) => value !== undefined)
-  @IsString({ message: '닉네임을 입력해주세요.' })
-  @Length(NICKNAME_MIN_LENGTH, NICKNAME_MAX_LENGTH, {
-    message: `닉네임은 ${NICKNAME_MIN_LENGTH}자 이상 ${NICKNAME_MAX_LENGTH}자 이하로 입력해주세요.`,
-  })
-  @Matches(NICKNAME_PATTERN, {
-    message:
-      '닉네임은 한글, 영문, 숫자, 밑줄(_)과 단어 사이 공백 한 칸만 사용할 수 있습니다.',
-  })
+  @NicknameRules()
   nickname?: string;
 
   @ApiProperty({

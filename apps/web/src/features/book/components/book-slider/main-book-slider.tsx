@@ -19,6 +19,7 @@ import { BookOpen } from "@/shared/components/icons/iconsax";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
+import { HOME_PUBLISHER_BOOKS_DISPLAY } from "../../constants/queries";
 import { BookSliderSkeleton } from "./skeleton";
 
 // 3D 실린더 카드 컴포넌트
@@ -237,7 +238,10 @@ export const MainBookSlider = () => {
     data: books,
     isLoading,
     isError,
-  } = useBookListQuery({ query: activePublisher, display: 18 });
+  } = useBookListQuery({
+    query: activePublisher,
+    display: HOME_PUBLISHER_BOOKS_DISPLAY,
+  });
 
   // 반응형 치수가 확정되기 전까지 슬라이더를 숨겨 레이아웃 점프(FOUC) 방지
   const [isLayoutReady, setIsLayoutReady] = useState(false);

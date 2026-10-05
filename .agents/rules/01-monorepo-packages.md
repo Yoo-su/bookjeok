@@ -56,8 +56,9 @@ export const API_PATHS = {
 
 ### 3-2. 타입 & DTO 파라미터 (`features/[feature]/types.ts`)
 
-- enum은 단일 진실 공급원(SSOT)으로서 `core`에서 정의.
+- enum은 단일 진실 공급원(SSOT)으로서 `core`에서 정의. 서버 엔티티는 core enum을 import해 컬럼에 쓰고, 기존 import 경로가 필요하면 엔티티 파일에서 다시 내보냄(`export { X }`). 서버에 따로 정의하는 예외는 내부 상태 `WITHDRAWN`이 있는 `SaleStatus`와 꺼진 결제의 `OrderStatus`뿐.
 - 요청 파라미터는 `Create[Domain]Params`, `Update[Domain]Params` 네이밍 사용.
+- 서버 DTO와 웹 폼이 함께 지키는 입력 제한(길이·개수·비밀번호 규칙)과 웹이 분기하는 서버 에러 코드(`API_ERROR_CODES`)는 core 상수 하나를 양쪽이 import. 안내 문구에도 숫자를 쓰지 않고 `{min}`·`{max}` 자리표시자로 넘김.
 
 ### 3-3. 쿼리 키 팩토리 (`features/[feature]/query-keys.ts`)
 

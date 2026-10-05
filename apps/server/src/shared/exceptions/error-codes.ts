@@ -13,7 +13,7 @@
  * - VALIDATION_xxx: 입력값 검증 관련 에러
  * - INTERNAL_xxx: 서버 내부 에러
  */
-import { MAX_CHAT_IMAGES } from '@bookjeok/core';
+import { API_ERROR_CODES, MAX_CHAT_IMAGES } from '@bookjeok/core';
 
 export const ERROR_CODES = {
   // ============================================
@@ -32,7 +32,7 @@ export const ERROR_CODES = {
     message: '접근 권한이 없습니다.',
   },
   EMAIL_ALREADY_EXISTS: {
-    code: 'AUTH_005',
+    code: API_ERROR_CODES.EMAIL_ALREADY_EXISTS,
     message: '이미 사용 중인 이메일 주소입니다.',
   },
   INVALID_OR_EXPIRED_VERIFICATION_TOKEN: {
@@ -65,7 +65,7 @@ export const ERROR_CODES = {
     message: '이메일 또는 비밀번호가 올바르지 않습니다.',
   },
   SOCIAL_LOGIN_USER: {
-    code: 'AUTH_013',
+    code: API_ERROR_CODES.SOCIAL_LOGIN_USER,
     message: '소셜 로그인으로 가입된 계정입니다. 소셜 로그인을 이용해주세요.',
   },
   INVALID_OR_EXPIRED_TICKET: {
@@ -80,6 +80,10 @@ export const ERROR_CODES = {
     code: 'AUTH_016',
     message: '이메일로 가입한 계정은 이메일을 비울 수 없습니다.',
   },
+  AUTH_VERIFICATION_EMAIL_SEND_FAILED: {
+    code: 'AUTH_017',
+    message: '인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요.',
+  },
 
   // ============================================
   // 사용자 관련 에러 (USER)
@@ -89,7 +93,7 @@ export const ERROR_CODES = {
     message: '사용자를 찾을 수 없습니다.',
   },
   NICKNAME_ALREADY_EXISTS: {
-    code: 'USER_003',
+    code: API_ERROR_CODES.NICKNAME_ALREADY_EXISTS,
     message: '이미 사용 중인 닉네임입니다.',
   },
   USER_IN_TRADE_CANNOT_WITHDRAW: {
@@ -183,7 +187,7 @@ export const ERROR_CODES = {
     message: '요청할 책 제목을 입력해 주세요.',
   },
   FEEDBACK_DAILY_LIMIT_EXCEEDED: {
-    code: 'FEEDBACK_003',
+    code: API_ERROR_CODES.FEEDBACK_DAILY_LIMIT_EXCEEDED,
     message: '오늘은 문의를 더 보낼 수 없습니다. 내일 다시 보내 주세요.',
   },
   FEEDBACK_NOT_FOUND: {
@@ -199,7 +203,7 @@ export const ERROR_CODES = {
     message: '독서 기록을 찾을 수 없습니다.',
   },
   READING_LOG_DUPLICATE: {
-    code: 'READING_LOG_002',
+    code: API_ERROR_CODES.READING_LOG_DUPLICATE,
     message: '그날 이미 기록한 책입니다.',
   },
   READING_LOG_FUTURE_DATE: {

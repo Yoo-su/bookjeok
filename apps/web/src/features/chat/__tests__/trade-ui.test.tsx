@@ -44,6 +44,13 @@ vi.mock("next-intl", () => ({
 vi.mock("@/features/confirm", () => ({
   useConfirm: () => vi.fn(),
 }));
+// 거래 래퍼 훅이 판매글 상세 ISR을 비우는 서버 액션과 App Router를 쓴다
+vi.mock("@/shared/config/i18n/routing", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+vi.mock("@/shared/actions/revalidate", () => ({
+  revalidateBookSale: vi.fn().mockResolvedValue(undefined),
+}));
 
 const mockSeller: SaleAuthor = {
   id: 1,

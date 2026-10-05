@@ -90,18 +90,12 @@ export const usePopularBooksQuery = () => {
 
 /**
  * LLM 책 요약 조회 (저장된 정보 조회)
+ * 저장본 없음만 `null`로 캐싱하고, 조회 실패는 에러 상태로 남겨 다음 마운트에 재조회합니다.
  */
 export const useBookSummaryQuery = (isbn: string) => {
   return useQuery({
     queryKey: bookKeys.summary(isbn).queryKey,
-    queryFn: async () => {
-      try {
-        const result = await getSavedBookSummary(isbn);
-        return result || null;
-      } catch {
-        return null;
-      }
-    },
+    queryFn: () => getSavedBookSummary(isbn),
     enabled: !!isbn,
     retry: false,
     staleTime: Infinity,

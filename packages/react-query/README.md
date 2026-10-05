@@ -55,6 +55,8 @@ export function BookListComponent() {
 
 1. **상대 경로 사용**: 패키지 내 다른 모듈 참조 시 반드시 **상대 경로**를 사용하세요.
 2. **캐시 무효화 연계**: 뮤테이션 작성 시 연관된 쿼리 키(`@bookjeok/core`의 `bookKeys`, `reviewKeys`, `orderKeys` 등)를 `queryClient.invalidateQueries`로 무효화하도록 처리하세요. 무효화 범위가 넓으면 불필요한 재요청이, 좁으면 낡은 캐시가 남습니다.
+   - 거래 상태 변경은 `features/trade/cache.ts`의 공개 함수 `invalidateTradeCaches(queryClient)`를 사용합니다. 예약·취소·완료 뮤테이션과 웹의 거래 소켓 수신이 같은 정책으로 판매글·채팅방 목록·거래 완료·후기·사용자·주문을 갱신합니다. 키 목록은 이 파일에서만 관리하며, 반환된 Promise는 활성 조회의 갱신이 끝나면 완료됩니다. 일반 메시지 수신이나 후기 내용 수정에는 이 전체 갱신 정책을 적용하지 않습니다.
+   - 같은 조건을 일반 `useQuery`와 `useInfiniteQuery`가 함께 쓰면 응답과 `pages` 형태가 한 캐시에 섞입니다. 무한 쿼리는 일반 키 아래 컨텍스트 키를 씁니다(예: `reviewKeys.list(params)._ctx.infinite`). 상위 접두가 같아 `reviewKeys.list._def` 무효화는 둘 다에 닿습니다.
 3. **`"use client"` 선언 필수**: 모든 훅 파일 최상단에 선언해야 Next.js App Router의 서버 컴포넌트 경계에서 문제가 없습니다.
 4. **계정 전환 시 캐시 격리**: 로그인 사용자가 바뀌면 이전 사용자 캐시가 노출되지 않도록 소비 측(`apps/web`의 `QueryProvider`)에서 쿼리 클라이언트를 초기화합니다. 사용자별 데이터를 다루는 훅을 추가할 때 이 전제를 확인하세요.
 5. **재시도가 부작용을 낳는 뮤테이션**: 주문·거래처럼 같은 요청이 두 번 반영되면 안 되는 훅은 `useIdempotencyKeys`로 대상별 키를 발급해 `x-idempotency-key`로 보냅니다. 서버 인터셉터가 완료된 키를 만나면 처음 응답을 그대로 재생합니다. 키는 **성공했을 때만** 버립니다 — 실패에는 "응답을 못 받았을 뿐 서버는 반영됨"이 섞여 있어, 새 키를 뽑으면 그 요청이 한 번 더 실행됩니다. 새로고침을 넘어야 하는 경로(결제 승인)는 메모리 대신 URL로 다시 들어오는 값(토스 `paymentKey`)을 키로 씁니다.

@@ -106,6 +106,12 @@ POST /auth/send-verification-email  →  Resend로 인증 링크 발송
                                  User.isEmailVerified = true
 ```
 
+인증 메일 정의는 `user/mail/verification.mail.ts`에 있습니다. 가입은 기존처럼 비동기 발송하고
+실패는 공통 MailService가 기록합니다. 인증 재발송은 전달 결과를 기다리며 공급자·렌더링 실패 시
+503 `AUTH_VERIFICATION_EMAIL_SEND_FAILED` (`AUTH_017`)를 반환합니다. 키 미설정 콘솔 대체는
+기존 성공 동작을 유지하되 `logged` 결과로 구분합니다. 인증 메일에 일반 알림의 인증 완료 조건을
+적용하지 않습니다. 토큰은 기존처럼 24시간 유효합니다.
+
 `EmailVerifiedGuard`는 `isEmailVerified !== true`인 요청을 `EMAIL_NOT_VERIFIED` 403으로 차단합니다. 적용 대상은 **중고거래 진입 경로**입니다.
 
 | 적용 지점          | 모듈             |

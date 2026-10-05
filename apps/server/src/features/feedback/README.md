@@ -16,8 +16,9 @@
 - **`controllers/admin-feedback.controller.ts`**: `GET /admin/feedback`, `PATCH /admin/feedback/:id` (JWT + `AdminGuard`)
 - **`listeners/feedback-reply-notify.listener.ts`**: `feedback.replied` → 작성자에게 `FEEDBACK_REPLIED` 알림 (행위자 없음)
 - **`services/feedback.service.ts`**: 접수(종류별 필수 항목·하루 한도), 목록, 운영자 처리, `feedback.created`·`feedback.replied` 발행
-- **`listeners/feedback-notify.listener.ts`**: `feedback.created` → 운영자 메일 (`MailService.sendFeedbackNotice`)
+- **`listeners/feedback-notify.listener.ts`**: `feedback.created` → 운영자 메일 (`MailService.send(feedbackNoticeMail, feedback)`)
 - **`listeners/feedback-cleanup.listener.ts`**: `user.withdrawn` → 작성자 연결만 끊음 (문의는 남김)
+- **`mail/feedback-notice.mail.ts`**: 운영자 수신 정책·입력 타입·제목·본문 정의(공통 서비스는 도메인 엔티티를 참조하지 않음)
 - **`entities/feedback.entity.ts`**: `feedbacks` 테이블
 
 ## 2. API
@@ -61,6 +62,7 @@
 - 받는 주소는 환경 변수 **`FEEDBACK_NOTIFY_EMAIL`** 입니다. 비어 있으면 메일을 보내지 않고 경고 로그만 남깁니다. 문의는 DB에 그대로 저장됩니다.
 - 제목: `[북적 문의] {종류} · {책 제목 또는 본문 앞 40자}`. 본문에 접수 번호, 작성자(닉네임·id·이메일), 책 정보, 보던 페이지 URL, 기기, 내용이 들어갑니다.
 - **사용자 입력은 전부 HTML 이스케이프합니다.** 운영자 메일함에 사용자가 쓴 HTML이 그대로 렌더링되지 않게 하기 위해서입니다.
+- 전달 결과는 `sent`·`logged`·`skipped`·`failed`로 구분합니다. 수신 주소 미설정은 `skipped`, 공급자 실패는 `failed`이며 공통 모듈에서 기록합니다.
 - 메일은 `feedback.created` 이벤트를 `async: true`로 받아 보내므로, 메일이 실패해도 접수 응답에는 영향이 없습니다.
 
 ## 5. 운영자 조회
@@ -72,3 +74,13 @@ SELECT f.id, f.type, f.status, f.details->>'bookTitle' AS book, left(f.content, 
  WHERE f.status = 'RECEIVED'
  ORDER BY f."createdAt" DESC;
 ```
+
+## 도메인 이벤트 계약
+
+[`events/feedback.events.ts`](events/feedback.events.ts)가 `FeedbackEvents.created`·`replied`와
+payload를 소유합니다(서비스 파일에서 타입을 정의하지 않음). 접수 저장 후 `feedbackId`를,
+답변 저장 후 답변이 변경됐고 작성자가 남아 있으면 `feedbackId`·`userId`·`type`·선택 `bookTitle`을
+발행합니다. 발행은 `emitDomainEvent`, 메일·답변 알림 구독은 같은 계약의 `@OnDomainEvent`를 씁니다.
+두 리스너의 `async: true`·오류 처리·수신 조건은 그대로입니다.
+
+탈퇴 정리 구독은 [user 소유 계약](../user/events/user-withdrawn.event.ts)을 사용합니다.

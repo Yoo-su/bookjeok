@@ -40,7 +40,7 @@ export const useReviewsInfiniteQuery = (
   enabled: boolean = true,
 ) => {
   return useInfiniteQuery({
-    queryKey: reviewKeys.list(params).queryKey,
+    queryKey: reviewKeys.list(params)._ctx.infinite.queryKey,
     queryFn: ({ pageParam }) =>
       getReviews({
         ...params,

@@ -53,6 +53,22 @@ const ensureFreshAuthToken = async (loginRequiredMsg: string) => {
 };
 
 /**
+ * 저장 요청 전 단계(인증 확인·압축·업로드)의 실패를 저장 실패와 같은 경로로 알립니다.
+ * 이 단계는 공유 뮤테이션 밖이라 그 `onError`가 호출되지 않습니다.
+ */
+const prepareOrReport = async <T,>(
+  prepare: () => Promise<T>,
+  context: string,
+): Promise<T> => {
+  try {
+    return await prepare();
+  } catch (error) {
+    handleMutationError(error, context);
+    throw error;
+  }
+};
+
+/**
  * 판매글에서 빠진 이미지를 스토리지에서 지웁니다.
  * 저장이 성공한 뒤에만 부릅니다. 먼저 지우면 저장이 실패했을 때 글은 남고 이미지만 사라집니다.
  * 실패해도 저장 결과에는 영향이 없어 에러를 삼킵니다.
@@ -128,14 +144,20 @@ export const useCreateBookSaleMutation = () => {
   return {
     ...sharedMutation,
     mutate: async (variables: CreateSaleVariables) => {
-      const { finalPayload, idempotencyKey } = await processCreate(variables);
+      const { finalPayload, idempotencyKey } = await prepareOrReport(
+        () => processCreate(variables),
+        "판매글 등록",
+      );
       return sharedMutation.mutate({
         ...finalPayload,
         idempotencyKey,
       } as CreateBookSaleParams & { idempotencyKey?: string });
     },
     mutateAsync: async (variables: CreateSaleVariables) => {
-      const { finalPayload, idempotencyKey } = await processCreate(variables);
+      const { finalPayload, idempotencyKey } = await prepareOrReport(
+        () => processCreate(variables),
+        "판매글 등록",
+      );
       return sharedMutation.mutateAsync({
         ...finalPayload,
         idempotencyKey,
@@ -243,7 +265,10 @@ export const useUpdateBookSaleMutation = () => {
   return {
     ...sharedMutation,
     mutate: async (variables: UpdateSaleVariables) => {
-      const params = await processUpdate(variables);
+      const params = await prepareOrReport(
+        () => processUpdate(variables),
+        "판매글 수정",
+      );
       // 실패는 공유 훅의 onError가 알린다. 여기서는 처리되지 않은 거부만 막는다
       await sharedMutation
         .mutateAsync(params)
@@ -251,7 +276,10 @@ export const useUpdateBookSaleMutation = () => {
         .catch(() => undefined);
     },
     mutateAsync: async (variables: UpdateSaleVariables) => {
-      const params = await processUpdate(variables);
+      const params = await prepareOrReport(
+        () => processUpdate(variables),
+        "판매글 수정",
+      );
       const updated = await sharedMutation.mutateAsync(params);
       await removeSaleImages(variables.deletedImageUrls ?? []);
       return updated;

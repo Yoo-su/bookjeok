@@ -33,7 +33,7 @@ comment/
 | ------ | ---------------------- | :--: | -------------------------------------------------------------- |
 | GET    | `/`                    | 선택 | 댓글 목록 (`targetType`, `targetId` 필터, 로그인 시 `isLiked`) |
 | GET    | `/my`                  |  ✅  | 내가 작성한 댓글 목록                                          |
-| POST   | `/`                    |  ✅  | 댓글 작성                                                      |
+| POST   | `/`                    |  ✅  | 댓글 작성 (대상 없으면 404)                                    |
 | PATCH  | `/:id`                 |  ✅  | 댓글 수정 (작성자만)                                           |
 | DELETE | `/:id`                 |  ✅  | 댓글 삭제 (작성자만)                                           |
 | POST   | `/:id/like`            |  ✅  | 좋아요 토글                                                    |
@@ -55,7 +55,7 @@ comment/
 | `likeCount`               | `number`         | 비정규화 좋아요 수      |
 | `createdAt` / `updatedAt` | `Date`           |                         |
 
-`targetType` + `targetId` 조합으로 도서와 리뷰를 하나의 테이블에서 다룹니다. 새 대상이 생기면 enum만 확장하면 됩니다.
+`targetType` + `targetId` 조합으로 도서와 리뷰를 하나의 테이블에서 다룹니다. 새 대상을 추가하려면 enum과 함께 아래 「대상 확인」의 분기, 「내 댓글」 제목 조회, 알림 리스너, 대상 삭제 시 정리를 모두 맞춰야 합니다.
 
 ### `CommentLike`
 
@@ -72,6 +72,17 @@ comment/
 `user.withdrawn` 이벤트를 받으면 `CommentCleanupListener`가 작성자 참조를 정리합니다. `userId`가 nullable인 이유는 **댓글 본문은 남기고 작성자만 익명 처리**하기 위해서입니다 — 대화 맥락이 통째로 사라지지 않습니다. 그래서 목록 응답의 `user`도 `null`일 수 있습니다(`@bookjeok/core`의 `Comment.user`).
 
 탈퇴 회원이 누른 좋아요는 지우면서 해당 댓글들의 `likeCount`도 1씩 줄입니다.
+
+### 대상 확인
+
+`createComment`는 저장 전에 `resolveTargetId`로 대상을 확인하고 **정식 ID로 저장**합니다. FK가 없어 이전에는 없는 리뷰·도서나 `REVIEW/no-such-review`도 그대로 저장됐습니다.
+
+| 대상     | 확인                                                 | 저장되는 `targetId` | 없을 때                |
+| -------- | ---------------------------------------------------- | ------------------- | ---------------------- |
+| `BOOK`   | `BookService.resolveBook(isbn)`                      | DB의 `isbn`         | 404 `BOOK_NOT_FOUND`   |
+| `REVIEW` | 숫자 문자열만 허용(`12abc`·`-1` 거부) → `findReviewById` | `String(review.id)` (`012` → `12`) | 404 `REVIEW_NOT_FOUND` |
+
+리뷰의 공개 여부는 보지 않습니다. 비공개 리뷰 댓글의 노출·작성 정책은 현행 그대로입니다. 조회(`GET /`)는 대상을 확인하지 않고 해당 조합의 댓글을 돌려줍니다.
 
 ### 대상이 사라질 때
 
@@ -92,3 +103,13 @@ comment/
 
 - 웹: [`features/comment`](../../../../web/src/features/comment/README.md)
 - 알림 구조: [`features/notification`](../notification/README.md)
+
+## 도메인 이벤트 계약
+
+[`events/comment.events.ts`](events/comment.events.ts)가 `CommentEvents.created`·`liked`의
+이름과 payload를 소유합니다. 생성 이벤트는 저장 후 작성자 관계를 다시 읽어 `comment`를 보내고,
+좋아요 이벤트는 `persistLikeToggle` 커밋 후 `comment`·`actorId`·`isLiked`를 보냅니다.
+`CommentService`의 `emitDomainEvent`와 알림 리스너의 `@OnDomainEvent`가 같은 계약을 사용합니다.
+리스너의 Nest 옵션은 기본값이며 기존 자기 글 제외·좋아요 추가 조건·오류 로깅을 유지합니다.
+
+탈퇴 정리 구독은 [user 소유 계약](../user/events/user-withdrawn.event.ts)을 사용합니다.

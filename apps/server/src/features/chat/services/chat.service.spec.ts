@@ -1,6 +1,7 @@
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { Repository } from 'typeorm';
 
 import { Order } from '@/features/order/entities/order.entity';
@@ -15,8 +16,26 @@ import { ChatRoom } from '../entities/chat-room.entity';
 import { ChatGateway } from '../gateways/chat.gateway';
 import { ChatService } from './chat.service';
 
+jest.mock('@nestjs-cls/transactional', () => {
+  const actual = jest.requireActual<Record<string, unknown>>(
+    '@nestjs-cls/transactional',
+  );
+  return {
+    ...actual,
+    Transactional:
+      () =>
+      (
+        _target: unknown,
+        _propertyKey: string,
+        descriptor: PropertyDescriptor,
+      ) =>
+        descriptor,
+  };
+});
+
 describe('ChatService', () => {
   let service: ChatService;
+  let txManager: { create: jest.Mock; save: jest.Mock };
 
   // Repositories
   let chatRoomRepo: Partial<Repository<ChatRoom>>;
@@ -91,10 +110,18 @@ describe('ChatService', () => {
       findSaleById: jest.fn(),
     };
 
+    txManager = {
+      create: jest.fn(
+        (_entity: unknown, data: Record<string, unknown>) => data,
+      ),
+      save: jest.fn(),
+    };
+
     chatGateway = {
       joinRoom: jest.fn(),
       notifyNewRoom: jest.fn(),
       emitUserRejoined: jest.fn(),
+      emitNewMessage: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -113,6 +140,7 @@ describe('ChatService', () => {
         },
         { provide: ChatGateway, useValue: chatGateway },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: TransactionHost, useValue: { tx: txManager } },
       ],
     }).compile();
 
@@ -219,23 +247,43 @@ describe('ChatService', () => {
       mockQueryBuilder.getOne.mockResolvedValue(null);
 
       const newRoom = { id: 99 };
-      (chatRoomRepo.create as jest.Mock).mockReturnValue(newRoom);
-      (chatRoomRepo.save as jest.Mock).mockResolvedValue({
-        ...newRoom,
-        id: 99,
-      });
-      (chatParticipantRepo.create as jest.Mock).mockImplementation(
-        (data: ChatParticipant) => data,
-      );
-      (chatParticipantRepo.save as jest.Mock).mockResolvedValue([]);
+      txManager.save
+        .mockResolvedValueOnce({ ...newRoom })
+        .mockResolvedValueOnce([]);
       (chatRoomRepo.findOne as jest.Mock).mockResolvedValue({ ...newRoom });
 
       await service.getChatRoom(1, buyerId);
 
-      expect(chatRoomRepo.save).toHaveBeenCalled();
-      expect(chatParticipantRepo.save).toHaveBeenCalled();
+      // 방과 참가자 모두 같은 트랜잭션 매니저로 저장
+      expect(txManager.create).toHaveBeenCalledWith(ChatRoom, {
+        usedBookSale: sale,
+      });
+      expect(txManager.save).toHaveBeenCalledTimes(2);
+      expect(txManager.save).toHaveBeenLastCalledWith([
+        expect.objectContaining({ user: { id: buyerId }, isActive: true }),
+        expect.objectContaining({ user: { id: 2 }, isActive: true }),
+      ]);
+      expect(chatRoomRepo.save).not.toHaveBeenCalled();
+      expect(chatParticipantRepo.save).not.toHaveBeenCalled();
       expect(chatGateway.joinRoom).toHaveBeenCalledWith([buyerId, 2], 99);
       expect(chatGateway.notifyNewRoom).toHaveBeenCalled();
+    });
+
+    it('참가자 저장이 실패하면 소켓·이벤트 없이 실패를 전파한다', async () => {
+      const sale = { id: 1, user: { id: 2, isEmailVerified: true } };
+      (usedBookSaleService.findSaleById as jest.Mock).mockResolvedValue(sale);
+      mockQueryBuilder.getOne.mockResolvedValue(null);
+      txManager.save
+        .mockResolvedValueOnce({ id: 99 })
+        .mockRejectedValueOnce(new Error('participant insert failed'));
+
+      await expect(service.getChatRoom(1, 1)).rejects.toThrow(
+        'participant insert failed',
+      );
+
+      expect(chatGateway.joinRoom).not.toHaveBeenCalled();
+      expect(chatGateway.notifyNewRoom).not.toHaveBeenCalled();
+      expect(chatRoomRepo.findOne).not.toHaveBeenCalled();
     });
 
     it('동시에 여러 요청이 들어와도 Request Collapsing에 의해 방 생성이 1회만 실행되어야 합니다', async () => {
@@ -246,15 +294,9 @@ describe('ChatService', () => {
       mockQueryBuilder.getOne.mockResolvedValue(null);
 
       const newRoom = { id: 99 };
-      (chatRoomRepo.create as jest.Mock).mockReturnValue(newRoom);
-      (chatRoomRepo.save as jest.Mock).mockResolvedValue({
-        ...newRoom,
-        id: 99,
-      });
-      (chatParticipantRepo.create as jest.Mock).mockImplementation(
-        (data: ChatParticipant) => data,
-      );
-      (chatParticipantRepo.save as jest.Mock).mockResolvedValue([]);
+      txManager.save
+        .mockResolvedValueOnce({ ...newRoom })
+        .mockResolvedValueOnce([]);
       (chatRoomRepo.findOne as jest.Mock).mockResolvedValue({ ...newRoom });
 
       // 5개의 동시 요청 실행
@@ -268,7 +310,11 @@ describe('ChatService', () => {
 
       expect(results).toHaveLength(5);
       results.forEach((res) => expect(res).toEqual(newRoom));
-      expect(chatRoomRepo.save).toHaveBeenCalledTimes(1);
+      expect(txManager.create).toHaveBeenCalledWith(
+        ChatRoom,
+        expect.anything(),
+      );
+      expect(txManager.save).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -463,6 +509,7 @@ describe('ChatService', () => {
       expect(result.content).toBe('결제가 완료되었습니다.');
       expect(chatRoomRepo.save).toHaveBeenCalled();
       expect(chatMessageRepo.save).toHaveBeenCalled();
+      expect(chatGateway.emitNewMessage).toHaveBeenCalledWith(10, result);
     });
 
     it('채팅방이 존재하지 않으면 CHAT_ROOM_NOT_FOUND 예외를 던져야 합니다', async () => {

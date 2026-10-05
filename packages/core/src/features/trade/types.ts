@@ -9,7 +9,9 @@ import { TradeReviewTag, TradeReviewTargetRole } from "./review-tags";
  * 검증된 기록입니다.
  */
 export enum TradeCompletionMethod {
+  /** 채팅으로 약속을 잡고 직접 만나 거래 (결제 없음) */
   DIRECT = "DIRECT",
+  /** 에스크로 결제 + 택배 배송 거래 */
   DELIVERY = "DELIVERY",
 }
 

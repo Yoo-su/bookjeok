@@ -48,13 +48,13 @@ const user = useAuthStore((state) => state.user);
 ### 3-1. 채팅 시스템
 
 - 메시지 타입: `ChatMessageType` (`TEXT`, `SYSTEM`, `TRADE_STATUS`, `TRADE_ACTION`, `IMAGE`).
-- 거래 상태 변경 시 `TRADE_STATUS` 소켓 수신 → TanStack Query 캐시 자동 갱신 (`orderKeys`, `bookSaleKeys`, `chatKeys`).
+- 거래 상태 변경 시 `TRADE_ACTION`·`TRADE_STATUS` 소켓 수신과 로컬 예약·취소·완료 뮤테이션은 `@bookjeok/react-query`의 `invalidateTradeCaches`를 함께 사용. 무효화할 키 목록은 `features/trade/cache.ts`에서 관리하며 완료 기록·후기 작성 자격까지 갱신. 채팅 메시지 기록은 소켓으로 병합하고, 전송 중·실패 메시지를 보존하기 위해 이 정책에서 재조회하지 않음.
 - 모바일 백그라운드 복귀 대응: 재연결 시 `joinRooms` 자동 재전송.
 
 ### 3-2. 알림 시스템
 
 - `NotificationType` (17종): 리뷰 반응, 댓글, 중고거래 결제·배송·구매확정·취소 라이프사이클, 직거래 예약·완료, 문의 답변(행위자 없음).
-- `NotificationProvider`에서 실시간 수신 → TanStack Query 캐시 갱신 및 토스트 알림 노출.
+- `NotificationProvider`에서 실시간 수신 → TanStack Query 캐시 갱신 및 토스트 알림 노출. 재연결(두 번째 이후 `connect`) 시 토스트 없이 알림 목록·개수 재조회.
 
 ---
 
@@ -78,5 +78,5 @@ const user = useAuthStore((state) => state.user);
 ## 5. 인증 및 토큰 갱신 플로우
 
 - **Ticket Exchange**: OAuth 로그인 후 60초 유효 1회용 ticket 발급 → 프론트엔드가 `POST /auth/exchange`로 JWT 수신.
-- **Silent Refresh**: `packages/api-client` 및 `apps/web/src/shared/libs/axios.ts`의 인터셉터가 401 발생 시 Refresh Token으로 자동 갱신.
+- **Silent Refresh**: `apps/web/src/shared/libs/axios.ts`가 `@bookjeok/api-client`의 빈 인스턴스에 붙이는 인터셉터가 401 발생 시 Refresh Token으로 자동 갱신(공용 패키지에는 인터셉터 없음). AI 추천 SSE(`features/book/utils/sse-chat-client.ts`)는 fetch 기반이라 같은 정책을 따로 구현(AI 추천 UI는 2026-09-29부터 미연결).
 - **토큰 무효화**: 로그아웃 시 백엔드 `user.tokenVersion` 증가로 즉시 무효화.

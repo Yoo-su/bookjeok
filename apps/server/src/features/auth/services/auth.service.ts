@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { Cache } from 'cache-manager';
 
 import { User } from '@/features/user/entities/user.entity';
+import { verificationMail } from '@/features/user/mail/verification.mail';
 import { UserService } from '@/features/user/services/user.service';
 import { NicknameGenerator } from '@/features/user/utils/nickname-generator';
 import { BusinessException } from '@/shared/exceptions';
@@ -333,9 +334,11 @@ export class AuthService {
     );
 
     // 6. 인증 메일 비동기 발송
-    this.mailService
-      .sendVerificationEmail(email, nickname, verificationToken)
-      .catch((err) => this.logger.error('회원가입 인증 메일 발송 실패:', err));
+    void this.mailService.send(verificationMail, {
+      email,
+      nickname,
+      token: verificationToken,
+    });
 
     return newUser;
   }

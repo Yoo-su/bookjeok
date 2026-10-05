@@ -17,6 +17,15 @@
 9. **서버 Import Alias**: 서버 코드에서는 항상 `@/features/...`, `@/shared/...` 사용 (`../../` 상대경로 지양).
 10. **엔티티 타임스탬프**: Date 컬럼에 `@CreateDateColumn({ type: 'timestamptz' })` 사용.
 
+**ESLint가 자동으로 막는 항목** (각 패키지 `eslint.config.mjs`, `pnpm lint`):
+
+- 2번 — 웹의 `router.push/replace/prefetch`와 `href`에 `/`로 시작하는 문자열·템플릿 리터럴 (루트 `"/"`와 `//` 외부 주소는 허용)
+- 3번 — 서버에서 Nest 기본 HTTP 예외(`BadRequestException` 등)를 `new`로 직접 생성 (꺼진 결제 가드 1곳만 예외 주석)
+- 9번 — 서버의 `../../` 상대 import
+- 의존 방향 — core의 `@bookjeok/*` import, api-client의 react-query import, 서버의 api-client·react-query import
+
+나머지 항목(쿼리 키 팩토리, `"use client"`, 모듈·export 등록, timestamptz)은 아직 사람이 확인합니다. react-query의 `"use client"`는 tsup 배너가 빌드 결과 전체에 붙여 런타임 영향이 없어 규칙을 두지 않았습니다.
+
 ---
 
 ## 2. 빌드 및 테스트 검증 커맨드

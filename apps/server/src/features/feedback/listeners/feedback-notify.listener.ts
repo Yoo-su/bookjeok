@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import {
+  FeedbackCreatedEvent,
+  FeedbackEvents,
+} from '@/features/feedback/events/feedback.events';
+import { feedbackNoticeMail } from '@/features/feedback/mail/feedback-notice.mail';
+import { OnDomainEvent } from '@/shared/events/domain-event';
 import { MailService } from '@/shared/mail/mail.service';
 
 import { Feedback } from '../entities/feedback.entity';
-import { FeedbackCreatedEvent } from '../services/feedback.service';
 
 /**
  * 문의가 접수되면 운영자에게 메일로 알린다
@@ -22,7 +26,7 @@ export class FeedbackNotifyListener {
     private readonly mailService: MailService,
   ) {}
 
-  @OnEvent('feedback.created', { async: true })
+  @OnDomainEvent(FeedbackEvents.created, { async: true })
   async handleFeedbackCreated({ feedbackId }: FeedbackCreatedEvent) {
     try {
       const feedback = await this.feedbackRepository.findOne({
@@ -30,7 +34,7 @@ export class FeedbackNotifyListener {
         relations: { user: true },
       });
       if (!feedback) return;
-      await this.mailService.sendFeedbackNotice(feedback);
+      await this.mailService.send(feedbackNoticeMail, feedback);
     } catch (error) {
       this.logger.error(`문의 #${feedbackId} 운영자 알림 실패`, error);
     }

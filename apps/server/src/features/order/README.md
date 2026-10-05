@@ -181,3 +181,16 @@ order.disputed                  trade_review.created
 | `TOSS_PAYMENTS_CLIENT_KEY`  | 결제 위젯 클라이언트 키                                |
 | `FEATURE_PAYMENT_ENABLED`   | `true`가 아니면 모든 주문/결제 라우트가 503            |
 | `DELIVERY_TRACKER_BASE_URL` | 배송 추적 API (기본값 `https://apis.tracker.delivery`) |
+
+## 도메인 이벤트 계약
+
+[`events/order.events.ts`](events/order.events.ts)가 `OrderEvents`의 13개 이름·payload와
+`PendingOrderEvent`를 소유합니다. 대기 이벤트는 이름별 payload를 연결한 discriminated union이므로
+구매자 지정·결제 완료의 `amount` 누락, 이름 오타, 다른 이벤트 payload의 조합이 타입 검사에서 드러납니다.
+`OrderService`는 기존처럼 `persist*`에서 대기 객체를 반환하고 커밋 후 `emitPendingOrderEvent`로
+발행합니다. 스케줄러는 기존 처리 지점에서 `emitDomainEvent`로 같은 계약을 사용합니다.
+
+`OrderEventListener`는 `@OnDomainEvent`와 계약 타입으로 구독하며 기본 Nest 옵션·catch·알림·채팅
+순서를 유지합니다. 확정/자동 확정과 취소/미배송 취소/분쟁 환불의 묶음 구독도 유지합니다.
+채팅방·운송장·사유의 기존 선택/nullable 필드는 유지합니다. 후기 알림은 order가 이벤트를
+정의하지 않고 [trade 소유 계약](../trade/events/trade-review-created.event.ts)을 구독합니다.

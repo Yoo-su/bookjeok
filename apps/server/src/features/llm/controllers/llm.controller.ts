@@ -52,7 +52,8 @@ export class LlmController {
   @TrackActivity(ActivityType.LLM_BOOK_SUMMARY)
   @ApiOperation({
     summary: '책 요약 생성',
-    description: '책 제목과 저자 정보를 바탕으로 AI 요약 및 후기를 생성합니다.',
+    description:
+      'ISBN이 있으면 DB 서지로 생성해 저장하고(없는 도서는 404), 없으면 전달한 서지로 생성만 합니다.',
   })
   @ApiResponse({ status: 201, description: '생성된 요약 정보를 반환합니다.' })
   async getBookSummary(
