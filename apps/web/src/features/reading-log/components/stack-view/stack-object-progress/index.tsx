@@ -6,6 +6,7 @@ import { cn } from "@/shared/utils";
 
 import { cm1, useStackCopy } from "../hooks/use-stack-copy";
 import { objectLadder, STACK_OBJECTS } from "../lib/objects";
+import { CollectionRowContent } from "../stack-collection-entry";
 import { StackStats } from "../stack-progress";
 
 interface StackObjectProgressProps {
@@ -18,6 +19,8 @@ interface StackObjectProgressProps {
   /** 테두리·배경 없이(dock 패널) */
   plain?: boolean /** 합계 줄을 빼고 그림 */;
   hideStats?: boolean;
+  /** 있으면 모은 사물 줄이 도감을 여는 버튼이 된다 */
+  onOpenCollection?: () => void;
 }
 
 /** 다음 사물까지 얼마나 남았는지와 올해 넘은 사물 */
@@ -30,11 +33,11 @@ export function StackObjectProgress({
   className,
   plain = false,
   hideStats = false,
+  onOpenCollection,
 }: StackObjectProgressProps) {
   const t = useTranslations("reading_log.stack");
   const { objectName, len } = useStackCopy();
   const { passed, next } = objectLadder(stackMm);
-  const passedCount = STACK_OBJECTS.filter((o) => o.heightMm <= stackMm).length;
   const top = STACK_OBJECTS[STACK_OBJECTS.length - 1];
   const from = passed?.heightMm ?? 0;
   // 넘은 사물부터 다음 사물까지를 한 칸으로 본다
@@ -94,34 +97,22 @@ export function StackObjectProgress({
                 len: len(stackMm - top.heightMm),
               })}
         </p>
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-stone-200 pt-3">
-          <span className="whitespace-nowrap text-[12px] font-semibold text-stone-600">
-            {t("object_collected")}
-            <span className="ml-1.5 tabular-nums text-stone-400">
-              {t("object_collected_count", {
-                count: passedCount,
-                total: STACK_OBJECTS.length,
-              })}
-            </span>
-          </span>
-          {/* 사다리 한 칸에 점 하나. 넘은 사물은 채우고 다음 사물은 테두리 */}
-          <ol className="flex shrink-0 items-center gap-1" aria-hidden="true">
-            {STACK_OBJECTS.map((o) => (
-              <li
-                key={o.id}
-                title={objectName(o.id, "name")}
-                className={cn(
-                  "size-[7px] rounded-full",
-                  o.heightMm <= stackMm
-                    ? "bg-emerald-700"
-                    : o.id === next?.id
-                      ? "border-[1.5px] border-emerald-700"
-                      : "bg-stone-300",
-                )}
-              />
-            ))}
-          </ol>
-        </div>
+        {onOpenCollection ? (
+          <div className="border-t border-stone-200 pt-1.5">
+            <button
+              type="button"
+              onClick={onOpenCollection}
+              aria-label={t("collection.open")}
+              className="group -mx-2 -mb-1.5 flex w-[calc(100%+1rem)] cursor-pointer items-center justify-between gap-3 rounded-xl px-2 py-1.5 text-left hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-emerald-700"
+            >
+              <CollectionRowContent stackMm={stackMm} button />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3 border-t border-stone-200 pt-3">
+            <CollectionRowContent stackMm={stackMm} />
+          </div>
+        )}
       </div>
       {!hideStats && (
         <StackStats count={count} pages={pages} grams={grams} plain={plain} />

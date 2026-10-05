@@ -18,28 +18,28 @@ import { API_ERROR_CODES, getErrorCode } from "@/shared/utils/error-handler";
 
 import { cm1 } from "../components/stack-view/hooks/use-stack-copy";
 import { useStackPerson } from "../components/stack-view/hooks/use-stack-person";
-import {
-  objectLadder,
-  objectsPassedBetween,
-} from "../components/stack-view/lib/objects";
+import { stackMilestone } from "../components/stack-view/lib/collection";
+import { objectLadder } from "../components/stack-view/lib/objects";
 import { stackStatus } from "../components/stack-view/lib/status";
 import { useReadingLogViewStore } from "../stores/use-reading-log-view-store";
+import { useStackMilestoneStore } from "../stores/use-stack-milestone-store";
 
 /** 같은 책·같은 날 중복은 서버가 409로 막는다. 폼은 열어 둬 날짜를 고치게 한다. */
 const isDuplicateError = (error: unknown) =>
   getErrorCode(error) === API_ERROR_CODES.READING_LOG_DUPLICATE;
 
 /**
- * 기록한 책이 쌓은 책을 얼마나 높였는지 알린다. 쌓은 책을 못 받으면 평범한 완료 알림을 띄운다.
- * 새로 넘은 사물 → 새로 넘은 몸 부위(내 키) → 다음 사물까지 남은 높이 순으로 하나만 말한다.
+ * 기록한 책이 쌓은 책을 얼마나 높였는지 알린다. 사물·내 키·몸 부위를 새로 넘었으면 장면을 띄우고,
+ * 아니면 다음 사물까지 남은 높이를 토스트로 말한다. 쌓은 책을 못 받으면 평범한 완료 알림을 띄운다.
  */
 function useAnnounceStackGrowth() {
   const t = useTranslations("reading_log.toast");
   const tStack = useTranslations("reading_log.stack");
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { heightCm } = useStackPerson();
+  const { heightCm, character } = useStackPerson();
   const setViewMode = useReadingLogViewStore((s) => s.setViewMode);
+  const showMilestone = useStackMilestoneStore((s) => s.show);
 
   return async (log: ReadingLog) => {
     const year = Number(log.date.slice(0, 4));
@@ -53,29 +53,26 @@ function useAnnounceStackGrowth() {
 
       const userMm = heightCm * 10;
       const stackMm = stack.items.reduce((a, b) => a + b.depth, 0);
-      const beforeMm = stackMm - book.depth;
-      const before = stackStatus(beforeMm, userMm);
-      const after = stackStatus(stackMm, userMm);
-      // 두꺼운 책은 사물 둘을 한 번에 넘기도 한다. 높은 쪽을 말한다
-      const passedObject = objectsPassedBetween(beforeMm, stackMm).at(-1);
+      const milestone = stackMilestone(stackMm - book.depth, stackMm, userMm);
+      if (milestone) {
+        showMilestone({
+          year,
+          books: stack.items,
+          logId: log.id,
+          milestone,
+          userMm,
+          character,
+        });
+        return;
+      }
+
       const nextObject = objectLadder(stackMm).next;
-      let description: string;
-      if (passedObject)
-        description = t("stack_object_passed", {
-          name: tStack(`objects.${passedObject.id}.object`),
-        });
-      else if (after.ratio >= 1 && before.ratio < 1)
-        description = t("stack_over_passed");
-      else if (after.passed && after.passed !== before.passed)
-        description = t("stack_passed", {
-          part: tStack(`parts.${after.passed}.object`),
-        });
-      else if (nextObject)
-        description = t("stack_object_to_next", {
-          name: tStack(`objects.${nextObject.id}.name`),
-          cm: cm1(nextObject.heightMm - stackMm),
-        });
-      else description = t("stack_over", { cm: after.overCm });
+      const description = nextObject
+        ? t("stack_object_to_next", {
+            name: tStack(`objects.${nextObject.id}.name`),
+            cm: cm1(nextObject.heightMm - stackMm),
+          })
+        : t("stack_over", { cm: stackStatus(stackMm, userMm).overCm });
 
       toast.success(t("create_stack", { cm: cm1(book.depth) }), {
         description,

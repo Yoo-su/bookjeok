@@ -11,6 +11,7 @@ import {
   useCreateReadingLogMutation,
   useUpdateReadingLogMutation,
 } from "@/features/reading-log/mutations";
+import { useStackMilestoneStore } from "@/features/reading-log/stores/use-stack-milestone-store";
 
 vi.mock("@bookjeok/api-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@bookjeok/api-client")>()),
@@ -240,6 +241,7 @@ describe("기록 생성 알림", () => {
     });
     vi.clearAllMocks();
     localStorage.clear();
+    useStackMilestoneStore.setState({ scene: null, open: false });
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -299,27 +301,35 @@ describe("기록 생성 알림", () => {
     ).toBe("stack");
   });
 
-  it("이번 책으로 부위를 넘으면 넘었다고 알린다", async () => {
+  it("이번 책으로 부위를 넘으면 토스트 대신 장면을 띄운다", async () => {
     // 173cm의 무릎(28%) = 484.4mm. 480 → 497
     vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([480, 17]));
 
     await create("log-1");
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalled());
-    expect(vi.mocked(toast.success).mock.calls[0][1]).toMatchObject({
-      description: "stack_passed",
+    await waitFor(() =>
+      expect(useStackMilestoneStore.getState().open).toBe(true),
+    );
+    expect(useStackMilestoneStore.getState().scene).toMatchObject({
+      year,
+      logId: "log-1",
+      milestone: { kind: "part", part: "knee" },
     });
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
-  it("이번 책으로 사물을 넘으면 부위보다 먼저 알린다", async () => {
+  it("이번 책으로 사물을 넘으면 부위보다 먼저 장면에 세운다", async () => {
     // 290 → 307: 닥스훈트(300mm)를 넘는다
     vi.mocked(apis.getReadingStack).mockResolvedValue(stackOf([290, 17]));
 
     await create("log-1");
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalled());
-    expect(vi.mocked(toast.success).mock.calls[0][1]).toMatchObject({
-      description: "stack_object_passed",
+    await waitFor(() =>
+      expect(useStackMilestoneStore.getState().open).toBe(true),
+    );
+    expect(useStackMilestoneStore.getState().scene?.milestone).toMatchObject({
+      kind: "object",
+      object: { id: "dachshund" },
     });
   });
 

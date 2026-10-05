@@ -9,11 +9,14 @@ import { RotateCcw, Share2 } from "@/shared/components/icons/iconsax";
 import { cn } from "@/shared/utils";
 
 import { useStackSettingsStore } from "../../../stores/use-stack-settings-store";
+import { HandUnderline } from "../hand-underline";
 import { useStackComparison } from "../hooks/use-stack-comparison";
 import { cm1, useStackCopy } from "../hooks/use-stack-copy";
 import { BODY_PARTS, type StackStatus, stackStatus } from "../lib/status";
 import { StackBookDialog } from "../stack-book-dialog";
+import { StackCollectionEntry } from "../stack-collection-entry";
 import { StackHeightChip } from "../stack-height-chip";
+import { StackObjectCollection } from "../stack-object-collection";
 import { StackObjectProgress } from "../stack-object-progress";
 import { StackOrderList } from "../stack-order-list";
 import { StackProgress } from "../stack-progress";
@@ -127,6 +130,7 @@ export function ReadingStack({ year }: { year: number }) {
   const [selected, setSelected] = useState<ReadingStackBook | null>(null);
   const [bookOpen, setBookOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [collectionOpen, setCollectionOpen] = useState(false);
   const stackRef = useRef<HTMLElement>(null);
   const handleBookClick = useCallback((b: ReadingStackBook) => {
     setSelected(b);
@@ -182,31 +186,7 @@ export function ReadingStack({ year }: { year: number }) {
               <span className="text-[0.52em] tracking-normal text-stone-500">
                 {t("height_unit")}
               </span>
-              <svg
-                viewBox="0 0 100 12"
-                preserveAspectRatio="none"
-                aria-hidden="true"
-                className="pointer-events-none absolute -bottom-[0.18em] left-[-3%] h-[0.24em] w-[106%] overflow-visible"
-              >
-                {/* 한 번 긋고 바로 아래를 한 번 더 스친 밑줄. 덧선은 오른쪽 끝에서 모인다 */}
-                <path
-                  d="M2,6.4 C30,5.4 62,6.6 98,3.8"
-                  fill="none"
-                  stroke="#292524"
-                  strokeWidth={2.6}
-                  strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"
-                />
-                <path
-                  d="M8,10 C38,9.6 70,8.8 94,6.4"
-                  fill="none"
-                  stroke="#78716C"
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"
-                  opacity={0.75}
-                />
-              </svg>
+              <HandUnderline />
             </span>
           </h3>
         ) : (
@@ -321,6 +301,7 @@ export function ReadingStack({ year }: { year: number }) {
               count={books.length}
               pages={totals.pages}
               grams={totals.grams}
+              onOpenCollection={() => setCollectionOpen(true)}
             />
           ) : (
             <StackProgress
@@ -332,6 +313,12 @@ export function ReadingStack({ year }: { year: number }) {
               count={books.length}
               pages={totals.pages}
               grams={totals.grams}
+            />
+          )}
+          {mode === "person" && (
+            <StackCollectionEntry
+              stackMm={totals.stackMm}
+              onOpen={() => setCollectionOpen(true)}
             />
           )}
           {books.length > 0 && (
@@ -360,6 +347,12 @@ export function ReadingStack({ year }: { year: number }) {
         open={bookOpen}
         belowMm={selectedBelowMm}
         onOpenChange={setBookOpen}
+      />
+      <StackObjectCollection
+        open={collectionOpen}
+        onOpenChange={setCollectionOpen}
+        year={year}
+        books={books}
       />
       {books.length > 0 && (
         <StackShareDialog

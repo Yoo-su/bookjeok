@@ -13,6 +13,7 @@ import { ChatProvider } from "@/features/chat/providers/chat-provider";
 import { ConfirmHost } from "@/features/confirm";
 import { GlobalMusicHost, MusicPlayerModal } from "@/features/music";
 import { NotificationProvider } from "@/features/notification/providers/notification-provider";
+import { StackMilestoneHost } from "@/features/reading-log/components/stack-view/stack-milestone-host";
 import { BottomDock } from "@/layouts/common/bottom-dock";
 import GoogleAnalytics from "@/shared/components/analytics/google-analytics";
 import MicrosoftClarity from "@/shared/components/analytics/microsoft-clarity";
@@ -120,6 +121,7 @@ export default async function Layout({
               <MicrosoftClarity />
             </QueryProvider>
             <ConfirmHost />
+            <StackMilestoneHost />
             <GlobalMusicHost />
             <MusicPlayerModal />
             {/* 하단 dock(약 56px) 위로 띄움 */}
