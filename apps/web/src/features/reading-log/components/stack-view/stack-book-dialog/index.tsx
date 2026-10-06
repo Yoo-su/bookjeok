@@ -52,7 +52,7 @@ export function StackBookDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="grid-cols-1 sm:max-w-[520px]">
         <div className="grid grid-cols-[96px_1fr] items-start gap-4 sm:grid-cols-[108px_1fr] sm:gap-5">
           <div ref={setCover} className="relative">
             {book.image ? (

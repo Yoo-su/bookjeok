@@ -1,6 +1,6 @@
 "use client";
 
-import type { KongSender } from "@bookjeok/core";
+import type { ReceivedKongLog } from "@bookjeok/core";
 import {
   useReadingLogSettingsQuery,
   useReceivedKongsQuery,
@@ -15,20 +15,22 @@ import { KongAboutDialog } from "../kong-about-dialog";
 import { FlailingKong } from "../kong-figure/flailing-kong";
 import type { KongFace } from "../lib/kong-art";
 
-/** 줄에 그리는 콩 수. 넘으면 숫자만 늘어난다 */
+/** 줄에 그리는 콩 수. 넘으면 숫자만 늘어난다. 좁은 화면은 셋까지 */
 const MAX_DRAWN = 5;
+const MAX_DRAWN_NARROW = 3;
 
-/** 보낸 사람 이름. 셋을 넘으면 「외 N명」 */
+/**
+ * 보낸 사람 이름. 셋을 넘으면 「외 N명」.
+ * 서버는 보낸 사람을 앞의 몇 명만 주므로 N은 count로 센다
+ */
 export function useSenderNames() {
   const t = useTranslations("kong.owner");
-  return (senders: KongSender[]) => {
+  return ({ senders, count }: Pick<ReceivedKongLog, "senders" | "count">) => {
     const names = senders
       .slice(0, 3)
       .map((s) => s.nickname)
       .join(" · ");
-    return senders.length > 3
-      ? t("senders_more", { names, count: senders.length - 3 })
-      : names;
+    return count > 3 ? t("senders_more", { names, count: count - 3 }) : names;
   };
 }
 
@@ -86,7 +88,10 @@ export function KongOwnerRow({ logId }: { logId: string }) {
                     key={i}
                     size={34}
                     seed={600 + i * 37}
-                    className={i ? "-ml-2" : undefined}
+                    className={cn(
+                      i && "-ml-2",
+                      i >= MAX_DRAWN_NARROW && "max-sm:hidden",
+                    )}
                   />
                 ),
               )}
@@ -95,8 +100,8 @@ export function KongOwnerRow({ logId }: { logId: string }) {
               <p className="font-[family-name:var(--font-gaegu)] text-[19px] leading-tight text-stone-800">
                 {t("received", { count: log.count })}
               </p>
-              <p className="truncate text-xs text-stone-500">
-                {senderNames(log.senders)}
+              <p className="line-clamp-1 text-xs text-stone-500">
+                {senderNames(log)}
               </p>
             </div>
           </>

@@ -214,6 +214,7 @@ reading-log/
 - **받은 콩 모아 보기**: 독서기록 hero의 공개 스위치 아래 **종이 알약**(사진 위라 크림색 바탕·검은 테두리). 누르면 **콩 종지**(30알까지 아래 줄부터 소복이, 시드 고정이라 자리가 같음). 종지를 누르면 차례로 튀어 오르고 한 알을 누르면 그 콩만 바둥. 아래 목록을 누르면 그날 상세로(`applyLink({ date })`). 받은 콩이 없으면 자는 콩 알약이 「콩이란?」을 엽니다.
 - **기록 곳곳의 표시**: 달력 칸(데스크톱은 날짜 줄 오른쪽 `KongBadge`, 모바일은 표지 오른쪽 위 흰 테두리 콩), 목록·하루 상세의 「콩 N · 보낸 사람」. 모두 `useReceivedKongMap`으로 같은 캐시(`kongsReceived`)를 봅니다. 공개 소개 페이지의 예시 달력(readOnly)에서는 받지 않습니다. 콩을 받은 기록을 지우면 확인 창에 「받은 콩 N알도 함께 사라져요」를 덧붙입니다.
 - **갱신**: 기록 뮤테이션이 `readingLogKeys._def`를 무효화하므로 받은 콩도 다시 받습니다. 콩 알림이 실시간으로 오면 `kongsReceived`만 따로 무효화합니다(`notification` README).
+- **콩이 많을 때·좁은 화면**: 서버는 기록마다 보낸 사람을 최근 10명(`KONG_SENDERS_PER_LOG`)까지만 주고 「외 N명」의 N은 `count`로 셉니다. 큰 수는 쉼표(번역은 `{count, number}`, 화면 숫자는 `toLocaleString`), 달력 칸은 세 자리부터 99+. 내 기록 줄의 콩은 좁은 화면에서 셋까지. 한 줄로 자르는 글자가 부모를 넓혀 가로 스크롤이 생긴 적이 있어(2026-10-07, 긴 책 제목이 콩 종지 시트를 570px로 넓힘) 다이얼로그는 `grid-cols-1`로 칸을 폭에 묶고, `ScrollArea`처럼 내용에 맞춰 늘어나는 부모 안의 콩 줄은 이름 칸을 `minmax(0, 1fr)` 그리드로 둡니다. Storybook `KongPill/Many`·`StackBookDialog/OwnerMany`와 달력 스토리(128알·긴 닉네임)로 320·375·768·1280px에서 넘침이 없는지 봅니다.
 - **동작 줄이기**: 날아가기·바둥(팔다리·흔들기)·튀어 오르기를 빼고 표정만 잠깐 바꿉니다. 선 떨림(`stack-boil`)과 자는 콩의 z도 멈춥니다.
 - 확인: Storybook `Features/ReadingLog/Kong/*`, `Features/ReadingLog/Stack/StackBookDialog`(방문자·이미 보냄·비로그인·내 기록·없음·비공개), `Features/ReadingLog/ReadingLogCalendar`(7월에 받은 콩), `pnpm vitest run src/features/reading-log/__tests__/kong.test.tsx`.
 

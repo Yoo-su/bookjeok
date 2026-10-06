@@ -1,4 +1,5 @@
 import {
+  KONG_SENDERS_PER_LOG,
   ReceivedKongLog,
   ReceivedKongsResponse,
   SendKongResponse,
@@ -108,7 +109,7 @@ export class ReadingLogKongService {
     return { logId: readingLogId, sent };
   }
 
-  /** 내 기록이 받은 콩. 최근에 받은 기록부터, 기록마다 최근에 보낸 사람부터 */
+  /** 내 기록이 받은 콩. 최근에 받은 기록부터, 기록마다 최근에 보낸 사람부터 `KONG_SENDERS_PER_LOG`명 */
   async getReceived(ownerId: number): Promise<ReceivedKongsResponse> {
     const rows = await this.kongRepository
       .createQueryBuilder('kong')
@@ -155,12 +156,15 @@ export class ReadingLogKongService {
         logs.set(row.logId, log);
       }
       log.count += 1;
-      log.senders.push({
-        userId: row.senderId,
-        nickname: row.nickname,
-        handle: row.handle,
-        profileImageUrl: row.profileImageUrl,
-      });
+      // 화면은 앞의 몇 명만 쓴다. 콩이 몰린 기록에서 응답이 불지 않게 자른다
+      if (log.senders.length < KONG_SENDERS_PER_LOG) {
+        log.senders.push({
+          userId: row.senderId,
+          nickname: row.nickname,
+          handle: row.handle,
+          profileImageUrl: row.profileImageUrl,
+        });
+      }
     }
 
     return { total: rows.length, logs: [...logs.values()] };

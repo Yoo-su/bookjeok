@@ -68,13 +68,20 @@ function storyKongs(): ReceivedKongsResponse {
     logId: log.id,
     date: log.date,
     book: log.book,
-    count: 3 - i,
-    senders: ["책벌레", "하루", "민지"].slice(0, 3 - i).map((nickname, j) => ({
-      userId: j + 10,
-      nickname,
-      handle: `reader_${j}`,
-      profileImageUrl: null,
-    })),
+    // 세 자리는 칸에서 99+로
+    count: [128, 2, 1][i],
+    senders: (i === 0
+      ? // 긴 닉네임에도 칸이 넓어지지 않는지
+        ["밤새도록책장넘기는사람", "도서관이두번째집", "커피한잔과고전문학"]
+      : ["책벌레", "하루", "민지"]
+    )
+      .slice(0, 3 - i)
+      .map((nickname, j) => ({
+        userId: j + 10,
+        nickname,
+        handle: `reader_${j}`,
+        profileImageUrl: null,
+      })),
     lastReceivedAt: `${log.date}T09:00:00.000Z`,
   }));
   return { total: logs.reduce((a, l) => a + l.count, 0), logs };

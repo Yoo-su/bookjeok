@@ -1,3 +1,4 @@
+import { KONG_SENDERS_PER_LOG } from '@bookjeok/core';
 import { HttpStatus } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
@@ -243,6 +244,30 @@ describe('ReadingLogKongService', () => {
         publisher: '',
         image: '',
       });
+    });
+
+    it('보낸 사람은 기록마다 앞의 몇 명만 담고 수는 전부 센다', async () => {
+      kongRepository.createQueryBuilder.mockReturnValue(
+        selectBuilder({
+          getRawMany: Array.from(
+            { length: KONG_SENDERS_PER_LOG + 5 },
+            (_, i) => ({
+              logId: LOG_ID,
+              date: '2026-10-05',
+              ...book,
+              ...sender(i + 2, `독자${i}`),
+              createdAt: new Date(Date.UTC(2026, 9, 7, 0, 0, 60 - i)),
+            }),
+          ),
+        }),
+      );
+
+      const result = await service.getReceived(1);
+
+      expect(result.total).toBe(KONG_SENDERS_PER_LOG + 5);
+      expect(result.logs[0].count).toBe(KONG_SENDERS_PER_LOG + 5);
+      expect(result.logs[0].senders).toHaveLength(KONG_SENDERS_PER_LOG);
+      expect(result.logs[0].senders[0].nickname).toBe('독자0');
     });
 
     it('날짜는 SQL에서 문자열로 굳혀 받는다', async () => {

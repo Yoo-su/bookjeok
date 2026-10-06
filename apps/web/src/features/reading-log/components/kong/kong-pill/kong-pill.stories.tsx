@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { gaegu } from "@/styles/fonts";
 
-import { sampleReceivedKongs } from "../lib/sample-kongs";
+import { LONG_NAMES, sampleReceivedKongs } from "../lib/sample-kongs";
 import { KongPill } from "./index";
 
 /** 독서기록 hero처럼 계절 사진 위에 얹는다 */
@@ -53,4 +53,16 @@ export const FullBowl: Story = {
 /** 아직 없으면 자는 콩. 누르면 「콩이란?」 */
 export const Empty: Story = {
   decorators: [withHero({ total: 0, logs: [] })],
+};
+
+/** 콩이 아주 많이 몰렸을 때. 수는 쉼표로, 종지는 30알, 목록은 시트 안에서 스크롤 */
+export const Many: Story = {
+  decorators: [
+    withHero(
+      sampleReceivedKongs(
+        [12345, 2048, 512, ...Array.from({ length: 20 }, (_, i) => 30 - i)],
+        LONG_NAMES,
+      ),
+    ),
+  ],
 };

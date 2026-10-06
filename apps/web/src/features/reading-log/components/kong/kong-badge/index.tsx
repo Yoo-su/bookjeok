@@ -27,7 +27,8 @@ export function KongBadge({
       )}
     >
       <KongFigure size={size} />
-      {count > 1 && count}
+      {/* 칸이 좁아 세 자리부터는 줄인다. 정확한 수는 aria와 하루 상세에 */}
+      {count > 1 && (count > 99 ? "99+" : count)}
     </span>
   );
 }
