@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import { FormEvent, useEffect, useState } from "react";
 
 import { PopularReviewList } from "@/features/review/components/review-list/popular-review-list";
@@ -52,6 +53,10 @@ export const ReviewHomeView = ({
   }, [searchQuery]);
 
   const isFiltered = !!(category || tag || isbn || searchQuery);
+  // 첫 화면은 그대로 두고, 필터를 걸거나 풀어 목록 종류가 바뀔 때만 짧게 나타냄
+  const listKind = isFiltered ? "grid" : "home";
+  const [list, setList] = useState({ kind: listKind, swapped: false });
+  if (list.kind !== listKind) setList({ kind: listKind, swapped: true });
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -115,20 +120,27 @@ export const ReviewHomeView = ({
           />
         )}
 
-        {!isFiltered ? (
-          <>
-            <PopularReviewList />
-            <ReviewFeedList />
-          </>
-        ) : (
-          <ReviewGridList
-            searchQuery={searchQuery}
-            category={category}
-            tag={tag}
-            isbn={isbn}
-            clearFilters={clearFilters}
-          />
-        )}
+        <motion.div
+          key={listKind}
+          initial={list.swapped ? { opacity: 0, y: 8 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          {!isFiltered ? (
+            <>
+              <PopularReviewList />
+              <ReviewFeedList />
+            </>
+          ) : (
+            <ReviewGridList
+              searchQuery={searchQuery}
+              category={category}
+              tag={tag}
+              isbn={isbn}
+              clearFilters={clearFilters}
+            />
+          )}
+        </motion.div>
       </section>
     </>
   );

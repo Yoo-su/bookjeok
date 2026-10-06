@@ -16,7 +16,11 @@ import {
   reviewKeys,
   TagSuggestion,
 } from "@bookjeok/core";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 
 /**
  * 리뷰 목록 조회
@@ -38,6 +42,8 @@ export const useReviewsQuery = (
 export const useReviewsInfiniteQuery = (
   params: GetReviewsParams,
   enabled: boolean = true,
+  /** keepPrevious: 필터를 바꿔 받는 동안 이전 목록을 placeholder로 유지 */
+  options?: { keepPrevious?: boolean },
 ) => {
   return useInfiniteQuery({
     queryKey: reviewKeys.list(params)._ctx.infinite.queryKey,
@@ -51,6 +57,7 @@ export const useReviewsInfiniteQuery = (
       return lastPage.nextCursor ?? undefined;
     },
     enabled,
+    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
   });
 };
 

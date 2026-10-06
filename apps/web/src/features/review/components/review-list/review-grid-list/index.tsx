@@ -1,8 +1,9 @@
 "use client";
 
 import { useReviewsInfiniteQuery } from "@bookjeok/react-query";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import {
@@ -13,6 +14,7 @@ import {
 import { Button } from "@/shared/components/shadcn/button";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { cn } from "@/shared/utils";
 
 import { ReviewCard } from "../../common/review-card";
 import { ReviewCardSkeleton } from "../../common/review-card/skeleton";
@@ -47,14 +49,26 @@ export function ReviewGridList({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useReviewsInfiniteQuery({
-    limit: 12,
-    category,
-    tag,
-    isbn: isbn ?? undefined,
-    search: searchQuery,
-    userId,
-  });
+    isPlaceholderData,
+  } = useReviewsInfiniteQuery(
+    {
+      limit: 12,
+      category,
+      tag,
+      isbn: isbn ?? undefined,
+      search: searchQuery,
+      userId,
+    },
+    true,
+    { keepPrevious: true },
+  );
+
+  // 필터를 바꾸면 받는 동안 이전 목록을 흐리게 두고, 도착하면 짧게 갈아 끼운다
+  const filterKey = [searchQuery, category, tag, isbn, userId].join("|");
+  const [shown, setShown] = useState({ key: filterKey, swapped: false });
+  if (!isPlaceholderData && !isLoading && shown.key !== filterKey) {
+    setShown({ key: filterKey, swapped: true });
+  }
 
   const t = useTranslations("review.list");
   const tCommon = useTranslations("common");
@@ -67,10 +81,17 @@ export function ReviewGridList({
 
   // 스크롤이 하단에 도달하고 다음 페이지가 있으면 추가 데이터 로드
   useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
+    // 이전 필터의 목록을 보여 주는 동안에는 다음 쪽을 받지 않는다
+    if (inView && hasNextPage && !isFetchingNextPage && !isPlaceholderData) {
       fetchNextPage();
     }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [
+    inView,
+    hasNextPage,
+    isFetchingNextPage,
+    isPlaceholderData,
+    fetchNextPage,
+  ]);
 
   // 로딩 상태
   if (isLoading) {
@@ -145,7 +166,15 @@ export function ReviewGridList({
   }
 
   return (
-    <div className="space-y-10">
+    <motion.div
+      key={shown.key}
+      // 처음 그릴 때는 그대로, 필터를 바꿔 갈아 끼울 때만 살짝 올라오며 나타남
+      initial={shown.swapped ? { opacity: 0, y: 8 } : false}
+      animate={{ opacity: isPlaceholderData ? 0.5 : 1, y: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      aria-busy={isPlaceholderData}
+      className={cn("space-y-10", isPlaceholderData && "pointer-events-none")}
+    >
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
         {reviews.map((review, index) => (
           <li key={review.id}>
@@ -177,6 +206,6 @@ export function ReviewGridList({
 
       {/* Infinite Scroll Trigger */}
       <div ref={ref} className="h-10 invisible" />
-    </div>
+    </motion.div>
   );
 }
