@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { ArrowLeft } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import { BRAND_ASSETS } from "@/shared/constants/brand";
 import { song_myung } from "@/styles/fonts";
 
 // 글로벌 404 페이지 (Locale 미지정 시) - 루트 레이아웃을 대체하므로 html/body 필수 포함
@@ -27,7 +28,7 @@ export default function NotFound() {
                 <div className="flex items-center gap-2">
                   <div className="relative w-10 h-10 transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110">
                     <Image
-                      src="/logo-square-sketch.svg"
+                      src={BRAND_ASSETS.symbol}
                       alt="Bookjeok"
                       fill
                       unoptimized

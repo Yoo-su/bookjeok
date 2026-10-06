@@ -2,6 +2,8 @@
 
 메인 페이지(`/`) 상단입니다. 지금 홈에 쓰는 것은 `home-heading`(h1)과 `author-greeting`(작가 인사)이고, `hero/home-hero`는 홈에서 빠진 채 남아 있습니다(장면 전환형 히어로, 퀄리티·테마 문제로 내림).
 
+보존 중인 `hero/home-hero/logo-scene.tsx`의 심벌도 `BRAND_ASSETS.symbol`(A 자유로운 펜선)로 통일했습니다. 로고 자산 제작·보존 규칙은 [브랜드 안내](../../../../../assets/brand/README.md)를 따릅니다.
+
 ## 폴더 구조
 
 ```

@@ -2,6 +2,7 @@
 
 import { normalizeTagName, REVIEW_TAG_MAX_COUNT } from "@bookjeok/core";
 import { useTagSuggestionsQuery } from "@bookjeok/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -12,6 +13,9 @@ import { Input } from "@/shared/components/shadcn/input";
 
 /** 입력이 멎은 뒤 제안을 조회하기까지의 대기. 한 글자마다 요청하지 않는다. */
 const DEBOUNCE_MS = 250;
+
+/** 남은 칩이 빈자리로 당겨지는 움직임 */
+const CHIP_LAYOUT = { type: "spring", stiffness: 500, damping: 38 } as const;
 
 interface TagInputProps {
   value: string[];
@@ -184,26 +188,43 @@ export function TagInput({ value, onChange, disabled = false }: TagInputProps) {
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {value.map((tag) => (
-          <Badge
-            key={tag}
-            variant="secondary"
-            role="button"
-            tabIndex={0}
-            aria-label={tAria("tag_remove", { tag })}
-            className="px-3 py-1 text-sm cursor-pointer hover:bg-gray-200 outline-none focus-visible:ring-2 focus-visible:ring-stone-400"
-            onClick={() => removeTag(tag)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                removeTag(tag);
-              }
-            }}
-          >
-            #{tag} ✕
-          </Badge>
-        ))}
+      {/* 넣은 칩은 톡 튀어나오고, 지운 칩은 조용히 빠지며 나머지가 당겨진다 */}
+      <div className="relative flex flex-wrap gap-2">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {value.map((tag) => (
+            <Badge
+              key={tag}
+              asChild
+              variant="secondary"
+              role="button"
+              tabIndex={0}
+              aria-label={tAria("tag_remove", { tag })}
+              className="px-3 py-1 text-sm cursor-pointer hover:bg-gray-200 outline-none focus-visible:ring-2 focus-visible:ring-stone-400"
+              onClick={() => removeTag(tag)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  removeTag(tag);
+                }
+              }}
+            >
+              <motion.span
+                layout="position"
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                transition={{
+                  type: "spring",
+                  stiffness: 600,
+                  damping: 20,
+                  layout: CHIP_LAYOUT,
+                }}
+              >
+                #{tag} ✕
+              </motion.span>
+            </Badge>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import { BRAND_ASSETS } from "@/shared/constants/brand";
+
 /** 검색 결과·공유 카드에 찍히는 사이트명. 한국어 검색어("북적")와 표기를 맞춘다. */
 const getSiteName = (locale: string) => (locale === "en" ? "Bookjeok" : "북적");
 
@@ -16,7 +18,7 @@ export const generateGlobalMetadata = (
   // 같은 이유로 follow는 남긴다. nofollow를 걸면 크롤러가 /en 안을 돌지 못해
   // 하위 페이지의 noindex에 도달할 경로가 사라진다.
   const isSearchExcludedLocale = locale !== "ko";
-  const homeImage = `/og/${locale === "en" ? "en" : "ko"}-home.png`;
+  const homeImage = BRAND_ASSETS.shareCard(locale, "home");
   const siteName = getSiteName(locale);
   return {
     metadataBase: new URL("https://bookjeok.com"),
@@ -30,14 +32,13 @@ export const generateGlobalMetadata = (
     },
     icons: {
       icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        { url: "/logo-square-sketch.svg", type: "image/svg+xml" },
-        { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
-        { url: "/logo-square-sketch.png", type: "image/png", sizes: "512x512" },
+        { url: BRAND_ASSETS.favicon, sizes: "16x16 32x32 48x48" },
+        { url: BRAND_ASSETS.faviconSvg, type: "image/svg+xml", sizes: "any" },
+        { url: BRAND_ASSETS.icon192, type: "image/png", sizes: "192x192" },
+        { url: BRAND_ASSETS.icon512, type: "image/png", sizes: "512x512" },
       ],
       apple: [
-        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-        { url: "/logo-square-sketch.png", sizes: "512x512", type: "image/png" },
+        { url: BRAND_ASSETS.appleIcon, sizes: "180x180", type: "image/png" },
       ],
     },
     description: t("meta.description"),
@@ -127,8 +128,8 @@ export const createPageMetadata = ({
   const image =
     imageUrl ||
     (pageImage
-      ? `/og/${locale === "en" ? "en" : "ko"}-${pageImage}.png`
-      : "/logo-og-sketch.png");
+      ? BRAND_ASSETS.shareCard(locale, pageImage)
+      : BRAND_ASSETS.share);
   const images = [
     { url: image, alt: title, ...(!imageUrl && { width: 1200, height: 630 }) },
   ];

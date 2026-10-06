@@ -6,6 +6,7 @@ import {
   LogoVariant,
 } from "@/shared/components/icons/bookjeok-text-logo";
 import { Link } from "@/shared/config/i18n/routing";
+import { BRAND_ASSETS } from "@/shared/constants/brand";
 import { PATHS } from "@/shared/constants/paths";
 
 interface LogoProps {
@@ -24,7 +25,7 @@ export const Logo = ({ size = "md", variant }: LogoProps) => {
     <Link href={PATHS.HOME} className="inline-block" aria-label={t("go_home")}>
       <div className="group relative flex items-center cursor-pointer select-none">
         <Image
-          src="/logo-square-sketch.svg"
+          src={BRAND_ASSETS.symbol}
           alt=""
           width={isSmall ? 28 : 30}
           height={isSmall ? 28 : 30}

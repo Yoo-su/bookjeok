@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { BRAND_ASSETS } from "@/shared/constants/brand";
+
 // 파스텔 컬러 팔레트 (CoolMode 스타일)
 const PARTICLE_COLORS = [
   "#D4C5A9", // warm sand
@@ -196,7 +198,7 @@ export const FullScreenLoader = () => {
             }}
           >
             <Image
-              src="/logo-square-sketch.svg"
+              src={BRAND_ASSETS.symbol}
               alt="북적"
               fill
               unoptimized

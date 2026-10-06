@@ -15,7 +15,12 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
       path,
     });
     expect(metadata.openGraph?.images).toEqual([
-      { url: `/og/ko-${image}.png`, alt: "제목", width: 1200, height: 630 },
+      {
+        url: `/og/pen-v1/ko-${image}.png`,
+        alt: "제목",
+        width: 1200,
+        height: 630,
+      },
     ]);
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
   });
@@ -28,7 +33,7 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
       path: "",
     });
     const global = generateGlobalMetadata((key) => key, locale);
-    const url = `/og/${locale}-home.png`;
+    const url = `/og/pen-v1/${locale}-home.png`;
     expect(home.openGraph?.images).toEqual([
       { url, alt: "북적", width: 1200, height: 630 },
     ]);
@@ -83,7 +88,7 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
     expect(meta.openGraph?.description).toBe("테스트 설명");
     expect(meta.openGraph?.images).toEqual([
       {
-        url: "/logo-og-sketch.png",
+        url: "/brand/pen-v1/share.png",
         alt: "테스트 제목",
         width: 1200,
         height: 630,

@@ -646,6 +646,7 @@ pnpm test
 | [apps/web/README.md](apps/web/README.md)                                                                                      | 웹 프론트엔드 개요 및 개발 원칙                                        |
 | [apps/web/docs/ARCHITECTURE.md](apps/web/docs/ARCHITECTURE.md)                                                                | 컴포넌트 문맥 기반 그룹화 규칙, i18n 구조                              |
 | [apps/web/docs/CACHING.md](apps/web/docs/CACHING.md)                                                                          | 캐시 4개 층의 책임, 서버 시드 쿼리 대장, 재검증 범위 규칙              |
+| [assets/brand/README.md](assets/brand/README.md)                                                                             | A 펜선 로고 원본·재생성·아이콘·SNS 파일, B 대안과 이전 로고 보존       |
 | [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                                      |
 | [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 (초기 세팅만 된 미배포 앱)                                 |
 | [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                                     |

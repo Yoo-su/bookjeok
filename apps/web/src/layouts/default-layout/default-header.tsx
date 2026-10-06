@@ -1,7 +1,8 @@
 "use client";
 
+import { motion, type Variants } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { type PointerEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
@@ -26,36 +27,65 @@ import { Logo } from "../common/logo";
 import { MobileNavSheet } from "./mobile-nav-sheet";
 import UserPopover from "./user-popover";
 
+type UnderlineState = "idle" | "preview" | "active";
+
+// 현재 메뉴는 진하게 긋고, 마우스를 올린 메뉴는 연필로 흐리게 미리 긋는다.
+// 지울 때는 그은 방향 반대로 되감겨 사라진다.
+const UNDERLINE_VARIANTS: Variants = {
+  idle: {
+    pathLength: 0,
+    opacity: 0,
+    transition: {
+      pathLength: { duration: 0.3, ease: [0.4, 0, 1, 1] },
+      opacity: { delay: 0.25, duration: 0.05 },
+    },
+  },
+  preview: {
+    pathLength: 1,
+    opacity: 0.25,
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+  },
+  active: {
+    pathLength: 1,
+    opacity: 0.6,
+    transition: { duration: 0.9, ease: [0.4, 0, 0.2, 1] },
+  },
+};
+
 // 손글씨 느낌의 꼬불꼬불한 용수철 밑줄 SVG 컴포넌트 (True Looped Spring)
-const HandDrawnUnderline = () => (
+const HandDrawnUnderline = ({ state }: { state: UnderlineState }) => (
   <svg
     className="absolute left-0 -top-2.5 w-full h-3 pointer-events-none text-stone-900"
     viewBox="0 0 100 10"
     preserveAspectRatio="none"
     aria-hidden="true"
   >
-    <style>{`
-      @keyframes draw-spring {
-        from { stroke-dashoffset: 1; }
-        to { stroke-dashoffset: 0; }
-      }
-    `}</style>
-    <path
+    <motion.path
       d="M 0 9 C 5 9 8 2 4 2 S 4 9 16 9 C 21 9 24 2 20 2 S 20 9 32 9 C 37 9 40 2 36 2 S 36 9 48 9 C 53 9 56 2 52 2 S 52 9 64 9 C 69 9 72 2 68 2 S 68 9 80 9 C 85 9 88 2 84 2 S 84 9 96 9 Q 99 9 100 2"
       stroke="currentColor"
       strokeWidth="0.6"
       fill="none"
       vectorEffect="non-scaling-stroke"
-      className="opacity-60"
-      pathLength="1"
-      style={{
-        strokeDasharray: 1,
-        strokeDashoffset: 1,
-        animation: "draw-spring 1s cubic-bezier(0.4, 0, 0.2, 1) forwards",
-      }}
+      variants={UNDERLINE_VARIANTS}
+      initial="idle"
+      animate={state}
     />
   </svg>
 );
+
+/** 마우스로 올렸을 때만 켜진다. 터치의 가짜 hover와 키보드 포커스는 무시한다 */
+function useMouseHover() {
+  const [hovered, setHovered] = useState(false);
+  return {
+    hovered,
+    hoverProps: {
+      onPointerEnter: (event: PointerEvent) => {
+        if (event.pointerType === "mouse") setHovered(true);
+      },
+      onPointerLeave: () => setHovered(false),
+    },
+  };
+}
 
 /**
  * 헤더 알약이 넓어지기 시작하는 스크롤 위치(px).
@@ -74,6 +104,138 @@ const HEADER_EXPAND_SCROLL_Y = 300;
  */
 const DROPDOWN_SIDE_OFFSET = 22;
 
+const NAV_ITEM_CLASS =
+  "group relative inline-flex items-center gap-1.5 py-1 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-200";
+
+// 챕터 인덱스는 값이 바뀌지 않는 정적 레이블이라 mono가 할 일이 없다.
+// 알약은 Pretendard를 물려받으므로 명조체를 명시해 드롭다운·드로어와 맞춘다.
+// 마우스를 올리면 책장 귀퉁이를 들추듯 살짝 올라간다.
+const indexNumClass = (active: boolean) =>
+  cn(
+    "font-[family-name:var(--font-gowun-batang)] text-[11px] tabular-nums select-none shrink-0",
+    "transition-[color,translate] duration-200 motion-reduce:transition-none",
+    active
+      ? "text-stone-900 font-semibold"
+      : "text-stone-400/90 group-hover:text-stone-700 group-hover:-translate-y-0.5",
+  );
+
+interface ChapterLinkProps {
+  href: string;
+  index: string;
+  label: string;
+  active: boolean;
+}
+
+const ChapterLink = ({ href, index, label, active }: ChapterLinkProps) => {
+  const { hovered, hoverProps } = useMouseHover();
+  return (
+    <Link
+      href={href}
+      {...hoverProps}
+      className={cn(
+        NAV_ITEM_CLASS,
+        active ? "text-stone-900" : "text-stone-500 hover:text-stone-900",
+      )}
+    >
+      <span className={indexNumClass(active)}>{index}</span>
+      <span className="tracking-tight">{label}</span>
+      <HandDrawnUnderline
+        state={active ? "active" : hovered ? "preview" : "idle"}
+      />
+    </Link>
+  );
+};
+
+interface ChapterMenuItem {
+  href: string;
+  label: string;
+  /** 비로그인이면 로그인 후 돌아올 곳으로 기억한다 */
+  requiresAuth?: boolean;
+}
+
+interface ChapterMenuProps {
+  index: string;
+  label: string;
+  active: boolean;
+  items: ChapterMenuItem[];
+  isLoggedIn: boolean;
+}
+
+const ChapterMenu = ({
+  index,
+  label,
+  active,
+  items,
+  isLoggedIn,
+}: ChapterMenuProps) => {
+  const { hovered, hoverProps } = useMouseHover();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <DropdownMenu modal={false} open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          {...hoverProps}
+          className={cn(
+            NAV_ITEM_CLASS,
+            "outline-none cursor-pointer",
+            active ? "text-stone-900" : "text-stone-500 hover:text-stone-900",
+          )}
+        >
+          <span className={indexNumClass(active)}>{index}</span>
+          <span className="tracking-tight">{label}</span>
+          <span
+            className={cn(
+              "ml-0.5 text-[9px] text-stone-400 group-hover:text-stone-700",
+              "transition-[color,rotate] duration-200 motion-reduce:transition-none",
+              open && "rotate-180 text-stone-700",
+            )}
+          >
+            ▾
+          </span>
+          {/* 펼쳐 둔 동안에는 마우스가 패널로 내려가도 미리 그은 밑줄을 남긴다 */}
+          <HandDrawnUnderline
+            state={active ? "active" : hovered || open ? "preview" : "idle"}
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="center"
+        sideOffset={DROPDOWN_SIDE_OFFSET}
+        className="w-44 p-1.5 rounded-lg border border-stone-200/90 bg-white/95 backdrop-blur-md shadow-lg shadow-stone-900/5 font-[family-name:var(--font-gowun-batang)]"
+      >
+        <DropdownMenuGroup>
+          {items.map((item, i) => (
+            <DropdownMenuItem
+              key={item.href}
+              asChild
+              // 패널이 열린 뒤 항목이 위에서부터 한 줄씩 내려앉는다
+              style={{ animationDelay: `${60 + i * 40}ms` }}
+              className="group/item rounded-md px-3 py-2 cursor-pointer hover:bg-stone-100/70 focus:bg-stone-100/70 outline-none transition-colors animate-in fade-in-0 slide-in-from-top-1 duration-300 fill-mode-backwards motion-reduce:animate-none"
+            >
+              <Link
+                href={item.href}
+                onClick={
+                  item.requiresAuth && !isLoggedIn
+                    ? () => saveReturnUrl(item.href)
+                    : undefined
+                }
+                className="flex items-center justify-between w-full text-xs font-medium text-stone-700 group-hover/item:text-stone-900"
+              >
+                <span>{item.label}</span>
+                <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
+                  {index}.{i + 1}
+                </span>
+              </Link>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 export const DefaultHeader = () => {
   const t = useTranslations("header");
   const user = useAuthStore((state) => state.user);
@@ -90,34 +252,11 @@ export const DefaultHeader = () => {
 
   const currentUser = mounted ? user : null;
 
-  const isActive = (path: string) => pathname?.startsWith(path);
+  const isActive = (path: string) => !!pathname?.startsWith(path);
   // 비로그인이면 가드에 막히는 내 독서 기록 대신 공개 소개로 보낸다
   const readingLogHref = currentUser
     ? PATHS.READING_LOG
     : PATHS.READING_LOG_INTRO;
-
-  const getLinkClass = (path: string) =>
-    cn(
-      "group relative inline-flex items-center gap-1.5 py-1 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-200",
-      isActive(path) ? "text-stone-900" : "text-stone-500 hover:text-stone-900",
-    );
-
-  // 챕터 인덱스는 값이 바뀌지 않는 정적 레이블이라 mono가 할 일이 없다.
-  // 알약은 Pretendard를 물려받으므로 명조체를 명시해 드롭다운·드로어와 맞춘다.
-  const getIndexNumClass = (path: string) =>
-    cn(
-      "font-[family-name:var(--font-gowun-batang)] text-[11px] tabular-nums select-none transition-colors duration-200 shrink-0",
-      isActive(path)
-        ? "text-stone-900 font-semibold"
-        : "text-stone-400/90 group-hover:text-stone-700",
-    );
-
-  const dropdownContentClass =
-    "w-44 p-1.5 rounded-lg border border-stone-200/90 bg-white/95 backdrop-blur-md shadow-lg shadow-stone-900/5 font-[family-name:var(--font-gowun-batang)]";
-  const dropdownItemClass =
-    "group/item rounded-md px-3 py-2 cursor-pointer hover:bg-stone-100/70 focus:bg-stone-100/70 outline-none transition-colors";
-  const dropdownLinkClass =
-    "flex items-center justify-between w-full text-xs font-medium text-stone-700 group-hover/item:text-stone-900";
 
   return (
     // 바깥 래퍼는 배경이 없다. 흐름 안에 남는 sticky라 레이아웃이 밀리지 않으면서,
@@ -156,169 +295,62 @@ export const DefaultHeader = () => {
           className="hidden lg:flex items-center gap-5.5 xl:gap-7 whitespace-nowrap shrink-0 font-[family-name:var(--font-gowun-batang)]"
           aria-label={t("nav.main_menu")}
         >
-          {/* 01. 라운지 */}
-          <Link href={PATHS.LOUNGE} className={getLinkClass(PATHS.LOUNGE)}>
-            <span className={getIndexNumClass(PATHS.LOUNGE)}>01</span>
-            <span className="tracking-tight">{t("nav.menu_lounge")}</span>
-            {isActive(PATHS.LOUNGE) && <HandDrawnUnderline />}
-          </Link>
-
-          {/* 02. 독서 기록 */}
-          <Link href={readingLogHref} className={getLinkClass(readingLogHref)}>
-            <span className={getIndexNumClass(readingLogHref)}>02</span>
-            <span className="tracking-tight">{t("nav.menu_log")}</span>
-            {isActive(readingLogHref) && <HandDrawnUnderline />}
-          </Link>
-
-          {/* 03. 리뷰 그룹 */}
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "group relative inline-flex items-center gap-1.5 py-1 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-200 outline-none cursor-pointer",
-                  isActive(PATHS.REVIEWS)
-                    ? "text-stone-900"
-                    : "text-stone-500 hover:text-stone-900",
-                )}
-              >
-                <span className={getIndexNumClass(PATHS.REVIEWS)}>03</span>
-                <span className="tracking-tight">{t("nav.menu_reviews")}</span>
-                <span className="text-[9px] text-stone-400 group-hover:text-stone-700 transition-colors ml-0.5">
-                  ▾
-                </span>
-                {isActive(PATHS.REVIEWS) && <HandDrawnUnderline />}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="center"
-              sideOffset={DROPDOWN_SIDE_OFFSET}
-              className={dropdownContentClass}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link href={PATHS.REVIEWS} className={dropdownLinkClass}>
-                    <span>{t("nav.review_feed")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      03.1
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link
-                    href={PATHS.REVIEW_WRITE}
-                    onClick={
-                      !currentUser
-                        ? () => saveReturnUrl(PATHS.REVIEW_WRITE)
-                        : undefined
-                    }
-                    className={dropdownLinkClass}
-                  >
-                    <span>{t("nav.write_review")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      03.2
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link
-                    href={PATHS.MY_REVIEWS}
-                    onClick={
-                      !currentUser
-                        ? () => saveReturnUrl(PATHS.MY_REVIEWS)
-                        : undefined
-                    }
-                    className={dropdownLinkClass}
-                  >
-                    <span>{t("nav.my_reviews")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      03.3
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 04. 중고마켓 그룹 */}
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  "group relative inline-flex items-center gap-1.5 py-1 text-sm font-medium whitespace-nowrap shrink-0 transition-colors duration-200 outline-none cursor-pointer",
-                  isActive(PATHS.BOOK_MARKET)
-                    ? "text-stone-900"
-                    : "text-stone-500 hover:text-stone-900",
-                )}
-              >
-                <span className={getIndexNumClass(PATHS.BOOK_MARKET)}>04</span>
-                <span className="tracking-tight">{t("nav.menu_market")}</span>
-                <span className="text-[9px] text-stone-400 group-hover:text-stone-700 transition-colors ml-0.5">
-                  ▾
-                </span>
-                {isActive(PATHS.BOOK_MARKET) && <HandDrawnUnderline />}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="center"
-              sideOffset={DROPDOWN_SIDE_OFFSET}
-              className={dropdownContentClass}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link href={PATHS.BOOK_MARKET} className={dropdownLinkClass}>
-                    <span>{t("nav.market_home")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      04.1
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link
-                    href={PATHS.BOOK_SALES_REGISTER}
-                    onClick={
-                      !currentUser
-                        ? () => saveReturnUrl(PATHS.BOOK_SALES_REGISTER)
-                        : undefined
-                    }
-                    className={dropdownLinkClass}
-                  >
-                    <span>{t("nav.write_sales")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      04.2
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className={dropdownItemClass}>
-                  <Link
-                    href={PATHS.MY_PAGE_SALES}
-                    onClick={
-                      !currentUser
-                        ? () => saveReturnUrl(PATHS.MY_PAGE_SALES)
-                        : undefined
-                    }
-                    className={dropdownLinkClass}
-                  >
-                    <span>{t("nav.my_sales")}</span>
-                    <span className="text-[10.5px] tabular-nums text-stone-400 group-hover/item:text-stone-600">
-                      04.3
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* 05. 도서 검색 */}
-          <Link
+          <ChapterLink
+            href={PATHS.LOUNGE}
+            index="01"
+            label={t("nav.menu_lounge")}
+            active={isActive(PATHS.LOUNGE)}
+          />
+          <ChapterLink
+            href={readingLogHref}
+            index="02"
+            label={t("nav.menu_log")}
+            active={isActive(readingLogHref)}
+          />
+          <ChapterMenu
+            index="03"
+            label={t("nav.menu_reviews")}
+            active={isActive(PATHS.REVIEWS)}
+            isLoggedIn={!!currentUser}
+            items={[
+              { href: PATHS.REVIEWS, label: t("nav.review_feed") },
+              {
+                href: PATHS.REVIEW_WRITE,
+                label: t("nav.write_review"),
+                requiresAuth: true,
+              },
+              {
+                href: PATHS.MY_REVIEWS,
+                label: t("nav.my_reviews"),
+                requiresAuth: true,
+              },
+            ]}
+          />
+          <ChapterMenu
+            index="04"
+            label={t("nav.menu_market")}
+            active={isActive(PATHS.BOOK_MARKET)}
+            isLoggedIn={!!currentUser}
+            items={[
+              { href: PATHS.BOOK_MARKET, label: t("nav.market_home") },
+              {
+                href: PATHS.BOOK_SALES_REGISTER,
+                label: t("nav.write_sales"),
+                requiresAuth: true,
+              },
+              {
+                href: PATHS.MY_PAGE_SALES,
+                label: t("nav.my_sales"),
+                requiresAuth: true,
+              },
+            ]}
+          />
+          <ChapterLink
             href={PATHS.BOOK_SEARCH}
-            className={getLinkClass(PATHS.BOOK_SEARCH)}
-          >
-            <span className={getIndexNumClass(PATHS.BOOK_SEARCH)}>05</span>
-            <span className="tracking-tight">{t("nav.menu_search")}</span>
-            {isActive(PATHS.BOOK_SEARCH) && <HandDrawnUnderline />}
-          </Link>
+            index="05"
+            label={t("nav.menu_search")}
+            active={isActive(PATHS.BOOK_SEARCH)}
+          />
         </nav>
 
         {/* 우측: 사용자 메뉴 & BGM */}

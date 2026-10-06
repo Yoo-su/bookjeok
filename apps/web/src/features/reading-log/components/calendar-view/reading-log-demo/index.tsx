@@ -6,7 +6,8 @@ import { useState } from "react";
 import { SAMPLE_BOOKS } from "../../stack-view/lib/sample-books";
 import { ReadingLogCalendar } from "../reading-log-calendar";
 
-const SAMPLE_LOGS: ReadingLog[] = SAMPLE_BOOKS.map((b) => ({
+/** 예시 46권을 독서 기록 모양으로. 스토리도 같은 데이터를 씀 */
+export const SAMPLE_LOGS: ReadingLog[] = SAMPLE_BOOKS.map((b) => ({
   id: b.logId,
   userId: 0,
   isbn: b.isbn,

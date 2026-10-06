@@ -4,6 +4,7 @@ import { SceneData } from "@bookjeok/core";
 import { motion } from "motion/react";
 import Image from "next/image";
 
+import { BRAND_ASSETS } from "@/shared/constants/brand";
 import { cn } from "@/shared/utils/cn";
 
 // -----------------------------------------------------------------------------
@@ -39,7 +40,7 @@ export const LogoScene = ({ data }: { data: SceneData }) => {
           {/* 로고 이미지 - 쉐도우로 깊이감 추가 */}
           <div className="relative h-32 w-32 md:h-40 md:w-40 drop-shadow-2xl">
             <Image
-              src="/logo-square-sketch.svg"
+              src={BRAND_ASSETS.symbol}
               alt="Bookjeok Icon"
               fill
               unoptimized

@@ -116,6 +116,8 @@ describe("리뷰 목록", () => {
 
     expect(useReviewsInfiniteQuery).toHaveBeenCalledWith(
       expect.objectContaining({ tag: "민음사빵" }),
+      true,
+      { keepPrevious: true },
     );
   });
 
@@ -133,6 +135,8 @@ describe("리뷰 목록", () => {
 
     expect(useReviewsInfiniteQuery).toHaveBeenCalledWith(
       expect.objectContaining({ isbn: "9791167376442" }),
+      true,
+      { keepPrevious: true },
     );
   });
 

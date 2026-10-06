@@ -1,6 +1,12 @@
 "use client";
 
 import { BaseBookInfo, BookInfo } from "@bookjeok/core";
+import {
+  motion,
+  type MotionValue,
+  useReducedMotion,
+  useSpring,
+} from "motion/react";
 import Image from "next/image";
 import React, { createContext, ReactNode, useContext } from "react";
 
@@ -11,7 +17,17 @@ import { cn } from "@/shared/utils/cn";
 
 interface BookCardContextValue {
   book: BaseBookInfo | BookInfo;
+  /** 마우스를 올렸을 때 표지가 들리고 포인터 쪽으로 기우는 값 */
+  tilt: {
+    x: MotionValue<number>;
+    y: MotionValue<number>;
+    lift: MotionValue<number>;
+  };
 }
+
+const TILT_SPRING = { stiffness: 300, damping: 22, mass: 0.5 };
+/** 가장자리에서 기우는 최대 각도(도) */
+const MAX_TILT = 7;
 
 const BookCardContext = createContext<BookCardContextValue | null>(null);
 
@@ -39,11 +55,41 @@ function BookCardRoot({
   asLink = true,
 }: BookCardRootProps) {
   const linkHref = href || PATHS.BOOK_DETAIL(book.isbn);
+  const reduceMotion = useReducedMotion();
+  const tilt = {
+    x: useSpring(0, TILT_SPRING),
+    y: useSpring(0, TILT_SPRING),
+    lift: useSpring(0, TILT_SPRING),
+  };
 
-  const inner = <div className={cn("group block", className)}>{children}</div>;
+  // 터치의 가짜 hover에는 걸지 않는다
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse" || reduceMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    tilt.x.set(-py * MAX_TILT);
+    tilt.y.set(px * MAX_TILT);
+    tilt.lift.set(-6);
+  };
+  const handlePointerLeave = () => {
+    tilt.x.set(0);
+    tilt.y.set(0);
+    tilt.lift.set(0);
+  };
+
+  const inner = (
+    <div
+      className={cn("group block", className)}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
+      {children}
+    </div>
+  );
 
   return (
-    <BookCardContext.Provider value={{ book }}>
+    <BookCardContext.Provider value={{ book, tilt }}>
       {asLink ? (
         <Link href={linkHref} prefetch={false} className="block">
           {inner}
@@ -61,12 +107,18 @@ interface BookCardCoverProps {
 }
 
 function BookCardCover({ className, children }: BookCardCoverProps) {
-  const { book } = useBookCardContext();
+  const { book, tilt } = useBookCardContext();
 
   return (
-    <div
+    <motion.div
+      style={{
+        rotateX: tilt.x,
+        rotateY: tilt.y,
+        y: tilt.lift,
+        transformPerspective: 700,
+      }}
       className={cn(
-        "relative w-full aspect-3/4 overflow-hidden rounded-sm bg-stone-100 shadow-md transition-all duration-300 ease-out group-hover:-translate-y-1 group-hover:shadow-lg",
+        "relative w-full aspect-3/4 overflow-hidden rounded-sm bg-stone-100 shadow-md transition-shadow duration-300 ease-out pointer-fine:group-hover:shadow-lg",
         className,
       )}
     >
@@ -79,9 +131,9 @@ function BookCardCover({ className, children }: BookCardCoverProps) {
         unoptimized
       />
       {/* 호버 오버레이 */}
-      <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/8" />
+      <div className="absolute inset-0 bg-black/0 transition-colors duration-300 pointer-fine:group-hover:bg-black/8" />
       {children}
-    </div>
+    </motion.div>
   );
 }
 

@@ -4,8 +4,9 @@ import { BookInfo, bookKeys } from "@bookjeok/core";
 import { useReadingLogBookStatusQuery } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { saveReturnUrl } from "@/features/auth/utils/return-url";
@@ -35,8 +36,18 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
-  const createMutation = useCreateReadingLogMutation();
+  useEffect(() => {
+    if (!justSaved) return;
+    const timer = setTimeout(() => setJustSaved(false), 1600);
+    return () => clearTimeout(timer);
+  }, [justSaved]);
+
+  // 사물·키를 넘은 기록은 장면이 축하하므로 토스트로 알린 평범한 저장만 체크로 답한다
+  const createMutation = useCreateReadingLogMutation({
+    onAnnounced: (kind) => setJustSaved(kind === "toast"),
+  });
   const { executeSafeSubmit } = useSafeSubmit();
 
   // 폼 열 때만 조회. 저장 중엔 멈춰 저장 직후 무효화로 닫히는 폼에서 재조회 방지
@@ -78,11 +89,49 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
         variant="outline"
         onClick={handleClick}
         className={cn(
-          "h-11 px-6 border-stone-200 text-stone-700 hover:bg-stone-50",
+          "h-11 px-3 border-stone-200 text-stone-700 hover:bg-stone-50",
           className,
         )}
       >
-        <BookOpen aria-hidden="true" />
+        {/* 저장 직후 잠깐 체크로 바뀜 */}
+        <span aria-hidden="true" className="relative size-4">
+          <AnimatePresence initial={false} mode="popLayout">
+            {justSaved ? (
+              <motion.svg
+                key="check"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ type: "spring", stiffness: 500, damping: 26 }}
+                className="absolute inset-0 text-emerald-600"
+              >
+                <motion.polyline
+                  points="20 6 9 17 4 12"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.25, delay: 0.05, ease: "easeOut" }}
+                />
+              </motion.svg>
+            ) : (
+              <motion.span
+                key="book"
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ duration: 0.15 }}
+                className="absolute inset-0"
+              >
+                <BookOpen />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </span>
         {t("button")}
       </Button>
 
