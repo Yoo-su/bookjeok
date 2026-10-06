@@ -1,5 +1,7 @@
 import { MetadataRoute } from "next";
 
+import { BRAND_ASSETS } from "@/shared/constants/brand";
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "북적 (Bookjeok)",
@@ -15,14 +17,21 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["books", "education", "shopping"],
     icons: [
       {
-        src: "/icon-192.png",
+        src: BRAND_ASSETS.icon192,
         sizes: "192x192",
         type: "image/png",
       },
       {
-        src: "/logo-square-sketch.png",
+        src: BRAND_ASSETS.icon512,
         sizes: "512x512",
         type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: BRAND_ASSETS.maskableIcon,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   };

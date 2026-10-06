@@ -63,7 +63,7 @@ core의 `NotificationType`을 서버와 함께 사용합니다. `utils/definitio
 | 직거래    | `TRADE_RESERVED`, `TRADE_COMPLETED`                                             |
 | 북적 공지 | `FEEDBACK_REPLIED` — 문의 답변. **행위자 없음**(`actorId` null)                 |
 
-행위자 없는 알림(`isSystemNotification`)은 프로필 사진·닉네임 대신 `/logo-square-sketch.svg`와 "북적"을 보입니다.
+행위자 없는 알림(`isSystemNotification`)은 프로필 사진·닉네임 대신 `BRAND_ASSETS.symbol`(`/brand/pen-v1/symbol.svg`, A 자유로운 펜선)과 "북적"을 보입니다. 로고 경로는 헤더·로딩·오류 화면과 같은 상수를 사용합니다.
 
 새 타입은 core enum·`NotificationMetadataMap` → 서버 생성 호출·DB enum DDL → 웹 등록부·한영 번역 순으로 추가합니다. 등록부는 enum 전체를 요구하는 mapped type이며 각 함수의 metadata도 종류별로 검사합니다. 번역 키는 한영 카탈로그 모두에 있어야 합니다.
 

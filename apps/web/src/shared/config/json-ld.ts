@@ -1,3 +1,5 @@
+import { BRAND_ASSETS } from "@/shared/constants/brand";
+
 export const getJsonLd = (
   t: (key: string) => string,
   locale: string = "ko",
@@ -25,7 +27,7 @@ export const getJsonLd = (
         sameAs: ["https://www.threads.com/@bookjeok_books"],
         logo: {
           "@type": "ImageObject",
-          url: "https://bookjeok.com/logo-square-sketch.png",
+          url: `https://bookjeok.com${BRAND_ASSETS.symbolPng}`,
           width: "512",
           height: "512",
           encodingFormat: "image/png",

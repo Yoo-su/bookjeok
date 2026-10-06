@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { Home, RefreshCw } from "@/shared/components/icons/iconsax";
 import { config } from "@/shared/config/env";
+import { BRAND_ASSETS } from "@/shared/constants/brand";
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -37,7 +38,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             <a href="/" className="inline-flex items-center gap-1">
               {/* eslint-disable-next-line @next/next/no-img-element -- 루트 레이아웃 밖이라 next/image 사용 불가 */}
               <img
-                src="/logo-square-sketch.svg"
+                src={BRAND_ASSETS.symbol}
                 alt="Bookjeok"
                 width={30}
                 height={30}

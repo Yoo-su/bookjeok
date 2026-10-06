@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from "@/shared/components/shadcn/popover";
 import { config } from "@/shared/config/env";
+import { BRAND_ASSETS } from "@/shared/constants/brand";
 import { cn } from "@/shared/utils";
 
 // 카카오 SDK 타입 선언
@@ -55,7 +56,7 @@ interface KakaoShareOptions {
  * 카카오 SDK는 브라우저에서 직접 URL을 수집하므로 `metadataBase`가 붙는
  * 메타태그와 달리 상대 경로를 해석하지 못한다. 절대 URL로 둔다.
  */
-const FALLBACK_SHARE_IMAGE_URL = "https://bookjeok.com/logo-og-sketch.png";
+const FALLBACK_SHARE_IMAGE_URL = `https://bookjeok.com${BRAND_ASSETS.share}`;
 
 interface ShareButtonProps {
   title: string;

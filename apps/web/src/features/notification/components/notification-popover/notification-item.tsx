@@ -15,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/shared/components/shadcn/tooltip";
 import { Link } from "@/shared/config/i18n/routing";
+import { BRAND_ASSETS } from "@/shared/constants/brand";
 import { cn } from "@/shared/utils";
 import { formatRelativeTime } from "@/shared/utils/format-date";
 import { getProfileImageUrl } from "@/shared/utils/profile-image";
@@ -31,7 +32,7 @@ interface NotificationItemProps {
   onClose?: () => void;
 }
 
-const SYSTEM_AVATAR_SRC = "/logo-square-sketch.svg";
+const SYSTEM_AVATAR_SRC = BRAND_ASSETS.symbol;
 
 export const NotificationItem = ({
   notification,

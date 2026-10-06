@@ -1,6 +1,8 @@
 import type { Review } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
 
+import { BRAND_ASSETS } from "@/shared/constants/brand";
+
 import { ReviewTicker } from "./review-ticker";
 
 const BOOKS = [
@@ -51,7 +53,7 @@ const makeReview = (index: number): Review => {
       author: book.author,
       publisher: book.publisher,
       description: "",
-      image: "/logo-square-sketch.png",
+      image: BRAND_ASSETS.symbolPng,
       link: "",
       discount: "12000",
       pubdate: "20220101",
