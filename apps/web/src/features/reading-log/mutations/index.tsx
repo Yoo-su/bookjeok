@@ -28,6 +28,9 @@ import { useStackMilestoneStore } from "../stores/use-stack-milestone-store";
 const isDuplicateError = (error: unknown) =>
   getErrorCode(error) === API_ERROR_CODES.READING_LOG_DUPLICATE;
 
+/** 기록 직후 알린 방식. 장면(milestone)은 그것만으로 축하하므로 부르는 쪽이 따로 반응하지 않는다 */
+export type ReadingLogAnnouncement = "milestone" | "toast";
+
 /**
  * 기록한 책이 쌓은 책을 얼마나 높였는지 알린다. 사물·내 키·몸 부위를 새로 넘었으면 장면을 띄우고,
  * 아니면 다음 사물까지 남은 높이를 토스트로 말한다. 쌓은 책을 못 받으면 평범한 완료 알림을 띄운다.
@@ -41,7 +44,7 @@ function useAnnounceStackGrowth() {
   const setViewMode = useReadingLogViewStore((s) => s.setViewMode);
   const showMilestone = useStackMilestoneStore((s) => s.show);
 
-  return async (log: ReadingLog) => {
+  return async (log: ReadingLog): Promise<ReadingLogAnnouncement> => {
     const year = Number(log.date.slice(0, 4));
     try {
       const stack = await queryClient.fetchQuery({
@@ -63,7 +66,7 @@ function useAnnounceStackGrowth() {
           userMm,
           character,
         });
-        return;
+        return "milestone";
       }
 
       const nextObject = objectLadder(stackMm).next;
@@ -88,21 +91,26 @@ function useAnnounceStackGrowth() {
               }
             : undefined,
       });
+      return "toast";
     } catch {
       toast.success(t("create_success"));
+      return "toast";
     }
   };
 }
 
 /**
  * 독서 기록 생성 뮤테이션 훅
+ * @param onAnnounced 장면이나 토스트로 알린 뒤 불림
  */
-export const useCreateReadingLogMutation = () => {
+export const useCreateReadingLogMutation = (options?: {
+  onAnnounced?: (kind: ReadingLogAnnouncement) => void;
+}) => {
   const t = useTranslations("reading_log.toast");
   const announce = useAnnounceStackGrowth();
   return useSharedCreateReadingLogMutation({
     onSuccess: (log) => {
-      void announce(log);
+      void announce(log).then(options?.onAnnounced);
     },
     onError: (error) => {
       toast.error(
