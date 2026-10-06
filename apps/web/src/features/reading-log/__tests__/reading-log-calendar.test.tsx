@@ -1,7 +1,7 @@
 import * as apis from "@bookjeok/api-client";
 import { ReadingLog } from "@bookjeok/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import {
   afterEach,
@@ -179,6 +179,14 @@ describe("ReadingLogCalendar 연 단위 조회", () => {
 
     const grid = screen.getByLabelText("2026-07-10 (2)").closest("[aria-busy]");
     expect(grid).toHaveAttribute("aria-busy", "true");
+    // 받는 동안 이전 달은 Tab으로도 못 들어가고, 키를 눌러도 지난 기록이 열리지 않는다
+    expect(
+      screen.getByLabelText("2026-07-10 (2)").closest("[inert]"),
+    ).not.toBeNull();
+    fireEvent.keyDown(screen.getByLabelText("2026-07-10 (2)"), {
+      key: "Enter",
+    });
+    expect(screen.queryByText("desc_write")).not.toBeInTheDocument();
 
     resolve([makeLog("old", "2024-06-15")]);
 

@@ -2,6 +2,7 @@
 
 // Animate UI Sliding Number (@animate-ui/primitives-texts-sliding-number) 원본.
 // 자릿수마다 0~9 바퀴를 스프링으로 돌려, 값이 연달아 바뀌어도 숫자 요소가 쌓이지 않는다
+// 고친 점: 동작 줄이기(MotionConfig)면 굴리지 않고 바로 바꿈, 높이를 재기 전에도 지금 숫자를 보임
 
 import {
   type HTMLMotionProps,
@@ -9,6 +10,7 @@ import {
   type MotionValue,
   type SpringOptions,
   useMotionValue,
+  useReducedMotionConfig,
   useSpring,
   useTransform,
 } from "motion/react";
@@ -38,13 +40,19 @@ function SlidingNumberRoller({
   const startNumber = Math.floor(prevValue / place) % 10;
   const targetNumber = Math.floor(value / place) % 10;
   const animatedValue = useSpring(startNumber, transition);
+  // useSpring은 motion 값이라 MotionConfig의 동작 줄이기를 따르지 않는다
+  const reduceMotion = useReducedMotionConfig();
 
   React.useEffect(() => {
+    if (reduceMotion) {
+      animatedValue.jump(targetNumber);
+      return;
+    }
     const timeoutId = setTimeout(() => {
       animatedValue.set(targetNumber);
     }, delay);
     return () => clearTimeout(timeoutId);
-  }, [targetNumber, animatedValue, delay]);
+  }, [targetNumber, animatedValue, delay, reduceMotion]);
 
   const [measureRef, { height }] = useMeasure();
 
@@ -98,9 +106,22 @@ function SlidingNumberDisplay({
     return translateY;
   });
 
+  // 재기 전(서버 렌더·스크립트 로딩 중)에도 지금 숫자는 제자리에 보이게
   if (!height) {
     return (
-      <span style={{ visibility: "hidden", position: "absolute" }}>
+      <span
+        style={{
+          visibility:
+            Math.round(motionValue.get()) % 10 === number
+              ? "visible"
+              : "hidden",
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {number}
       </span>
     );
@@ -174,6 +195,7 @@ function SlidingNumber({
     initiallyStable ? initialNumeric : (fromNumber ?? 0),
   );
   const springVal = useSpring(motionVal, { stiffness: 90, damping: 50 });
+  const reduceMotion = useReducedMotionConfig();
 
   const skippedInitialWhenStable = React.useRef(false);
 
@@ -184,10 +206,21 @@ function SlidingNumber({
       return;
     }
     const timeoutId = setTimeout(() => {
-      if (isInView) motionVal.set(number);
+      if (!isInView) return;
+      motionVal.set(number);
+      if (reduceMotion) springVal.jump(number);
     }, delay);
     return () => clearTimeout(timeoutId);
-  }, [hasAnimated, initiallyStable, isInView, number, motionVal, delay]);
+  }, [
+    hasAnimated,
+    initiallyStable,
+    isInView,
+    number,
+    motionVal,
+    springVal,
+    delay,
+    reduceMotion,
+  ]);
 
   const [effectiveNumber, setEffectiveNumber] = React.useState<number>(
     initiallyStable ? initialNumeric : 0,

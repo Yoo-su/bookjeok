@@ -151,6 +151,8 @@ export function ReadingLogCalendar({
     logsByDate.get(format(date, "yyyy-MM-dd")) ?? [];
 
   const handleDayClick = (date: Date) => {
+    // 다른 해를 받는 동안 남아 있는 이전 달 칸이 열리지 않게(키보드 포함)
+    if (isWaiting) return;
     overlay.open(({ isOpen, close }) => (
       <DayDetailsDialog
         date={date}
@@ -267,9 +269,10 @@ export function ReadingLogCalendar({
                   initial="enter"
                   animate={isWaiting ? "waiting" : "center"}
                   exit="exit"
+                  // 받는 중인 이전 달을 누르거나 Tab으로 들어가 지난 기록이 열리지 않게
+                  inert={isWaiting}
                   className={cn(
                     "grid grid-cols-7 gap-1 p-2 sm:auto-rows-[160px] sm:gap-0 sm:p-0 sm:divide-x sm:divide-y sm:divide-gray-100",
-                    // 받는 중인 이전 달을 눌러 지난 기록이 열리지 않게
                     isWaiting && "pointer-events-none",
                   )}
                 >
