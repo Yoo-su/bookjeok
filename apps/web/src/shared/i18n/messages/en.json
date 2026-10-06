@@ -1328,7 +1328,8 @@
       "resend_verification": "Send Verification Email",
       "resend_success": "Verification email sent. Please check your inbox.",
       "resend_error": "Failed to send verification email.",
-      "resending": "Sending..."
+      "resending": "Sending...",
+      "view_public": "See your profile as others do"
     },
     "stats": {
       "my_reviews_title": "My Reviews",

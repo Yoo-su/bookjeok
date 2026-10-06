@@ -1328,7 +1328,8 @@
       "resend_verification": "인증 메일 발송",
       "resend_success": "인증 메일이 발송되었습니다. 받은 편지함을 확인해주세요.",
       "resend_error": "인증 메일 발송 중 오류가 발생했습니다.",
-      "resending": "발송 중..."
+      "resending": "발송 중...",
+      "view_public": "다른 사람에게 보이는 내 프로필"
     },
     "stats": {
       "my_reviews_title": "나의 리뷰",

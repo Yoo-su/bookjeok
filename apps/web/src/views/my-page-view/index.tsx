@@ -15,6 +15,7 @@ import {
   Calendar,
   CalendarDays,
   CheckCircle2,
+  ChevronRight,
   Handshake,
   Heart,
   MessageSquare,
@@ -219,6 +220,17 @@ export const MyPageView = () => {
                     })}
                   </span>
                 </div>
+              )}
+
+              {/* 마이페이지는 관리하는 곳, 프로필은 남에게 보이는 나. 메뉴를 늘리지 않고 여기서 잇는다 */}
+              {user.handle && (
+                <Link
+                  href={PATHS.USER_PROFILE(user.handle)}
+                  className="mt-2 inline-flex items-center gap-0.5 py-1.5 -my-1 text-xs font-semibold text-stone-600 underline-offset-4 transition-colors hover:text-stone-900 hover:underline"
+                >
+                  {t("profile.view_public")}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
               )}
             </div>
           </div>
