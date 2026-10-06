@@ -97,14 +97,10 @@ export const SignupForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md space-y-8">
+    <div className="w-full max-w-md space-y-8 font-(family-name:--font-gowun-batang)">
       <div className="text-center">
-        <h1 className="font-(family-name:--font-gowun-batang) text-2xl font-bold text-gray-900">
-          {t("title")}
-        </h1>
-        <p className="mt-2 font-(family-name:--font-gowun-batang) text-sm text-gray-600">
-          {t("subtitle")}
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+        <p className="mt-2 text-sm text-gray-600">{t("subtitle")}</p>
       </div>
 
       <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -250,7 +246,7 @@ export const SignupForm = () => {
                           />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="font-(family-name:--font-gowun-batang)">
                         <SelectItem value="U">
                           {t("options.gender_none")}
                         </SelectItem>
@@ -290,7 +286,7 @@ export const SignupForm = () => {
                           />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="font-(family-name:--font-gowun-batang)">
                         <SelectItem value="none">
                           {t("options.age_none")}
                         </SelectItem>
@@ -328,7 +324,7 @@ export const SignupForm = () => {
             <div className="pt-2">
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-11 text-[15px] font-medium transition-colors"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-11 text-[15px] font-bold transition-colors"
                 disabled={isLoading}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -338,7 +334,7 @@ export const SignupForm = () => {
           </form>
         </Form>
 
-        <div className="mt-6 text-center font-(family-name:--font-gowun-batang) text-sm">
+        <div className="mt-6 text-center text-sm">
           <span className="text-gray-500">{t("has_account")} </span>
           <Link
             href={PATHS.LOGIN}
