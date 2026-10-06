@@ -3,15 +3,7 @@ import { ReadingLog } from "@bookjeok/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ReadingLogCalendar } from "@/features/reading-log/components/calendar-view/reading-log-calendar";
 import { ReadingLogStats } from "@/features/reading-log/components/stats-view/reading-log-stats";
@@ -49,15 +41,6 @@ const makeLog = (id: string, date: string): ReadingLog => ({
     publisher: "",
     image: `https://cdn.bookjeok.com/${id}.jpg`,
   },
-});
-
-beforeAll(() => {
-  // 상단 연·월 SlidingNumber가 크기를 잰다
-  globalThis.ResizeObserver ??= class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
 });
 
 // 2026-07-01은 수요일이라 7월 달력 첫 줄에 6/28~30 칸이 함께 그려진다

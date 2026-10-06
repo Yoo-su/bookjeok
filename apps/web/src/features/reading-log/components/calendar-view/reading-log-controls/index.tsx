@@ -5,7 +5,6 @@ import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 
-import { SlidingNumber } from "@/shared/components/animateui/sliding-number";
 import { ChevronLeft, ChevronRight } from "@/shared/components/icons/iconsax";
 import {
   Select,
@@ -17,6 +16,7 @@ import {
 import { cn } from "@/shared/utils";
 
 import { READING_LOG_MIN_YEAR } from "../../../constants/ui";
+import { TurningNumber } from "./turning-number";
 
 const UNDERLINE_TRANSITION = {
   type: "spring",
@@ -89,24 +89,23 @@ export function ReadingLogControls({
               <div className="flex items-baseline gap-2 relative group cursor-pointer overflow-hidden">
                 {/* 시각적 텍스트 표시 */}
                 <h2 className="text-3xl md:text-4xl font-serif font-medium text-stone-900 tracking-tight flex items-baseline">
-                  {/* 자릿수 바퀴를 스프링으로 돌려 빠르게 넘겨도 숫자가 겹치지 않는다. 첫 화면은 그대로 */}
-                  {/* 바퀴마다 0~9가 다 들어 있어 화면 낭독은 따로 읽힌다 */}
+                  {/* 숫자는 달 그리드와 같은 박자로 넘어가고 화면 낭독은 이 문구로 읽힌다 */}
                   <span className="sr-only">
                     {tPeek("month_label", {
                       year: currentDate.getFullYear(),
                       month: currentDate.getMonth() + 1,
                     })}
                   </span>
-                  <SlidingNumber
-                    aria-hidden="true"
-                    number={currentDate.getMonth() + 1}
-                    initiallyStable
-                    className="min-w-[1.4em] justify-center"
+                  <TurningNumber
+                    value={currentDate.getMonth() + 1}
+                    order={
+                      currentDate.getFullYear() * 12 + currentDate.getMonth()
+                    }
+                    className="min-w-[1.4em] justify-items-center"
                   />
-                  <SlidingNumber
-                    aria-hidden="true"
-                    number={currentDate.getFullYear()}
-                    initiallyStable
+                  <TurningNumber
+                    value={currentDate.getFullYear()}
+                    order={currentDate.getFullYear()}
                     className="ml-2 text-stone-400 font-light"
                   />
                 </h2>
