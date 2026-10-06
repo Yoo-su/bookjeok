@@ -18,18 +18,19 @@ export function KongReceivedLine({
   const t = useTranslations("kong.owner");
   const senderNames = useSenderNames();
   if (!log) return null;
+  // 이름 칸을 minmax(0, 1fr)로 둬야 ScrollArea처럼 내용에 맞춰 늘어나는 부모를 넓히지 않는다
   return (
     <p
       className={cn(
-        "flex min-w-0 items-center gap-1.5 text-xs text-stone-500",
+        "grid min-w-0 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-1.5 text-xs text-stone-500",
         className,
       )}
     >
-      <PokeableKong size={20} className="shrink-0" />
-      <span className="shrink-0 font-[family-name:var(--font-gaegu)] text-[15px] font-bold text-stone-800">
+      <PokeableKong size={20} />
+      <span className="whitespace-nowrap font-[family-name:var(--font-gaegu)] text-[15px] font-bold text-stone-800">
         {t("count", { count: log.count })}
       </span>
-      <span className="truncate">{senderNames(log.senders)}</span>
+      <span className="truncate">{senderNames(log)}</span>
     </p>
   );
 }

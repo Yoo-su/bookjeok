@@ -10,7 +10,7 @@ import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { Toaster } from "@/shared/components/shadcn/sonner";
 import { gaegu } from "@/styles/fonts";
 
-import { sampleReceivedKongs } from "../../kong/lib/sample-kongs";
+import { LONG_NAMES, sampleReceivedKongs } from "../../kong/lib/sample-kongs";
 import { SAMPLE_BOOKS } from "../lib/sample-books";
 import { StackBookDialog, type StackBookKong } from "./index";
 
@@ -144,5 +144,17 @@ export const OwnerPrivate: Story = {
     kong: { owner: true },
     received: { total: 0, logs: [] },
     isPublic: false,
+  },
+};
+
+/** 한 기록에 콩이 아주 많고 닉네임이 길 때. 콩은 5알까지, 이름은 셋과 「외 N명」 */
+export const OwnerMany: Story = {
+  args: {
+    kong: { owner: true },
+    received: (() => {
+      const data = sampleReceivedKongs([12345], LONG_NAMES);
+      data.logs[0].logId = BOOK.logId;
+      return data;
+    })(),
   },
 };

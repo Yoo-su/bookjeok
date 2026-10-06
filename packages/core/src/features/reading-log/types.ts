@@ -224,7 +224,7 @@ export interface ReceivedKongLog {
   date: string;
   book: ReadingLogBook;
   count: number;
-  /** 최근에 보낸 사람부터 */
+  /** 최근에 보낸 사람부터 `KONG_SENDERS_PER_LOG`명까지. 전체 수는 count */
   senders: KongSender[];
   /** 마지막으로 콩을 받은 시각(ISO 8601) */
   lastReceivedAt: string;

@@ -2,7 +2,7 @@
 
 import { useReceivedKongsQuery } from "@bookjeok/react-query";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { KongAboutDialog } from "../kong-about-dialog";
@@ -20,6 +20,7 @@ interface KongPillProps {
  */
 export function KongPill({ onOpenDate }: KongPillProps) {
   const t = useTranslations("kong.pill");
+  const locale = useLocale();
   const { data } = useReceivedKongsQuery();
   const [bowlOpen, setBowlOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -56,7 +57,7 @@ export function KongPill({ onOpenDate }: KongPillProps) {
           <>
             {t("received")}
             <span className="font-[family-name:var(--font-gaegu)] text-2xl font-bold leading-none tabular-nums text-stone-900">
-              {data.total}
+              {data.total.toLocaleString(locale)}
             </span>
           </>
         )}

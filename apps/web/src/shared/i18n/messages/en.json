@@ -236,7 +236,7 @@
       "none": "No kongs yet",
       "private": "Your log is private, so it can't get kongs",
       "what": "What's a kong?",
-      "senders_more": "{names} and {count} more",
+      "senders_more": "{names} and {count, number} more",
       "delete_note": "The {count, plural, one {kong} other {# kongs}} it received will go too."
     },
     "pill": {
@@ -247,7 +247,7 @@
     },
     "bowl": {
       "title": "My kong bowl",
-      "desc": "Kongs your reading logs received · {count} in all",
+      "desc": "Kongs your reading logs received · {count, number} in all",
       "hint": "Give the kongs a poke",
       "shake": "Shake the bowl ({count, plural, one {# kong} other {# kongs}})",
       "list_label": "Logs that got kongs",

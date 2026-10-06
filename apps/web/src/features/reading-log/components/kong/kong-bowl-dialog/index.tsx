@@ -41,7 +41,8 @@ export function KongBowlDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] overflow-y-auto rounded-2xl px-5 pb-4 pt-6 sm:max-w-[440px] sm:px-6">
+        {/* 칸을 폭에 묶어야 한 줄로 자르는 긴 제목·이름이 칸을 넓히지 않는다(가로 스크롤 방지) */}
+        <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-[calc(100%-2rem)] custom-scrollbar grid-cols-1 overflow-y-auto rounded-2xl px-5 pb-4 pt-6 sm:max-w-[440px] sm:px-6">
           <div>
             <DialogTitle className="font-[family-name:var(--font-gaegu)] text-[30px] font-bold leading-none text-stone-900">
               {t("title")}
@@ -77,19 +78,19 @@ export function KongBowlDialog({
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-stone-900">
+                    <span className="line-clamp-1 text-sm font-semibold text-stone-900">
                       {log.book.title}
                     </span>
                     <span className="block text-xs text-stone-400">
                       {formatDate(log.date, locale, "full")}
                     </span>
-                    <span className="mt-0.5 block truncate text-xs text-stone-500">
-                      {senderNames(log.senders)}
+                    <span className="mt-0.5 line-clamp-1 text-xs text-stone-500">
+                      {senderNames(log)}
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-0.5 font-[family-name:var(--font-gaegu)] text-xl font-bold tabular-nums text-stone-900">
                     <KongFigure size={20} />
-                    {log.count}
+                    {log.count.toLocaleString(locale)}
                   </span>
                 </>
               );
