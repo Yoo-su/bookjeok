@@ -1,7 +1,7 @@
 "use client";
 
 import { UsedBookSale } from "@bookjeok/core";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";

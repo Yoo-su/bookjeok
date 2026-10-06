@@ -149,7 +149,7 @@ const withProviders: Decorator = (Story) => {
 };
 
 const meta = {
-  title: "Feedback/FeedbackInbox",
+  title: "Features/Feedback/FeedbackInbox",
   decorators: [withProviders],
   parameters: {
     layout: "fullscreen",

@@ -2,7 +2,7 @@
 
 import { BookInfo, FeedbackType } from "@bookjeok/core";
 import { useInfiniteBookSearch } from "@bookjeok/react-query";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";

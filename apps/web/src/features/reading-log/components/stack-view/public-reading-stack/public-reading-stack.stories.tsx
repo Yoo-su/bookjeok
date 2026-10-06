@@ -35,7 +35,7 @@ function withPublicStack(byYear: Record<number, ReadingStackBook[]>) {
 }
 
 const meta: Meta<typeof PublicReadingStack> = {
-  title: "ReadingLog/PublicReadingStack",
+  title: "Features/ReadingLog/Stack/PublicReadingStack",
   component: PublicReadingStack,
   parameters: { nextjs: { appDirectory: true }, layout: "fullscreen" },
   args: { handle: HANDLE, nickname: "책벌레", initialYear: 2026 },

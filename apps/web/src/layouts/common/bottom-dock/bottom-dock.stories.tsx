@@ -53,7 +53,7 @@ const Page = () => (
 );
 
 const meta = {
-  title: "Layout/BottomDock",
+  title: "Layouts/BottomDock",
   component: Page,
   parameters: {
     layout: "fullscreen",

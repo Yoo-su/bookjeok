@@ -3,17 +3,18 @@
 import { ReviewReactionType } from "@bookjeok/core";
 import { useMyReviewReactionQuery } from "@bookjeok/react-query";
 import {
-  AnimatePresence,
   motion,
   type TargetAndTransition,
   useReducedMotion,
-} from "framer-motion";
+} from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { saveReturnUrl } from "@/features/auth/utils/return-url";
 import { useToggleReviewReactionMutation } from "@/features/review/mutations";
+import { Burst } from "@/shared/components/ui/burst";
+import { RollingNumber } from "@/shared/components/ui/rolling-number";
 import { usePathname, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { cn } from "@/shared/utils/cn";
@@ -34,36 +35,6 @@ const PRESS_MOTION: Record<ReviewReactionType, TargetAndTransition> = {
   },
   [ReviewReactionType.SUPPORT]: { rotate: [0, 360], scale: [1, 1.4, 1] },
 };
-const PARTICLES = 8;
-
-function Burst({ className }: { className: string }) {
-  return (
-    <span aria-hidden className="pointer-events-none absolute inset-0">
-      {Array.from({ length: PARTICLES }, (_, index) => {
-        const angle = (index / PARTICLES) * Math.PI * 2;
-        const distance = index % 2 ? 16 : 22;
-        return (
-          <motion.span
-            key={index}
-            className={cn(
-              "absolute left-1/2 top-1/2 -ml-[3px] -mt-[3px] size-1.5 rounded-full bg-current",
-              className,
-            )}
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-            animate={{
-              x: Math.cos(angle) * distance,
-              y: Math.sin(angle) * distance,
-              scale: 0,
-              opacity: 0,
-            }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          />
-        );
-      })}
-    </span>
-  );
-}
-
 interface ReviewDetailActionsProps {
   reviewId: string;
   reactionCounts?: {
@@ -163,19 +134,13 @@ export function ReviewDetailActions({
                 </motion.span>
                 <span className="flex items-center gap-1.5 sm:gap-2">
                   <span>{tReactions(labelKey)}</span>
-                  <span className="relative inline-flex min-w-[1ch] justify-center overflow-hidden tabular-nums">
-                    <AnimatePresence mode="popLayout" initial={false}>
-                      <motion.span
-                        key={count}
-                        initial={{ y: "100%", opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: "-100%", opacity: 0 }}
-                        className={isActive ? color : "text-stone-400"}
-                      >
-                        {count}
-                      </motion.span>
-                    </AnimatePresence>
-                  </span>
+                  <RollingNumber
+                    value={count}
+                    className={cn(
+                      "min-w-[1ch] justify-center",
+                      isActive ? color : "text-stone-400",
+                    )}
+                  />
                 </span>
               </motion.button>
             );

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { StarRating } from "./star-rating";
 
 const meta = {
-  title: "UI/StarRating",
+  title: "Shared/UI/StarRating",
   component: StarRating,
   parameters: {
     layout: "centered",

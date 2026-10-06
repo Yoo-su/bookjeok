@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pagination } from "./pagination";
 
 const meta = {
-  title: "UI/Pagination",
+  title: "Shared/UI/Pagination",
   component: Pagination,
   parameters: {
     layout: "centered",

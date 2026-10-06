@@ -79,7 +79,7 @@ const mockMessages = [
 ];
 
 const meta = {
-  title: "Feature/BookSearch/AiChatWindow",
+  title: "Features/Book/AiChatWindow",
   component: AiChatWindow,
   parameters: {
     layout: "padded",

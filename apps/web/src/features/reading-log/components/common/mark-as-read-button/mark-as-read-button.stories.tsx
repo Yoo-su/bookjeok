@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MarkAsReadButton } from "./index";
 
 const meta: Meta<typeof MarkAsReadButton> = {
-  title: "ReadingLog/MarkAsReadButton",
+  title: "Features/ReadingLog/MarkAsReadButton",
   component: MarkAsReadButton,
   parameters: { nextjs: { appDirectory: true } },
   decorators: [

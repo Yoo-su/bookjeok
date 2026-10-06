@@ -62,7 +62,7 @@ const makeReview = (index: number): Review => {
 };
 
 const meta = {
-  title: "Feature/ReviewTicker",
+  title: "Features/Review/ReviewTicker",
   component: ReviewTicker,
   parameters: { layout: "fullscreen" },
   decorators: [

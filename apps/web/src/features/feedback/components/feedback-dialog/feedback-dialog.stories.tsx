@@ -58,7 +58,7 @@ const OpenOnMount = ({ preset }: { preset?: FeedbackPreset }) => {
 };
 
 const meta = {
-  title: "Feedback/FeedbackDialog",
+  title: "Features/Feedback/FeedbackDialog",
   decorators: [withProviders],
   parameters: {
     layout: "fullscreen",

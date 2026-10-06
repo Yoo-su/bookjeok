@@ -7,7 +7,7 @@ import {
   useSpring,
   useTransform,
   type Variants,
-} from "framer-motion";
+} from "motion/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 

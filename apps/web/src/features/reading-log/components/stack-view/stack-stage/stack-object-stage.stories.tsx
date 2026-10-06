@@ -110,7 +110,7 @@ function Stages({
 }
 
 const meta: Meta<typeof Stages> = {
-  title: "ReadingLog/StackObjectStage",
+  title: "Features/ReadingLog/Stack/StackObjectStage",
   component: Stages,
 };
 

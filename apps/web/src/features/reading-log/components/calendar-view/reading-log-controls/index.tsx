@@ -1,8 +1,9 @@
 "use client";
 
 import { setMonth, setYear } from "date-fns";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { useId } from "react";
 
 import { ChevronLeft, ChevronRight } from "@/shared/components/icons/iconsax";
 import {
@@ -15,6 +16,12 @@ import {
 import { cn } from "@/shared/utils";
 
 import { READING_LOG_MIN_YEAR } from "../../../constants/ui";
+
+const UNDERLINE_TRANSITION = {
+  type: "spring",
+  stiffness: 500,
+  damping: 40,
+} as const;
 
 export type ReadingLogViewMode = "calendar" | "list" | "stack";
 
@@ -40,6 +47,7 @@ export function ReadingLogControls({
   readOnly = false,
 }: ReadingLogControlsProps) {
   const t = useTranslations("reading_log.controls");
+  const underlineId = `view-mode-underline-${useId()}`;
   // 연도 선택 옵션 생성 (현재 연도 + 1 년 동안 2020년까지)
   const currentYear = new Date().getFullYear();
   const years = Array.from(
@@ -206,7 +214,11 @@ export function ReadingLogControls({
           >
             {t("view_calendar")}
             {viewMode === "calendar" && (
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
+              <motion.span
+                layoutId={underlineId}
+                className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900"
+                transition={UNDERLINE_TRANSITION}
+              />
             )}
           </button>
 
@@ -223,7 +235,11 @@ export function ReadingLogControls({
           >
             {t("view_list")}
             {viewMode === "list" && (
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
+              <motion.span
+                layoutId={underlineId}
+                className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900"
+                transition={UNDERLINE_TRANSITION}
+              />
             )}
           </button>
 
@@ -240,7 +256,11 @@ export function ReadingLogControls({
           >
             {t("view_stack")}
             {viewMode === "stack" && (
-              <span className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900 animate-in fade-in zoom-in duration-300" />
+              <motion.span
+                layoutId={underlineId}
+                className="absolute -bottom-1 left-0 right-0 h-px bg-stone-900"
+                transition={UNDERLINE_TRANSITION}
+              />
             )}
           </button>
         </div>

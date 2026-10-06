@@ -91,7 +91,7 @@ function Demo({
 }
 
 const meta: Meta<typeof Demo> = {
-  title: "ReadingLog/StackMilestoneDialog",
+  title: "Features/ReadingLog/Stack/StackMilestoneDialog",
   component: Demo,
   args: { userMm: 1700, character: "F" },
 };

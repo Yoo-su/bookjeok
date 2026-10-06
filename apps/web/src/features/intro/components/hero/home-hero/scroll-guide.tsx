@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 // -----------------------------------------------------------------------------
 // 컴포넌트: 스크롤 가이드 (Scroll Guide)

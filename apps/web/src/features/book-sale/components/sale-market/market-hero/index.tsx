@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useMarketHeroStats } from "@/features/book-sale/hooks/use-market-hero-stats";

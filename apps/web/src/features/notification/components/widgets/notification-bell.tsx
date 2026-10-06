@@ -1,5 +1,5 @@
 import { useUnreadCountQuery } from "@bookjeok/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { Bell } from "@/shared/components/icons/iconsax";

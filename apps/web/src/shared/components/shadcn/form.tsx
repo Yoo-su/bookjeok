@@ -2,6 +2,7 @@
 
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
+import { animate, useReducedMotion } from "motion/react";
 import * as React from "react";
 import {
   Controller,
@@ -104,9 +105,33 @@ function FormLabel({
   );
 }
 
+/**
+ * 제출했는데 이 칸에 오류가 남아 있으면 좌우로 한 번 흔든다.
+ * 타이핑 중 검증으로 생긴 오류에는 반응하지 않는다.
+ */
+function useShakeOnInvalidSubmit(formItemId: string, hasError: boolean) {
+  const { submitCount } = useFormState();
+  const reduced = useReducedMotion();
+  const lastSubmitCount = React.useRef(submitCount);
+
+  React.useEffect(() => {
+    if (submitCount === lastSubmitCount.current) return;
+    lastSubmitCount.current = submitCount;
+    if (!hasError || reduced) return;
+    const element = document.getElementById(formItemId);
+    if (!element) return;
+    animate(
+      element,
+      { x: [0, -6, 6, -4, 4, -2, 0] },
+      { duration: 0.4, ease: "easeOut" },
+    );
+  }, [submitCount, hasError, reduced, formItemId]);
+}
+
 function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
+  useShakeOnInvalidSubmit(formItemId, !!error);
 
   return (
     <Slot

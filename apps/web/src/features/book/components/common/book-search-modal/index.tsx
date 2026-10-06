@@ -2,8 +2,8 @@
 
 import { BookInfo } from "@bookjeok/core";
 import { useInfiniteBookSearch } from "@bookjeok/react-query";
-import { AnimatePresence, motion } from "framer-motion";
 import debounce from "lodash/debounce";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";

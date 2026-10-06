@@ -1,7 +1,7 @@
 "use client";
 
 import { usePopularKeywordsQuery } from "@bookjeok/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 

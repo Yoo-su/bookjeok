@@ -522,8 +522,8 @@ bookjeok/
 | 항목             | 현황                                                                                                  |
 | ---------------- | ----------------------------------------------------------------------------------------------------- |
 | 서버 단위 테스트 | Jest — 55개 spec (주문 서비스·스케줄러·토스 연동·채팅 게이트웨이·가드·도메인 이벤트 계약 등)          |
-| 웹 테스트        | Vitest 4 + Testing Library — 118개 테스트 파일 (결제 플로우, 주문 상세, 배송/분쟁 모달, 거래 후기 등) |
-| 컴포넌트 문서    | Storybook 8 — 27개 스토리                                                                             |
+| 웹 테스트        | Vitest 4 + Testing Library — 120개 테스트 파일 (결제 플로우, 주문 상세, 배송/분쟁 모달, 거래 후기 등) |
+| 컴포넌트 문서    | Storybook 8 — 40개 스토리 파일 (사이드바는 src 폴더 구조를 따름)                                      |
 | 타입 안전성      | `tsc --noEmit` 게이트 (server / web / admin)                                                          |
 | 정적 분석        | ESLint 9 Flat Config + Prettier. 패키지 의존 방향·서버 alias import·`BusinessException`·웹 `PATHS` 사용을 규칙으로 검사 (`.agents/rules/04-checklist.md`) |
 | CI               | GitHub Actions에서 `pnpm turbo lint test` → `pnpm turbo build`. lint는 수정 없이 검사만(고칠 때는 `pnpm lint:fix`) |

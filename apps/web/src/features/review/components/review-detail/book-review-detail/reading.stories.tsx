@@ -18,7 +18,7 @@ const sample =
     .join("");
 
 const meta = {
-  title: "Feature/ReviewReading",
+  title: "Features/Review/ReviewReading",
   component: ReviewDetailContent,
   parameters: { layout: "fullscreen" },
   decorators: [

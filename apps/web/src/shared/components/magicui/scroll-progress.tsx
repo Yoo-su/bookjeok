@@ -6,7 +6,7 @@ import {
   useReducedMotion,
   useScroll,
   useSpring,
-} from "framer-motion";
+} from "motion/react";
 import React, { useEffect } from "react";
 
 import { cn } from "@/shared/utils/cn";

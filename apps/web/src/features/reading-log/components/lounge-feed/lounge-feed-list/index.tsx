@@ -2,7 +2,7 @@
 
 import type { LoungeBookCard } from "@bookjeok/core";
 import { useLoungeFeedInfiniteQuery } from "@bookjeok/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { ImpressionArea } from "@/shared/components/common/impression-area";

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { ImageUploader } from "./image-uploader";
 
 const meta = {
-  title: "UI/ImageUploader",
+  title: "Shared/UI/ImageUploader",
   component: ImageUploader,
   parameters: {
     layout: "centered",

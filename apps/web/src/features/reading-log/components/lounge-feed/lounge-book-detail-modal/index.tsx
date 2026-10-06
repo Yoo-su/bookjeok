@@ -2,7 +2,7 @@
 
 import type { LoungeBookCard } from "@bookjeok/core";
 import { useLoungeBookReadersInfiniteQuery } from "@bookjeok/react-query";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 

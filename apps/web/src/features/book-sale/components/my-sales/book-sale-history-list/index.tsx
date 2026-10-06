@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { ShoppingBagIcon } from "@/shared/components/icons";
 import { AlertTriangle, Plus } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import { FilterTabs } from "@/shared/components/ui/filter-tabs";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -84,35 +85,11 @@ export const BookSaleHistoryList = () => {
   return (
     <div className="space-y-6">
       {/* 상태 필터 탭 바 (모바일 가로 스크롤) */}
-      <div className="border-b border-stone-200 dark:border-stone-800">
-        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.key;
-            const count = counts[tab.key];
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs"
-                    : "text-stone-500 hover:text-stone-900 hover:bg-stone-100 dark:hover:bg-stone-800"
-                }`}
-              >
-                {tab.label}
-                {count !== undefined && count > 0 && (
-                  <span
-                    className={`ml-1 text-[11px] ${isActive ? "opacity-90 font-mono" : "text-stone-400 font-mono"}`}
-                  >
-                    ({count})
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <FilterTabs
+        tabs={tabs.map((tab) => ({ ...tab, count: counts[tab.key] }))}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* 빈 목록 상태 */}
       {filteredSales.length === 0 ? (

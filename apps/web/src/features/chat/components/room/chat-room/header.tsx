@@ -1,7 +1,7 @@
 import { chatKeys, ChatRoom, OrderStatus } from "@bookjeok/core";
 import { useActiveOrderByRoomQuery } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";

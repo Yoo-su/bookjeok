@@ -2,7 +2,7 @@
 
 import { ChatRoom } from "@bookjeok/core";
 import { isToday, isYesterday } from "date-fns";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
