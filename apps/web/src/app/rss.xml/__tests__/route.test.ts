@@ -13,6 +13,7 @@ const review = {
   id: 1,
   title: "리뷰 제목",
   content: "<p>첫 문장이다.</p><p>둘째 &amp; 문장.</p>",
+  isPublic: true,
   createdAt: "2026-09-01T00:00:00.000Z",
   book: { title: "책 제목" },
 };
@@ -50,14 +51,31 @@ describe("GET /rss.xml", () => {
     vi.mocked(apis.getRecentBookSales).mockResolvedValue([sale] as never);
   });
 
-  it("본문 HTML을 벗겨 설명에 싣는다", async () => {
+  it("리뷰 본문 전체를 정제한 HTML로 싣는다", async () => {
+    const content = `<p>${"긴 감상. ".repeat(60)}</p><p>마지막 문장.</p><script>alert(1)</script>`;
+    vi.mocked(apis.getReviews).mockResolvedValue({
+      reviews: [{ ...review, content }],
+    } as never);
+
     const { doc } = await readFeed();
+    const description = findItemBy(doc, "/book/reviews/1")?.querySelector(
+      "description",
+    )?.textContent;
 
-    const descriptions = [...doc.querySelectorAll("item > description")].map(
-      (node) => node.textContent,
-    );
+    expect(description).toBe(content.replace(/<script>.*<\/script>/, ""));
+    expect(description).toContain("마지막 문장.");
+  });
 
-    expect(descriptions).toContain("첫 문장이다. 둘째 & 문장.");
+  it("비공개 리뷰는 제목과 본문 모두 피드에서 제외한다", async () => {
+    vi.mocked(apis.getReviews).mockResolvedValue({
+      reviews: [{ ...review, isPublic: false }],
+    } as never);
+
+    const { xml, doc } = await readFeed();
+
+    expect(findItemBy(doc, "/book/reviews/1")).toBeUndefined();
+    expect(xml).not.toContain(review.title);
+    expect(xml).not.toContain("첫 문장이다.");
   });
 
   it("항목마다 카테고리를 붙인다", async () => {
@@ -102,16 +120,27 @@ describe("GET /rss.xml", () => {
 
   it("본문에 CDATA 종료 문자열이 있어도 XML이 깨지지 않는다", async () => {
     vi.mocked(apis.getReviews).mockResolvedValue({
-      reviews: [{ ...review, content: "탈출 시도 ]]> 뒤 문장" }],
+      reviews: [
+        {
+          ...review,
+          title: "제목 ]]> 뒤 문장",
+          content: "탈출 시도 ]]> 뒤 문장",
+        },
+      ],
     } as never);
 
     const { doc } = await readFeed();
 
     expect(doc.querySelector("parsererror")).toBeNull();
-    expect(
-      findItemBy(doc, "/book/reviews/1")?.querySelector("description")
-        ?.textContent,
-    ).toBe("탈출 시도 ]]> 뒤 문장");
+    const item = findItemBy(doc, "/book/reviews/1");
+    expect(item?.querySelector("title")?.textContent).toContain(
+      "제목 ]]> 뒤 문장",
+    );
+    const body = new DOMParser().parseFromString(
+      item?.querySelector("description")?.textContent ?? "",
+      "text/html",
+    );
+    expect(body.body.textContent).toBe("탈출 시도 ]]> 뒤 문장");
   });
 
   it("한쪽 조회가 실패해도 나머지로 피드를 만든다", async () => {

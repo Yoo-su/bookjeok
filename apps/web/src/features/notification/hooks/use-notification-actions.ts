@@ -1,4 +1,9 @@
-import { Notification, notificationKeys } from "@bookjeok/core";
+import {
+  Notification,
+  notificationKeys,
+  NotificationType,
+  readingLogKeys,
+} from "@bookjeok/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
@@ -19,6 +24,12 @@ export const useNotificationActions = () => {
     (notification: Notification) => {
       // 1. 데이터 갱신 (Refetch)
       syncNotifications();
+      // 독서기록 hero의 받은 콩 수가 바로 늘게
+      if (notification.type === NotificationType.READING_LOG_KONG) {
+        queryClient.invalidateQueries({
+          queryKey: readingLogKeys.kongsReceived.queryKey,
+        });
+      }
 
       // 2. UI 피드백 (Toast)
       const { key, params } = getNotificationMessageParams(notification, {
@@ -29,7 +40,7 @@ export const useNotificationActions = () => {
 
       toast.info(message);
     },
-    [syncNotifications, t],
+    [queryClient, syncNotifications, t],
   );
 
   return {

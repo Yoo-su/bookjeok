@@ -201,6 +201,11 @@ export function PublicReadingStack({
         open={bookOpen}
         belowMm={selectedBelowMm}
         onOpenChange={setBookOpen}
+        kong={
+          viewer?.handle === handle
+            ? { owner: true }
+            : { owner: false, handle, nickname }
+        }
       />
 
       {viewer?.handle !== handle && (

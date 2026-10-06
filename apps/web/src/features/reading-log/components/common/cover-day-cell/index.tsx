@@ -10,10 +10,13 @@ import { Link } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils/cn";
 
 import { PLANT_COVER, useJustPlanted } from "../../../hooks/use-just-planted";
+import { KongFigure } from "../../kong/kong-figure";
 
 interface CoverDayCellProps {
   day: Date;
   logs: ReadingLog[];
+  /** 그날 기록들이 받은 콩. 표지 오른쪽 위에 콩 한 알을 얹는다 */
+  kongCount?: number;
   isFuture: boolean;
   isLoading?: boolean;
   /** 있으면 링크(dock 패널), 없으면 버튼(독서기록 페이지) */
@@ -29,6 +32,7 @@ interface CoverDayCellProps {
 export const CoverDayCell = ({
   day,
   logs,
+  kongCount = 0,
   isFuture,
   isLoading = false,
   href,
@@ -36,6 +40,7 @@ export const CoverDayCell = ({
   className,
 }: CoverDayCellProps) => {
   const t = useTranslations("reading_log.peek");
+  const tKong = useTranslations("kong.badge");
   const first = logs[0];
   const extra = logs.length - 1;
   const today = isToday(day);
@@ -73,13 +78,17 @@ export const CoverDayCell = ({
     );
   }
 
-  const label = logs.length
+  const dayLabel = logs.length
     ? t("day_label_books", {
         month: day.getMonth() + 1,
         day: day.getDate(),
         count: logs.length,
       })
     : t("day_label", { month: day.getMonth() + 1, day: day.getDate() });
+  const label =
+    kongCount > 0
+      ? `${dayLabel}, ${tKong("aria", { count: kongCount })}`
+      : dayLabel;
 
   const interactiveClass = cn(
     cellClass,
@@ -118,6 +127,12 @@ export const CoverDayCell = ({
       {extra > 0 && (
         <span className="absolute bottom-0.5 right-0.5 rounded bg-stone-900/85 px-1 text-[10px] font-bold leading-4 tabular-nums text-white">
           +{extra}
+        </span>
+      )}
+      {kongCount > 0 && (
+        // 표지 위에서도 보이게 흰 테두리를 두른다
+        <span className="absolute right-0.5 top-0.5 z-[1] drop-shadow-[0_0_1.5px_#fff]">
+          <KongFigure size={14} />
         </span>
       )}
     </>

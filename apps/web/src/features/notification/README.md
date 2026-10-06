@@ -23,7 +23,7 @@ notification/
 ├── mutations/
 │   └── index.tsx
 └── utils/
-    ├── definitions.ts                   # 17종 문구·이동 경로·시스템 표시 등록부
+    ├── definitions.ts                   # 18종 문구·이동 경로·시스템 표시 등록부
     └── index.ts                         # 토스트·목록에서 공유하는 조회 함수
 ```
 
@@ -49,7 +49,7 @@ useNotificationSocket ──▶ queryClient 캐시 갱신
 
 ---
 
-## 알림 타입 (17종)
+## 알림 타입 (18종)
 
 core의 `NotificationType`을 서버와 함께 사용합니다. `utils/definitions.ts`가 모든 종류의 번역 키·보간 인자·이동 경로·시스템 표시 여부를 한곳에서 정의하고, `utils/index.ts`의 기존 조회 함수가 토스트와 목록에 같은 정의를 전달합니다.
 
@@ -62,6 +62,9 @@ core의 `NotificationType`을 서버와 함께 사용합니다. `utils/definitio
 | 후기      | `TRADE_REVIEW_RECEIVED`                                                         |
 | 직거래    | `TRADE_RESERVED`, `TRADE_COMPLETED`                                             |
 | 북적 공지 | `FEEDBACK_REPLIED` — 문의 답변. **행위자 없음**(`actorId` null)                 |
+| 독서 기록 | `READING_LOG_KONG` — 내 독서 기록에 콩                                          |
+
+`READING_LOG_KONG`은 `readingLogHref`로 내 독서기록 페이지의 그날(`?date=`)을 열어 상세를 띄웁니다. 실시간으로 받으면 독서기록 hero의 받은 콩 수가 바로 늘도록 `readingLogKeys.kongsReceived`도 무효화합니다(`use-notification-actions`).
 
 행위자 없는 알림(`isSystemNotification`)은 프로필 사진·닉네임 대신 `BRAND_ASSETS.symbol`(`/brand/pen-v1/symbol.svg`, A 자유로운 펜선)과 "북적"을 보입니다. 로고 경로는 헤더·로딩·오류 화면과 같은 상수를 사용합니다.
 

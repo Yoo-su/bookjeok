@@ -211,7 +211,61 @@
     "fallback_actor": "Someone",
     "fallback_cancel_reason": "Trade cancelled",
     "feedback_replied": "We replied to your message. Take a look.",
+    "reading_log_kong": "{actorName} sent a kong to your “{bookTitle}” log.",
     "system_name": "Bookjeok"
+  },
+  "kong": {
+    "send": {
+      "prompt_1": "They read it to the end.",
+      "prompt_2": "How about a kong?",
+      "note": "Once sent, a kong can't be taken back.",
+      "what": "What's a kong?",
+      "button": "Send a kong",
+      "aria": "Send a kong to {name}'s “{title}” log",
+      "pong": "Kong!",
+      "sent": "You sent a kong",
+      "sent_note": "The kong on the cover is yours",
+      "seat_label": "The kong you sent",
+      "login_bubble": "Log in to send a kong",
+      "login": "Log in",
+      "error": "Couldn't send the kong. Please try again in a moment."
+    },
+    "owner": {
+      "received": "{count, plural, one {# kong} other {# kongs}} received",
+      "count": "{count, plural, one {# kong} other {# kongs}}",
+      "none": "No kongs yet",
+      "private": "Your log is private, so it can't get kongs",
+      "what": "What's a kong?",
+      "senders_more": "{names} and {count} more",
+      "delete_note": "The {count, plural, one {kong} other {# kongs}} it received will go too."
+    },
+    "pill": {
+      "received": "Kongs",
+      "empty": "No kongs yet",
+      "aria": "{count, plural, one {# kong} other {# kongs}} received, open your kong bowl",
+      "aria_empty": "No kongs yet. Open “What's a kong?”"
+    },
+    "bowl": {
+      "title": "My kong bowl",
+      "desc": "Kongs your reading logs received · {count} in all",
+      "hint": "Give the kongs a poke",
+      "shake": "Shake the bowl ({count, plural, one {# kong} other {# kongs}})",
+      "list_label": "Logs that got kongs",
+      "go": "Open the “{title}” log, {count, plural, one {# kong} other {# kongs}}",
+      "what": "What's a kong?"
+    },
+    "badge": {
+      "aria": "{count, plural, one {# kong} other {# kongs}}"
+    },
+    "about": {
+      "word": "Kong",
+      "pos": "[noun]",
+      "def_1": "A tiny black bean of respect for someone's reading.",
+      "def_2": "One per log. Once sent, it can't be taken back.",
+      "def_3": "Kongs you receive pile up in your bowl. Not for eating.",
+      "example": "e.g. A kong for you, for reading to the end.",
+      "poke": "Poke the kong"
+    }
   },
   "auth": {
     "login": {

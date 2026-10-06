@@ -51,6 +51,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-25 | `book_ingest`에 `book_dimensions` SELECT·INSERT 권한 + RLS 정책 2개 (적재 도구용)      | `532dfd31`, 12절        |
 | 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)       | `9546a94e`, 13절        |
 | 2026-09-29 | `books` 교재·학습서 2,174권 삭제 (DDL 아님, 데이터 정리. 용량 확보)                    | (SQL Editor), 14절      |
+| 2026-10-07 | `reading_log_kongs` 테이블 + RLS, 알림 enum에 `READING_LOG_KONG` (독서 기록 콩)        | 16절                    |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -1392,3 +1393,107 @@ DDL이 아니라 데이터 정리입니다. 사용자가 Supabase 무료 500MB �
 ### 다시 쓰려면
 
 도서 임베딩 생성 코드는 저장소에 없습니다(검색어용 `generateQueryEmbedding`만 있음). 일괄 생성 스크립트를 새로 만들어야 하고, 768차원 × 행 수만큼 용량이 다시 듭니다(이전 약 140MB). 대상 범위(예: 판매지수 상위)를 먼저 정하세요.
+
+---
+
+## 16. `reading_log_kongs` 테이블 + 콩 알림 — 독서 기록 콩 (2026-10-07)
+
+### 배경
+
+공개된 남의 독서 기록에 보내는 리액션 「콩」입니다. 한 기록에 한 사람이 한 알이고 거둬들이지
+않으며, 받은 수는 기록 주인만 봅니다. 콩을 받으면 주인에게 `READING_LOG_KONG` 알림이 가고,
+누르면 독서기록 페이지에서 그날 상세가 열립니다(서버 `reading-log` README 「콩」).
+
+### 적용 순서
+
+**develop·main에 서버 코드가 push되면 Azure 배포가 자동으로 돕니다. 아래를 push 전에 끝내세요.**
+
+1. 0단계(알림 enum 값)를 트랜잭션 밖에서 실행
+2. 1단계(테이블)를 한 트랜잭션으로 실행
+3. push → 서버 자동 배포 → 웹 배포
+
+먼저 배포하면 생기는 일:
+
+- 테이블이 없으면 **회원 탈퇴가 막힙니다.** 탈퇴 리스너(`ReadingLogCleanupListener`)가
+  `reading_log_kongs`를 DELETE하다 실패하면 탈퇴 트랜잭션 전체가 롤백되기 때문입니다.
+  콩 API 3개(`POST /reading-logs/:id/kongs`, `GET /reading-logs/kongs/received`·`/sent`)도 500을 냅니다.
+  웹은 독서기록 hero의 콩 알약이 뜨지 않고, 콩 보내기를 누르면 실패 안내만 뜹니다.
+- enum 값이 없으면 콩 저장은 성공하고 알림 INSERT만 실패합니다(알림은 별도 이벤트). 서버 로그에
+  `Failed to notify kong on reading log ...`가 남습니다.
+
+#### 0단계 — 알림 enum 값 (트랜잭션 밖에서 먼저)
+
+3·13절과 같습니다. 운영 enum 이름은 **단수형** `notification_type_enum`입니다. 실행 전에 이름을 조회해 확인하세요.
+
+```sql
+SELECT t.typname FROM pg_type t
+  JOIN pg_attribute a ON a.atttypid = t.oid
+ WHERE a.attrelid = 'public.notifications'::regclass AND a.attname = 'type';
+
+ALTER TYPE "notification_type_enum" ADD VALUE IF NOT EXISTS 'READING_LOG_KONG';
+```
+
+#### 1단계 — 테이블
+
+```sql
+BEGIN;
+CREATE TABLE public.reading_log_kongs (
+  "id"           SERIAL NOT NULL,
+  "readingLogId" uuid NOT NULL,
+  "senderId"     integer NOT NULL,
+  "createdAt"    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  CONSTRAINT "PK_reading_log_kongs_id" PRIMARY KEY ("id"),
+  CONSTRAINT "UQ_reading_log_kongs_readingLogId_senderId" UNIQUE ("readingLogId", "senderId"),
+  CONSTRAINT "FK_reading_log_kongs_readingLogId" FOREIGN KEY ("readingLogId")
+    REFERENCES public.reading_logs ("id") ON DELETE CASCADE,
+  CONSTRAINT "FK_reading_log_kongs_senderId" FOREIGN KEY ("senderId")
+    REFERENCES public.users ("id") ON DELETE CASCADE
+);
+CREATE INDEX "IDX_reading_log_kongs_senderId" ON public.reading_log_kongs ("senderId");
+ALTER TABLE public.reading_log_kongs ENABLE ROW LEVEL SECURITY;
+COMMIT;
+```
+
+- **한 알 규칙은 유니크 제약이 지킵니다.** 서버는 `INSERT ... ON CONFLICT DO NOTHING`으로 넣고, 무시되면
+  `sent: false`로 성공을 돌려줍니다. 연타·동시 요청도 한 알이고 알림도 한 번입니다.
+- **기록이 지워지면 콩도 지워집니다**(`readingLogId` FK CASCADE). 기록 삭제·탈퇴 모두 `reading_logs`
+  행이 실제로 DELETE되므로 이 FK가 동작합니다.
+- **보낸 사람 FK의 CASCADE는 거의 돌지 않습니다.** 회원 행은 소프트 삭제라서, 탈퇴한 사람이 보낸
+  콩은 `ReadingLogCleanupListener`가 지웁니다(리뷰 리액션과 같은 처리).
+- **인덱스**: 유니크가 `readingLogId`로 시작해 기록별 조회(받은 콩)를 받고, `senderId` 인덱스가 보낸 콩
+  조회와 탈퇴 정리를 받습니다. 테이블이 작을 동안은 플래너가 순차 탐색을 고를 수 있습니다.
+- **RLS**: 9·11·13절과 같은 이유로 켜고 정책은 두지 않습니다. 누가 누구의 기록에 보냈는지가
+  anon REST API로 열리면 안 됩니다.
+- PK·FK·유니크·인덱스 이름은 8절 규칙대로 엔티티(`reading-log-kong.entity.ts`)에 박았습니다.
+
+### 적용 기록 (2026-10-07)
+
+- 0단계(enum 값)·1단계(테이블)를 Supabase SQL Editor에서 실행한 뒤 콩 코드를 develop에 push했습니다(서버 자동 배포).
+  아래 확인 쿼리의 결과 값은 기록하지 않았습니다.
+
+### 확인
+
+```sql
+SELECT column_name, data_type, is_nullable, column_default
+  FROM information_schema.columns
+ WHERE table_name = 'reading_log_kongs' ORDER BY ordinal_position;
+SELECT conname, contype, confdeltype FROM pg_constraint
+ WHERE conrelid = 'public.reading_log_kongs'::regclass ORDER BY conname;
+SELECT indexname FROM pg_indexes WHERE tablename = 'reading_log_kongs' ORDER BY indexname;
+SELECT relrowsecurity FROM pg_class WHERE oid = 'public.reading_log_kongs'::regclass;
+SELECT 'READING_LOG_KONG' = ANY(enum_range(NULL::notification_type_enum)::text[]) AS has_value;
+```
+
+컬럼 4개, 제약 4개(`PK_…`·`UQ_…`·FK 둘 다 `confdeltype = 'c'`), 인덱스 3개(PK·유니크·`IDX_reading_log_kongs_senderId`),
+`relrowsecurity = true`, `has_value = true`면 정상입니다. 배포 후 한 바퀴 돌려 봅니다: 계정 A의 공개
+프로필 독서 키재기에서 책을 열어 계정 B로 콩 보내기 → A에게 알림 → 알림을 누르면 그날 상세에 「콩 1」
+→ A의 독서기록 hero에 「받은 콩 1」.
+
+### 되돌리기
+
+```sql
+DROP TABLE public.reading_log_kongs;
+```
+
+서버를 이 변경 이전으로 먼저 내린 뒤 실행하세요. 테이블만 지우면 탈퇴가 막힙니다.
+`notification_type_enum`에 추가한 값은 3절과 같은 이유로 되돌리지 않습니다.

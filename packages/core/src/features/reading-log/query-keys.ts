@@ -24,4 +24,8 @@ export const readingLogKeys = createQueryKeys("readingLog", {
   loungeBookReaders: (isbn: string) => ({
     queryKey: [isbn],
   }),
+  kongsReceived: null,
+  kongsSent: (handle: string) => ({
+    queryKey: [handle],
+  }),
 });

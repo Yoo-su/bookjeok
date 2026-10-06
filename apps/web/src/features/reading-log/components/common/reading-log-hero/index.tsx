@@ -9,12 +9,18 @@ import { cn } from "@/shared/utils";
 
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { useUpdateReadingLogSettingsMutation } from "../../../mutations";
+import { KongPill } from "../../kong/kong-pill";
 
 interface ReadingLogHeroProps {
   currentDate: Date;
+  /** 콩 종지에서 기록을 누르면 그날 상세로 */
+  onOpenDate?: (date: string) => void;
 }
 
-export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
+export function ReadingLogHero({
+  currentDate,
+  onOpenDate,
+}: ReadingLogHeroProps) {
   const t = useTranslations("reading_log.hero");
   // 테마 및 배경 이미지 로직
   const theme = useSeasonalTheme(currentDate);
@@ -124,6 +130,7 @@ export function ReadingLogHero({ currentDate }: ReadingLogHeroProps) {
                 className="data-[state=checked]:bg-sky-400 data-[state=unchecked]:bg-stone-500/50 border-transparent h-4 w-7 md:h-5 md:w-9 transition-colors duration-300"
               />
             </div>
+            <KongPill onOpenDate={onOpenDate} />
           </div>
         </div>
       </div>

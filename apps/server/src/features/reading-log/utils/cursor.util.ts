@@ -32,9 +32,14 @@ export function assertCursorDate(value: string): void {
   if (parsed.toISOString().slice(0, 10) !== value) invalidCursor();
 }
 
+/** uuid 컬럼 비교에 넣어도 캐스팅에서 실패하지 않는 값인지 */
+export function isUuid(value: string): boolean {
+  return UUID_PATTERN.test(value);
+}
+
 /** uuid 컬럼 비교에 들어갈 값인지 확인한다. */
 export function assertCursorUuid(value: string): void {
-  if (!UUID_PATTERN.test(value)) invalidCursor();
+  if (!isUuid(value)) invalidCursor();
 }
 
 /** 양의 정수 ID인지 확인하고 숫자로 돌려준다. */

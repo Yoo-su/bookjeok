@@ -6,7 +6,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cache } from "react";
 
 import { ReviewJsonLd } from "@/features/review/components/common/review-json-ld";
-import { getReviewShareDescription } from "@/features/review/utils/share";
+import {
+  getReviewSearchTitle,
+  getReviewShareDescription,
+} from "@/features/review/utils/share";
 import { BreadcrumbJsonLd } from "@/shared/components/breadcrumb-json-ld";
 import { ServerQueryBoundary } from "@/shared/components/server-query-boundary";
 import { createPageMetadata } from "@/shared/config/metadata";
@@ -67,7 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title = review.title;
+  const title = getReviewSearchTitle(review, locale);
   const images = review.book?.image ? [review.book.image] : [];
 
   const description = getReviewShareDescription(review);

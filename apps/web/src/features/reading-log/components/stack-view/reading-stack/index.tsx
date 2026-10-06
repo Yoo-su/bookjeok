@@ -347,6 +347,7 @@ export function ReadingStack({ year }: { year: number }) {
         open={bookOpen}
         belowMm={selectedBelowMm}
         onOpenChange={setBookOpen}
+        kong={{ owner: true }}
       />
       <StackObjectCollection
         open={collectionOpen}

@@ -7,6 +7,7 @@ import { ReadingLogCalendar } from "@/features/reading-log/components/calendar-v
 import { ReadingLogHero } from "@/features/reading-log/components/common/reading-log-hero";
 import { useReadingLogViewStore } from "@/features/reading-log/stores/use-reading-log-view-store";
 import type { ReadingLogLink } from "@/features/reading-log/utils/reading-log-link";
+import { parseCalendarDate } from "@/shared/utils/format-date";
 
 import { ReadingLogDeepLink } from "./reading-log-deep-link";
 
@@ -37,7 +38,10 @@ export function ReadingLogView() {
       <Suspense fallback={null}>
         <ReadingLogDeepLink onApply={applyLink} />
       </Suspense>
-      <ReadingLogHero currentDate={currentDate} />
+      <ReadingLogHero
+        currentDate={currentDate}
+        onOpenDate={(date) => applyLink({ date: parseCalendarDate(date) })}
+      />
 
       <div className="relative z-10 w-full">
         <ReadingLogCalendar

@@ -48,6 +48,11 @@ const metadata: { [T in NotificationType]: NotificationMetadata<T> } = {
     feedbackId: 6,
     feedbackType: FeedbackType.OTHER,
   },
+  [NotificationType.READING_LOG_KONG]: {
+    readingLogId: "uuid",
+    date: "2026-10-07",
+    bookTitle: "책",
+  },
 };
 
 // tsc로 검증하는 음성 계약. 실행하지 않아 저장/전송 부수 효과가 없다.
@@ -85,6 +90,11 @@ function checkTypes(type: NotificationType, notification: Notification) {
   accept(NotificationType.TRADE_COMPLETED, { saleId: 3 });
   // @ts-expect-error 문의 답변은 feedbackType 필수
   accept(NotificationType.FEEDBACK_REPLIED, { feedbackId: 6 });
+  // @ts-expect-error 콩은 그날 상세로 가는 date 필수
+  accept(NotificationType.READING_LOG_KONG, {
+    readingLogId: "uuid",
+    bookTitle: "책",
+  });
   // @ts-expect-error 열린 타입 변수와 특정 metadata의 조합은 안전하지 않다
   accept(type, { saleId: 3 });
   const reserved = metadata[NotificationType.TRADE_RESERVED];
@@ -101,7 +111,7 @@ function checkTypes(type: NotificationType, notification: Notification) {
 void checkTypes;
 
 describe("알림 계약", () => {
-  it("현재 17종 enum의 이름·DB 값과 순서를 유지한다", () => {
+  it("현재 18종 enum의 이름·DB 값과 순서를 유지한다", () => {
     expect(Object.values(NotificationType)).toEqual([
       "REVIEW_REACTION",
       "REVIEW_COMMENT",
@@ -120,6 +130,7 @@ describe("알림 계약", () => {
       "TRADE_RESERVED",
       "TRADE_COMPLETED",
       "FEEDBACK_REPLIED",
+      "READING_LOG_KONG",
     ]);
     expect(Object.keys(metadata)).toEqual(Object.values(NotificationType));
   });

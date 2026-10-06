@@ -13,6 +13,8 @@ import {
   getReadingLogSettings,
   getReadingLogsInfinite,
   getReadingStack,
+  getReceivedKongs,
+  getSentKongs,
 } from "@bookjeok/api-client";
 import { CACHE_TIME, readingLogKeys } from "@bookjeok/core";
 import {
@@ -189,5 +191,32 @@ export const useLoungeBookReadersInfiniteQuery = (
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled,
     staleTime: 60 * 1000,
+  });
+};
+
+/**
+ * 내 독서 기록이 받은 콩. 콩 알림이 오면 무효화된다
+ */
+export const useReceivedKongsQuery = (options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: readingLogKeys.kongsReceived.queryKey,
+    queryFn: getReceivedKongs,
+    staleTime: 60 * 1000,
+    enabled: options?.enabled,
+  });
+};
+
+/**
+ * 한 사용자의 기록 중 내가 콩을 보낸 기록. 로그인했고 남의 프로필일 때만 켠다
+ */
+export const useSentKongsQuery = (
+  handle: string,
+  options?: { enabled?: boolean },
+) => {
+  return useQuery({
+    queryKey: readingLogKeys.kongsSent(handle).queryKey,
+    queryFn: () => getSentKongs(handle),
+    staleTime: 5 * 60 * 1000,
+    enabled: options?.enabled,
   });
 };

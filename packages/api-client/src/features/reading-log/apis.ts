@@ -13,6 +13,9 @@ import {
   ReadingLogSettings,
   ReadingLogStats,
   ReadingStackResponse,
+  ReceivedKongsResponse,
+  SendKongResponse,
+  SentKongsResponse,
   UpdateReadingLogParams,
 } from "@bookjeok/core";
 
@@ -238,6 +241,33 @@ export const getLoungeBookReaders = async (
     {
       params: { cursor },
     },
+  );
+  return data;
+};
+
+/** 남의 독서 기록에 콩을 보냅니다. 이미 보냈으면 sent: false (인증 필요) */
+export const sendKong = async (logId: string): Promise<SendKongResponse> => {
+  const { data } = await privateApiClient.post<SendKongResponse>(
+    API_PATHS.readingLog.kongs(logId),
+  );
+  return data;
+};
+
+/** 내 독서 기록이 받은 콩을 조회합니다. (인증 필요) */
+export const getReceivedKongs = async (): Promise<ReceivedKongsResponse> => {
+  const { data } = await privateApiClient.get<ReceivedKongsResponse>(
+    API_PATHS.readingLog.kongsReceived,
+  );
+  return data;
+};
+
+/** 한 사용자의 기록 중 내가 콩을 보낸 기록을 조회합니다. (인증 필요) */
+export const getSentKongs = async (
+  handle: string,
+): Promise<SentKongsResponse> => {
+  const { data } = await privateApiClient.get<SentKongsResponse>(
+    API_PATHS.readingLog.kongsSent,
+    { params: { handle } },
   );
   return data;
 };

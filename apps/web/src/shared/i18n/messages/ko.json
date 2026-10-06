@@ -211,7 +211,61 @@
     "fallback_actor": "사용자",
     "fallback_cancel_reason": "거래 취소",
     "feedback_replied": "보내신 문의에 답변이 달렸어요. 확인해 보세요.",
+    "reading_log_kong": "{actorName}님이 「{bookTitle}」 기록에 콩을 보냈어요.",
     "system_name": "북적"
+  },
+  "kong": {
+    "send": {
+      "prompt_1": "끝까지 읽은 사람에게",
+      "prompt_2": "콩 한 알 어때요?",
+      "note": "콩은 보내면 돌려받을 수 없어요.",
+      "what": "콩이란?",
+      "button": "콩 보내기",
+      "aria": "{name}님의 「{title}」 기록에 콩 보내기",
+      "pong": "콩!",
+      "sent": "콩을 보냈어요",
+      "sent_note": "표지 위의 콩이 당신이 보낸 콩이에요",
+      "seat_label": "내가 보낸 콩",
+      "login_bubble": "로그인하면 콩을 보낼 수 있어요",
+      "login": "로그인",
+      "error": "콩을 보내지 못했어요. 잠시 후 다시 시도해 주세요."
+    },
+    "owner": {
+      "received": "콩 {count}알 받았어요",
+      "count": "콩 {count}",
+      "none": "아직 받은 콩이 없어요",
+      "private": "비공개 기록이라 콩을 받을 수 없어요",
+      "what": "콩이란?",
+      "senders_more": "{names} 외 {count}명",
+      "delete_note": "이 기록이 받은 콩 {count}알도 함께 사라져요."
+    },
+    "pill": {
+      "received": "받은 콩",
+      "empty": "아직 콩이 없어요",
+      "aria": "받은 콩 {count}알, 콩 종지 열기",
+      "aria_empty": "아직 받은 콩이 없어요. 콩이란? 열기"
+    },
+    "bowl": {
+      "title": "내 콩 종지",
+      "desc": "독서 기록에 받은 콩이 모여요 · 모두 {count}알",
+      "hint": "콩을 눌러 보세요",
+      "shake": "종지 흔들기 (콩 {count}알)",
+      "list_label": "콩을 받은 기록",
+      "go": "「{title}」 기록 보기, 콩 {count}알",
+      "what": "콩이란?"
+    },
+    "badge": {
+      "aria": "콩 {count}알"
+    },
+    "about": {
+      "word": "콩",
+      "pos": "[명사]",
+      "def_1": "누군가의 독서에 보내는 작고 까만 경의.",
+      "def_2": "한 기록에 한 알. 보내면 돌려받을 수 없다.",
+      "def_3": "받은 콩은 종지에 차곡차곡 모인다. 먹지는 않는다.",
+      "example": "예) 끝까지 읽은 당신에게 콩 한 알.",
+      "poke": "콩 찔러 보기"
+    }
   },
   "auth": {
     "login": {

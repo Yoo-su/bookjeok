@@ -1,6 +1,6 @@
 # Notification Module (`features/notification`)
 
-사용자 알림의 생성·조회·읽음 처리와 Socket.IO 실시간 푸시를 담당합니다. 커뮤니티 활동, 중고거래 진행 상황, 문의 답변을 합쳐 **17종** 알림을 다룹니다.
+사용자 알림의 생성·조회·읽음 처리와 Socket.IO 실시간 푸시를 담당합니다. 커뮤니티 활동, 중고거래 진행 상황, 문의 답변, 독서 기록 콩을 합쳐 **18종** 알림을 다룹니다.
 
 ## 1. 폴더 구조
 
@@ -40,7 +40,7 @@ FeedbackService    ──emit──▶ feedback.replied ──▶ FeedbackReplyN
 ### 새 알림 추가 방법
 
 1. `@bookjeok/core`의 `NotificationType`에 값을 추가하고 `NotificationMetadataMap`에 필수 metadata를 정의합니다. 서버는 core enum을 직접 사용합니다.
-2. 운영 DB enum에 새 값을 수동 적용하고 `docs/manual-ddl-log.md`에 기록합니다. 현재 17종 값·컬럼 정의는 변경하지 않았으므로 이번 정리에는 DDL이 없습니다.
+2. 운영 DB enum에 새 값을 수동 적용하고 `docs/manual-ddl-log.md`에 기록합니다. 최근 추가는 `READING_LOG_KONG`(DDL 로그 16절)입니다.
 3. 해당 도메인에서 이벤트를 발행하고 리스너가 `createNotification(recipientId, actorId, type, metadata)`를 호출합니다. 종류와 metadata의 tuple union 계약이 필수 필드 누락·종류 혼합을 거부합니다.
 4. 웹 `features/notification/utils/definitions.ts`에 번역 키·보간 인자·이동 경로·시스템 표시 여부를 등록하고 한영 번역을 추가합니다. enum 전체를 요구하는 mapped type이 등록 누락을 잡습니다.
 5. core의 최소 입력 예시·음성 타입 계약과 웹의 전 종류 표현 계약 예시를 갱신하고 core 빌드 후 서버·웹 타입 검사 및 계약 테스트를 실행합니다.
@@ -55,12 +55,12 @@ FeedbackService    ──emit──▶ feedback.replied ──▶ FeedbackReplyN
 
 ### 계약 검증
 
-- core `features/notification/__tests__/contract.test.ts`: 17종 enum 값 고정, 종류별 최소 입력과 `@ts-expect-error` 음성 계약(`tsc`로 검사).
+- core `features/notification/__tests__/contract.test.ts`: 18종 enum 값 고정, 종류별 최소 입력과 `@ts-expect-error` 음성 계약(`tsc`로 검사).
 - 서버 `notification.entity.spec.ts`: TypeORM enum 컬럼이 core enum 객체를 직접 사용함을 확인.
 - 서버 `notification.service.spec.ts`: 실제 생성 입구의 타입 거부(ts-jest), actor 유무·자기 행동·저장 후 전달·저장 실패 시 미전달 검증.
 - 웹 `features/notification/__tests__/definitions.test.ts`: 모든 타입의 문구·경로·시스템 표시와 한영 보간 계약, 기존 대체 표시 검증.
 
-## 3. 알림 타입 (17종)
+## 3. 알림 타입 (18종)
 
 | 분류      | 타입                                                                            |
 | --------- | ------------------------------------------------------------------------------- |
@@ -71,11 +71,12 @@ FeedbackService    ──emit──▶ feedback.replied ──▶ FeedbackReplyN
 | 후기      | `TRADE_REVIEW_RECEIVED`                                                         |
 | 직거래    | `TRADE_RESERVED`, `TRADE_COMPLETED`                                             |
 | 북적 공지 | `FEEDBACK_REPLIED` — 문의 답변. **행위자 없음**(`actorId` null)                 |
+| 독서 기록 | `READING_LOG_KONG` — 내 독서 기록에 콩                                          |
 
 **행위자 없는 알림**: `createNotification(recipientId, null, ...)`로 보냅니다. 북적이 보내는 알림이라
 "자기 행동은 자기에게 알리지 않는다" 검사를 건너뜁니다(운영자가 자기 문의에 답해도 알림이 감).
 웹은 `isSystemNotification`으로 골라 행위자 대신 북적 로고·이름을 보입니다. 타입을 추가하면 운영 DB의
-`notification_type_enum`에도 값을 넣어야 합니다(DDL 로그 3·13절).
+`notification_type_enum`에도 값을 넣어야 합니다(DDL 로그 3·13·16절).
 
 ## 4. API 엔드포인트
 

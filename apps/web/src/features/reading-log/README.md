@@ -17,7 +17,7 @@ reading-log/
 │   └── use-stack-milestone-store.ts  # 기록 직후 장면(넘은 사물·부위). 루트 호스트가 띄운다
 ├── utils/reading-log-link.ts        # 내 독서기록 딥링크(?date · ?month · ?view) 만들기·읽기
 ├── utils/month-logs.ts              # 한 해 기록에서 그 달 거르기·날짜별 묶기
-├── __tests__/                        # queries · mutations · reading-log-calendar · day-details-dialog · stack-height-card · stack-comparison
+├── __tests__/                        # queries · mutations · reading-log-calendar · day-details-dialog · stack-height-card · stack-comparison · kong
 └── components/
     ├── dock-peek/                    # 하단 dock 패널(보기 전용)
     │   ├── reading-calendar-panel/   # 미니 기록 달력. 날짜를 누르면 독서기록 페이지의 그날로
@@ -40,7 +40,7 @@ reading-log/
     │   ├── stack-compare-stage/      # 같은 쌓은 책 옆에 나·작가를 바꿔 세우는 무대 (소개 모달·소개 페이지 공용, 이름 칩은 숨길 수 있음)
     │   ├── stack-ladder-stage/       # 쌓은 책을 몇 장면으로 키우며 다음 사물이 바뀌는 무대 (소개 모달)
     │   ├── stack-demo/               # 공개 소개 페이지의 체험 무대(예시 46권)와 시작 버튼
-    │   ├── stack-book-dialog/
+    │   ├── stack-book-dialog/        # 쌓은 책 한 권 상세 + 맨 아래 콩 줄 (+ stories)
     │   ├── stack-share-dialog/       # 공유 이미지 (Canvas), 제목 넣을 책 고르기
     │   ├── stack-milestone-dialog/   # 기록으로 사물·부위·내 키를 넘었을 때의 장면 (+ stories)
     │   ├── stack-milestone-host/     # 루트 레이아웃에 붙는 장면·도감 호스트(코드 분할)
@@ -52,6 +52,17 @@ reading-log/
     │   ├── hooks/use-stack-person.ts # 내 캐릭터·키 (저장값 없으면 프로필 성별·평균 키)
     │   ├── hooks/use-canvas-measure.ts # 장면 글자 폭 재기 (독서 키재기 무대·북적 책동산 공용)
     │   └── lib/                      # 장면 생성·손그림 선·캐릭터·사물(objects·figure-objects)·SVG/Canvas 렌더러, 예시 46권(sample-books: 스토리·테스트·신기능 소개), 북적 책동산 장면(mountain-scene)·이정표 그림(figure-landmarks)
+    ├── kong/                         # 콩: 남의 기록에 보내는 리액션
+    │   ├── lib/kong-art.ts           # 콩·종지 그림(키재기와 같은 연필), sample-kongs(스토리용)
+    │   ├── kong-figure/              # 콩 한 알 · 바둥거리는 콩(flailing-kong) (+ stories)
+    │   ├── hooks/                    # use-kong-flail(바둥) · use-received-kong-map(받은 콩 표)
+    │   ├── kong-visitor-row/         # 키재기 다이얼로그: 보내기·날아가 앉기·비로그인 말풍선
+    │   ├── kong-owner-row/           # 키재기 다이얼로그(내 기록): 받은 콩·보낸 사람
+    │   ├── kong-pill/                # 독서기록 hero의 받은 콩 알약 (+ stories)
+    │   ├── kong-bowl/ · kong-bowl-dialog/ # 콩 종지
+    │   ├── kong-about-dialog/        # 「콩이란?」
+    │   ├── kong-badge/               # 달력 칸의 콩 표시
+    │   └── kong-received-line/       # 목록·하루 상세의 「콩 N · 보낸 사람」
     ├── list-view/
     │   └── reading-log-list-view/
     ├── stats-view/
@@ -189,6 +200,22 @@ reading-log/
 - **키 입력**: 입력 중에는 유효한 값(80~230)만 반영하고, 오류는 칸을 벗어날 때만 띄웁니다.
 
 > 카드덱 뷰(`deck-view`)와 공유 페이지는 독서 키재기로 대체하며 지웠습니다(2026-09-25). 옛 링크 `/share/deck/[handle]`은 그 사용자의 공개 프로필로 영구 리다이렉트합니다.
+
+### 콩 (`kong`, 2026-10-07)
+
+공개 프로필 독서 키재기에서 남의 기록에 보내는 리액션입니다. 댓글처럼 직설적이지 않게, 「읽느라 수고했다」는 작고 까만 경의 한 알만 보냅니다. 규칙과 API는 서버 README 「콩」.
+
+- **그림**: 키재기와 같은 연필(`stack-view/lib/pencil.ts`)로 그립니다(`kong/lib/kong-art.ts`). 몸은 순검정이 아닌 다크 그레이(`#3A3633`, 순검정이면 연필 윤곽이 묻힘), 크림색 점눈·작은 웃는 입·바깥 끝이 처진 팔자 눈썹. 눈썹은 40px 아래에서 빼고, 점눈은 작게 그려도 1px 아래로 줄지 않습니다. 표정은 `smile`(평소)·`squeeze`(눈 질끈, 바둥·비행)·`sleep`(받은 콩이 없을 때) 셋. 팔다리는 바둥거릴 때만 두 프레임(`flail0`·`flail1`)을 번갈아 그립니다. 시안 단계에서 콩 배꼽(hilum)·감자형 몸·큰 흰자 눈은 기각했습니다.
+- **보는 사람별 콩 줄**(`stack-book-dialog`의 `kong` prop): 공개 프로필에서 남의 기록이면 `KongVisitorRow`, 내 프로필·내 독서 키재기면 `KongOwnerRow`.
+  - 비로그인: 콩이 바둥거리고 로그인 말풍선(로그인 뒤 돌아올 주소 저장). 바로 로그인 화면으로 넘기지 않습니다.
+  - 안 보냄: 누르면 납작 → 「콩!」 → 포물선으로 빙글 날아 표지 오른쪽 위에 착지. 누르는 즉시 보낸 목록(`readingLogKeys.kongsSent(handle)`)에 넣고 실패하면 되돌립니다. 날아가는 콩은 다이얼로그가 transform 안이라 `document.body`로 포털하고, 앉는 콩은 표지 요소로 포털합니다. 탭을 옮겨 프레임이 멈추면 비행 시간 뒤 강제로 앉힙니다.
+  - 이미 보냄: 표지 위 내 콩만. 누르면 바둥.
+  - 내 기록: 받은 콩(5알까지 그림)·보낸 사람(셋 넘으면 「외 N명」). 없으면 자는 콩, 비공개면 「받을 수 없어요」.
+- **받은 콩 모아 보기**: 독서기록 hero의 공개 스위치 아래 **종이 알약**(사진 위라 크림색 바탕·검은 테두리). 누르면 **콩 종지**(30알까지 아래 줄부터 소복이, 시드 고정이라 자리가 같음). 종지를 누르면 차례로 튀어 오르고 한 알을 누르면 그 콩만 바둥. 아래 목록을 누르면 그날 상세로(`applyLink({ date })`). 받은 콩이 없으면 자는 콩 알약이 「콩이란?」을 엽니다.
+- **기록 곳곳의 표시**: 달력 칸(데스크톱은 날짜 줄 오른쪽 `KongBadge`, 모바일은 표지 오른쪽 위 흰 테두리 콩), 목록·하루 상세의 「콩 N · 보낸 사람」. 모두 `useReceivedKongMap`으로 같은 캐시(`kongsReceived`)를 봅니다. 공개 소개 페이지의 예시 달력(readOnly)에서는 받지 않습니다. 콩을 받은 기록을 지우면 확인 창에 「받은 콩 N알도 함께 사라져요」를 덧붙입니다.
+- **갱신**: 기록 뮤테이션이 `readingLogKeys._def`를 무효화하므로 받은 콩도 다시 받습니다. 콩 알림이 실시간으로 오면 `kongsReceived`만 따로 무효화합니다(`notification` README).
+- **동작 줄이기**: 날아가기·바둥(팔다리·흔들기)·튀어 오르기를 빼고 표정만 잠깐 바꿉니다. 선 떨림(`stack-boil`)과 자는 콩의 z도 멈춥니다.
+- 확인: Storybook `Features/ReadingLog/Kong/*`, `Features/ReadingLog/Stack/StackBookDialog`(방문자·이미 보냄·비로그인·내 기록·없음·비공개), `Features/ReadingLog/ReadingLogCalendar`(7월에 받은 콩), `pnpm vitest run src/features/reading-log/__tests__/kong.test.tsx`.
 
 ### 라운지 피드
 
