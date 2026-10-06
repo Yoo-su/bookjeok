@@ -1,5 +1,6 @@
 import type { User } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
+import { userEvent, within } from "@storybook/test";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 
@@ -73,5 +74,39 @@ export const LoggedIn: Story = {
         profileImageUrl: null,
       } as unknown as User,
     });
+  },
+};
+
+/**
+ * 데스크톱 메뉴(1280).
+ * - 메뉴에 마우스를 올리면 흐린 손그림 밑줄이 그어지고, 떼면 거꾸로 되감겨 지워진다
+ * - 챕터 번호가 살짝 들린다
+ * - 리뷰·중고마켓을 펼치면 ▾가 뒤집히고 항목이 한 줄씩 내려앉는다. 펼친 동안 밑줄은 남는다
+ * - 현재 메뉴(도서 검색)의 진한 밑줄은 처음에 한 번 그어진다
+ */
+export const ChapterNavigation: Story = {
+  ...ScrollToExpand,
+  parameters: {
+    ...meta.parameters,
+    viewport: { defaultViewport: "desktop" },
+  },
+};
+
+/**
+ * 모바일 메뉴(375). 열린 채로 시작한다. 닫았다 다시 열면 다시 볼 수 있다.
+ * - 시트가 들어오는 동안 섹션과 항목이 한 박자씩 늦게 따라 들어온다
+ * - 항목이 다 들어온 뒤 현재 메뉴(라운지)에 형광펜이 그어진다
+ * - 항목과 햄버거 버튼을 누르는 동안 살짝 눌려 들어간다
+ */
+export const MobileMenu: Story = {
+  ...ScrollToExpand,
+  parameters: {
+    ...meta.parameters,
+    nextjs: { appDirectory: true, navigation: { pathname: "/ko/lounge" } },
+    viewport: { defaultViewport: "mobile" },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "메뉴 열기" }));
   },
 };

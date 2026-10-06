@@ -1,3 +1,4 @@
+import { motion, type Variants } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
@@ -18,6 +19,33 @@ import { cn } from "@/shared/utils/cn";
 
 import { LanguageSwitcher } from "../common/language-switcher";
 import { Logo } from "../common/logo";
+
+// 시트가 미끄러져 들어오는 동안 섹션과 항목이 한 박자씩 늦게 따라 들어온다
+const NAV_VARIANTS: Variants = {
+  hidden: {},
+  shown: { transition: { delayChildren: 0.08, staggerChildren: 0.06 } },
+};
+const SECTION_VARIANTS: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  shown: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 380,
+      damping: 32,
+      staggerChildren: 0.035,
+    },
+  },
+};
+const ITEM_VARIANTS: Variants = {
+  hidden: { opacity: 0, x: -8 },
+  shown: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", stiffness: 420, damping: 34 },
+  },
+};
 
 interface NavItem {
   href: string;
@@ -130,7 +158,7 @@ export const MobileNavSheet = () => {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
-          className="lg:hidden p-2 -mr-2 text-stone-600 hover:text-stone-900 transition-colors"
+          className="lg:hidden p-2 -mr-2 text-stone-600 hover:text-stone-900 transition-[color,scale] duration-150 active:scale-90 motion-reduce:transition-none"
           aria-label={t("menu_open")}
         >
           <Menu className="w-6 h-6" />
@@ -153,9 +181,18 @@ export const MobileNavSheet = () => {
           </div>
         </SheetHeader>
 
-        <nav className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100dvh-80px)] custom-scrollbar">
+        <motion.nav
+          variants={NAV_VARIANTS}
+          initial="hidden"
+          animate="shown"
+          className="flex flex-col gap-6 p-6 overflow-y-auto h-[calc(100dvh-80px)] custom-scrollbar"
+        >
           {navSections.map((section) => (
-            <div key={section.title} className="space-y-2">
+            <motion.div
+              key={section.title}
+              variants={SECTION_VARIANTS}
+              className="space-y-2"
+            >
               {/*
                 섹션 레이블은 한글이다. font-mono 스택에는 한글 글리프가 없어
                 기기마다 다른 폰트로 대체되고, uppercase는 무효, Latin 소형
@@ -169,46 +206,55 @@ export const MobileNavSheet = () => {
                 {section.items.map((item) => {
                   const active = isActive(item.href);
                   return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => handleLinkClick(item.href)}
-                      className={cn(
-                        "flex items-center justify-between py-2 px-3 text-sm transition-colors duration-200 rounded-md",
-                        active
-                          ? "font-bold text-stone-900"
-                          : "text-stone-600 font-medium hover:bg-stone-50 hover:text-stone-900",
-                      )}
-                    >
-                      {/* 활성 표시는 행 배경이 아니라 글자에 그은 형광펜 자국이다.
-                          자국이 글자보다 살짝 넓어야 손으로 그은 것처럼 보인다. */}
-                      <span
-                        className={cn(active && "highlighter-mark -mx-1 px-1")}
+                    <motion.div key={item.href} variants={ITEM_VARIANTS}>
+                      <Link
+                        href={item.href}
+                        onClick={() => handleLinkClick(item.href)}
+                        className={cn(
+                          "flex items-center justify-between py-2 px-3 text-sm rounded-md",
+                          // 누르는 동안 행이 살짝 눌려 들어간다
+                          "transition-[color,background-color,scale] duration-150 active:scale-[0.98] active:bg-stone-100 motion-reduce:transition-none",
+                          active
+                            ? "font-bold text-stone-900"
+                            : "text-stone-600 font-medium hover:bg-stone-50 hover:text-stone-900",
+                        )}
                       >
-                        {item.label}
-                      </span>
-                      {/*
+                        {/* 활성 표시는 행 배경이 아니라 글자에 그은 형광펜 자국이다.
+                          자국이 글자보다 살짝 넓어야 손으로 그은 것처럼 보인다. */}
+                        {/* 항목이 다 들어온 뒤에 펜을 긋는다 */}
+                        <span
+                          className={cn(
+                            active && "highlighter-mark -mx-1 px-1",
+                          )}
+                          style={
+                            active ? { animationDelay: "320ms" } : undefined
+                          }
+                        >
+                          {item.label}
+                        </span>
+                        {/*
                         챕터 인덱스는 값이 바뀌지도, 사람이 받아적지도 않는
                         정적 레이블이다. mono가 할 일이 없고 "코드" 톤만
                         끌고 오므로 드로어의 명조체를 그대로 물려받는다.
                       */}
-                      <span
-                        className={cn(
-                          "text-[11px] tabular-nums select-none",
-                          active
-                            ? "text-stone-900 font-bold"
-                            : "text-stone-400",
-                        )}
-                      >
-                        {item.index}
-                      </span>
-                    </Link>
+                        <span
+                          className={cn(
+                            "text-[11px] tabular-nums select-none",
+                            active
+                              ? "text-stone-900 font-bold"
+                              : "text-stone-400",
+                          )}
+                        >
+                          {item.index}
+                        </span>
+                      </Link>
+                    </motion.div>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </nav>
+        </motion.nav>
       </SheetContent>
     </Sheet>
   );
