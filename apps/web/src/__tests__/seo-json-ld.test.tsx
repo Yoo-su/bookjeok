@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 import { BookSaleJsonLd } from "@/features/book-sale/components/common/book-sale-json-ld";
 import { getBookSaleShareData } from "@/features/book-sale/utils/share";
 import { ReviewJsonLd } from "@/features/review/components/common/review-json-ld";
-import { getReviewShareDescription } from "@/features/review/utils/share";
+import {
+  getReviewSearchTitle,
+  getReviewShareDescription,
+} from "@/features/review/utils/share";
 
 const book: BookInfo = {
   isbn: "9791167376442",
@@ -63,6 +66,15 @@ function jsonLd(element: React.ReactElement) {
 }
 
 describe("검색봇에 전달하는 실제 JSON-LD", () => {
+  it("검색 제목에 책명을 보충하되 이미 포함된 책명은 반복하지 않는다", () => {
+    expect(getReviewSearchTitle(review)).toBe("테스트 도서 리뷰: 감상");
+    expect(
+      getReviewSearchTitle({ ...review, title: "『테스트도서』를 읽고" }),
+    ).toBe("『테스트도서』를 읽고");
+    expect(getReviewSearchTitle({ ...review, book: undefined })).toBe("감상");
+    expect(getReviewSearchTitle({ ...review, isPublic: false })).toBe("감상");
+  });
+
   it("작성자 비공개 원문은 공유 설명에 포함하지 않는다", () => {
     expect(getReviewShareDescription({ ...review, isPublic: false })).toBe(
       "테스트 도서 - 저자",

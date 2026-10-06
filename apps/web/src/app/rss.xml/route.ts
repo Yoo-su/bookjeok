@@ -3,8 +3,9 @@ import "@/shared/libs/axios";
 import { getRecentBookSales, getReviews } from "@bookjeok/api-client";
 import { cleanHtmlText, Review, UsedBookSale } from "@bookjeok/core";
 
-// 봇이 칠 때마다 함수를 깨우고 백엔드를 두 번 치던 자리.
-// 내용은 목록 상위 60건이라 6시간 단위로 굳혀도 색인에 영향이 없다.
+import { sanitizeReviewContent } from "@/shared/utils/sanitize-review-content";
+
+// 피드는 최신 리뷰·판매글 각 30건을 6시간 캐시한다.
 export const revalidate = 21600; // 6시간
 
 /**
@@ -16,7 +17,7 @@ export const revalidate = 21600; // 6시간
  */
 const ITEMS_PER_SOURCE = 30;
 
-/** 구글·네이버 모두 설명은 200자 안쪽에서 자른다. */
+/** 판매글 설명은 짧은 발췌로 제공한다. 리뷰는 아래에서 본문 전체를 제공한다. */
 const DESCRIPTION_MAX_LENGTH = 200;
 
 /** CDATA 안에서는 `]]>`만이 유일한 탈출 문자열이다. 만나면 두 섹션으로 쪼갠다. */
@@ -42,7 +43,9 @@ export async function GET() {
   ]);
 
   if (reviewResult.status === "fulfilled") {
-    reviews = reviewResult.value.reviews || [];
+    reviews = (reviewResult.value.reviews || []).filter(
+      (review) => review.isPublic === true,
+    );
   } else {
     console.error("Failed to fetch reviews for RSS feed:", reviewResult.reason);
   }
@@ -63,7 +66,8 @@ export async function GET() {
     ...reviews.map((r) => ({
       title: `[도서리뷰] ${r.book?.title || "도서"} - ${r.title}`,
       link: `https://bookjeok.com/ko/book/reviews/${r.id}`,
-      description: toSnippet(r.content),
+      // 네이버 RSS 가이드에 맞춰 공개 리뷰의 정제한 HTML 본문 전체를 제공한다.
+      description: sanitizeReviewContent(r.content ?? ""),
       // 태그를 카테고리로 함께 싣는다. 네이버가 RSS를 신규 웹문서 수집
       // 소스로 쓰는데, 고정값 하나만 실으면 글마다 주제 구분이 없다.
       categories: ["도서리뷰", ...(r.tags ?? [])],
@@ -83,8 +87,8 @@ export async function GET() {
 
   // 4. RSS Item XML 생성
   //
-  // 제목·본문은 사용자 입력이라 전부 CDATA로 감싼다. 이전에는 리뷰 본문
-  // HTML이 그대로 실려 스니펫에 태그가 보였다.
+  // 제목·본문은 사용자 입력이라 전부 CDATA로 감싼다.
+  // 리뷰 HTML은 위에서 정제하고, 판매글은 텍스트 발췌를 제공한다.
   const xmlItems = feedItems
     .map(
       (item) => `

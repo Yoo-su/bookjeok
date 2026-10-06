@@ -490,6 +490,8 @@ bookjeok/
 │   ├── book-data-migration-plan.md
 │   ├── manual-ddl-log.md
 │   ├── seo-audit-2026-09-19.md
+│   ├── review-search-audit-2026-10-07.md
+│   ├── review-search-official-guidance-2026-10-07.md
 │   ├── vercel-usage-audit-2026-09-20.md
 │   └── ddl/                      # 운영에 적용한 DDL 원본
 ├── .agents/rules/                # 코드베이스 컨벤션 (개발자 & AI 에이전트 공용)
@@ -665,6 +667,8 @@ pnpm test
 ### 설계 · 운영
 
 SEO·SNS 공유 점검 결과: [2026-09-19 SEO 감사](docs/seo-audit-2026-09-19.md) — 주요 페이지 운영 응답, 구조화 데이터 결함, 검색 발견성과 공유 개선 사항.
+
+도서 리뷰 검색 노출: [2026-10-07 리뷰 점검](docs/review-search-audit-2026-10-07.md) · [공식 가이드 조사](docs/review-search-official-guidance-2026-10-07.md). 같은 날 후속 적용으로 공개 리뷰의 검색·OG 제목에 도서명을 보충하고 RSS에 정제한 HTML 본문 전체를 제공합니다. IndexNow·서버 리뷰 링크·페이지네이션은 후속 과제입니다.
 
 Vercel 사용량 점검: [2026-09-20 비용 진단](docs/vercel-usage-audit-2026-09-20.md) — 운영 캐시 반복 측정, 배포별 ISR 재생성, 사이트맵·404 렌더 및 응답 크기 분석.
 
