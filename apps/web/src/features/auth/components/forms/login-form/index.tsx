@@ -31,12 +31,10 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="w-full max-w-sm p-8 mx-4 space-y-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
+    <div className="w-full max-w-sm p-8 mx-4 space-y-6 bg-white border border-gray-200 rounded-2xl shadow-sm font-(family-name:--font-gowun-batang)">
       <div className="flex flex-col items-center gap-2">
         <Logo />
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          {t("title")}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
         <p className="text-sm text-gray-500">{t("subtitle")}</p>
       </div>
 
@@ -56,7 +54,7 @@ export const LoginForm = () => {
         <button
           type="button"
           onClick={() => handleSocialLogin("auth/naver")}
-          className="w-full h-11 flex items-center justify-center gap-2 bg-[#03C75A] hover:bg-[#02B350] transition-colors rounded-xl font-medium text-white text-[15px] cursor-pointer shadow-xs"
+          className="w-full h-11 flex items-center justify-center gap-2 bg-[#03C75A] hover:bg-[#02B350] transition-colors rounded-xl font-bold text-white text-[15px] cursor-pointer shadow-xs"
         >
           <svg
             width="18"
@@ -77,7 +75,7 @@ export const LoginForm = () => {
         <button
           type="button"
           onClick={() => handleSocialLogin("auth/kakao")}
-          className="w-full h-11 flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#FDD835] transition-colors rounded-xl font-medium text-[#191919] text-[15px] cursor-pointer shadow-xs"
+          className="w-full h-11 flex items-center justify-center gap-2 bg-[#FEE500] hover:bg-[#FDD835] transition-colors rounded-xl font-bold text-[#191919] text-[15px] cursor-pointer shadow-xs"
         >
           <svg
             width="18"
@@ -202,7 +200,7 @@ function EmailLoginForm() {
 
         <Button
           type="submit"
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="w-full bg-emerald-600 font-bold text-white hover:bg-emerald-700"
           disabled={isLoading}
         >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
