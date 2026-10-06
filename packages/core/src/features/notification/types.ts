@@ -21,6 +21,8 @@ export enum NotificationType {
   TRADE_COMPLETED = "TRADE_COMPLETED",
   // 북적이 보내는 알림 (행위자 없음)
   FEEDBACK_REPLIED = "FEEDBACK_REPLIED",
+  // 독서 기록에 콩
+  READING_LOG_KONG = "READING_LOG_KONG",
 }
 
 export interface NotificationUser {
@@ -79,6 +81,12 @@ export interface NotificationMetadataMap {
     feedbackId: number;
     feedbackType: FeedbackType;
     bookTitle?: string;
+  };
+  // 날짜는 독서기록 페이지에서 그날 상세를 여는 링크에 쓴다
+  [NotificationType.READING_LOG_KONG]: {
+    readingLogId: string;
+    date: string;
+    bookTitle: string;
   };
 }
 

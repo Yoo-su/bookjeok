@@ -4,7 +4,7 @@ import { ReadingLog } from "@bookjeok/core";
 import { format, isAfter, startOfDay } from "date-fns";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { cn } from "@/shared/utils";
 import { formatDate } from "@/shared/utils/format-date";
@@ -12,10 +12,13 @@ import { formatDate } from "@/shared/utils/format-date";
 import { SeasonalTheme } from "../../../constants/ui";
 import { PLANT_COVER, useJustPlanted } from "../../../hooks/use-just-planted";
 import { CoverDayCell } from "../../common/cover-day-cell";
+import { KongBadge } from "../../kong/kong-badge";
 
 interface ReadingLogDayCellProps {
   date: Date;
   logs: ReadingLog[];
+  /** 그날 기록들이 받은 콩 */
+  kongCount?: number;
   isCurrentMonth: boolean;
   onClick: () => void;
   theme: SeasonalTheme;
@@ -24,6 +27,7 @@ interface ReadingLogDayCellProps {
 export function ReadingLogDayCell({
   date,
   logs,
+  kongCount = 0,
   isCurrentMonth,
   onClick,
   theme,
@@ -38,7 +42,8 @@ export function ReadingLogDayCell({
   const planted = useJustPlanted(logs);
 
   const formattedDate = format(date, "yyyy-MM-dd");
-  const cellAriaLabel = `${formattedDate}${hasLogs ? ` (${logs.length})` : ""}`;
+  const tKong = useTranslations("kong.badge");
+  const cellAriaLabel = `${formattedDate}${hasLogs ? ` (${logs.length})` : ""}${kongCount > 0 ? `, ${tKong("aria", { count: kongCount })}` : ""}`;
 
   // 모바일은 표지가 칸을 꽉 채우는 칸(dock 달력 패널과 같음). 칸이 좁아 날짜 줄·제목을 두면 표지가 작아짐.
   // 화면 폭은 CSS로 갈라 둘 중 하나만 그리드 칸이 됨(display:none은 칸을 차지하지 않음)
@@ -46,6 +51,7 @@ export function ReadingLogDayCell({
     <CoverDayCell
       day={date}
       logs={logs}
+      kongCount={kongCount}
       isFuture={isFuture}
       onClick={onClick}
       className="sm:hidden"
@@ -102,6 +108,7 @@ export function ReadingLogDayCell({
           >
             {formatDate(date, locale, "day")}
           </span>
+          <KongBadge count={kongCount} className="pt-0.5 pr-0.5" />
         </div>
 
         {/* 통합 View: 책 표지 Hero UI (모바일은 미니 표지, 데스크탑은 표지+제목) */}

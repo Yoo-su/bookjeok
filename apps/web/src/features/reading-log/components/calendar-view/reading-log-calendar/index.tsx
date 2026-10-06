@@ -31,6 +31,7 @@ import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { groupLogsByDate, logsInMonth } from "../../../utils/month-logs";
 import { DayDetailsDialog } from "../../common/day-details-dialog";
+import { useReceivedKongMap } from "../../kong/hooks/use-received-kong-map";
 import { ReadingLogListView } from "../../list-view/reading-log-list-view";
 import { StackSkeleton } from "../../stack-view/stack-skeleton";
 import { ReadingLogStats } from "../../stats-view/reading-log-stats";
@@ -128,6 +129,7 @@ export function ReadingLogCalendar({
   );
 
   const isLoading = readOnly ? false : isYearLoading;
+  const kongs = useReceivedKongMap({ enabled: !readOnly });
   // 다른 해를 받는 중. yearLogs는 아직 그리고 있는 해의 기록
   const isWaiting = !readOnly && isPlaceholderData;
 
@@ -290,16 +292,23 @@ export function ReadingLogCalendar({
                     isWaiting && "pointer-events-none",
                   )}
                 >
-                  {calendarDays.map((day) => (
-                    <ReadingLogDayCell
-                      key={day.toISOString()}
-                      date={day}
-                      logs={getLogsForDate(day)}
-                      isCurrentMonth={isSameMonth(day, monthStart)}
-                      onClick={() => handleDayClick(day)}
-                      theme={theme}
-                    />
-                  ))}
+                  {calendarDays.map((day) => {
+                    const logs = getLogsForDate(day);
+                    return (
+                      <ReadingLogDayCell
+                        key={day.toISOString()}
+                        date={day}
+                        logs={logs}
+                        kongCount={logs.reduce(
+                          (sum, log) => sum + (kongs.get(log.id)?.count ?? 0),
+                          0,
+                        )}
+                        isCurrentMonth={isSameMonth(day, monthStart)}
+                        onClick={() => handleDayClick(day)}
+                        theme={theme}
+                      />
+                    );
+                  })}
                 </motion.div>
               </AnimatePresence>
             </div>

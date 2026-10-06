@@ -1,6 +1,6 @@
 # Reading-Log Module (`features/reading-log`)
 
-개인 독서 기록(캘린더·통계·설정)과 공개 피드인 **독서 라운지**를 함께 담당합니다. 컨트롤러가 두 개로 나뉘어 있습니다.
+개인 독서 기록(캘린더·통계·설정)과 공개 피드인 **독서 라운지**, 남의 기록에 보내는 리액션 **콩**을 함께 담당합니다.
 
 ## 1. 폴더 구조
 
@@ -10,13 +10,21 @@ reading-log/
 ├── constants.ts                       # 라운지 페이지 크기·집계 기간
 ├── controllers/
 │   ├── reading-log.controller.ts      # /reading-logs (개인, 인증 필요)
+│   ├── reading-log-kong.controller.ts # /reading-logs/:id/kongs, /reading-logs/kongs/* (콩, 인증 필요)
 │   ├── lounge.controller.ts           # /reading-logs/lounge (공개)
 │   └── public-reading-log.controller.ts # /reading-logs/users/:handle/stack (공개 프로필의 독서 키재기)
 ├── services/
 │   ├── reading-log.service.ts
-│   └── reading-log.service.spec.ts
-├── entities/reading-log.entity.ts
-├── listeners/reading-log-cleanup.listener.ts   # user.withdrawn
+│   ├── reading-log.service.spec.ts
+│   ├── reading-log-kong.service.ts    # 콩 보내기·받은 콩·보낸 콩
+│   └── reading-log-kong.service.spec.ts
+├── entities/
+│   ├── reading-log.entity.ts
+│   └── reading-log-kong.entity.ts     # reading_log_kongs
+├── events/reading-log.events.ts       # reading-log.kong-sent
+├── listeners/
+│   ├── reading-log-cleanup.listener.ts       # user.withdrawn
+│   └── reading-log-notification.listener.ts  # 콩 → READING_LOG_KONG 알림
 ├── utils/cursor.util.ts                # 커서 조각 검증 (500 → 400)
 ├── utils/mountain.util.ts              # 북적 책동산 합산 (두께·지층 띠·넘은 이정표)
 └── dtos/
@@ -42,6 +50,14 @@ reading-log/
 | PATCH  | `/settings`          | 라운지 공개 설정 변경                       |
 | PATCH  | `/:id`               | 기록 수정 (메모·날짜)                       |
 | DELETE | `/:id`               | 기록 삭제                                   |
+
+### 콩 (`/reading-logs`) — 인증 필요
+
+| 메서드 | 경로                  | 설명                                                                 |
+| ------ | --------------------- | -------------------------------------------------------------------- |
+| POST   | `/:id/kongs`          | 콩 보내기. 이미 보냈으면 `sent: false`로 200. 내 기록 400·비공개 404 |
+| GET    | `/kongs/received`     | 내 기록이 받은 콩 (최근 받은 기록부터, 기록마다 보낸 사람)           |
+| GET    | `/kongs/sent?handle=` | 그 사용자의 기록 중 내가 콩을 보낸 기록 id                           |
 
 ### 공개 독서 키재기 (`/reading-logs/users`) — 인증 없음
 
@@ -174,9 +190,21 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 `isReadingLogPublic`이 `true`인 사용자의 기록만 라운지 피드와 공개 프로필에 노출됩니다. 라운지 조회 쿼리에 이 조건이 항상 포함되므로, 새 라운지 API를 추가할 때 반드시 함께 적용해야 합니다.
 
+### 콩
+
+공개된 남의 독서 기록에 보내는 리액션입니다. 엔티티는 `ReadingLogKong`(`reading_log_kongs`, DDL 로그 16절).
+
+- **한 기록에 한 사람이 한 알, 거둬들이지 않습니다.** `(readingLogId, senderId)` 유니크에 `INSERT ... ON CONFLICT DO NOTHING`으로 넣고, 무시되면 `sent: false`로 성공합니다. 연타·동시 요청도 한 알이고 알림도 한 번이라 `hasNotification` 중복 검사를 두지 않았습니다.
+- **보낼 수 없는 경우**: 형태가 틀린 id(uuid 캐스팅 500을 막으려 `isUuid`로 먼저 거름)·없는 기록·주인이 비공개이거나 탈퇴 → `READING_LOG_NOT_FOUND`(404). 내 기록 → `READING_LOG_KONG_SELF`(400). 비공개를 404로 두어 기록이 있는지조차 드러내지 않습니다.
+- **알림**: 새로 보냈을 때만 `reading-log.kong-sent`를 발행하고 `ReadingLogNotificationListener`가 주인에게 `READING_LOG_KONG`(`readingLogId`·`date`·`bookTitle`)을 보냅니다. 웹은 `date`로 독서기록 페이지의 그날 상세를 엽니다. 알림 실패는 로그만 남기고 콩은 그대로입니다.
+- **받은 수는 주인만 봅니다.** 공개 API(공개 키재기)에는 콩을 싣지 않습니다. 보는 사람이 보낸 기록은 `/kongs/sent`로 따로 받아, 공개 키재기 응답을 캐시와 무관하게 둡니다.
+- **받은 콩의 날짜**는 `TO_CHAR(log.date, 'YYYY-MM-DD')`로 받습니다(위 「`date` 컬럼」).
+- **기록을 지우면** 그 기록이 받은 콩은 FK CASCADE로 함께 지워집니다. 이미 간 알림은 남고, 누르면 그날 상세가 빈 채로 열립니다. 기록 날짜를 바꾸면 이전 알림은 옛 날짜를 엽니다.
+- 받은 콩은 전부 한 번에 돌려줍니다. 2026-10-07 기준 독서 기록 181행이라 페이지를 나누지 않았습니다. 수천 알을 넘으면 기록별 집계와 보낸 사람 목록을 나누세요.
+
 ### 탈퇴
 
-`user.withdrawn` → `ReadingLogCleanupListener`가 해당 사용자의 기록을 정리합니다.
+`user.withdrawn` → `ReadingLogCleanupListener`가 해당 사용자의 기록과 **남에게 보낸 콩**을 정리합니다. 회원 행은 소프트 삭제라 `senderId` FK의 CASCADE가 돌지 않아 직접 지웁니다. 내 기록이 받은 콩은 기록과 함께 CASCADE로 지워집니다.
 
 ## 6. 관련
 

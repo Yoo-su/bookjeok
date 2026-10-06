@@ -94,6 +94,12 @@ export const API_PATHS = {
     mountainMine: "/reading-logs/mountain/me",
     loungeBookReaders: (isbn: string) =>
       `/reading-logs/lounge/book/${isbn}/readers`,
+    /** 콩 보내기. 한 기록에 한 사람이 한 알 (인증 필요) */
+    kongs: (id: string) => `/reading-logs/${id}/kongs`,
+    /** 내가 받은 콩 (인증 필요) */
+    kongsReceived: "/reading-logs/kongs/received",
+    /** 한 사용자의 기록 중 내가 콩을 보낸 기록 (인증 필요, `?handle=`) */
+    kongsSent: "/reading-logs/kongs/sent",
   },
   review: {
     base: "/reviews",

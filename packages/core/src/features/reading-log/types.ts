@@ -208,3 +208,42 @@ export interface ActiveReader {
 export interface ActiveReadersResponse {
   items: ActiveReader[];
 }
+
+/** 콩을 보낸 사람 */
+export interface KongSender {
+  userId: number;
+  nickname: string;
+  handle: string;
+  profileImageUrl: string | null;
+}
+
+/** 콩을 받은 독서 기록 한 건 */
+export interface ReceivedKongLog {
+  logId: string;
+  /** 기록 날짜(YYYY-MM-DD). 알림·종지에서 그날 상세로 넘어갈 때 쓴다 */
+  date: string;
+  book: ReadingLogBook;
+  count: number;
+  /** 최근에 보낸 사람부터 */
+  senders: KongSender[];
+  /** 마지막으로 콩을 받은 시각(ISO 8601) */
+  lastReceivedAt: string;
+}
+
+/** 내가 받은 콩. 주인만 본다 */
+export interface ReceivedKongsResponse {
+  total: number;
+  /** 최근에 콩을 받은 기록부터 */
+  logs: ReceivedKongLog[];
+}
+
+/** 한 사용자의 기록 중 내가 콩을 보낸 기록 */
+export interface SentKongsResponse {
+  logIds: string[];
+}
+
+/** 콩 보내기 결과. 이미 보낸 기록이면 sent가 false다 */
+export interface SendKongResponse {
+  logId: string;
+  sent: boolean;
+}

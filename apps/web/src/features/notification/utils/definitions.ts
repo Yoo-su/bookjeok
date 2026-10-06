@@ -1,8 +1,10 @@
 import { type NotificationMetadata, NotificationType } from "@bookjeok/core";
 
+import { readingLogHref } from "@/features/reading-log/utils/reading-log-link";
 import { PATHS } from "@/shared/constants/paths";
 import type en from "@/shared/i18n/messages/en.json";
 import type ko from "@/shared/i18n/messages/ko.json";
+import { parseCalendarDate } from "@/shared/utils/format-date";
 
 type StringKeys<T> = {
   [K in keyof T]: T[K] extends string ? K : never;
@@ -170,6 +172,19 @@ export const notificationDefinitions: NotificationDefinitions = {
     system: true,
     params: noParams,
     link: () => PATHS.MY_PAGE_FEEDBACK,
+  },
+  // 내 독서기록 페이지에서 그날 상세를 연다
+  [NotificationType.READING_LOG_KONG]: {
+    messageKey: "reading_log_kong",
+    system: false,
+    params: (metadata, actorName) => ({
+      actorName,
+      bookTitle: metadata.bookTitle || "",
+    }),
+    link: (metadata) =>
+      metadata.date
+        ? readingLogHref({ date: parseCalendarDate(metadata.date) })
+        : PATHS.READING_LOG,
   },
 };
 

@@ -3,6 +3,7 @@
 import {
   createReadingLog,
   deleteReadingLog,
+  sendKong,
   updateReadingLog,
   updateReadingLogSettings,
 } from "@bookjeok/api-client";
@@ -10,6 +11,8 @@ import {
   CreateReadingLogParams,
   ReadingLog,
   readingLogKeys,
+  SendKongResponse,
+  SentKongsResponse,
   UpdateReadingLogParams,
   User,
   userKeys,
@@ -172,5 +175,43 @@ export const useDeleteReadingLogMutation = (options?: {
       options?.onSuccess?.();
     },
     onError: options?.onError,
+  });
+};
+
+/**
+ * 콩 보내기 뮤테이션. 누르자마자 보낸 콩이 앉도록 보낸 목록에 먼저 넣고, 실패하면 되돌린다.
+ * 서버는 같은 기록에 두 번 보내도 성공(sent: false)으로 답한다
+ */
+export const useSendKongMutation = (
+  handle: string,
+  options?: {
+    onSuccess?: (data: SendKongResponse) => void;
+    onError?: (error: unknown) => void;
+  },
+) => {
+  const queryClient = useQueryClient();
+  const sentKey = readingLogKeys.kongsSent(handle).queryKey;
+
+  return useMutation({
+    mutationFn: (logId: string) => sendKong(logId),
+    onMutate: async (logId) => {
+      await queryClient.cancelQueries({ queryKey: sentKey });
+      const previous = queryClient.getQueryData<SentKongsResponse>(sentKey);
+      queryClient.setQueryData<SentKongsResponse>(sentKey, (old) => ({
+        logIds: old?.logIds.includes(logId)
+          ? old.logIds
+          : [...(old?.logIds ?? []), logId],
+      }));
+      return { previous };
+    },
+    onError: (error, _logId, context) => {
+      // 받기 전이었으면 비워 둔다. undefined로 set하면 무시되어 낙관적 값이 남는다
+      if (context?.previous)
+        queryClient.setQueryData(sentKey, context.previous);
+      else queryClient.removeQueries({ queryKey: sentKey, exact: true });
+      options?.onError?.(error);
+    },
+    onSuccess: (data) => options?.onSuccess?.(data),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: sentKey }),
   });
 };

@@ -12,6 +12,7 @@ vi.mock("@bookjeok/api-client", () => ({
   deleteReadingLog: vi.fn(),
   updateReadingLog: vi.fn(),
   getReadingLogs: vi.fn(),
+  getReceivedKongs: vi.fn(),
 }));
 
 vi.mock("@/shared/config/i18n/routing", () => ({
@@ -69,6 +70,7 @@ describe("DayDetailsDialog", () => {
     });
     vi.clearAllMocks();
     vi.mocked(apis.getReadingLogs).mockResolvedValue([mockLog1]);
+    vi.mocked(apis.getReceivedKongs).mockResolvedValue({ total: 0, logs: [] });
   });
 
   const renderDialog = (initialLogs: ReadingLog[] = [mockLog1]) => {
@@ -97,6 +99,40 @@ describe("DayDetailsDialog", () => {
       expect(screen.getByText("데미안")).toBeInTheDocument();
       expect(screen.getByText("첫 번째 책 메모")).toBeInTheDocument();
     });
+  });
+
+  it("콩을 받은 기록에만 받은 수와 보낸 사람을 붙인다", async () => {
+    queryClient.setQueryData(readingLogKeys.kongsReceived.queryKey, {
+      total: 2,
+      logs: [
+        {
+          logId: "log-2",
+          date: "2026-08-21",
+          book: mockLog2.book,
+          count: 2,
+          senders: [
+            {
+              userId: 3,
+              nickname: "하루",
+              handle: "haru",
+              profileImageUrl: null,
+            },
+            {
+              userId: 4,
+              nickname: "책벌레",
+              handle: "bug",
+              profileImageUrl: null,
+            },
+          ],
+          lastReceivedAt: "2026-08-22T00:00:00.000Z",
+        },
+      ],
+    });
+    renderDialog([mockLog1, mockLog2]);
+
+    expect(await screen.findByText("하루 · 책벌레")).toBeInTheDocument();
+    // 번역 목은 키를 그대로 돌려준다. 콩 줄은 받은 기록 하나에만
+    expect(screen.getAllByText("count")).toHaveLength(1);
   });
 
   it("캐시에 새로운 독서기록이 추가되면 모달이 다시 열리지 않아도 즉각 반영되어야 합니다", async () => {

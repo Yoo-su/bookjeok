@@ -53,7 +53,7 @@ const user = useAuthStore((state) => state.user);
 
 ### 3-2. 알림 시스템
 
-- `NotificationType` (17종): 리뷰 반응, 댓글, 중고거래 결제·배송·구매확정·취소 라이프사이클, 직거래 예약·완료, 문의 답변(행위자 없음).
+- `NotificationType` (18종): 리뷰 반응, 댓글, 중고거래 결제·배송·구매확정·취소 라이프사이클, 직거래 예약·완료, 문의 답변(행위자 없음), 독서 기록 콩.
 - `NotificationProvider`에서 실시간 수신 → TanStack Query 캐시 갱신 및 토스트 알림 노출. 재연결(두 번째 이후 `connect`) 시 토스트 없이 알림 목록·개수 재조회.
 
 ---

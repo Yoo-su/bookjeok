@@ -210,6 +210,10 @@ export const ERROR_CODES = {
     code: 'READING_LOG_003',
     message: '미래 날짜로는 기록할 수 없습니다.',
   },
+  READING_LOG_KONG_SELF: {
+    code: 'READING_LOG_004',
+    message: '내 독서 기록에는 콩을 보낼 수 없습니다.',
+  },
 
   // ============================================
   // 채팅 관련 에러 (CHAT)

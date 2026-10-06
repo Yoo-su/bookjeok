@@ -32,6 +32,8 @@ import {
   useDeleteReadingLogMutation,
   useUpdateReadingLogMutation,
 } from "../../../mutations";
+import { useReceivedKongMap } from "../../kong/hooks/use-received-kong-map";
+import { KongReceivedLine } from "../../kong/kong-received-line";
 import {
   ReadingLogFormDialog,
   ReadingLogFormValues,
@@ -57,6 +59,7 @@ export function DayDetailsDialog({
   const t = useTranslations("reading_log.details_dialog");
   const tLog = useTranslations("reading_log");
   const tCommon = useTranslations("common");
+  const tKong = useTranslations("kong.owner");
 
   // 생성 모드 상태
   const [selectedBookForCreate, setSelectedBookForCreate] =
@@ -75,6 +78,8 @@ export function DayDetailsDialog({
     { year: (date ?? new Date()).getFullYear() },
     { enabled: !readOnly && !!date },
   );
+
+  const kongs = useReceivedKongMap({ enabled: !readOnly && open });
 
   // 현재 날짜의 로그 필터링
   const currentLogs = readOnly
@@ -142,9 +147,13 @@ export function DayDetailsDialog({
   const confirm = useConfirm();
 
   const handleRemoveLog = async (log: ReadingLog) => {
+    const kongCount = kongs.get(log.id)?.count ?? 0;
     const isConfirmed = await confirm({
       title: tLog("dialog.delete_title"),
-      description: tLog("dialog.delete_desc"),
+      // 받은 콩은 기록과 함께 지워지고 되돌릴 수 없다
+      description: kongCount
+        ? `${tLog("dialog.delete_desc")} ${tKong("delete_note", { count: kongCount })}`
+        : tLog("dialog.delete_desc"),
       confirmText: tCommon("actions.delete"),
       variant: "destructive",
     });
@@ -243,6 +252,12 @@ export function DayDetailsDialog({
                         )}
                       </div>
 
+                      {!readOnly && (
+                        <KongReceivedLine
+                          log={kongs.get(log.id)}
+                          className="mt-2"
+                        />
+                      )}
                       {log.memo && (
                         <div className="mt-auto pt-3 border-t border-stone-50">
                           <div className="flex items-start gap-2.5">

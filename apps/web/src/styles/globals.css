@@ -516,6 +516,28 @@ html::-webkit-scrollbar {
     visibility: visible;
   }
 }
+/* 콩: 받은 콩이 없을 때 자는 콩 위로 z가 피어오른다 */
+.kong-zz {
+  animation: kong-zz 2.4s ease-out infinite;
+}
+@keyframes kong-zz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(8px, -10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kong-zz {
+    animation: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .stack-boil-0 {
     animation: none;

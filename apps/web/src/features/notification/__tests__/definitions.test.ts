@@ -211,6 +211,21 @@ const cases: { [T in NotificationType]: Fixture<T> } = {
     params: {},
     link: "/my-page/feedback",
   },
+  READING_LOG_KONG: {
+    notification: {
+      ...base,
+      type: NotificationType.READING_LOG_KONG,
+      metadata: {
+        readingLogId: "11111111-1111-4111-8111-111111111111",
+        date: "2026-10-05",
+        bookTitle: "책",
+      },
+    },
+    key: "reading_log_kong",
+    params: { actorName: "독자", bookTitle: "책" },
+    // 그날 상세를 여는 독서기록 딥링크. 날짜는 로컬 자정으로 읽어 하루 밀리지 않는다
+    link: "/my-page/reading-log?date=2026-10-05",
+  },
 };
 
 describe("알림 표현 등록부", () => {

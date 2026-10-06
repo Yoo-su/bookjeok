@@ -14,6 +14,8 @@ import { cn } from "@/shared/utils";
 import { getDateLocale } from "@/shared/utils/format-date";
 
 import { getSeasonalTheme } from "../../../hooks/use-seasonal-theme";
+import { useReceivedKongMap } from "../../kong/hooks/use-received-kong-map";
+import { KongReceivedLine } from "../../kong/kong-received-line";
 
 interface ReadingLogListViewProps {
   logs?: ReadingLog[];
@@ -32,6 +34,7 @@ export function ReadingLogListView({
   const [visibleCount, setVisibleCount] = useState(10);
 
   const queryResult = useReadingLogsInfiniteQuery({ enabled: !isControlled });
+  const kongs = useReceivedKongMap({ enabled: !readOnly });
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     isControlled
       ? {
@@ -173,6 +176,7 @@ export function ReadingLogListView({
                     {log.memo}
                   </div>
                 )}
+                <KongReceivedLine log={kongs.get(log.id)} className="mt-2" />
               </div>
             </div>
           </Fragment>

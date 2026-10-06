@@ -1,5 +1,10 @@
 import { privateApiClient } from "@bookjeok/api-client";
-import { type ReadingLog, readingLogKeys } from "@bookjeok/core";
+import {
+  API_PATHS,
+  type ReadingLog,
+  readingLogKeys,
+  type ReceivedKongsResponse,
+} from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { AxiosAdapter } from "axios";
@@ -38,6 +43,16 @@ const requests = {
 const fakeReadingLogAdapter =
   (latency: number): AxiosAdapter =>
   async (config) => {
+    // 받은 콩: 7월 앞쪽 기록 몇 개가 받은 것으로. 기록 요청 수에는 세지 않는다
+    if (config.url === API_PATHS.readingLog.kongsReceived) {
+      return {
+        data: storyKongs(),
+        status: 200,
+        statusText: "OK",
+        headers: {},
+        config,
+      };
+    }
     const { year } = config.params ?? {};
     requests.add(`${config.url}?year=${year}`);
     await new Promise((r) => setTimeout(r, latency));
@@ -46,6 +61,24 @@ const fakeReadingLogAdapter =
       .sort((a, b) => a.date.localeCompare(b.date));
     return { data, status: 200, statusText: "OK", headers: {}, config };
   };
+
+function storyKongs(): ReceivedKongsResponse {
+  const july = SAMPLE_LOGS.filter((l) => l.date.startsWith("2026-07"));
+  const logs = july.slice(0, 3).map((log, i) => ({
+    logId: log.id,
+    date: log.date,
+    book: log.book,
+    count: 3 - i,
+    senders: ["책벌레", "하루", "민지"].slice(0, 3 - i).map((nickname, j) => ({
+      userId: j + 10,
+      nickname,
+      handle: `reader_${j}`,
+      profileImageUrl: null,
+    })),
+    lastReceivedAt: `${log.date}T09:00:00.000Z`,
+  }));
+  return { total: logs.reduce((a, l) => a + l.count, 0), logs };
+}
 
 function CalendarPlayground({ withRecord }: { withRecord: boolean }) {
   const queryClient = useQueryClient();
@@ -122,7 +155,8 @@ type Args = { latency: number; withRecord: boolean };
 const meta: Meta<Args> = {
   title: "Features/ReadingLog/ReadingLogCalendar",
   render: ({ withRecord }) => <CalendarPlayground withRecord={withRecord} />,
-  parameters: { layout: "padded" },
+  // 날짜를 누르면 여는 하루 상세가 앱 라우터를 쓴다
+  parameters: { layout: "padded", nextjs: { appDirectory: true } },
   args: { latency: 1200, withRecord: false },
   argTypes: {
     latency: { control: { type: "range", min: 0, max: 3000, step: 100 } },
