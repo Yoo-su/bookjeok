@@ -1,6 +1,8 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 
 import { Search, X } from "@/shared/components/icons/iconsax";
 import { Input } from "@/shared/components/shadcn/input";
@@ -33,6 +35,7 @@ export const BookSearchInput = ({
 
   const { inputValue, setInputValue, executeSearch, handleKeyDown } =
     useBookSearchParams({ paramName });
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // 입력값 변경 핸들러
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +57,7 @@ export const BookSearchInput = ({
         )}
 
         <Input
+          ref={inputRef}
           type={isHero ? "search" : "text"}
           enterKeyHint="search"
           value={inputValue}
@@ -68,16 +72,35 @@ export const BookSearchInput = ({
           }
         />
 
-        {isHero && inputValue && (
-          <button
-            type="button"
-            onClick={() => setInputValue("")}
-            className={styles.clearButton}
-            aria-label={t("hero.clear")}
-          >
-            <X size={18} />
-          </button>
-        )}
+        {/* 버튼 자리는 CSS transform으로 잡혀 있어 안의 X만 돌리며 키우고 줄인다 */}
+        <AnimatePresence initial={false}>
+          {isHero && inputValue && (
+            <motion.button
+              type="button"
+              // 지운 뒤 바로 다시 입력하게 포커스를 돌려줌
+              onClick={() => {
+                setInputValue("");
+                inputRef.current?.focus();
+              }}
+              className={styles.clearButton}
+              aria-label={t("hero.clear")}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, pointerEvents: "none" }}
+              transition={{ duration: 0.15 }}
+            >
+              <motion.span
+                className="grid place-items-center"
+                initial={{ scale: 0.4, rotate: -90 }}
+                animate={{ scale: 1, rotate: 0 }}
+                exit={{ scale: 0.4, rotate: 90 }}
+                transition={{ type: "spring", stiffness: 520, damping: 24 }}
+              >
+                <X size={18} />
+              </motion.span>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {!isHero && (
           <button

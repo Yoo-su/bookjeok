@@ -2,10 +2,10 @@
 
 import { BookInfo, FeedbackType } from "@bookjeok/core";
 import { useInfiniteBookSearch } from "@bookjeok/react-query";
-import { motion } from "motion/react";
+import { motion, type Variants } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 import { FeedbackButton } from "@/features/feedback/components/feedback-button";
@@ -15,9 +15,28 @@ import { cn } from "@/shared/utils/cn";
 import { BookCard } from "../../common/book-card";
 import { BookSearchResultListSkeleton } from "./skeleton";
 
+/** 처음 몇 장만 차례로, 그 뒤는 한꺼번에. 한 쪽(20권)을 다 차례로 세우면 끝이 너무 늦다 */
+const STAGGER_COUNT = 8;
+
+// custom = 차례(0부터). 다음 쪽은 0으로 받아 한꺼번에 나타남
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (order: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.28,
+      ease: "easeOut",
+      delay: Math.min(order, STAGGER_COUNT) * 0.04,
+    },
+  }),
+};
+
 interface BookSearchResultListProps {
   /** 쿼리 파라미터 이름 (기본값: "q") */
   paramName?: string;
+  /** 넘기면 URL 대신 이 검색어로 찾는다 */
+  query?: string;
 }
 
 /**
@@ -27,11 +46,12 @@ interface BookSearchResultListProps {
  */
 export const BookSearchResultList = ({
   paramName = "q",
+  query: queryProp,
 }: BookSearchResultListProps) => {
   const t = useTranslations("book.search");
   const tFeedback = useTranslations("feedback");
   const searchParams = useSearchParams();
-  const query = searchParams.get(paramName) || "";
+  const query = queryProp ?? (searchParams.get(paramName) || "");
 
   const {
     data,
@@ -40,8 +60,21 @@ export const BookSearchResultList = ({
     hasNextPage,
     isFetching,
     isFetchingNextPage,
+    isPlaceholderData,
     status,
   } = useInfiniteBookSearch(query);
+
+  // 그리고 있는 결과의 검색어. 새 검색어 결과가 도착해야 바뀌어 목록을 새로 세운다.
+  // 처음부터 캐시에 있던 결과(뒤로 가기 등)는 움직이지 않고, 그 뒤 받은 쪽만 나타나게 한다
+  const ready = status === "success" && !isPlaceholderData;
+  const [shown, setShown] = useState(() => ({
+    query: ready ? query : null,
+    swapped: false,
+    cachedPages: ready ? (data?.pages.length ?? 0) : 0,
+  }));
+  if (ready && shown.query !== query) {
+    setShown({ query, swapped: true, cachedPages: 0 });
+  }
 
   // 바닥에 닿기 전에 미리 불러와 로딩 표시가 하단 검색 알약에 가리지 않게 함
   const { ref, inView } = useInView({
@@ -95,26 +128,6 @@ export const BookSearchResultList = ({
     );
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.03,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.3,
-      },
-    },
-  };
-
   const isTransitioning =
     isFetching && !isFetchingNextPage && status === "success";
 
@@ -125,25 +138,25 @@ export const BookSearchResultList = ({
         isTransitioning && "opacity-40 pointer-events-none",
       )}
     >
-      <div className="grid gap-x-4 gap-y-6 grid-cols-2 sm:grid-cols-4">
-        {data?.pages.map((page, pageIndex: number) => (
-          <motion.div
-            key={`page-${pageIndex}`}
-            className="col-span-full grid gap-x-4 gap-y-6 grid-cols-2 sm:grid-cols-4"
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-          >
-            {page.items?.map((book: BookInfo, bookIndex: number) => (
-              <motion.div
-                key={book.isbn || `book-${pageIndex}-${bookIndex}`}
-                variants={itemVariants}
-              >
-                <BookCard book={book} />
-              </motion.div>
-            ))}
-          </motion.div>
-        ))}
+      <div
+        key={shown.query ?? ""}
+        className="grid gap-x-4 gap-y-6 grid-cols-2 sm:grid-cols-4"
+      >
+        {data?.pages.map((page, pageIndex: number) => {
+          const animate = shown.swapped || pageIndex >= shown.cachedPages;
+          return page.items?.map((book: BookInfo, bookIndex: number) => (
+            <motion.div
+              // 쪽마다 따로 받으니 같은 책이 두 쪽에 올 수 있어 쪽 번호를 붙임
+              key={`${pageIndex}-${book.isbn || bookIndex}`}
+              custom={pageIndex === 0 ? bookIndex : 0}
+              variants={itemVariants}
+              initial={animate ? "hidden" : false}
+              animate="visible"
+            >
+              <BookCard book={book} />
+            </motion.div>
+          ));
+        })}
       </div>
 
       {/* 다음 페이지를 불러오기 위한 트리거 요소 */}
