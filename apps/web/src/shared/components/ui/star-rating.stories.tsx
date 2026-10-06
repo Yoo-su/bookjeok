@@ -82,7 +82,10 @@ export const Large: Story = {
   },
 };
 
-/** 인터랙티브 데모: 실제 값 변경 체험 */
+/**
+ * 인터랙티브 데모. 값이 오르면 앞 별부터 하나씩 차오르고 누른 별이 통 튄다.
+ * 내릴 때는 바로 비운다. 화살표 키로 바꿔도 같다
+ */
 export const Interactive: Story = {
   args: {
     value: 0,
