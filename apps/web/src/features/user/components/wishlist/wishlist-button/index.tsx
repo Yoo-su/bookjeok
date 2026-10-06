@@ -12,6 +12,7 @@ import {
 import { AnimatedHeart } from "@/shared/components/icons/animated";
 import { Heart } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import { Burst } from "@/shared/components/ui/burst";
 import { cn } from "@/shared/utils";
 
 interface WishlistButtonProps {
@@ -46,6 +47,8 @@ export const WishlistButton = ({
     initialIsWishlisted ?? false,
   );
 
+  const [burstKey, setBurstKey] = useState<number | null>(null);
+
   const addToWishlistMutation = useAddToWishlistMutation();
   const removeFromWishlistMutation = useRemoveFromWishlistMutation();
 
@@ -79,6 +82,7 @@ export const WishlistButton = ({
       );
     } else {
       setIsWishlisted(true);
+      setBurstKey(Date.now());
       addToWishlistMutation.mutate(
         { type, id },
         {
@@ -109,7 +113,7 @@ export const WishlistButton = ({
     <Button
       variant="ghost"
       size="icon"
-      className={cn("rounded-full hover:bg-transparent", className)}
+      className={cn("relative rounded-full hover:bg-transparent", className)}
       onClick={handleToggle}
       aria-label={isWishlisted ? t("remove_wishlist") : t("add_wishlist")}
       aria-pressed={isWishlisted}
@@ -126,6 +130,9 @@ export const WishlistButton = ({
         )}
         aria-hidden="true"
       />
+      {burstKey !== null && (
+        <Burst key={burstKey} className="text-red-500" particles={6} />
+      )}
     </Button>
   );
 };

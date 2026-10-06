@@ -26,6 +26,7 @@ import { getJsonLd } from "@/shared/config/json-ld";
 import { generateGlobalMetadata } from "@/shared/config/metadata";
 import { OverlayProvider } from "@/shared/hooks/use-overlay";
 import { IntlMessagesProvider } from "@/shared/providers/intl-messages-provider";
+import { MotionProvider } from "@/shared/providers/motion-provider";
 import { QueryProvider } from "@/shared/providers/query-provider";
 import { SocketProvider } from "@/shared/providers/socket-provider";
 import UserProvider from "@/shared/providers/user-provider";
@@ -89,58 +90,60 @@ export default async function Layout({
           {t("common.aria.skip_to_content")}
         </a>
         <NextIntlClientProvider messages={null}>
-          <IntlMessagesProvider>
-            <NavigationProgress />
-            <QueryProvider>
-              <UserProvider>
-                {/* 알림 시스템 */}
-                <SocketProvider namespace="/notification">
-                  <NotificationProvider />
-                </SocketProvider>
+          <MotionProvider>
+            <IntlMessagesProvider>
+              <NavigationProgress />
+              <QueryProvider>
+                <UserProvider>
+                  {/* 알림 시스템 */}
+                  <SocketProvider namespace="/notification">
+                    <NotificationProvider />
+                  </SocketProvider>
 
-                {/* 채팅 시스템 (중첩 또는 병렬 - 리스너가 각 제공자 내부에 있으므로 형제 관계도 작동함) */}
-                <SocketProvider namespace="/chat">
-                  <ChatProvider>
-                    <OverlayProvider>
-                      <div
-                        id="main-content"
-                        tabIndex={-1}
-                        className="outline-none"
-                      >
-                        {children}
-                      </div>
-                    </OverlayProvider>
-                  </ChatProvider>
-                </SocketProvider>
-                <BottomDock />
-              </UserProvider>
+                  {/* 채팅 시스템 (중첩 또는 병렬 - 리스너가 각 제공자 내부에 있으므로 형제 관계도 작동함) */}
+                  <SocketProvider namespace="/chat">
+                    <ChatProvider>
+                      <OverlayProvider>
+                        <div
+                          id="main-content"
+                          tabIndex={-1}
+                          className="outline-none"
+                        >
+                          {children}
+                        </div>
+                      </OverlayProvider>
+                    </ChatProvider>
+                  </SocketProvider>
+                  <BottomDock />
+                </UserProvider>
 
-              <Analytics />
-              <SpeedInsights />
-              <GoogleAnalytics />
-              <MicrosoftClarity />
-            </QueryProvider>
-            <ConfirmHost />
-            <StackMilestoneHost />
-            <GlobalMusicHost />
-            <MusicPlayerModal />
-            {/* 하단 dock(약 56px) 위로 띄움 */}
-            <Toaster
-              position="bottom-center"
-              offset={{ bottom: 88 }}
-              mobileOffset={{ bottom: 84 }}
-            />
-            <JsonLd data={jsonLdData} />
-            {config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID && (
-              <Script
-                id="adsense-init"
-                async
-                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
-                crossOrigin="anonymous"
-                strategy="afterInteractive"
+                <Analytics />
+                <SpeedInsights />
+                <GoogleAnalytics />
+                <MicrosoftClarity />
+              </QueryProvider>
+              <ConfirmHost />
+              <StackMilestoneHost />
+              <GlobalMusicHost />
+              <MusicPlayerModal />
+              {/* 하단 dock(약 56px) 위로 띄움 */}
+              <Toaster
+                position="bottom-center"
+                offset={{ bottom: 88 }}
+                mobileOffset={{ bottom: 84 }}
               />
-            )}
-          </IntlMessagesProvider>
+              <JsonLd data={jsonLdData} />
+              {config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID && (
+                <Script
+                  id="adsense-init"
+                  async
+                  src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${config.NEXT_PUBLIC_GOOGLE_ADSENSE_ID}`}
+                  crossOrigin="anonymous"
+                  strategy="afterInteractive"
+                />
+              )}
+            </IntlMessagesProvider>
+          </MotionProvider>
         </NextIntlClientProvider>
       </body>
     </html>

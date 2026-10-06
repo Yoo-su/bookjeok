@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/shadcn/dropdown-menu";
 import { Textarea } from "@/shared/components/shadcn/textarea";
+import { Burst } from "@/shared/components/ui/burst";
+import { RollingNumber } from "@/shared/components/ui/rolling-number";
 import { UserAvatarMenu } from "@/shared/components/ui/user-avatar-menu";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
@@ -103,8 +105,12 @@ export const CommentItem = ({
     comment.content.split("\n").length > COMMENT_LINE_CLAMP ||
     comment.content.length > 150;
 
+  // 누른 순간 터지도록 서버 응답 전에 띄운다. 좋아요를 켤 때만
+  const [likeBurstKey, setLikeBurstKey] = useState<number | null>(null);
+
   const handleLike = () => {
     if (!isAuthenticated || isLikePending) return;
+    if (!comment.isLiked) setLikeBurstKey(Date.now());
     toggleLike(comment.id);
   };
 
@@ -283,7 +289,7 @@ export const CommentItem = ({
             >
               <div
                 className={cn(
-                  "flex items-center justify-center p-1.5 rounded-[12px] transition-all duration-300",
+                  "relative flex items-center justify-center p-1.5 rounded-[12px] transition-all duration-300",
                   comment.isLiked
                     ? "bg-stone-900 text-white shadow-sm"
                     : "bg-stone-50 text-stone-400 group-hover/like:bg-stone-100",
@@ -299,11 +305,21 @@ export const CommentItem = ({
                   )}
                   aria-hidden="true"
                 />
+                {likeBurstKey !== null && (
+                  <Burst
+                    key={likeBurstKey}
+                    className="text-stone-900"
+                    particles={6}
+                    distance={20}
+                    size={4}
+                  />
+                )}
               </div>
               {comment.likeCount > 0 && (
-                <span className="tabular-nums tracking-wide">
-                  {comment.likeCount}
-                </span>
+                <RollingNumber
+                  value={comment.likeCount}
+                  className="tracking-wide"
+                />
               )}
             </button>
           </div>

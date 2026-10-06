@@ -3,10 +3,11 @@ import {
   usePublicUserProfileQuery,
   useSellerStatsQuery,
 } from "@bookjeok/react-query";
+import { motion } from "motion/react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { SaleStatusBadge } from "@/features/book-sale/components/common/sale-status-badge";
 import { READING_LOG_MIN_YEAR } from "@/features/reading-log/constants/ui";
@@ -65,6 +66,7 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
     enabled: Boolean(handle),
   });
   const [activeTab, setActiveTab] = useState<ProfileTab>("READING");
+  const tabUnderlineId = `profile-tab-underline-${useId()}`;
 
   if (isLoading) {
     return <UserProfileSkeleton />;
@@ -90,23 +92,37 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
           <button
             type="button"
             onClick={() => setActiveTab("READING")}
-            className={`pb-3 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+            className={`relative pb-3 px-4 text-sm font-bold border-b-2 border-transparent transition-colors cursor-pointer ${
               activeTab === "READING"
-                ? "border-stone-900 text-stone-900"
-                : "border-transparent text-stone-400 hover:text-stone-600"
+                ? "text-stone-900"
+                : "text-stone-400 hover:text-stone-600"
             }`}
           >
+            {activeTab === "READING" && (
+              <motion.span
+                layoutId={tabUnderlineId}
+                className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-stone-900"
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+              />
+            )}
             {tReview("list.tab_reading")}
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("TRADE_REVIEWS")}
-            className={`pb-3 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`relative pb-3 px-4 text-sm font-bold border-b-2 border-transparent transition-colors cursor-pointer flex items-center gap-1.5 ${
               activeTab === "TRADE_REVIEWS"
-                ? "border-stone-900 text-stone-900"
-                : "border-transparent text-stone-400 hover:text-stone-600"
+                ? "text-stone-900"
+                : "text-stone-400 hover:text-stone-600"
             }`}
           >
+            {activeTab === "TRADE_REVIEWS" && (
+              <motion.span
+                layoutId={tabUnderlineId}
+                className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-stone-900"
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+              />
+            )}
             <span>
               {tReview("list.tab_trade_reviews", { count: reviewCount })}
             </span>

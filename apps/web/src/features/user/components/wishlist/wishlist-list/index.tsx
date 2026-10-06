@@ -1,6 +1,7 @@
 "use client";
 
 import { useMyWishlistQuery } from "@bookjeok/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
@@ -10,11 +11,18 @@ import {
   Search,
 } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import { FilterTabs } from "@/shared/components/ui/filter-tabs";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
 import { WishlistItem } from "../wishlist-item";
 import { WishlistSkeleton } from "./skeleton";
+
+const LIST_ITEM_TRANSITION = {
+  type: "spring",
+  stiffness: 420,
+  damping: 38,
+} as const;
 
 type FilterTabKey = "ALL" | "BOOK" | "SALE";
 
@@ -99,39 +107,11 @@ export const WishlistList = () => {
   return (
     <div className="space-y-6">
       {/* 상태 필터 탭 바 (모바일 가로 스크롤) */}
-      <div className="border-b border-stone-200 dark:border-stone-800">
-        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.key;
-            const count = counts[tab.key];
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs"
-                    : "text-stone-500 hover:text-stone-900 hover:bg-stone-100 dark:hover:bg-stone-800"
-                }`}
-              >
-                {tab.label}
-                {count !== undefined && count > 0 && (
-                  <span
-                    className={`ml-1 text-[11px] ${
-                      isActive
-                        ? "opacity-90 font-mono"
-                        : "text-stone-400 font-mono"
-                    }`}
-                  >
-                    ({count})
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <FilterTabs
+        tabs={tabs.map((tab) => ({ ...tab, count: counts[tab.key] }))}
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* 빈 목록 상태 */}
       {filteredWishlist.length === 0 ? (
@@ -173,10 +153,20 @@ export const WishlistList = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredWishlist.map((item) => (
-            <WishlistItem key={item.id} item={item} />
-          ))}
+        // 탭을 바꿀 때는 새로 그리고, 같은 탭 안에서 찜을 해제했을 때만 빠지는 움직임을 준다
+        <div key={activeTab} className="relative flex flex-col gap-3">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {filteredWishlist.map((item) => (
+              <motion.div
+                key={item.id}
+                layout="position"
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={LIST_ITEM_TRANSITION}
+              >
+                <WishlistItem item={item} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </div>

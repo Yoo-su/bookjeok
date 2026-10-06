@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
+import { FilterTabs } from "@/shared/components/ui/filter-tabs";
 import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -65,27 +66,7 @@ export const MyPurchasesList = () => {
   return (
     <div className="space-y-6">
       {/* 상태 필터 탭 바 (모바일 가로 스크롤) */}
-      <div className="border-b border-stone-200 dark:border-stone-800">
-        <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-none">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => handleTabChange(tab.key)}
-                className={`whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 shadow-2xs"
-                    : "text-stone-500 hover:text-stone-900 hover:bg-stone-100 dark:hover:bg-stone-800"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <FilterTabs tabs={tabs} value={activeTab} onChange={handleTabChange} />
 
       {/* 로딩 상태 */}
       {isLoading && <PurchasesSkeleton />}

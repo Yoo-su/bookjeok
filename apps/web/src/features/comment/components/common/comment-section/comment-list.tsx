@@ -2,6 +2,7 @@
 
 import { CommentTargetType } from "@bookjeok/core";
 import { useCommentsQuery } from "@bookjeok/react-query";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
@@ -63,16 +64,27 @@ export const CommentList = ({
   return (
     <div className="space-y-4">
       {/* 댓글 목록 */}
-      <div className="space-y-3">
-        {comments.map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            targetType={targetType}
-            targetId={targetId}
-            page={page}
-          />
-        ))}
+      {/* 페이지를 넘길 때는 새로 그리고, 같은 페이지에서 쓰거나 지운 댓글만 움직인다 */}
+      <div key={page} className="relative flex flex-col gap-3">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {comments.map((comment) => (
+            <motion.div
+              key={comment.id}
+              layout="position"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 420, damping: 38 }}
+            >
+              <CommentItem
+                comment={comment}
+                targetType={targetType}
+                targetId={targetId}
+                page={page}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
       {/* 페이지네이션 */}
