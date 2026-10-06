@@ -34,10 +34,12 @@ export const LoginForm = () => {
     <div className="w-full max-w-sm p-8 mx-4 space-y-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
       <div className="flex flex-col items-center gap-2">
         <Logo />
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="font-(family-name:--font-gowun-batang) text-2xl font-bold text-gray-900">
           {t("title")}
         </h1>
-        <p className="text-sm text-gray-500">{t("subtitle")}</p>
+        <p className="font-(family-name:--font-gowun-batang) text-sm text-gray-500">
+          {t("subtitle")}
+        </p>
       </div>
 
       <EmailLoginForm />
@@ -46,7 +48,7 @@ export const LoginForm = () => {
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-gray-200" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
+        <div className="relative flex justify-center font-(family-name:--font-gowun-batang) text-xs uppercase">
           <span className="bg-white px-2 text-gray-500">{t("or_social")}</span>
         </div>
       </div>
@@ -97,7 +99,7 @@ export const LoginForm = () => {
         </button>
       </div>
 
-      <div className="text-center text-sm">
+      <div className="text-center font-(family-name:--font-gowun-batang) text-sm">
         <span className="text-gray-500">{t("no_account")} </span>
         <Link
           href={PATHS.SIGNUP}

@@ -99,10 +99,12 @@ export const SignupForm = () => {
   return (
     <div className="w-full max-w-md space-y-8">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h1 className="font-(family-name:--font-gowun-batang) text-2xl font-bold text-gray-900">
           {t("title")}
         </h1>
-        <p className="mt-2 text-sm text-gray-600">{t("subtitle")}</p>
+        <p className="mt-2 font-(family-name:--font-gowun-batang) text-sm text-gray-600">
+          {t("subtitle")}
+        </p>
       </div>
 
       <div className="p-6 bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -336,7 +338,7 @@ export const SignupForm = () => {
           </form>
         </Form>
 
-        <div className="mt-6 text-center text-sm">
+        <div className="mt-6 text-center font-(family-name:--font-gowun-batang) text-sm">
           <span className="text-gray-500">{t("has_account")} </span>
           <Link
             href={PATHS.LOGIN}
