@@ -117,6 +117,8 @@ export const useReviewForEditQuery = (id: number) => {
     queryFn: () => getReviewForEdit(id),
     enabled: !!id,
     retry: false,
+    // 폼은 초기값을 마운트 때 한 번만 읽음. 캐시를 남기면 재진입 시 수정 전 내용으로 굳음
+    gcTime: 0,
   });
 };
 
