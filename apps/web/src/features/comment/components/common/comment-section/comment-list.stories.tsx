@@ -36,7 +36,7 @@ const makeComment = (id: number, likeCount = 0): Comment => ({
 });
 
 /** 서버 대신 캐시를 고쳐 쓰기·지우기·좋아요 수 변화를 흉내 낸다 */
-function CommentsPlayground() {
+function CommentsPlayground({ initialCount }: { initialCount: number }) {
   const [client] = useState(() => {
     const c = new QueryClient({
       defaultOptions: {
@@ -45,8 +45,10 @@ function CommentsPlayground() {
       },
     });
     c.setQueryData<GetCommentsResponse>(KEY, {
-      data: [makeComment(3, 9), makeComment(2, 1), makeComment(1)],
-      meta: { page: 1, limit: 10, total: 3, totalPages: 1 },
+      data: [makeComment(3, 9), makeComment(2, 1), makeComment(1)].slice(
+        3 - initialCount,
+      ),
+      meta: { page: 1, limit: 10, total: initialCount, totalPages: 1 },
     } as GetCommentsResponse);
     return c;
   });
@@ -82,6 +84,13 @@ function CommentsPlayground() {
           <button
             type="button"
             className="rounded-md border border-stone-200 px-2.5 py-1.5"
+            onClick={() => update((list) => list.slice(1))}
+          >
+            맨 위 댓글 지우기
+          </button>
+          <button
+            type="button"
+            className="rounded-md border border-stone-200 px-2.5 py-1.5"
             onClick={() =>
               update((list) =>
                 list.map((c, i) =>
@@ -108,6 +117,7 @@ const meta = {
   title: "Features/Comment/CommentList",
   component: CommentsPlayground,
   parameters: { layout: "padded" },
+  args: { initialCount: 3 },
   beforeEach: () => {
     useAuthStore.setState({
       user: { id: VIEWER_ID, nickname: "미리보기" } as unknown as User,
@@ -125,3 +135,9 @@ type Story = StoryObj<typeof meta>;
  * - 하트를 누르면 점이 퍼진다. 서버가 없어 요청은 실패하고 토스트가 뜬다
  */
 export const Interactions: Story = {};
+
+/**
+ * 댓글이 없는 책·리뷰. 첫 댓글을 달면 빈 안내가 빠지고 댓글이 올라오며 나타나고,
+ * 마지막 댓글을 지우면 반대로 빈 안내가 돌아온다
+ */
+export const FromEmpty: Story = { args: { initialCount: 0 } };

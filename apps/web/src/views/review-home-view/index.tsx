@@ -36,6 +36,9 @@ interface ReviewHomeViewProps {
  * 서버 렌더링이 생략되어 크롤러에 빈 페이지가 전달되므로 파싱된 값을 props로 받습니다.
  * URL 파싱은 ReviewHomeViewWithParams가 담당합니다.
  */
+// 필터를 바꿀 때마다 맨 위로 튀지 않게 URL만 바꾸고 스크롤은 그대로 둔다
+const KEEP_SCROLL = { scroll: false } as const;
+
 export const ReviewHomeView = ({
   category,
   tag,
@@ -66,7 +69,7 @@ export const ReviewHomeView = ({
     } else {
       params.delete("search");
     }
-    router.push(`${PATHS.REVIEWS}?${params.toString()}`);
+    router.push(`${PATHS.REVIEWS}?${params.toString()}`, KEEP_SCROLL);
   };
 
   const handleCategoryClick = (nextCategory: string) => {
@@ -78,7 +81,7 @@ export const ReviewHomeView = ({
       params.set("category", nextCategory);
     }
 
-    router.push(`${PATHS.REVIEWS}?${params.toString()}`);
+    router.push(`${PATHS.REVIEWS}?${params.toString()}`, KEEP_SCROLL);
   };
 
   /** 하나의 필터만 걷어내고 나머지 파라미터는 보존한다. */
@@ -86,12 +89,15 @@ export const ReviewHomeView = ({
     const params = new URLSearchParams(searchParamsString);
     params.delete(key);
     const query = params.toString();
-    router.push(query ? `${PATHS.REVIEWS}?${query}` : PATHS.REVIEWS);
+    router.push(
+      query ? `${PATHS.REVIEWS}?${query}` : PATHS.REVIEWS,
+      KEEP_SCROLL,
+    );
   };
 
   const clearFilters = () => {
     setSearchInput("");
-    router.push(PATHS.REVIEWS);
+    router.push(PATHS.REVIEWS, KEEP_SCROLL);
   };
 
   return (

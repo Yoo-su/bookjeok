@@ -1,10 +1,11 @@
 "use client";
 
 import { setMonth, setYear } from "date-fns";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 
+import { SlidingNumber } from "@/shared/components/animateui/sliding-number";
 import { ChevronLeft, ChevronRight } from "@/shared/components/icons/iconsax";
 import {
   Select,
@@ -47,6 +48,7 @@ export function ReadingLogControls({
   readOnly = false,
 }: ReadingLogControlsProps) {
   const t = useTranslations("reading_log.controls");
+  const tPeek = useTranslations("reading_log.peek");
   const underlineId = `view-mode-underline-${useId()}`;
   // 연도 선택 옵션 생성 (현재 연도 + 1 년 동안 2020년까지)
   const currentYear = new Date().getFullYear();
@@ -87,39 +89,26 @@ export function ReadingLogControls({
               <div className="flex items-baseline gap-2 relative group cursor-pointer overflow-hidden">
                 {/* 시각적 텍스트 표시 */}
                 <h2 className="text-3xl md:text-4xl font-serif font-medium text-stone-900 tracking-tight flex items-baseline">
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.span
-                      key={currentDate.getMonth()}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -20, opacity: 0 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                      className="inline-block min-w-[1.4em] text-center"
-                    >
-                      {currentDate.getMonth() + 1}
-                    </motion.span>
-                  </AnimatePresence>
-
-                  <AnimatePresence mode="popLayout" initial={false}>
-                    <motion.span
-                      key={currentDate.getFullYear()}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -20, opacity: 0 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                      className="ml-2 text-stone-400 font-light inline-block"
-                    >
-                      {currentDate.getFullYear()}
-                    </motion.span>
-                  </AnimatePresence>
+                  {/* 자릿수 바퀴를 스프링으로 돌려 빠르게 넘겨도 숫자가 겹치지 않는다. 첫 화면은 그대로 */}
+                  {/* 바퀴마다 0~9가 다 들어 있어 화면 낭독은 따로 읽힌다 */}
+                  <span className="sr-only">
+                    {tPeek("month_label", {
+                      year: currentDate.getFullYear(),
+                      month: currentDate.getMonth() + 1,
+                    })}
+                  </span>
+                  <SlidingNumber
+                    aria-hidden="true"
+                    number={currentDate.getMonth() + 1}
+                    initiallyStable
+                    className="min-w-[1.4em] justify-center"
+                  />
+                  <SlidingNumber
+                    aria-hidden="true"
+                    number={currentDate.getFullYear()}
+                    initiallyStable
+                    className="ml-2 text-stone-400 font-light"
+                  />
                 </h2>
 
                 {/* 기능을 위해 텍스트 위에 덮어씌운 투명 Select 트리거 */}

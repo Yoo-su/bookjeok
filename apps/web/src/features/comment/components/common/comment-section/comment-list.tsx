@@ -50,23 +50,27 @@ export const CommentList = ({
     );
   }
 
-  if (!data || data.data.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-lg">{t("empty")}</p>
-        <p className="text-sm mt-1">{t("empty_desc")}</p>
-      </div>
-    );
-  }
-
-  const { data: comments, meta } = data;
+  const comments = data?.data ?? [];
 
   return (
     <div className="space-y-4">
       {/* 댓글 목록 */}
-      {/* 페이지를 넘길 때는 새로 그리고, 같은 페이지에서 쓰거나 지운 댓글만 움직인다 */}
+      {/* 페이지를 넘길 때는 새로 그리고, 같은 페이지에서 쓰거나 지운 댓글만 움직인다.
+          빈 안내도 같은 목록 안에 두어야 첫 댓글·마지막 댓글을 지울 때도 움직인다 */}
       <div key={page} className="relative flex flex-col gap-3">
         <AnimatePresence mode="popLayout" initial={false}>
+          {comments.length === 0 && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, transition: { duration: 0.12 } }}
+              className="text-center py-12 text-muted-foreground"
+            >
+              <p className="text-lg">{t("empty")}</p>
+              <p className="text-sm mt-1">{t("empty_desc")}</p>
+            </motion.div>
+          )}
           {comments.map((comment) => (
             <motion.div
               key={comment.id}
@@ -88,12 +92,14 @@ export const CommentList = ({
       </div>
 
       {/* 페이지네이션 */}
-      <Pagination
-        currentPage={meta.page}
-        totalPages={meta.totalPages}
-        onPageChange={onPageChange}
-        className="mt-6"
-      />
+      {data && comments.length > 0 && (
+        <Pagination
+          currentPage={data.meta.page}
+          totalPages={data.meta.totalPages}
+          onPageChange={onPageChange}
+          className="mt-6"
+        />
+      )}
     </div>
   );
 };
