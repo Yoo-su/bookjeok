@@ -44,7 +44,10 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
-  const { data: stats, isLoading } = useReadingLogStatsQuery(year, month);
+  // 달을 넘길 때 스켈레톤으로 바뀌면 높이가 달라 아래 달력이 출렁인다. 이전 값을 두고 숫자만 굴린다
+  const { data: stats, isLoading } = useReadingLogStatsQuery(year, month, {
+    keepPrevious: true,
+  });
   const t = useTranslations("reading_log.stats");
 
   const getMessage = (monthly: number) => {

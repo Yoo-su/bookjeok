@@ -2,6 +2,7 @@
 
 import { ReadingLog } from "@bookjeok/core";
 import { format, isAfter, startOfDay } from "date-fns";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
 
@@ -9,6 +10,7 @@ import { cn } from "@/shared/utils";
 import { formatDate } from "@/shared/utils/format-date";
 
 import { SeasonalTheme } from "../../../constants/ui";
+import { PLANT_COVER, useJustPlanted } from "../../../hooks/use-just-planted";
 import { CoverDayCell } from "../../common/cover-day-cell";
 
 interface ReadingLogDayCellProps {
@@ -33,6 +35,7 @@ export function ReadingLogDayCell({
   const hasLogs = logs.length > 0;
   const firstLog = hasLogs ? logs[0] : null;
   const extraCount = Math.max(0, logs.length - 1);
+  const planted = useJustPlanted(logs);
 
   const formattedDate = format(date, "yyyy-MM-dd");
   const cellAriaLabel = `${formattedDate}${hasLogs ? ` (${logs.length})` : ""}`;
@@ -116,13 +119,24 @@ export function ReadingLogDayCell({
                   )}]`,
                 )}
               >
-                <Image
-                  src={firstLog.book.image}
-                  alt={firstLog.book.title}
-                  fill
-                  unoptimized
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                {/* 달 넘김 그리드의 AnimatePresence(initial=false)가 안쪽 표지의 등장까지 막으므로 새로 둔다. 움직일지는 표지의 initial이 정함 */}
+                <AnimatePresence>
+                  <motion.div
+                    key={firstLog.id}
+                    initial={planted ? PLANT_COVER.initial : false}
+                    animate={PLANT_COVER.animate}
+                    transition={PLANT_COVER.transition}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={firstLog.book.image}
+                      alt={firstLog.book.title}
+                      fill
+                      unoptimized
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  </motion.div>
+                </AnimatePresence>
 
                 {/* 여러 권일 경우 뱃지 (이미지 위 오버레이) */}
                 {extraCount > 0 && (

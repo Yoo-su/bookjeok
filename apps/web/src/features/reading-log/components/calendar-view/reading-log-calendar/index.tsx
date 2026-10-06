@@ -13,6 +13,7 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
+import { AnimatePresence, motion, type Variants } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -38,6 +39,23 @@ const ReadingStack = dynamic(
   () => import("../../stack-view/reading-stack").then((m) => m.ReadingStack),
   { ssr: false, loading: () => <StackSkeleton /> },
 );
+
+/** 넘긴 쪽에서 들어오고 반대쪽으로 빠짐. 자주 누르는 곳이라 짧게 */
+const monthSlide: Variants = {
+  enter: (dir: number) => ({ x: dir * 24, opacity: 0 }),
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] },
+  },
+  // 다음 달을 받는 동안 이전 달을 흐리게 둠
+  waiting: { x: 0, opacity: 0.45, transition: { duration: 0.2 } },
+  exit: (dir: number) => ({
+    x: dir * -24,
+    opacity: 0,
+    transition: { duration: 0.14, ease: "easeIn" },
+  }),
+};
 
 interface ReadingLogCalendarProps {
   currentDate: Date;
@@ -83,20 +101,30 @@ export function ReadingLogCalendar({
   const {
     data: fetchedMonthlyLogs = [],
     isLoading: isMonthlyLoading,
-    isFetching: isMonthlyFetching,
+    isPlaceholderData,
   } = useReadingLogsQuery(
     { year: currentDate.getFullYear(), month: currentDate.getMonth() + 1 },
-    { enabled: viewMode === "calendar" && !readOnly },
+    { enabled: viewMode === "calendar" && !readOnly, keepPrevious: true },
   );
 
   const logs: ReadingLog[] = readOnly ? initialLogs : fetchedMonthlyLogs;
   const isLoading = readOnly ? false : isMonthlyLoading;
-  const isFetching = readOnly ? false : isMonthlyFetching;
+  // 다른 달을 받는 중. logs는 아직 그리고 있는 달의 기록
+  const isWaiting = !readOnly && isPlaceholderData;
+
+  // 그리는 달은 기록이 도착해야 넘어감. 넘긴 방향으로 슬라이드
+  const [shownMonth, setShownMonth] = useState(() => startOfMonth(currentDate));
+  const [direction, setDirection] = useState(1);
+  const targetMonth = startOfMonth(currentDate);
+  if (!isWaiting && targetMonth.getTime() !== shownMonth.getTime()) {
+    setDirection(targetMonth > shownMonth ? 1 : -1);
+    setShownMonth(targetMonth);
+  }
 
   const handlePrevMonth = () => onDateChange(subMonths(currentDate, 1));
   const handleNextMonth = () => onDateChange(addMonths(currentDate, 1));
 
-  const monthStart = startOfMonth(currentDate);
+  const monthStart = shownMonth;
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart);
   const endDate = endOfWeek(monthEnd);
@@ -126,7 +154,14 @@ export function ReadingLogCalendar({
   };
 
   useEffect(() => {
-    if (!openDate || readOnly || viewMode !== "calendar" || isLoading) return;
+    if (
+      !openDate ||
+      readOnly ||
+      viewMode !== "calendar" ||
+      isLoading ||
+      isWaiting
+    )
+      return;
     // 달이 바뀌기 전 렌더에서는 이전 달 기록이라 기다림
     if (!isSameMonth(openDate, currentDate)) return;
     handleDayClick(openDate);
@@ -144,7 +179,9 @@ export function ReadingLogCalendar({
         onDateChange={onDateChange}
         onPrevMonth={handlePrevMonth}
         onNextMonth={handleNextMonth}
-        isLoading={readOnly ? false : isFetching}
+        // 받는 동안에도 이전 달을 그대로 두므로 처음 불러올 때만 막는다.
+        // 다시 받기마다 막으면 화살표가 흐려지고 연달아 누른 클릭이 먹힌다
+        isLoading={isLoading}
         readOnly={readOnly}
       />
 
@@ -196,17 +233,38 @@ export function ReadingLogCalendar({
 
             {/* 캘린더 그리드 */}
             {/* 모바일은 dock 달력 패널처럼 표지 칸을 띄워 배치, sm 이상은 칸을 선으로 나눈 표 */}
-            <div className="grid grid-cols-7 gap-1 p-2 sm:auto-rows-[160px] sm:gap-0 sm:p-0 sm:divide-x sm:divide-y sm:divide-gray-100">
-              {calendarDays.map((day) => (
-                <ReadingLogDayCell
-                  key={day.toISOString()}
-                  date={day}
-                  logs={getLogsForDate(day)}
-                  isCurrentMonth={isSameMonth(day, monthStart)}
-                  onClick={() => handleDayClick(day)}
-                  theme={theme}
-                />
-              ))}
+            {/* popLayout: 빠지는 달을 겹쳐 띄워 들어오는 달이 제자리에서 시작 */}
+            <div className="relative" aria-busy={isWaiting}>
+              <AnimatePresence
+                initial={false}
+                mode="popLayout"
+                custom={direction}
+              >
+                <motion.div
+                  key={monthStart.getTime()}
+                  custom={direction}
+                  variants={monthSlide}
+                  initial="enter"
+                  animate={isWaiting ? "waiting" : "center"}
+                  exit="exit"
+                  className={cn(
+                    "grid grid-cols-7 gap-1 p-2 sm:auto-rows-[160px] sm:gap-0 sm:p-0 sm:divide-x sm:divide-y sm:divide-gray-100",
+                    // 받는 중인 이전 달을 눌러 지난 기록이 열리지 않게
+                    isWaiting && "pointer-events-none",
+                  )}
+                >
+                  {calendarDays.map((day) => (
+                    <ReadingLogDayCell
+                      key={day.toISOString()}
+                      date={day}
+                      logs={getLogsForDate(day)}
+                      isCurrentMonth={isSameMonth(day, monthStart)}
+                      onClick={() => handleDayClick(day)}
+                      theme={theme}
+                    />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>

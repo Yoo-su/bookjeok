@@ -16,29 +16,44 @@ import {
   getReadingStack,
 } from "@bookjeok/api-client";
 import { readingLogKeys } from "@bookjeok/core";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 
 /**
  * 독서 기록 목록 조회 (월별/연별/최근 기록 통합)
  */
 export const useReadingLogsQuery = (
   params?: { year?: number; month?: number; limit?: number },
-  options?: { enabled?: boolean },
+  options?: {
+    enabled?: boolean;
+    /** 다른 달을 불러오는 동안 이전 결과를 placeholder로 유지 */
+    keepPrevious?: boolean;
+  },
 ) => {
   return useQuery({
     queryKey: readingLogKeys.list(params).queryKey,
     queryFn: () => getReadingLogs(params),
     enabled: options?.enabled,
+    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
   });
 };
 
 /**
  * 월별 독서 통계 조회
  */
-export const useReadingLogStatsQuery = (year: number, month: number) => {
+export const useReadingLogStatsQuery = (
+  year: number,
+  month: number,
+  /** keepPrevious: 다른 달을 받는 동안 이전 통계를 placeholder로 유지 */
+  options?: { keepPrevious?: boolean },
+) => {
   return useQuery({
     queryKey: readingLogKeys.stats(year, month).queryKey,
     queryFn: () => getReadingLogStats({ year, month }),
+    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
   });
 };
 

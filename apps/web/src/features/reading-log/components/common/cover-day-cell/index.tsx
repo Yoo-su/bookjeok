@@ -2,11 +2,14 @@
 
 import type { ReadingLog } from "@bookjeok/core";
 import { isToday } from "date-fns";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils/cn";
+
+import { PLANT_COVER, useJustPlanted } from "../../../hooks/use-just-planted";
 
 interface CoverDayCellProps {
   day: Date;
@@ -36,6 +39,7 @@ export const CoverDayCell = ({
   const first = logs[0];
   const extra = logs.length - 1;
   const today = isToday(day);
+  const planted = useJustPlanted(logs, isLoading);
 
   const cellClass = cn(
     "relative aspect-[3/4] overflow-hidden rounded-md",
@@ -90,16 +94,27 @@ export const CoverDayCell = ({
   const content = (
     <>
       {dateBadge}
-      {first && (
-        <Image
-          src={first.book.image}
-          alt=""
-          fill
-          // 페이지·패널 달력이 같은 주소라 브라우저 캐시를 함께 씀
-          unoptimized
-          className="object-cover"
-        />
-      )}
+      {/* 달 넘김 그리드의 AnimatePresence(initial=false)가 안쪽 표지의 등장까지 막으므로 새로 둔다. 움직일지는 표지의 initial이 정함 */}
+      <AnimatePresence>
+        {first && (
+          <motion.span
+            key={first.id}
+            initial={planted ? PLANT_COVER.initial : false}
+            animate={PLANT_COVER.animate}
+            transition={PLANT_COVER.transition}
+            className="absolute inset-0"
+          >
+            <Image
+              src={first.book.image}
+              alt=""
+              fill
+              // 페이지·패널 달력이 같은 주소라 브라우저 캐시를 함께 씀
+              unoptimized
+              className="object-cover"
+            />
+          </motion.span>
+        )}
+      </AnimatePresence>
       {extra > 0 && (
         <span className="absolute bottom-0.5 right-0.5 rounded bg-stone-900/85 px-1 text-[10px] font-bold leading-4 tabular-nums text-white">
           +{extra}
