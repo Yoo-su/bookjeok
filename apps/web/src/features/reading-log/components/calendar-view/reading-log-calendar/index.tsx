@@ -48,8 +48,8 @@ const monthSlide: Variants = {
     opacity: 1,
     transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] },
   },
-  // 다음 달을 받는 동안 이전 달을 흐리게 둠
-  waiting: { x: 0, opacity: 0.45, transition: { duration: 0.2 } },
+  // 다음 달을 받는 동안 이전 달을 흐리게 둠. 짧은 대기에는 흐려지지 않게 늦게 시작
+  waiting: { x: 0, opacity: 0.45, transition: { delay: 0.2, duration: 0.2 } },
   exit: (dir: number) => ({
     x: dir * -24,
     opacity: 0,

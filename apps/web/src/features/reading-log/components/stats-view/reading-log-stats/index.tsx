@@ -3,6 +3,7 @@
 import { useReadingLogStatsQuery } from "@bookjeok/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { cn } from "@/shared/utils";
@@ -45,9 +46,20 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
   const month = currentDate.getMonth() + 1;
 
   // 달을 넘길 때 스켈레톤으로 바뀌면 높이가 달라 아래 달력이 출렁인다. 이전 값을 두고 숫자만 굴린다
-  const { data: stats, isLoading } = useReadingLogStatsQuery(year, month, {
-    keepPrevious: true,
-  });
+  const {
+    data: stats,
+    isLoading,
+    isPlaceholderData,
+  } = useReadingLogStatsQuery(year, month, { keepPrevious: true });
+  // 제목의 연·월도 숫자가 도착할 때 함께 바꿔 "8월의 독서"에 7월 숫자가 붙지 않게 한다
+  const [shown, setShown] = useState({ year, month });
+  if (
+    stats &&
+    !isPlaceholderData &&
+    (shown.year !== year || shown.month !== month)
+  ) {
+    setShown({ year, month });
+  }
   const t = useTranslations("reading_log.stats");
 
   const getMessage = (monthly: number) => {
@@ -101,7 +113,7 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
       <div className="flex flex-col items-center justify-center text-center space-y-4 group">
         <div className="space-y-1">
           <p className="text-[11px] font-bold tracking-[0.2em] text-stone-400 uppercase">
-            {t("monthly_title", { month })}
+            {t("monthly_title", { month: shown.month })}
           </p>
           <div className="flex items-baseline justify-center gap-1">
             <span
@@ -132,7 +144,7 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
       <div className="flex flex-col items-center justify-center text-center space-y-4 group">
         <div className="space-y-1">
           <p className="text-[11px] font-bold tracking-[0.2em] text-stone-400 uppercase">
-            {t("yearly_title", { year })}
+            {t("yearly_title", { year: shown.year })}
           </p>
           <div className="flex items-baseline justify-center gap-1">
             <span className="text-5xl md:text-7xl font-serif font-light tracking-tight text-stone-800 transition-colors duration-500 group-hover:text-stone-600">
