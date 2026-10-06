@@ -4,9 +4,6 @@ export const readingLogKeys = createQueryKeys("readingLog", {
   list: (params?: { year?: number; month?: number; limit?: number }) => ({
     queryKey: [params],
   }),
-  stats: (year: number, month: number) => ({
-    queryKey: [year, month],
-  }),
   settings: null,
   infinite: null,
   stack: (year: number) => ({

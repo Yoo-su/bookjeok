@@ -12,47 +12,41 @@ import {
   getReadingLogs,
   getReadingLogSettings,
   getReadingLogsInfinite,
-  getReadingLogStats,
   getReadingStack,
 } from "@bookjeok/api-client";
-import { readingLogKeys } from "@bookjeok/core";
+import { CACHE_TIME, readingLogKeys } from "@bookjeok/core";
 import {
   keepPreviousData,
+  queryOptions,
   useInfiniteQuery,
   useQuery,
 } from "@tanstack/react-query";
 
 /**
- * 독서 기록 목록 조회 (월별/연별/최근 기록 통합)
+ * 한 해 독서 기록(날짜 오름차순) 쿼리 옵션. 달력·통계·dock 패널·미리 받기가 같은 캐시를 쓴다.
+ * 내 기록은 뮤테이션 무효화로 갱신되므로 미리 받은 것과 같은 신선도로 둔다
+ */
+export const readingLogsYearQueryOptions = (year: number) =>
+  queryOptions({
+    queryKey: readingLogKeys.list({ year }).queryKey,
+    queryFn: () => getReadingLogs({ year }),
+    staleTime: CACHE_TIME.FIVE_MINUTES,
+  });
+
+/**
+ * 한 해 독서 기록 조회. 월·권수는 부르는 쪽이 이 목록에서 거른다
  */
 export const useReadingLogsQuery = (
-  params?: { year?: number; month?: number; limit?: number },
+  params: { year: number },
   options?: {
     enabled?: boolean;
-    /** 다른 달을 불러오는 동안 이전 결과를 placeholder로 유지 */
+    /** 다른 해를 불러오는 동안 이전 결과를 placeholder로 유지 */
     keepPrevious?: boolean;
   },
 ) => {
   return useQuery({
-    queryKey: readingLogKeys.list(params).queryKey,
-    queryFn: () => getReadingLogs(params),
+    ...readingLogsYearQueryOptions(params.year),
     enabled: options?.enabled,
-    placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
-  });
-};
-
-/**
- * 월별 독서 통계 조회
- */
-export const useReadingLogStatsQuery = (
-  year: number,
-  month: number,
-  /** keepPrevious: 다른 달을 받는 동안 이전 통계를 placeholder로 유지 */
-  options?: { keepPrevious?: boolean },
-) => {
-  return useQuery({
-    queryKey: readingLogKeys.stats(year, month).queryKey,
-    queryFn: () => getReadingLogStats({ year, month }),
     placeholderData: options?.keepPrevious ? keepPreviousData : undefined,
   });
 };

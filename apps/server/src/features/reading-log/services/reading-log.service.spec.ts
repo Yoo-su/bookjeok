@@ -524,6 +524,45 @@ describe('ReadingLogService', () => {
     });
   });
 
+  describe('findAll 목록 열', () => {
+    it('한 해 기록은 소개글 없이 표지·제목·저자 열만 담아 날짜순으로 돌려준다', async () => {
+      const qb = mockSelectQueryBuilder();
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        qb,
+      );
+
+      await service.findAll(1, { year: 2026 });
+
+      expect(qb.leftJoinAndSelect).not.toHaveBeenCalled();
+      expect(qb.leftJoin).toHaveBeenCalledWith('log.book', 'book');
+      expect(qb.addSelect).toHaveBeenCalledWith([
+        'book.isbn',
+        'book.title',
+        'book.author',
+        'book.publisher',
+        'book.image',
+      ]);
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'log.date >= :start AND log.date <= :end',
+        { start: '2026-01-01', end: '2026-12-31' },
+      );
+      expect(qb.orderBy).toHaveBeenCalledWith('log.date', 'ASC');
+    });
+
+    it('연·월이 없으면 최근 기록을 같은 열로 개수 제한해 돌려준다', async () => {
+      const qb = mockSelectQueryBuilder();
+      (readingLogRepository.createQueryBuilder as jest.Mock).mockReturnValue(
+        qb,
+      );
+
+      await service.findAll(1, {});
+
+      expect(qb.leftJoinAndSelect).not.toHaveBeenCalled();
+      expect(qb.andWhere).not.toHaveBeenCalled();
+      expect(qb.take).toHaveBeenCalledWith(50);
+    });
+  });
+
   describe('getLoungeFeed 커서 검증', () => {
     it('날짜 조각이 깨진 공개 피드 커서를 400으로 막는다', async () => {
       await expectInvalidCursor(service.getLoungeFeed('garbage|9788901234567'));

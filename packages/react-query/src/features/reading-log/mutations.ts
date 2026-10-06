@@ -16,14 +16,7 @@ import {
 } from "@bookjeok/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-/** 기록 날짜(`YYYY-MM-DD`)가 속한 달의 목록 쿼리 키 */
-const monthListKey = (date: string) => {
-  const [yearStr, monthStr] = date.split("-");
-  return readingLogKeys.list({
-    year: parseInt(yearStr, 10),
-    month: parseInt(monthStr, 10),
-  }).queryKey;
-};
+import { applyUpdatedLog, insertLog, removeLog, yearListKey } from "./cache";
 
 /**
  * 독서 기록 설정 수정 뮤테이션
@@ -110,12 +103,11 @@ export const useCreateReadingLogMutation = (options?: {
       }),
     onSuccess: (data) => {
       if (data.date) {
-        // 캐시가 없는 달에 [data]를 심으면 그 달이 한 권짜리로 먼저 그려진다.
+        // 캐시가 없는 해에 [data]를 심으면 그해가 한 권짜리로 먼저 그려진다.
         // 도서 상세처럼 캘린더 밖에서 기록하면 흔하다.
         queryClient.setQueryData<ReadingLog[]>(
-          monthListKey(data.date),
-          (old) =>
-            old && [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
+          yearListKey(data.date),
+          (old) => old && insertLog(old, data),
         );
       }
       // 동기화를 위해 백그라운드로 캐시 전체 무효화
@@ -139,15 +131,15 @@ export const useUpdateReadingLogMutation = (options?: {
     mutationFn: (params: UpdateReadingLogParams) => updateReadingLog(params),
     onSuccess: (data) => {
       if (data.date) {
-        // 날짜가 바뀌면 다른 달로 옮겨 가므로 모든 목록에서 빼고 새 달에만 넣는다.
+        // 날짜가 바뀌면 다른 해로 옮겨 갈 수 있어 모든 목록에서 빼고 새 해에만 넣는다.
+        // 날짜가 같으면 제자리에서 바꿔 그날 맨 앞 표지가 바뀌지 않게 한다.
         queryClient.setQueriesData<ReadingLog[]>(
           { queryKey: readingLogKeys.list._def },
-          (old) => old?.filter((log) => log.id !== data.id),
+          (old) => old && applyUpdatedLog(old, data),
         );
         queryClient.setQueryData<ReadingLog[]>(
-          monthListKey(data.date),
-          (old) =>
-            old && [...old, data].sort((a, b) => a.date.localeCompare(b.date)),
+          yearListKey(data.date),
+          (old) => old && insertLog(old, data),
         );
       }
       queryClient.invalidateQueries({ queryKey: readingLogKeys._def });
@@ -172,11 +164,8 @@ export const useDeleteReadingLogMutation = (options?: {
     onSuccess: (_, variables) => {
       if (variables.date) {
         queryClient.setQueryData<ReadingLog[]>(
-          monthListKey(variables.date),
-          (old) => {
-            if (!old) return old;
-            return old.filter((log) => log.id !== variables.id);
-          },
+          yearListKey(variables.date),
+          (old) => old && removeLog(old, variables.id),
         );
       }
       queryClient.invalidateQueries({ queryKey: readingLogKeys._def });

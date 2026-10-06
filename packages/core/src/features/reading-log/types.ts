@@ -1,11 +1,17 @@
 import { BookInfo } from "../book/types";
 import type { MountainLandmarkId } from "./mountain";
 
+/** 독서 기록에 붙는 책. 목록 응답은 소개글처럼 큰 열을 빼고 이 필드만 담는다 */
+export type ReadingLogBook = Pick<
+  BookInfo,
+  "isbn" | "title" | "author" | "publisher" | "image"
+>;
+
 export interface ReadingLog {
   id: string;
   userId: number;
   isbn: string;
-  book: BookInfo;
+  book: ReadingLogBook;
   date: string; // YYYY-MM-DD
   memo?: string;
   createdAt: string;

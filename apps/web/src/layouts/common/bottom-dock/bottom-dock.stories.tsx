@@ -154,10 +154,10 @@ const SeedReading = ({
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, "0");
     const days = [1, 1, 2, 4, 4, 4, 7, 9, 12, 12, 15, 18, 21, 23, 26, 28];
-    const seedMonth = (d: Date, lastDay: number, offset: number) => {
+    const monthLogs = (d: Date, lastDay: number, offset: number) => {
       const year = d.getFullYear();
       const month = d.getMonth() + 1;
-      const logs = days
+      return days
         .filter((day) => day <= lastDay)
         .map((day, i) => {
           const b = SAMPLE_BOOKS[(i + offset) % SAMPLE_BOOKS.length];
@@ -168,13 +168,20 @@ const SeedReading = ({
             book: { isbn: b.isbn, title: b.title, image: b.image },
           };
         }) as unknown as ReadingLog[];
-      queryClient.setQueryData(
-        readingLogKeys.list({ year, month }).queryKey,
-        logs,
-      );
     };
-    seedMonth(now, now.getDate(), 0);
-    seedMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1), 31, 16);
+    // 달력 패널은 해 단위로 받는다. 지난달이 작년(1월)이면 두 해로 나뉜다
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const byYear = new Map<number, ReadingLog[]>();
+    for (const log of [
+      ...monthLogs(prev, 31, 16),
+      ...monthLogs(now, now.getDate(), 0),
+    ]) {
+      const year = Number(log.date.slice(0, 4));
+      byYear.set(year, [...(byYear.get(year) ?? []), log]);
+    }
+    for (const [year, logs] of byYear) {
+      queryClient.setQueryData(readingLogKeys.list({ year }).queryKey, logs);
+    }
     queryClient.setQueryData(readingLogKeys.stack(now.getFullYear()).queryKey, {
       year: now.getFullYear(),
       items: Array.from({ length: copies }, (_, c) =>

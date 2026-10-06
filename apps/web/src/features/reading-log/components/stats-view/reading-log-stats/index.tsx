@@ -1,17 +1,21 @@
 "use client";
 
-import { useReadingLogStatsQuery } from "@bookjeok/react-query";
+import type { ReadingLog } from "@bookjeok/core";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { cn } from "@/shared/utils";
 
 import { SeasonalTheme } from "../../../constants/ui";
+import { logsInMonth } from "../../../utils/month-logs";
 
 interface ReadingLogStatsProps {
-  currentDate: Date;
+  /** 달력이 그리고 있는 달. 다른 해를 받는 동안엔 이전 달이라 제목과 숫자가 함께 넘어간다 */
+  month: Date;
+  /** 그해 기록. 서버 통계와 같은 기준(기간 안 기록 수)으로 센다 */
+  logs: ReadingLog[] | undefined;
+  isLoading: boolean;
   theme: SeasonalTheme;
 }
 
@@ -41,26 +45,18 @@ function AnimatedNumber({ value }: { value: number }) {
   );
 }
 
-export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
-
-  // 달을 넘길 때 스켈레톤으로 바뀌면 높이가 달라 아래 달력이 출렁인다. 이전 값을 두고 숫자만 굴린다
-  const {
-    data: stats,
-    isLoading,
-    isPlaceholderData,
-  } = useReadingLogStatsQuery(year, month, { keepPrevious: true });
-  // 제목의 연·월도 숫자가 도착할 때 함께 바꿔 "8월의 독서"에 7월 숫자가 붙지 않게 한다
-  const [shown, setShown] = useState({ year, month });
-  if (
-    stats &&
-    !isPlaceholderData &&
-    (shown.year !== year || shown.month !== month)
-  ) {
-    setShown({ year, month });
-  }
+export function ReadingLogStats({
+  month,
+  logs,
+  isLoading,
+  theme,
+}: ReadingLogStatsProps) {
   const t = useTranslations("reading_log.stats");
+  // 달력과 같은 그해 기록에서 세므로 달을 넘겨도 요청 없이 숫자만 굴린다
+  const stats = logs && {
+    monthlyCount: logsInMonth(logs, month).length,
+    yearlyCount: logs.length,
+  };
 
   const getMessage = (monthly: number) => {
     if (monthly === 0) return t("messages.start");
@@ -113,7 +109,7 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
       <div className="flex flex-col items-center justify-center text-center space-y-4 group">
         <div className="space-y-1">
           <p className="text-[11px] font-bold tracking-[0.2em] text-stone-400 uppercase">
-            {t("monthly_title", { month: shown.month })}
+            {t("monthly_title", { month: month.getMonth() + 1 })}
           </p>
           <div className="flex items-baseline justify-center gap-1">
             <span
@@ -144,7 +140,7 @@ export function ReadingLogStats({ currentDate, theme }: ReadingLogStatsProps) {
       <div className="flex flex-col items-center justify-center text-center space-y-4 group">
         <div className="space-y-1">
           <p className="text-[11px] font-bold tracking-[0.2em] text-stone-400 uppercase">
-            {t("yearly_title", { year: shown.year })}
+            {t("yearly_title", { year: month.getFullYear() })}
           </p>
           <div className="flex items-baseline justify-center gap-1">
             <span className="text-5xl md:text-7xl font-serif font-light tracking-tight text-stone-800 transition-colors duration-500 group-hover:text-stone-600">
