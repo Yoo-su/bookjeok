@@ -473,20 +473,25 @@ export const MainBookSlider = () => {
       <h2 className="sr-only">{t("title")}</h2>
 
       {/* 출판사 필터 칩 목록 */}
-      <div className="container mx-auto w-full px-4 md:px-0 mb-16 flex justify-center">
-        <div className="inline-flex items-center gap-0.5 md:gap-1 p-1 md:p-1.5 bg-white/60 backdrop-blur-xl rounded-full shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)] border border-white/40 overflow-x-auto max-w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* 모바일은 폭을 꽉 채워 다섯 칸으로 나눈다. 칩 크기대로 두면 320px에서 두 개가 잘린다 */}
+      <div className="container mx-auto w-full mb-16 flex justify-center">
+        <div className="flex w-full max-w-sm md:inline-flex md:w-auto md:max-w-full items-center md:gap-1 p-1 md:p-1.5 bg-white/60 backdrop-blur-xl rounded-full shadow-[0_2px_20px_-5px_rgba(0,0,0,0.05)] border border-white/40 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {HOME_PUBLISHERS.map((publisher) => (
             <button
               key={publisher}
               onClick={() => setActivePublisher(publisher)}
-              className={`relative px-4 md:px-7 py-2.5 rounded-full text-xs md:text-base transition-all duration-500 whitespace-nowrap ${
+              className={`relative flex-1 md:flex-none px-1 md:px-7 py-2.5 rounded-full text-xs md:text-base transition-colors duration-500 whitespace-nowrap ${
                 activePublisher === publisher
-                  ? "text-stone-900 font-semibold shadow-sm"
+                  ? "text-stone-900 font-semibold"
                   : "text-stone-400 hover:text-stone-700 font-medium"
               }`}
             >
               {activePublisher === publisher && (
-                <span className="absolute inset-0 bg-white rounded-full shadow-[0_4px_10px_-4px_rgba(0,0,0,0.1)] -z-10 animate-in zoom-in-95 duration-300" />
+                <motion.span
+                  layoutId="home-publisher-pill"
+                  className="absolute inset-0 bg-white rounded-full shadow-[0_1px_3px_0_rgb(0_0_0/0.1),0_1px_2px_-1px_rgb(0_0_0/0.1),0_4px_10px_-4px_rgba(0,0,0,0.1)] -z-10"
+                  transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                />
               )}
               {publisher}
             </button>
