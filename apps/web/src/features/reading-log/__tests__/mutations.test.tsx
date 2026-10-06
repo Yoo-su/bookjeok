@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   useCreateReadingLogMutation,
+  useDeleteReadingLogMutation,
   useUpdateReadingLogMutation,
 } from "@/features/reading-log/mutations";
 import { useStackMilestoneStore } from "@/features/reading-log/stores/use-stack-milestone-store";
@@ -17,6 +18,7 @@ vi.mock("@bookjeok/api-client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@bookjeok/api-client")>()),
   createReadingLog: vi.fn(),
   updateReadingLog: vi.fn(),
+  deleteReadingLog: vi.fn(),
   getReadingStack: vi.fn(),
 }));
 
@@ -47,20 +49,18 @@ const makeLog = (id: string, date: string): ReadingLog => ({
     title: id,
     author: "",
     publisher: "",
-    description: "",
     image: "",
-    link: "",
-    discount: "",
-    pubdate: "",
   },
 });
 
-const august = readingLogKeys.list({ year: 2026, month: 8 }).queryKey;
-const september = readingLogKeys.list({ year: 2026, month: 9 }).queryKey;
-const july = readingLogKeys.list({ year: 2026, month: 7 }).queryKey;
+const y2026 = readingLogKeys.list({ year: 2026 }).queryKey;
+const y2025 = readingLogKeys.list({ year: 2025 }).queryKey;
+const y2024 = readingLogKeys.list({ year: 2024 }).queryKey;
 
-describe("독서 기록 뮤테이션의 월별 캐시 반영", () => {
+describe("독서 기록 뮤테이션의 연 목록 캐시 반영", () => {
   let queryClient: QueryClient;
+  const ids = (key: readonly unknown[]) =>
+    queryClient.getQueryData<ReadingLog[]>(key)?.map((log) => log.id);
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -70,82 +70,74 @@ describe("독서 기록 뮤테이션의 월별 캐시 반영", () => {
       },
     });
     vi.clearAllMocks();
+    // 생성 뒤 키재기 알림은 여기서 보지 않는다
+    vi.mocked(apis.getReadingStack).mockRejectedValue(new Error("skip"));
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  it("수정으로 날짜가 다른 달로 바뀌면 원래 달에서 빠지고 새 달에 들어간다", async () => {
+  const update = async (params: { id: string; memo: string; date: string }) => {
+    const { result } = renderHook(() => useUpdateReadingLogMutation(), {
+      wrapper,
+    });
+    await act(() => result.current.mutateAsync(params));
+  };
+
+  it("같은 해 다른 달로 옮기면 그해 목록 안에서 날짜순 자리로 간다", async () => {
     const moving = makeLog("a", "2026-08-30");
-    queryClient.setQueryData(august, [makeLog("b", "2026-08-01"), moving]);
-    queryClient.setQueryData(september, [makeLog("c", "2026-09-10")]);
+    queryClient.setQueryData(y2026, [
+      makeLog("b", "2026-08-01"),
+      moving,
+      makeLog("c", "2026-09-10"),
+    ]);
     vi.mocked(apis.updateReadingLog).mockResolvedValue({
       ...moving,
-      date: "2026-09-02",
+      date: "2026-09-20",
     });
 
-    const { result } = renderHook(() => useUpdateReadingLogMutation(), {
-      wrapper,
-    });
-    await act(() =>
-      result.current.mutateAsync({ id: "a", memo: "", date: "2026-09-02" }),
-    );
+    await update({ id: "a", memo: "", date: "2026-09-20" });
 
-    const aug = queryClient.getQueryData<ReadingLog[]>(august)!;
-    const sep = queryClient.getQueryData<ReadingLog[]>(september)!;
-    expect(aug.map((log) => log.id)).toEqual(["b"]);
-    expect(sep.map((log) => log.id)).toEqual(["a", "c"]);
+    expect(ids(y2026)).toEqual(["b", "c", "a"]);
   });
 
-  it("같은 달 안에서 메모만 고치면 그 달에 한 번만 남는다", async () => {
-    const log = makeLog("a", "2026-08-30");
-    queryClient.setQueryData(august, [log]);
-    vi.mocked(apis.updateReadingLog).mockResolvedValue({ ...log, memo: "새" });
-
-    const { result } = renderHook(() => useUpdateReadingLogMutation(), {
-      wrapper,
-    });
-    await act(() =>
-      result.current.mutateAsync({ id: "a", memo: "새", date: log.date }),
-    );
-
-    expect(queryClient.getQueryData<ReadingLog[]>(august)).toEqual([
-      { ...log, memo: "새" },
+  it("다른 해로 옮기면 원래 해에서 빠지고, 받아 둔 새 해에 날짜순으로 들어간다", async () => {
+    const moving = makeLog("a", "2026-01-02");
+    queryClient.setQueryData(y2026, [moving, makeLog("b", "2026-03-01")]);
+    queryClient.setQueryData(y2025, [
+      makeLog("c", "2025-11-01"),
+      makeLog("d", "2025-12-31"),
     ]);
-  });
-
-  it("캐시가 없는 달로 옮기거나 생성해도 그 달을 한 권짜리로 심지 않는다", async () => {
-    const log = makeLog("a", "2026-08-30");
-    queryClient.setQueryData(august, [log]);
     vi.mocked(apis.updateReadingLog).mockResolvedValue({
-      ...log,
-      date: "2026-07-05",
+      ...moving,
+      date: "2025-12-20",
     });
-    vi.mocked(apis.createReadingLog).mockResolvedValue(
-      makeLog("new", "2026-07-06"),
-    );
 
-    const update = renderHook(() => useUpdateReadingLogMutation(), { wrapper });
-    await act(() =>
-      update.result.current.mutateAsync({
-        id: "a",
-        memo: "",
-        date: "2026-07-05",
-      }),
-    );
-    const create = renderHook(() => useCreateReadingLogMutation(), { wrapper });
-    await act(() =>
-      create.result.current.mutateAsync({ isbn: "x", date: "2026-07-06" }),
-    );
+    await update({ id: "a", memo: "", date: "2025-12-20" });
 
-    expect(queryClient.getQueryData(july)).toBeUndefined();
-    expect(queryClient.getQueryData<ReadingLog[]>(august)).toEqual([]);
+    expect(ids(y2026)).toEqual(["b"]);
+    expect(ids(y2025)).toEqual(["c", "a", "d"]);
   });
 
-  it("생성은 캐시가 있는 달에 날짜순으로 끼워 넣는다", async () => {
-    queryClient.setQueryData(september, [
-      makeLog("a", "2026-09-01"),
+  it("같은 날 여러 권 중 맨 앞 기록의 메모만 고치면 순서가 그대로다", async () => {
+    const first = makeLog("a", "2026-08-30");
+    queryClient.setQueryData(y2026, [first, makeLog("b", "2026-08-30")]);
+    vi.mocked(apis.updateReadingLog).mockResolvedValue({
+      ...first,
+      memo: "새",
+    });
+
+    await update({ id: "a", memo: "새", date: first.date });
+
+    const logs = queryClient.getQueryData<ReadingLog[]>(y2026)!;
+    expect(logs.map((log) => log.id)).toEqual(["a", "b"]);
+    expect(logs[0].memo).toBe("새");
+  });
+
+  it("같은 날 이미 기록이 있으면 새 기록은 그 뒤에 붙어 그날 맨 앞 표지가 그대로다", async () => {
+    queryClient.setQueryData(y2026, [
+      makeLog("a", "2026-09-10"),
       makeLog("c", "2026-09-20"),
     ]);
     vi.mocked(apis.createReadingLog).mockResolvedValue(
@@ -159,9 +151,91 @@ describe("독서 기록 뮤테이션의 월별 캐시 반영", () => {
       result.current.mutateAsync({ isbn: "x", date: "2026-09-10" }),
     );
 
-    expect(
-      queryClient.getQueryData<ReadingLog[]>(september)!.map((log) => log.id),
-    ).toEqual(["a", "b", "c"]);
+    expect(ids(y2026)).toEqual(["a", "b", "c"]);
+  });
+
+  it("캐시가 없는 해로 옮기거나 생성해도 그해를 한 권짜리로 심지 않는다", async () => {
+    const log = makeLog("a", "2026-08-30");
+    queryClient.setQueryData(y2026, [log]);
+    vi.mocked(apis.updateReadingLog).mockResolvedValue({
+      ...log,
+      date: "2024-07-05",
+    });
+    vi.mocked(apis.createReadingLog).mockResolvedValue(
+      makeLog("new", "2024-07-06"),
+    );
+
+    await update({ id: "a", memo: "", date: "2024-07-05" });
+    const create = renderHook(() => useCreateReadingLogMutation(), { wrapper });
+    await act(() =>
+      create.result.current.mutateAsync({ isbn: "x", date: "2024-07-06" }),
+    );
+
+    expect(queryClient.getQueryData(y2024)).toBeUndefined();
+    expect(ids(y2026)).toEqual([]);
+  });
+
+  it("지우면 그해 목록에서 빠져 그날 칸이 빈다", async () => {
+    queryClient.setQueryData(y2026, [
+      makeLog("a", "2026-08-30"),
+      makeLog("b", "2026-09-01"),
+    ]);
+    vi.mocked(apis.deleteReadingLog).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useDeleteReadingLogMutation(), {
+      wrapper,
+    });
+    await act(() =>
+      result.current.mutateAsync({ id: "a", date: "2026-08-30" }),
+    );
+
+    expect(ids(y2026)).toEqual(["b"]);
+  });
+
+  it("실패하면 연 목록을 건드리지 않는다", async () => {
+    const before = [makeLog("a", "2026-08-30"), makeLog("b", "2026-09-01")];
+    queryClient.setQueryData(y2026, before);
+    const fail = new Error("offline");
+    vi.mocked(apis.createReadingLog).mockRejectedValue(fail);
+    vi.mocked(apis.updateReadingLog).mockRejectedValue(fail);
+    vi.mocked(apis.deleteReadingLog).mockRejectedValue(fail);
+
+    const create = renderHook(() => useCreateReadingLogMutation(), { wrapper });
+    const edit = renderHook(() => useUpdateReadingLogMutation(), { wrapper });
+    const remove = renderHook(() => useDeleteReadingLogMutation(), {
+      wrapper,
+    });
+    await act(async () => {
+      await create.result.current
+        .mutateAsync({ isbn: "x", date: "2026-09-02" })
+        .catch(() => {});
+      await edit.result.current
+        .mutateAsync({ id: "a", memo: "", date: "2025-01-01" })
+        .catch(() => {});
+      await remove.result.current
+        .mutateAsync({ id: "b", date: "2026-09-01" })
+        .catch(() => {});
+    });
+
+    expect(queryClient.getQueryData(y2026)).toBe(before);
+  });
+
+  it("성공하면 연 목록을 바로 고친 뒤 독서 기록 캐시 전체를 무효화해 서버와 맞춘다", async () => {
+    queryClient.setQueryData(y2026, [makeLog("a", "2026-08-30")]);
+    vi.mocked(apis.deleteReadingLog).mockResolvedValue(undefined);
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    const { result } = renderHook(() => useDeleteReadingLogMutation(), {
+      wrapper,
+    });
+    await act(() =>
+      result.current.mutateAsync({ id: "a", date: "2026-08-30" }),
+    );
+
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: readingLogKeys._def,
+    });
+    expect(queryClient.getQueryState(y2026)?.isInvalidated).toBe(true);
   });
 });
 

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReadingLog } from "@bookjeok/core";
 import { useReadingLogsQuery } from "@bookjeok/react-query";
 import {
   addDays,
@@ -27,6 +26,7 @@ import { Link } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils/cn";
 
 import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
+import { groupLogsByDate, logsInMonth } from "../../../utils/month-logs";
 import { readingLogHref } from "../../../utils/reading-log-link";
 import { CoverDayCell } from "../../common/cover-day-cell";
 
@@ -60,22 +60,19 @@ export const ReadingCalendarPanel = ({
     if (open) setMonth(startOfMonth(new Date()));
   }, [open]);
 
-  const { data: logs = [], isLoading } = useReadingLogsQuery(
-    { year: month.getFullYear(), month: month.getMonth() + 1 },
+  // 독서기록 페이지와 같은 그해 캐시. 같은 해 안에서 넘기면 요청하지 않는다
+  const { data: yearLogs, isLoading } = useReadingLogsQuery(
+    { year: month.getFullYear() },
     { enabled: open },
   );
-  // 앞뒤 달을 미리 받아 넘길 때 빈 칸으로 기다리지 않게
-  useReadingLogPrefetch(month.getFullYear(), month.getMonth() + 1, open, false);
+  // 이웃 해와 앞뒤 달 표지를 미리 받아 넘길 때 빈 칸으로 기다리지 않게
+  useReadingLogPrefetch(month.getFullYear(), month.getMonth() + 1, open);
 
-  const logsByDate = useMemo(() => {
-    const map = new Map<string, ReadingLog[]>();
-    for (const log of logs) {
-      const list = map.get(log.date);
-      if (list) list.push(log);
-      else map.set(log.date, [log]);
-    }
-    return map;
-  }, [logs]);
+  const logs = useMemo(
+    () => logsInMonth(yearLogs ?? [], month),
+    [yearLogs, month],
+  );
+  const logsByDate = useMemo(() => groupLogsByDate(logs), [logs]);
 
   // 늘 6주를 그림. 달마다 4~6주로 바뀌면 넘길 때 패널 높이가 출렁임
   const firstDay = startOfWeek(month);

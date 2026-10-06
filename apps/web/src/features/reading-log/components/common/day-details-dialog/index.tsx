@@ -70,16 +70,16 @@ export function DayDetailsDialog({
   const updateMutation = useUpdateReadingLogMutation();
   const { executeSafeSubmit } = useSafeSubmit();
 
-  // readOnly가 아닐 때는 TanStack Query로부터 해당 월의 실시간 기록 목록을 직접 구독
-  const { data: monthlyLogs = [] } = useReadingLogsQuery(
-    date ? { year: date.getFullYear(), month: date.getMonth() + 1 } : undefined,
+  // readOnly가 아닐 때는 달력과 같은 그해 기록 캐시를 구독해 기록·수정·삭제가 바로 보인다
+  const { data: yearLogs = [] } = useReadingLogsQuery(
+    { year: (date ?? new Date()).getFullYear() },
     { enabled: !readOnly && !!date },
   );
 
   // 현재 날짜의 로그 필터링
   const currentLogs = readOnly
     ? initialLogs
-    : monthlyLogs.filter(
+    : yearLogs.filter(
         (log) => log.date === (date ? format(date, "yyyy-MM-dd") : ""),
       );
 

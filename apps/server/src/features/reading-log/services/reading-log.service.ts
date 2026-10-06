@@ -60,6 +60,15 @@ import {
  */
 const MAX_READING_DATE_AS_TEXT = "TO_CHAR(MAX(rl.date), 'YYYY-MM-DD')";
 
+/** 기록 목록·키재기에 붙이는 책 열. 소개글(text)은 응답 대부분을 차지하고 쓰지 않아 뺀다(core `ReadingLogBook`과 같음) */
+const READING_LOG_BOOK_COLUMNS = [
+  'book.isbn',
+  'book.title',
+  'book.author',
+  'book.publisher',
+  'book.image',
+];
+
 /**
  * 오늘로부터 daysAgo일 전의 달력 날짜(`YYYY-MM-DD`). `date` 컬럼 비교용.
  *
@@ -697,13 +706,17 @@ export class ReadingLogService {
     const { year, month } = params;
     const limit = clampNumber(params.limit, 50, 1, 100);
 
+    // 달력은 표지·제목·저자만 그린다. 소개글(text)이 응답의 대부분이라 필요한 열만 담는다
+    const query = this.readingLogRepository
+      .createQueryBuilder('log')
+      .leftJoin('log.book', 'book')
+      .addSelect(READING_LOG_BOOK_COLUMNS)
+      .where('log.userId = :userId', { userId });
+
     // 1. 연도 및 월 지정 시 월별 기록 조회
     if (year && month) {
       const { start, end } = this.getDateRangeOfMonth(year, month);
-      return await this.readingLogRepository
-        .createQueryBuilder('log')
-        .leftJoinAndSelect('log.book', 'book')
-        .where('log.userId = :userId', { userId })
+      return await query
         .andWhere('log.date >= :start AND log.date <= :end', { start, end })
         .orderBy('log.date', 'ASC')
         .getMany();
@@ -713,20 +726,14 @@ export class ReadingLogService {
     if (year) {
       const start = `${year}-01-01`;
       const end = `${year}-12-31`;
-      return await this.readingLogRepository
-        .createQueryBuilder('log')
-        .leftJoinAndSelect('log.book', 'book')
-        .where('log.userId = :userId', { userId })
+      return await query
         .andWhere('log.date >= :start AND log.date <= :end', { start, end })
         .orderBy('log.date', 'ASC')
         .getMany();
     }
 
     // 3. 연/월 미지정 시 최근 기록 조회 (기본 50개)
-    return await this.readingLogRepository
-      .createQueryBuilder('log')
-      .leftJoinAndSelect('log.book', 'book')
-      .where('log.userId = :userId', { userId })
+    return await query
       .orderBy('log.date', 'DESC')
       .addOrderBy('log.createdAt', 'DESC')
       .take(limit)
@@ -744,13 +751,7 @@ export class ReadingLogService {
       .createQueryBuilder('log')
       // 소개글(text)은 쓰지 않으므로 필요한 열만
       .leftJoin('log.book', 'book')
-      .addSelect([
-        'book.isbn',
-        'book.title',
-        'book.author',
-        'book.publisher',
-        'book.image',
-      ])
+      .addSelect(READING_LOG_BOOK_COLUMNS)
       // 판형도 같은 쿼리로. 서버와 DB가 다른 클라우드라 왕복 한 번이 아깝다
       .leftJoinAndMapOne(
         'log.dimension',

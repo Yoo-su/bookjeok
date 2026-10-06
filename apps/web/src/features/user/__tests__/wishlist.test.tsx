@@ -3,7 +3,7 @@ import {
   TradeMethod,
   WishlistItem as WishlistItemType,
 } from "@bookjeok/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -207,6 +207,21 @@ describe("WishlistList", () => {
 
     expect(screen.getByText("위시리스트가 비어있습니다.")).toBeInTheDocument();
     expect(screen.getByText("도서 둘러보기")).toBeInTheDocument();
+  });
+
+  it("마지막 찜을 해제하면 항목이 빠지는 움직임을 거쳐 빈 안내로 바뀐다", async () => {
+    queryReturn = { ...queryReturn, data: [mockWishlistData[0]] };
+    const { rerender } = render(<WishlistList />);
+
+    queryReturn = { ...queryReturn, data: [] };
+    rerender(<WishlistList />);
+
+    // 빠지는 동안에는 항목과 빈 안내가 함께 있다
+    expect(screen.getByText("Clean Code")).toBeInTheDocument();
+    expect(screen.getByText("위시리스트가 비어있습니다.")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText("Clean Code")).not.toBeInTheDocument(),
+    );
   });
 
   it("renders error state and handles retry", () => {

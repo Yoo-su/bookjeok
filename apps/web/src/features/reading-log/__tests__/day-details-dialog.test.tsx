@@ -36,11 +36,7 @@ const mockLog1: ReadingLog = {
     title: "데미안",
     author: "헤르만 헤세",
     publisher: "민음사",
-    description: "데미안 설명",
     image: "https://example.com/demian.jpg",
-    link: "https://example.com/demian",
-    discount: "10000",
-    pubdate: "2000-01-01",
   },
   userId: 1,
 };
@@ -57,11 +53,7 @@ const mockLog2: ReadingLog = {
     title: "이방인",
     author: "알베르 카뮈",
     publisher: "민음사",
-    description: "이방인 설명",
     image: "https://example.com/stranger.jpg",
-    link: "https://example.com/stranger",
-    discount: "10000",
-    pubdate: "2000-01-01",
   },
   userId: 1,
 };
@@ -80,9 +72,9 @@ describe("DayDetailsDialog", () => {
   });
 
   const renderDialog = (initialLogs: ReadingLog[] = [mockLog1]) => {
-    // 캘린더 월별 쿼리 캐시 초기화 (2026년 8월)
+    // 달력과 같은 그해 쿼리 캐시 (2026년)
     queryClient.setQueryData(
-      readingLogKeys.list({ year: 2026, month: 8 }).queryKey,
+      readingLogKeys.list({ year: 2026 }).queryKey,
       initialLogs,
     );
 
@@ -115,10 +107,10 @@ describe("DayDetailsDialog", () => {
 
     // 쿼리 캐시에 새로운 책(이방인) 추가 시뮬레이션
     act(() => {
-      queryClient.setQueryData(
-        readingLogKeys.list({ year: 2026, month: 8 }).queryKey,
-        [mockLog1, mockLog2],
-      );
+      queryClient.setQueryData(readingLogKeys.list({ year: 2026 }).queryKey, [
+        mockLog1,
+        mockLog2,
+      ]);
     });
 
     await waitFor(() => {
@@ -135,15 +127,32 @@ describe("DayDetailsDialog", () => {
 
     // 쿼리 캐시에서 mockLog1 제거 시뮬레이션
     act(() => {
-      queryClient.setQueryData(
-        readingLogKeys.list({ year: 2026, month: 8 }).queryKey,
-        [mockLog2],
-      );
+      queryClient.setQueryData(readingLogKeys.list({ year: 2026 }).queryKey, [
+        mockLog2,
+      ]);
     });
 
     await waitFor(() => {
       expect(screen.queryByText("데미안")).not.toBeInTheDocument();
       expect(screen.getByText("이방인")).toBeInTheDocument();
+    });
+  });
+  it("그해 캐시에서 그날 기록만 보여 주고, 다른 날로 옮겨 가면 목록에서 빠진다", async () => {
+    const otherDay = { ...mockLog2, id: "log-3", date: "2026-03-02" };
+    renderDialog([mockLog1, otherDay]);
+
+    expect(screen.getByText("데미안")).toBeInTheDocument();
+    expect(screen.queryByText("이방인")).not.toBeInTheDocument();
+
+    act(() => {
+      queryClient.setQueryData(readingLogKeys.list({ year: 2026 }).queryKey, [
+        { ...mockLog1, date: "2026-09-01" },
+        otherDay,
+      ]);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText("데미안")).not.toBeInTheDocument();
     });
   });
 });

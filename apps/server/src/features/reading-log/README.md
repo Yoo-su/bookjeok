@@ -140,7 +140,7 @@ DB 유니크 제약은 없습니다. 동시에 들어온 두 요청은 둘 다 �
 
 ### 조회 개수
 
-`GET /reading-logs`의 `limit`은 1~100(기본 50), `GET /reading-logs/list`는 1~50(기본 10)으로 가둡니다. `GET /reading-logs/stats`는 연도(2000~2100)·월(1~12)이 없거나 범위 밖이면 DB를 보기 전에 400입니다.
+`GET /reading-logs`(연·월·최근 목록)는 도서를 제목·저자·출판사·표지·ISBN만 담습니다(`READING_LOG_BOOK_COLUMNS`, 키재기와 같음). 소개글이 응답 대부분이라 뺐고, 웹 달력은 이 열만 씁니다. `limit`은 1~100(기본 50), `GET /reading-logs/list`는 1~50(기본 10)으로 가둡니다. `GET /reading-logs/stats`는 연도(2000~2100)·월(1~12)이 없거나 범위 밖이면 DB를 보기 전에 400입니다.
 
 `getBookStatus(userId, isbn)` — `GET /reading-logs/book/:isbn/status`. 내가 이 책을 기록한 횟수와 가장 최근 기록일(`{ count, lastDate }`, 없으면 `0`·`null`)을 돌려줍니다. 웹의 「읽었어요」 폼이 재독인지 알리는 데 씁니다. 마지막 날짜는 `MAX_READING_DATE_AS_TEXT`로 텍스트로 받습니다. 기록을 만들지 않는 조회라 `BookResolvePipe`를 두지 않으며, 없는 ISBN은 기록 0건으로 끝납니다.
 

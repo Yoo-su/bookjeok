@@ -16,13 +16,14 @@ import {
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useOverlay } from "@/shared/hooks/use-overlay";
 import { cn } from "@/shared/utils";
 
 import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
+import { groupLogsByDate, logsInMonth } from "../../../utils/month-logs";
 import { DayDetailsDialog } from "../../common/day-details-dialog";
 import { ReadingLogListView } from "../../list-view/reading-log-list-view";
 import { StackSkeleton } from "../../stack-view/stack-skeleton";
@@ -48,7 +49,7 @@ const monthSlide: Variants = {
     opacity: 1,
     transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] },
   },
-  // 다음 달을 받는 동안 이전 달을 흐리게 둠. 짧은 대기에는 흐려지지 않게 늦게 시작
+  // 다른 해를 받는 동안 이전 달을 흐리게 둠. 짧은 대기에는 흐려지지 않게 늦게 시작
   waiting: { x: 0, opacity: 0.45, transition: { delay: 0.2, duration: 0.2 } },
   exit: (dir: number) => ({
     x: dir * -24,
@@ -56,6 +57,9 @@ const monthSlide: Variants = {
     transition: { duration: 0.14, ease: "easeIn" },
   }),
 };
+
+// 기본값을 렌더마다 새로 만들면 칸 묶음 memo가 매번 풀림
+const NO_LOGS: ReadingLog[] = [];
 
 interface ReadingLogCalendarProps {
   currentDate: Date;
@@ -65,7 +69,7 @@ interface ReadingLogCalendarProps {
   /** 넘기면 보기 모드를 밖에서 제어한다(내 독서기록 페이지가 마지막 보기를 기억한다) */
   viewMode?: ReadingLogViewMode;
   onViewModeChange?: (mode: ReadingLogViewMode) => void;
-  /** 이 날짜의 상세를 그 달 기록을 받은 뒤 한 번 띄움(dock 달력 패널에서 넘어온 딥링크) */
+  /** 이 날짜의 상세를 그해 기록을 받은 뒤 한 번 띄움(dock 달력 패널에서 넘어온 딥링크) */
   openDate?: Date | null;
   onOpenDateHandled?: () => void;
 }
@@ -74,7 +78,7 @@ export function ReadingLogCalendar({
   currentDate,
   onDateChange,
   readOnly = false,
-  initialLogs = [],
+  initialLogs = NO_LOGS,
   viewMode: controlledViewMode,
   onViewModeChange,
   openDate,
@@ -90,29 +94,28 @@ export function ReadingLogCalendar({
   // 계절 테마 훅 사용
   const theme = useSeasonalTheme(currentDate);
 
-  // 인접한 월 데이터 prefetch - readOnly가 아닐 때만
+  // 이웃 해와 앞뒤 달 표지 미리 받기 - readOnly가 아닐 때만
   useReadingLogPrefetch(
     currentDate.getFullYear(),
     currentDate.getMonth() + 1,
     !readOnly,
   );
 
-  // API 호출 - 캘린더 모드일 때만 월별 기록 조회
+  // 그해 기록을 한 번 받고 달은 여기서 거른다. 통계도 이 목록에서 세므로 보기 모드와 상관없이 받는다
   const {
-    data: fetchedMonthlyLogs = [],
-    isLoading: isMonthlyLoading,
+    data: yearLogs,
+    isLoading: isYearLoading,
     isPlaceholderData,
   } = useReadingLogsQuery(
-    { year: currentDate.getFullYear(), month: currentDate.getMonth() + 1 },
-    { enabled: viewMode === "calendar" && !readOnly, keepPrevious: true },
+    { year: currentDate.getFullYear() },
+    { enabled: !readOnly, keepPrevious: true },
   );
 
-  const logs: ReadingLog[] = readOnly ? initialLogs : fetchedMonthlyLogs;
-  const isLoading = readOnly ? false : isMonthlyLoading;
-  // 다른 달을 받는 중. logs는 아직 그리고 있는 달의 기록
+  const isLoading = readOnly ? false : isYearLoading;
+  // 다른 해를 받는 중. yearLogs는 아직 그리고 있는 해의 기록
   const isWaiting = !readOnly && isPlaceholderData;
 
-  // 그리는 달은 기록이 도착해야 넘어감. 넘긴 방향으로 슬라이드
+  // 그리는 달은 그해 기록이 있어야 넘어감(같은 해는 바로). 넘긴 방향으로 슬라이드
   const [shownMonth, setShownMonth] = useState(() => startOfMonth(currentDate));
   const [direction, setDirection] = useState(1);
   const targetMonth = startOfMonth(currentDate);
@@ -136,12 +139,20 @@ export function ReadingLogCalendar({
 
   const weekDayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-  const getLogsForDate = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    return logs.filter((log) => log.date === dateStr);
-  };
+  // 그리는 달의 기록만 칸에 둔다. 체험 달력은 예시 전체를 넘겨 이웃 달 칸에도 흐린 표지가 보인다(전과 같음)
+  const logsByDate = useMemo(
+    () =>
+      groupLogsByDate(
+        readOnly ? initialLogs : logsInMonth(yearLogs ?? [], monthStart),
+      ),
+    [readOnly, initialLogs, yearLogs, monthStart],
+  );
+  const getLogsForDate = (date: Date): ReadingLog[] =>
+    logsByDate.get(format(date, "yyyy-MM-dd")) ?? [];
 
   const handleDayClick = (date: Date) => {
+    // 다른 해를 받는 동안 남아 있는 이전 달 칸이 열리지 않게(키보드 포함)
+    if (isWaiting) return;
     overlay.open(({ isOpen, close }) => (
       <DayDetailsDialog
         date={date}
@@ -153,24 +164,35 @@ export function ReadingLogCalendar({
     ));
   };
 
+  // 부모가 openDate를 비우기 전에 다시 그려져도 한 번만 띄움
+  const openedDateRef = useRef<Date | null>(null);
   useEffect(() => {
     if (
       !openDate ||
+      openedDateRef.current === openDate ||
       readOnly ||
       viewMode !== "calendar" ||
       isLoading ||
       isWaiting
     )
       return;
-    // 달이 바뀌기 전 렌더에서는 이전 달 기록이라 기다림
-    if (!isSameMonth(openDate, currentDate)) return;
+    // 그 달로 넘어가기 전 렌더에서는 이전 달 기록이라 기다림
+    if (!isSameMonth(openDate, monthStart)) return;
+    openedDateRef.current = openDate;
     handleDayClick(openDate);
     onOpenDateHandled?.();
   });
 
   return (
     <div className="w-full mx-auto space-y-6">
-      {!readOnly && <ReadingLogStats currentDate={currentDate} theme={theme} />}
+      {!readOnly && (
+        <ReadingLogStats
+          month={monthStart}
+          logs={yearLogs}
+          isLoading={isLoading}
+          theme={theme}
+        />
+      )}
 
       <ReadingLogControls
         viewMode={viewMode}
@@ -247,9 +269,10 @@ export function ReadingLogCalendar({
                   initial="enter"
                   animate={isWaiting ? "waiting" : "center"}
                   exit="exit"
+                  // 받는 중인 이전 달을 누르거나 Tab으로 들어가 지난 기록이 열리지 않게
+                  inert={isWaiting}
                   className={cn(
                     "grid grid-cols-7 gap-1 p-2 sm:auto-rows-[160px] sm:gap-0 sm:p-0 sm:divide-x sm:divide-y sm:divide-gray-100",
-                    // 받는 중인 이전 달을 눌러 지난 기록이 열리지 않게
                     isWaiting && "pointer-events-none",
                   )}
                 >
