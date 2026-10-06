@@ -27,7 +27,7 @@ function Harness() {
 }
 
 const meta: Meta<typeof Harness> = {
-  title: "Announcement/ReadingStackIntro",
+  title: "Features/Announcement/ReadingStackIntro",
   component: Harness,
   parameters: { nextjs: { appDirectory: true }, layout: "fullscreen" },
   decorators: [

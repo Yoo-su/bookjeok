@@ -17,7 +17,7 @@ const mockBook: BookInfo = {
 };
 
 const meta = {
-  title: "Feature/BookCard",
+  title: "Features/Book/BookCard",
   component: BookCard,
   parameters: {
     layout: "centered",

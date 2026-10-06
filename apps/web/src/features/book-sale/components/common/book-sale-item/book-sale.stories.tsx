@@ -37,7 +37,7 @@ const mockSale: UsedBookSaleType = {
 };
 
 const meta = {
-  title: "Feature/UsedBookSale",
+  title: "Features/BookSale/UsedBookSale",
   component: UsedBookSale.Root,
   parameters: {
     layout: "centered",

@@ -41,7 +41,7 @@ const defaultItemData: LoungePopularBook = {
 
 // === Storybook Meta ===
 const meta = {
-  title: "Feature/Lounge/LoungePopularBannerCard",
+  title: "Features/ReadingLog/Lounge/LoungePopularBannerCard",
   component: LoungePopularBannerCard,
   parameters: {
     layout: "centered",

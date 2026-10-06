@@ -6,7 +6,7 @@ import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { DefaultHeader } from "./default-header";
 
 const meta = {
-  title: "Layout/DefaultHeader",
+  title: "Layouts/DefaultHeader",
   component: DefaultHeader,
   parameters: {
     layout: "fullscreen",

@@ -111,7 +111,7 @@ function HomeHeaderDemo({
 }
 
 const meta: Meta<typeof HomeHeaderDemo> = {
-  title: "Home/AuthorPeek",
+  title: "Features/ReadingLog/Stack/AuthorPeek",
   component: HomeHeaderDemo,
   parameters: { layout: "fullscreen" },
   args: { height: 270 },

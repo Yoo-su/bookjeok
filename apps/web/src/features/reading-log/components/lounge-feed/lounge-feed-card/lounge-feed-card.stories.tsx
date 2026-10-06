@@ -55,7 +55,7 @@ const defaultCardData: LoungeBookCard = {
 
 // === Storybook Meta ===
 const meta = {
-  title: "Feature/Lounge/LoungeFeedCard",
+  title: "Features/ReadingLog/Lounge/LoungeFeedCard",
   component: LoungeFeedCard,
   parameters: {
     layout: "centered",

@@ -116,7 +116,7 @@ function Seeded({
 }
 
 const meta = {
-  title: "Feature/Lounge/LoungeMountain",
+  title: "Features/ReadingLog/Lounge/LoungeMountain",
   component: Seeded,
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof Seeded>;

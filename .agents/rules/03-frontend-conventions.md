@@ -73,6 +73,13 @@ const user = useAuthStore((state) => state.user);
 - **좁은 기기(320px)**: 콘텐츠 폭은 레이아웃 `p-4`를 빼면 288px뿐이다. 고정 너비는 288px를 넘기지 말고, 단일 행 `input`의 placeholder는 16px 기준으로 잘리지 않게 짧게 쓴다(한글 15자 내외).
 - **뷰포트 높이**: `h-screen`·`100vh` 사용 금지. 모바일 브라우저 크롬 때문에 높이가 어긋난다. `h-dvh`·`100dvh`를 쓴다.
 
+### 4-2. Storybook
+
+- **title은 src 폴더 구조를 따른다.** `shared/components/ui` → `Shared/UI/<Name>`, `features/<domain>` → `Features/<Domain>/<Name>`, `layouts` → `Layouts/<Name>`. 기능 안의 하위 영역은 한 단계 더 둔다(`Features/ReadingLog/Stack/…`, `Features/ReadingLog/Lounge/…`). 화면 이름(`Home/`)이나 `Feature/` 같은 중간 단계로 묶지 않는다.
+- **title을 꼭 적는다.** 비워 두면 파일 경로에서 자동으로 이름이 붙어 위 규칙과 어긋난다.
+- **뷰포트는 툴바의 320 / 375 / 768 / 1280 프리셋으로 확인한다**(`.storybook/preview.tsx`). 미리보기는 앱과 같은 `MotionConfig`로 감싸져 있다.
+- 서버가 필요한 컴포넌트는 스토리 안에서 `QueryClient`에 `setQueryData`로 시드하고 `staleTime: Infinity`를 준다. 로그인 상태는 `beforeEach`에서 `useAuthStore.setState`로 만든다. 변경 요청은 로컬에 API가 없어 실패하므로, 쓰기·지우기 같은 변화는 캐시를 고치는 버튼으로 흉내 낸다(`comment-list.stories.tsx` 참고).
+
 ---
 
 ## 5. 인증 및 토큰 갱신 플로우

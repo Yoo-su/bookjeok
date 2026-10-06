@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { ReadingLogFormDialog } from "./index";
 
 const meta: Meta<typeof ReadingLogFormDialog> = {
-  title: "ReadingLog/ReadingLogFormDialog",
+  title: "Features/ReadingLog/ReadingLogFormDialog",
   component: ReadingLogFormDialog,
   args: {
     book: {

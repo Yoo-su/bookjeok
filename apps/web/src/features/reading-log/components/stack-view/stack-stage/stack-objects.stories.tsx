@@ -96,7 +96,7 @@ function Gallery({
 }
 
 const meta: Meta<typeof Gallery> = {
-  title: "ReadingLog/StackObjects",
+  title: "Features/ReadingLog/Stack/StackObjects",
   component: Gallery,
   args: { height: 360, boil: true },
 };

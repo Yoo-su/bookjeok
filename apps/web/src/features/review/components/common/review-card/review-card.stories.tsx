@@ -45,7 +45,7 @@ const mockReview: Review = {
 };
 
 const meta = {
-  title: "Feature/ReviewCard",
+  title: "Features/Review/ReviewCard",
   component: ReviewCard.Root,
   parameters: {
     layout: "centered",

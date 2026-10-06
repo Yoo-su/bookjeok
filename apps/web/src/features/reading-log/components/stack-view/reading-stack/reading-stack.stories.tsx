@@ -56,7 +56,7 @@ function withStack(
 }
 
 const meta: Meta<typeof ReadingStack> = {
-  title: "ReadingLog/ReadingStack",
+  title: "Features/ReadingLog/Stack/ReadingStack",
   component: ReadingStack,
   parameters: { nextjs: { appDirectory: true }, layout: "fullscreen" },
   args: { year: 2026 },

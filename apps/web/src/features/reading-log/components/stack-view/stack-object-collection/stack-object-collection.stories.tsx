@@ -29,7 +29,7 @@ function Demo({ count }: { count: number }) {
 }
 
 const meta: Meta<typeof Demo> = {
-  title: "ReadingLog/StackObjectCollection",
+  title: "Features/ReadingLog/Stack/StackObjectCollection",
   component: Demo,
 };
 
