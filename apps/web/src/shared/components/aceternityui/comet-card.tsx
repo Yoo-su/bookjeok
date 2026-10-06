@@ -6,7 +6,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-} from "framer-motion";
+} from "motion/react";
 import React, { useRef } from "react";
 
 import { cn } from "@/shared/utils/cn";

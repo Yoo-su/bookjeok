@@ -1,7 +1,7 @@
 "use client";
 
 import { setMonth, setYear } from "date-fns";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { ChevronLeft, ChevronRight } from "@/shared/components/icons/iconsax";

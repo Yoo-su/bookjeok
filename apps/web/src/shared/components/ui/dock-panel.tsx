@@ -5,7 +5,7 @@ import {
   type Transition,
   useDragControls,
   type Variants,
-} from "framer-motion";
+} from "motion/react";
 import { useTranslations } from "next-intl";
 import {
   createContext,

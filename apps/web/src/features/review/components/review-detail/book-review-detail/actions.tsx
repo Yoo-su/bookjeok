@@ -7,7 +7,7 @@ import {
   motion,
   type TargetAndTransition,
   useReducedMotion,
-} from "framer-motion";
+} from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 

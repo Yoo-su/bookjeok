@@ -1,7 +1,7 @@
 "use client";
 
 import { useReadingLogStatsQuery } from "@bookjeok/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@/shared/components/shadcn/skeleton";

@@ -8,7 +8,7 @@ import {
   useMotionValue,
   useSpring,
   useTransform,
-} from "framer-motion";
+} from "motion/react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Link } from "@/shared/config/i18n/routing";
