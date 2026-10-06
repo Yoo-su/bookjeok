@@ -13,7 +13,12 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
-import { AnimatePresence, motion, type Variants } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotionConfig,
+  type Variants,
+} from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -21,6 +26,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useOverlay } from "@/shared/hooks/use-overlay";
 import { cn } from "@/shared/utils";
 
+import { MONTH_TURN } from "../../../constants/ui";
 import { useReadingLogPrefetch } from "../../../hooks/use-reading-log-prefetch";
 import { useSeasonalTheme } from "../../../hooks/use-seasonal-theme";
 import { groupLogsByDate, logsInMonth } from "../../../utils/month-logs";
@@ -41,20 +47,30 @@ const ReadingStack = dynamic(
   { ssr: false, loading: () => <StackSkeleton /> },
 );
 
-/** 넘긴 쪽에서 들어오고 반대쪽으로 빠짐. 자주 누르는 곳이라 짧게 */
+/**
+ * 넘긴 쪽에서 들어오고 반대쪽으로 빠짐. 자주 누르는 곳이라 짧게. custom은 밀 거리 방향(동작 줄이기면 0)
+ * - transform 문자열로 움직여 합성 스레드에서 돈다. 새 달 칸을 그리는 동안에도 끊기지 않게
+ */
 const monthSlide: Variants = {
-  enter: (dir: number) => ({ x: dir * 24, opacity: 0 }),
+  enter: (dir: number) => ({
+    transform: `translateX(${dir * 24}px)`,
+    opacity: 0,
+  }),
   center: {
-    x: 0,
+    transform: "translateX(0px)",
     opacity: 1,
-    transition: { duration: 0.26, ease: [0.22, 1, 0.36, 1] },
+    transition: MONTH_TURN.enter,
   },
   // 다른 해를 받는 동안 이전 달을 흐리게 둠. 짧은 대기에는 흐려지지 않게 늦게 시작
-  waiting: { x: 0, opacity: 0.45, transition: { delay: 0.2, duration: 0.2 } },
+  waiting: {
+    transform: "translateX(0px)",
+    opacity: 0.45,
+    transition: { delay: 0.2, duration: 0.2 },
+  },
   exit: (dir: number) => ({
-    x: dir * -24,
+    transform: `translateX(${dir * -24}px)`,
     opacity: 0,
-    transition: { duration: 0.14, ease: "easeIn" },
+    transition: MONTH_TURN.exit,
   }),
 };
 
@@ -118,6 +134,8 @@ export function ReadingLogCalendar({
   // 그리는 달은 그해 기록이 있어야 넘어감(같은 해는 바로). 넘긴 방향으로 슬라이드
   const [shownMonth, setShownMonth] = useState(() => startOfMonth(currentDate));
   const [direction, setDirection] = useState(1);
+  // transform 문자열은 MotionConfig가 줄여 주지 않아 직접 밀지 않게 한다
+  const slide = useReducedMotionConfig() ? 0 : direction;
   const targetMonth = startOfMonth(currentDate);
   if (!isWaiting && targetMonth.getTime() !== shownMonth.getTime()) {
     setDirection(targetMonth > shownMonth ? 1 : -1);
@@ -257,14 +275,10 @@ export function ReadingLogCalendar({
             {/* 모바일은 dock 달력 패널처럼 표지 칸을 띄워 배치, sm 이상은 칸을 선으로 나눈 표 */}
             {/* popLayout: 빠지는 달을 겹쳐 띄워 들어오는 달이 제자리에서 시작 */}
             <div className="relative" aria-busy={isWaiting}>
-              <AnimatePresence
-                initial={false}
-                mode="popLayout"
-                custom={direction}
-              >
+              <AnimatePresence initial={false} mode="popLayout" custom={slide}>
                 <motion.div
                   key={monthStart.getTime()}
-                  custom={direction}
+                  custom={slide}
                   variants={monthSlide}
                   initial="enter"
                   animate={isWaiting ? "waiting" : "center"}

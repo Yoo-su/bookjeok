@@ -86,3 +86,9 @@ export type SeasonalTheme =
 
 /** 연도 선택과 독서 키재기 연도 이동의 하한 */
 export const READING_LOG_MIN_YEAR = 2020;
+
+/** 달 넘김 박자. 달력 그리드와 상단 연·월 숫자가 같이 출발해 같이 멈추도록 함께 쓴다 */
+export const MONTH_TURN = {
+  enter: { duration: 0.26, ease: [0.22, 1, 0.36, 1] },
+  exit: { duration: 0.14, ease: "easeIn" },
+} as const;
