@@ -54,9 +54,6 @@ export function KongBowlDialog({
 
           <div className="pt-2">
             <KongBowl count={data.total} />
-            <p className="mt-1 text-center font-[family-name:var(--font-gaegu)] text-base text-stone-400">
-              {t("hint")}
-            </p>
           </div>
 
           <ul

@@ -251,6 +251,8 @@
       "desc": "Kongs your reading logs received · {count, number} in all",
       "hint": "Give the kongs a poke",
       "shake": "Shake the bowl ({count, plural, one {# kong} other {# kongs}})",
+      "tip": "Tip it over",
+      "refill": "Put them back",
       "list_label": "Logs that got kongs",
       "go": "Open the “{title}” log, {count, plural, one {# kong} other {# kongs}}",
       "what": "What's a kong?"
