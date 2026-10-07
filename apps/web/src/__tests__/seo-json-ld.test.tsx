@@ -71,7 +71,13 @@ describe("검색봇에 전달하는 실제 JSON-LD", () => {
     expect(
       getReviewSearchTitle({ ...review, title: "『테스트도서』를 읽고" }),
     ).toBe("『테스트도서』를 읽고");
-    expect(getReviewSearchTitle({ ...review, book: undefined })).toBe("감상");
+    // 타입상 필수지만 책 정보가 빠진 응답에도 함수가 방어하는지 본다
+    expect(
+      getReviewSearchTitle({
+        ...review,
+        book: undefined as unknown as BookInfo,
+      }),
+    ).toBe("감상");
     expect(getReviewSearchTitle({ ...review, isPublic: false })).toBe("감상");
   });
 
