@@ -19,7 +19,11 @@ export const SceneNodes = memo(function SceneNodes({
         const key = it.id ?? i;
         if (it.k === "g") {
           return (
-            <g key={key} className={it.cls}>
+            <g
+              key={key}
+              className={it.cls}
+              transform={it.transform && `matrix(${it.transform.join(" ")})`}
+            >
               <SceneNodes items={it.children} />
             </g>
           );

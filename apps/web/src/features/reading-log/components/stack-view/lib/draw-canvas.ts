@@ -8,7 +8,10 @@ export function drawSceneItems(
 ) {
   for (const it of items) {
     if (it.k === "g") {
+      ctx.save();
+      if (it.transform) ctx.transform(...it.transform);
       drawSceneItems(ctx, it.children, fonts);
+      ctx.restore();
       continue;
     }
     ctx.save();
