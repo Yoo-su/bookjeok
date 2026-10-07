@@ -1,4 +1,6 @@
 // 실행: node scripts/generate-share-images.mjs (한국어 글꼴이 설치된 환경)
+// 카드 하나만: node scripts/generate-share-images.mjs reading-height
+// 설명 글자는 시스템 글꼴로 그리므로, 다른 OS에서 전부 다시 만들면 손대지 않은 카드까지 바뀐다
 // 코드로 그리는 정적 카드. 런타임 이미지 생성/API 호출은 없다.
 import { createRequire } from "node:module";
 import { copyFile, mkdir, readFile } from "node:fs/promises";
@@ -47,7 +49,9 @@ const pages = [
     art: "share-art/reading-height.svg",
   },
 ];
+const only = process.argv.slice(2);
 for (const page of pages) {
+  if (only.length && !only.includes(page.key)) continue;
   for (const locale of ["ko", "en"]) {
     const [title, description] = page[locale].map((text) =>
       text

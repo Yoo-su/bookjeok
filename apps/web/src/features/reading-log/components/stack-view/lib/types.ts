@@ -20,6 +20,8 @@ export interface PathItem extends ItemBase {
   dash?: number[];
   op?: number;
   cls?: string;
+  /** 구멍이 있는 면. 시안에서 딴 머리처럼 윤곽 안쪽을 비워야 할 때 */
+  rule?: "evenodd";
 }
 
 export interface TextItem extends ItemBase {

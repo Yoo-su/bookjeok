@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef } from "react";
 
-import { buildFigure } from "../lib/figure";
 import { HEART_CENTER, WAVE_ELBOW } from "../lib/figure-authors";
+import { buildAuthorFigure } from "../lib/figure-person";
 import { SceneNodes } from "../lib/scene-svg";
 import type { SceneColors, StackAuthor } from "../lib/types";
 import { AUTHOR_SIGNATURES, SIGNATURE_SIZE } from "./signatures";
@@ -173,14 +173,13 @@ export function AuthorPeek({
   const width = 330 * k + pad * 2;
   const items = useMemo(
     () =>
-      buildFigure({
+      buildAuthorFigure({
         fx: pad,
         fy: pad,
         k,
         colors: COLORS,
         u: 1,
-        mood: "calm",
-        character: author,
+        author,
         heldColor: "#3F6E8C",
         boil: true,
         arm: action === "bow" ? undefined : action,
