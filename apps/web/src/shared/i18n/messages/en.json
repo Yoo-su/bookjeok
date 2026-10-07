@@ -239,6 +239,9 @@
       "senders_more": "{names} and {count, number} more",
       "delete_note": "The {count, plural, one {kong} other {# kongs}} it received will go too."
     },
+    "menu": {
+      "count": "{count, plural, one {# kong} other {# kongs}} received"
+    },
     "pill": {
       "aria": "{count, plural, one {# kong} other {# kongs}} received, open your kong bowl",
       "aria_empty": "No kongs yet. Open “What's a kong?”"

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -28,6 +29,10 @@ vi.mock("@/shared/utils/session", () => ({
   markSessionToast: vi.fn(),
 }));
 
+vi.mock("@/features/reading-log/components/kong/kong-menu-count", () => ({
+  KongMenuCount: () => null,
+}));
+
 vi.mock("@/features/auth/stores/use-auth-store", () => ({
   useAuthStore: (selector: (state: unknown) => unknown) =>
     selector({
@@ -42,7 +47,11 @@ vi.mock("@/features/auth/stores/use-auth-store", () => ({
 }));
 
 const clickLogout = async () => {
-  render(<UserPopover />);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <UserPopover />
+    </QueryClientProvider>,
+  );
   fireEvent.click(screen.getByRole("button"));
   fireEvent.click(await screen.findByText("logout"));
 };
