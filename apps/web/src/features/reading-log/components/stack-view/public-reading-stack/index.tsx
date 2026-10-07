@@ -1,7 +1,10 @@
 "use client";
 
 import type { ReadingStackBook } from "@bookjeok/core";
-import { usePublicReadingStackQuery } from "@bookjeok/react-query";
+import {
+  usePublicReadingStackQuery,
+  useSentKongsQuery,
+} from "@bookjeok/react-query";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
@@ -55,6 +58,8 @@ export function PublicReadingStack({
     year,
   );
   const viewer = useAuthStore((s) => s.user);
+  // 책을 열 때 콩 줄만 늦게 뜨지 않게 내가 보낸 콩을 미리 받아 둔다(콩 줄과 같은 캐시)
+  useSentKongsQuery(handle, { enabled: !!viewer && viewer.handle !== handle });
 
   const books = useMemo(() => data?.items ?? [], [data]);
   const stackMm = useMemo(
