@@ -6,7 +6,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AnimatedCopyCheck } from "@/shared/components/icons/animated";
-import { MessageCircle, Share2, X } from "@/shared/components/icons/iconsax";
+import { Share2 } from "@/shared/components/icons/iconsax";
+import { KakaoTalkLogo } from "@/shared/components/icons/kakao-talk-logo";
+import { XLogo } from "@/shared/components/icons/x-logo";
 import { Button } from "@/shared/components/shadcn/button";
 import {
   Popover,
@@ -203,10 +205,7 @@ export const ShareButton = ({
               title={t("aria.share_kakao")}
               aria-label={t("aria.share_kakao")}
             >
-              <MessageCircle
-                className="w-4 h-4 text-yellow-600"
-                aria-hidden="true"
-              />
+              <KakaoTalkLogo className="w-5 h-5" aria-hidden="true" />
             </Button>
 
             {/* 트위터(X) */}
@@ -218,7 +217,7 @@ export const ShareButton = ({
               title={t("aria.share_x")}
               aria-label={t("aria.share_x")}
             >
-              <X className="w-4 h-4" aria-hidden="true" />
+              <XLogo className="w-3.5 h-3.5" aria-hidden="true" />
             </Button>
 
             {/* 링크 복사 */}
