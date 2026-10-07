@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
+import { useAuthorArt } from "../hooks/use-author-art";
 import { STACK_AUTHOR_IDS } from "../lib/authors";
 import { buildFigure } from "../lib/figure";
 import { SceneNodes } from "../lib/scene-svg";
@@ -31,6 +32,7 @@ function Figure({
 }) {
   const k = height / 1000;
   const pad = 12;
+  const { art } = useAuthorArt(character);
   const items = buildFigure({
     fx: pad,
     fy: pad,
@@ -41,6 +43,7 @@ function Figure({
     character,
     heldColor: "#3F6E8C",
     boil,
+    authorArt: art,
   });
   return (
     <figure className="m-0 grid justify-items-center gap-1">

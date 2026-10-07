@@ -12,7 +12,10 @@ import {
 } from "@/shared/components/ui/dock-panel";
 import { Link, useRouter } from "@/shared/config/i18n/routing";
 
-import { STACK_PANEL_COVERS } from "../../../hooks/use-dock-peek-prefetch";
+import {
+  loadStackStage,
+  STACK_PANEL_COVERS,
+} from "../../../hooks/use-dock-peek-prefetch";
 import { useStackSettingsStore } from "../../../stores/use-stack-settings-store";
 import { readingLogHref } from "../../../utils/reading-log-link";
 import { useStackComparison } from "../../stack-view/hooks/use-stack-comparison";
@@ -20,7 +23,7 @@ import { cm1, useStackCopy } from "../../stack-view/hooks/use-stack-copy";
 import { BODY_PARTS, stackStatus } from "../../stack-view/lib/status";
 import { StackObjectProgress } from "../../stack-view/stack-object-progress";
 import { StackProgress, StackStats } from "../../stack-view/stack-progress";
-import { StackStage } from "../../stack-view/stack-stage";
+import type { StackStage as StackStageComponent } from "../../stack-view/stack-stage";
 
 interface ReadingStackPanelProps {
   open: boolean;
@@ -227,22 +230,32 @@ export const ReadingStackPanel = ({
   );
 };
 
-/** 열리는 동안은 같은 크기의 빈 자리만. 다 열린 뒤 무대를 붙이고 책을 떨어뜨림 */
+/**
+ * 열리는 동안은 같은 크기의 빈 자리만. 다 열린 뒤 무대 코드를 불러와 붙이고 책을 떨어뜨림
+ * (`loadStackStage` 참고)
+ */
 const SettledStage = (
-  props: Omit<ComponentProps<typeof StackStage>, "replayKey">,
+  props: Omit<ComponentProps<typeof StackStageComponent>, "replayKey">,
 ) => {
   const settled = useDockPanelSettled();
   // 한 번 붙이면 유지. 다시 열 때는 그리지 않고 책만 다시 떨어뜨림
-  const [mounted, setMounted] = useState(false);
+  const [Stage, setStage] = useState<typeof StackStageComponent | null>(null);
   const [replayKey, setReplayKey] = useState(0);
   useEffect(() => {
     if (!settled) return;
-    setMounted(true);
-    setReplayKey((k) => k + 1);
+    let live = true;
+    void loadStackStage().then(({ StackStage }) => {
+      if (!live) return;
+      setStage(() => StackStage);
+      setReplayKey((k) => k + 1);
+    });
+    return () => {
+      live = false;
+    };
   }, [settled]);
 
-  if (!mounted) {
+  if (!Stage) {
     return <div aria-hidden="true" className={props.className} />;
   }
-  return <StackStage {...props} replayKey={replayKey} />;
+  return <Stage {...props} replayKey={replayKey} />;
 };

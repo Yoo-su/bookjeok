@@ -23,7 +23,7 @@ import { PATHS } from "@/shared/constants/paths";
 import { formatRelativeTime } from "@/shared/utils/format-date";
 
 import { ReadingLogStartLink } from "../../common/reading-log-start-link";
-import { bookColor } from "../../stack-view/lib/scene";
+import { bookColor } from "../../stack-view/lib/scene-common";
 import { hashSeed, rng } from "../../stack-view/lib/sketch";
 import { SketchBook } from "../../stack-view/stack-order-list";
 import type { MountainStageScene } from "./mountain-stage";

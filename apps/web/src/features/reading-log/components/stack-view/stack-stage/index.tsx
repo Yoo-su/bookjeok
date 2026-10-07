@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { cn } from "@/shared/utils";
 
+import { useAuthorArt } from "../hooks/use-author-art";
 import { useCanvasMeasure } from "../hooks/use-canvas-measure";
 import { cm1 } from "../hooks/use-stack-copy";
 import type { StackObjectSpec } from "../lib/objects";
@@ -198,6 +199,7 @@ export function StackStage({
 }: StackStageProps) {
   const userMm = person?.userMm ?? 0;
   const character = person?.character ?? "M";
+  const { art: authorArt, pending: artPending } = useAuthorArt(character);
   const labelsFor = person?.labelsFor;
   const reducedMotion = usePrefersReducedMotion();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -282,7 +284,8 @@ export function StackStage({
   // 사물 무대는 높이가 바뀌는 동안에도 목표 높이로 그려 장면을 매 프레임 다시 만들지 않는다
   const height = objectHeight ?? size.height;
   const scene = useMemo(() => {
-    if (!size.width || !height) return null;
+    // 작가 시안 전신을 받는 동안은 그리지 않는다. 옛 그림이 잠깐 보였다 바뀌지 않게
+    if (!size.width || !height || (artPending && !object)) return null;
     const status = stackStatus(stackMm, displayMm);
     if (object)
       return buildStackScene({
@@ -320,6 +323,7 @@ export function StackStage({
       measure,
       boil: !reducedMotion && !settling,
       figure: Boolean(labelsFor),
+      authorArt,
       minStackWidthPx,
     });
   }, [
@@ -335,6 +339,8 @@ export function StackStage({
     reducedMotion,
     settling,
     minStackWidthPx,
+    authorArt,
+    artPending,
   ]);
 
   // 책을 한 권씩 떨어뜨린다. 보이지 않는 탭에서는 타임라인이 멈춰 책이 투명하게 남으므로 건너뛴다

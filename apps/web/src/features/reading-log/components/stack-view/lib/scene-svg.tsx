@@ -30,6 +30,7 @@ export const SceneNodes = memo(function SceneNodes({
               key={key}
               d={it.d}
               fill={it.fill ?? "none"}
+              fillRule={it.rule}
               stroke={it.stroke}
               strokeWidth={it.sw}
               strokeLinecap={it.cap}

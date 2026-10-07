@@ -50,7 +50,7 @@ const toSvg = (items: SceneItem[]): string =>
       if (it.id && DROP.has(it.id)) return "";
       if (it.k === "g") return `<g>${toSvg(it.children)}</g>`;
       if (it.k === "t") return "";
-      return `<path d="${it.d}" fill="${it.fill ?? "none"}"${attr("stroke", it.stroke)}${attr("stroke-width", it.sw)}${attr("stroke-linecap", it.cap)}${attr("stroke-linejoin", it.join)}${attr("stroke-dasharray", it.dash?.map((v) => v.toFixed(1)).join(" "))}${attr("opacity", it.op)}/>`;
+      return `<path d="${it.d}" fill="${it.fill ?? "none"}"${attr("fill-rule", it.rule)}${attr("stroke", it.stroke)}${attr("stroke-width", it.sw)}${attr("stroke-linecap", it.cap)}${attr("stroke-linejoin", it.join)}${attr("stroke-dasharray", it.dash?.map((v) => v.toFixed(1)).join(" "))}${attr("opacity", it.op)}/>`;
     })
     .join("");
 

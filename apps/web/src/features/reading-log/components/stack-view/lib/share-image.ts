@@ -1,5 +1,6 @@
 import type { ReadingStackBook } from "@bookjeok/core";
 
+import { loadAuthorArt } from "./author-art";
 import { drawSceneItems } from "./draw-canvas";
 import { buildLegend } from "./legend";
 import type { StackObjectSpec } from "./objects";
@@ -194,7 +195,16 @@ export async function renderStackShareImage(o: {
       })
     : bottom - top;
   const sceneTop = top + Math.round((bottom - top - sceneH) / 2);
+  // 작가는 시안 전신을 받아 그린다. 받지 못하면 코드 캐리커처
+  const author =
+    o.object || o.character === "M" || o.character === "F"
+      ? undefined
+      : o.character;
+  const authorArt = author
+    ? await loadAuthorArt(author).catch(() => undefined)
+    : undefined;
   const scene = buildStackScene({
+    authorArt,
     width: sceneW,
     height: sceneH,
     books: o.books,

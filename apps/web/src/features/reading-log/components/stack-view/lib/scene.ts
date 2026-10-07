@@ -1,26 +1,20 @@
-import {
-  fallbackCoverColor,
-  inkColorFor,
-  type ReadingStackBook,
-} from "@bookjeok/core";
+import { inkColorFor, type ReadingStackBook } from "@bookjeok/core";
 
 import { buildFigure, buildObject } from "./figure";
 import { OBJECT_ART, objectArtHeightMm, type StackObjectSpec } from "./objects";
+import { bookColor, bubbleItem, bubbleRect } from "./scene-common";
 import {
-  type Cmds,
   f1,
   hashSeed,
   lerp,
   poly,
   rectCorners,
   rng,
-  samplePath,
   sketchPoly,
-  wobble,
 } from "./sketch";
 import type { StackStatus } from "./status";
+import type { AuthorArt } from "./traced";
 import type {
-  GroupItem,
   MeasureText,
   PathItem,
   SceneColors,
@@ -29,9 +23,8 @@ import type {
   TextItem,
 } from "./types";
 
-/** 책을 칠할 색. 표지색이 없으면(10/30 이후 신간 등) ISBN으로 고른 옅은 색 */
-export const bookColor = (b: Pick<ReadingStackBook, "isbn" | "coverColor">) =>
-  b.coverColor ?? fallbackCoverColor(b.isbn);
+// 라운지 책동산처럼 무대 그림 없이 이 셋만 쓰는 곳은 `scene-common.ts`에서 직접 가져온다
+export { bookColor, bubbleItem, bubbleRect };
 
 export interface SceneLabels {
   /** 눈금자 옆 "내 키 172cm". 사물이면 "닥스훈트 약 30cm" */
@@ -63,6 +56,8 @@ export interface SceneOptions {
   u?: number;
   /** 캐릭터 선 떨림용으로 세 벌 그릴지 */
   boil?: boolean;
+  /** 작가를 세울 때 시안에서 딴 전신(`author-art`). 없으면 코드로 그린 캐리커처 */
+  authorArt?: AuthorArt;
   /** false면 캐릭터·키 주석·말풍선 없이 쌓은 책만 그린다(공개 프로필). 축척도 쌓은 높이에 맞춘다 */
   figure?: boolean;
   /**
@@ -105,144 +100,6 @@ interface Box {
 
 const hits = (a: Box, b: Box) =>
   a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
-
-/** 말풍선 몸통의 자리와 꼬리 x(px). 이름표가 부딪히는지 미리 볼 때도 쓴다 */
-export function bubbleRect(
-  cx: number,
-  bottom: number,
-  lines: [string, string],
-  u: number,
-  width: number,
-  minX: number,
-  measure: MeasureText,
-) {
-  const w =
-    Math.max(...lines.map((t) => measure(t, 16 * u, 700, "hand"))) + 24 * u;
-  const x = Math.max(
-    minX,
-    Math.min(width - w - 3 * u, Math.round(cx - w * 0.62)),
-  );
-  const h = lines.length * 19 * u + 14 * u;
-  const y = Math.max(3 * u, bottom - h - 12 * u);
-  const tx = Math.max(x + 16 * u, Math.min(x + w - 16 * u, cx - 6 * u));
-  return { x, y, w, h, tx };
-}
-
-export function bubbleItem(
-  cx: number,
-  bottom: number,
-  lines: [string, string],
-  C: SceneColors,
-  u: number,
-  width: number,
-  minX: number,
-  measure: MeasureText,
-  boil: boolean,
-): GroupItem {
-  const size = 16 * u;
-  const lh = 19 * u;
-  const { x, y, w, h, tx } = bubbleRect(
-    cx,
-    bottom,
-    lines,
-    u,
-    width,
-    minX,
-    measure,
-  );
-  const r = 12 * u;
-  const B = y + h;
-  // 선만 연필로 긋는다. 캐릭터와 같이 세 벌을 번갈아 보여 떨리게 한다
-  const shape: Cmds = [
-    "M",
-    x + r,
-    y,
-    "L",
-    x + w - r,
-    y,
-    "Q",
-    x + w,
-    y,
-    x + w,
-    y + r,
-    "L",
-    x + w,
-    B - r,
-    "Q",
-    x + w,
-    B,
-    x + w - r,
-    B,
-    "L",
-    tx + 7 * u,
-    B,
-    "L",
-    tx + 2 * u,
-    B + 11 * u,
-    "L",
-    tx - 5 * u,
-    B,
-    "L",
-    x + r,
-    B,
-    "Q",
-    x,
-    B,
-    x,
-    B - r,
-    "L",
-    x,
-    y + r,
-    "Q",
-    x,
-    y,
-    x + r,
-    y,
-  ];
-  const outline = samplePath(shape, (px, py) => [px, py]);
-  const children: SceneItem[] = [
-    { k: "p", d: wobble(outline, 41, 0.3 * u, true), fill: C.paper },
-  ];
-  for (const v of boil ? [0, 1, 2] : [0]) {
-    const seed = 41 + v * 53;
-    children.push({
-      k: "g",
-      cls: boil ? `stack-boil stack-boil-${v}` : "stack-bubble-line",
-      children: [
-        {
-          k: "p",
-          d: wobble(outline, seed, 0.55 * u, true),
-          stroke: C.ink,
-          sw: 1.7 * u,
-          join: "round",
-          op: 0.92,
-        },
-        {
-          k: "p",
-          d: wobble(outline, seed + 1, 0.95 * u, true),
-          stroke: C.ink,
-          sw: 0.8 * u,
-          join: "round",
-          op: 0.35,
-        },
-      ],
-    });
-  }
-  lines.forEach((t, i) =>
-    children.push({
-      k: "t",
-      x: x + w / 2,
-      y: y + 7 * u + lh * (i + 0.5),
-      t,
-      size,
-      weight: 700,
-      fam: "hand",
-      fill: i ? C.pen : C.ink,
-      anchor: "middle",
-    }),
-  );
-  return { k: "g", id: "bubble", cls: "stack-bubble", children };
-}
 
 /** 사물 모드 위아래 여백(px, u=1). 말풍선 자리와 바닥 아래 */
 const OBJECT_PAD = { top: 74, floor: 30 };
@@ -593,6 +450,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         character,
         heldColor: held,
         boil: o.boil ?? false,
+        authorArt: o.authorArt,
       }),
     });
   }

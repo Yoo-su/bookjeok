@@ -17,7 +17,7 @@ export function drawSceneItems(
       const p = new Path2D(it.d);
       if (it.fill) {
         ctx.fillStyle = it.fill;
-        ctx.fill(p);
+        ctx.fill(p, it.rule ?? "nonzero");
       }
       if (it.stroke) {
         ctx.strokeStyle = it.stroke;

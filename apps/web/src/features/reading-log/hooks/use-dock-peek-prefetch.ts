@@ -6,6 +6,13 @@ import { readingLogsYearQueryOptions } from "@bookjeok/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
+/**
+ * 키재기 패널의 무대 코드. dock은 모든 페이지에 있어 정적으로 가져오면 무대 그림(기본 캐릭터 머리 데이터 등)이
+ * 전 페이지 번들에 실린다. 패널이 다 열린 뒤에 불러오고, 아이콘에 손이 닿을 때 미리 받아 둔다
+ */
+export const loadStackStage = () =>
+  import("../components/stack-view/stack-stage");
+
 /** 키재기 패널이 한 줄로 보여 주는 최근 표지 수 */
 export const STACK_PANEL_COVERS = 6;
 
@@ -24,6 +31,7 @@ export function useDockPeekPrefetch() {
   }, [queryClient]);
 
   const stack = useCallback(() => {
+    void loadStackStage();
     const year = new Date().getFullYear();
     const queryKey = readingLogKeys.stack(year).queryKey;
     void queryClient
