@@ -195,13 +195,21 @@ export const useLoungeBookReadersInfiniteQuery = (
 };
 
 /**
+ * 내 독서 기록이 받은 콩 쿼리 옵션. 프로필 메뉴가 열리기 전에 미리 받을 때도 쓴다
+ */
+export const receivedKongsQueryOptions = () =>
+  queryOptions({
+    queryKey: readingLogKeys.kongsReceived.queryKey,
+    queryFn: getReceivedKongs,
+    staleTime: 60 * 1000,
+  });
+
+/**
  * 내 독서 기록이 받은 콩. 콩 알림이 오면 무효화된다
  */
 export const useReceivedKongsQuery = (options?: { enabled?: boolean }) => {
   return useQuery({
-    queryKey: readingLogKeys.kongsReceived.queryKey,
-    queryFn: getReceivedKongs,
-    staleTime: 60 * 1000,
+    ...receivedKongsQueryOptions(),
     enabled: options?.enabled,
   });
 };

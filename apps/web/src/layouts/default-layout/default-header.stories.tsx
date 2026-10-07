@@ -1,8 +1,10 @@
-import type { User } from "@bookjeok/core";
+import { readingLogKeys, type User } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
 import { userEvent, within } from "@storybook/test";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
+import { sampleReceivedKongs } from "@/features/reading-log/components/kong/lib/sample-kongs";
 
 import { DefaultHeader } from "./default-header";
 
@@ -74,6 +76,31 @@ export const LoggedIn: Story = {
         profileImageUrl: null,
       } as unknown as User,
     });
+  },
+};
+
+/** 받은 콩이 있으면 사용자 메뉴 「독서 기록」 옆에 작게 수를 붙인다. 열린 채로 시작한다 */
+export const LoggedInWithKongs: Story = {
+  ...LoggedIn,
+  decorators: [
+    (Story) => {
+      const client = new QueryClient({
+        defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+      });
+      client.setQueryData(
+        readingLogKeys.kongsReceived.queryKey,
+        sampleReceivedKongs([5, 4, 3]),
+      );
+      return (
+        <QueryClientProvider client={client}>
+          <Story />
+        </QueryClientProvider>
+      );
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const avatar = await within(canvasElement).findByText("미리");
+    await userEvent.click(avatar);
   },
 };
 

@@ -239,6 +239,9 @@
       "senders_more": "{names} and {count, number} more",
       "delete_note": "The {count, plural, one {kong} other {# kongs}} it received will go too."
     },
+    "menu": {
+      "count": "{count, plural, one {# kong} other {# kongs}} received"
+    },
     "pill": {
       "aria": "{count, plural, one {# kong} other {# kongs}} received, open your kong bowl",
       "aria_empty": "No kongs yet. Open “What's a kong?”"
@@ -248,6 +251,8 @@
       "desc": "Kongs your reading logs received · {count, number} in all",
       "hint": "Give the kongs a poke",
       "shake": "Shake the bowl ({count, plural, one {# kong} other {# kongs}})",
+      "tip": "Tip it over",
+      "refill": "Put them back",
       "list_label": "Logs that got kongs",
       "go": "Open the “{title}” log, {count, plural, one {# kong} other {# kongs}}",
       "what": "What's a kong?"

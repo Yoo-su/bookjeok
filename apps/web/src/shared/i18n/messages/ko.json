@@ -239,6 +239,9 @@
       "senders_more": "{names} 외 {count, number}명",
       "delete_note": "이 기록이 받은 콩 {count, number}알도 함께 사라져요."
     },
+    "menu": {
+      "count": "받은 콩 {count, number}알"
+    },
     "pill": {
       "aria": "받은 콩 {count, number}알, 콩 종지 열기",
       "aria_empty": "아직 받은 콩이 없어요. 콩이란? 열기"
@@ -248,6 +251,8 @@
       "desc": "독서 기록에 받은 콩이 모여요 · 모두 {count, number}알",
       "hint": "콩을 눌러 보세요",
       "shake": "종지 흔들기 (콩 {count, number}알)",
+      "tip": "종지 엎기",
+      "refill": "다시 담기",
       "list_label": "콩을 받은 기록",
       "go": "「{title}」 기록 보기, 콩 {count, number}알",
       "what": "콩이란?"

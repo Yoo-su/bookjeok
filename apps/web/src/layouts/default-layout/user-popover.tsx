@@ -1,11 +1,14 @@
 "use client";
 
 import { logout } from "@bookjeok/api-client";
+import { receivedKongsQueryOptions } from "@bookjeok/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { useFeedbackDialogStore } from "@/features/feedback/stores/use-feedback-dialog-store";
+import { KongMenuCount } from "@/features/reading-log/components/kong/kong-menu-count";
 import {
   Avatar,
   AvatarFallback,
@@ -32,6 +35,10 @@ export default function UserPopover() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const queryClient = useQueryClient();
+  // 메뉴의 받은 콩 수가 열린 뒤에 늦게 뜨지 않게 손을 대는 순간 받아 둔다
+  const prefetchKongs = () =>
+    queryClient.prefetchQuery(receivedKongsQueryOptions());
 
   useEffect(() => {
     setIsOpen(false);
@@ -64,6 +71,9 @@ export default function UserPopover() {
           hoverScale={1}
           tapScale={1}
           className="relative w-10 h-10 rounded-full p-0"
+          onPointerEnter={prefetchKongs}
+          onPointerDown={prefetchKongs}
+          onFocus={prefetchKongs}
         >
           <Avatar className="w-10 h-10" data-nosnippet>
             <AvatarImage
@@ -117,7 +127,10 @@ export default function UserPopover() {
             className="justify-start w-full h-auto px-3 py-2"
             asChild
           >
-            <Link href={PATHS.READING_LOG}>{tNav("reading_log")}</Link>
+            <Link href={PATHS.READING_LOG}>
+              {tNav("reading_log")}
+              <KongMenuCount />
+            </Link>
           </Button>
           <Button
             variant="ghost"

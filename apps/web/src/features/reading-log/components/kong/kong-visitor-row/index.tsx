@@ -127,7 +127,7 @@ export function KongVisitorRow({
             ref={seatRef}
             key={landing}
             type="button"
-            onClick={seatFlail.flail}
+            onClick={seatFlail.poke}
             aria-label={t("seat_label")}
             title={t("seat_label")}
             initial={landing ? { scaleX: 1.35, scaleY: 0.6 } : false}
