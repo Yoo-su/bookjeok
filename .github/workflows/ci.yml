@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: ["main", "develop"]
 
+# 같은 브랜치·이벤트에 새 커밋이 오면 이전 실행은 취소한다
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build and Test
@@ -29,8 +34,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint and Test
-        run: pnpm turbo lint test
+      # 바뀌지 않은 패키지의 lint·test·build는 이전 실행 결과를 그대로 쓴다
+      - name: Restore Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-
 
-      - name: Build
-        run: pnpm turbo build
+      # 한 번에 돌려 서로 의존하지 않는 작업을 병렬로 처리한다
+      - name: Lint, Test and Build
+        run: pnpm turbo lint test build --cache-dir=.turbo/cache
