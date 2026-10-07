@@ -114,13 +114,38 @@ const EYES: [number, number][] = [
   [586, 600],
 ];
 
-/** smile: 평소 · squeeze: 눈 질끈(바둥·날아갈 때) · sleep: 콩이 없을 때 */
-export type KongFace = "smile" | "squeeze" | "sleep";
-/** 바둥거릴 때만 팔다리가 나온다. 두 프레임을 번갈아 그린다 */
-export type KongLimbs = "none" | "flail0" | "flail1";
+/**
+ * smile: 평소 · squeeze: 눈 질끈(바둥·날아갈 때) · sleep: 콩이 없을 때
+ * joy: 콩 점프(^^ 눈, 벌린 입) · shiver: 부르르(동그란 눈, 물결 입)
+ */
+export type KongFace = "smile" | "squeeze" | "sleep" | "joy" | "shiver";
+/**
+ * 바둥거릴 때 팔다리가 나온다(두 프레임을 번갈아 그림).
+ * cheer: 점프 중 만세 · brr: 부르르 떨 때 몸 양옆의 떨림 선
+ */
+export type KongLimbs = "none" | "flail0" | "flail1" | "cheer" | "brr";
 
 function limbs(p: Pencil, l: KongLimbs) {
   if (l === "none") return;
+  if (l === "cheer") {
+    p.pen(["M", 244, 600, "Q", 176, 540, 150, 420], { w: 2.6 });
+    p.pen(["M", 762, 586, "Q", 832, 512, 856, 404], { w: 2.6 });
+    p.pen(["M", 430, 912, "L", 404, 968], { w: 2.6 });
+    p.pen(["M", 582, 906, "L", 610, 962], { w: 2.6 });
+    return;
+  }
+  if (l === "brr") {
+    // 몸 바깥의 짧은 괄호 두 겹. 연필 선이라 몸과 같은 결로 떨린다
+    for (const [x, d] of [
+      [176, -1],
+      [118, -1],
+      [826, 1],
+      [884, 1],
+    ] as const) {
+      p.pen(["M", x, 520, "Q", x + d * 22, 600, x, 680], { w: 2 });
+    }
+    return;
+  }
   const a = l === "flail0";
   p.pen(
     ["M", 234, 640, "Q", 160, a ? 560 : 660, a ? 104 : 120, a ? 470 : 660],
@@ -152,13 +177,45 @@ function face(p: Pencil, f: KongFace, k: number) {
       ["M", mx - 40, my + 54, "Q", mx, my + 120, mx + 40, my + 54, "Z"],
       DOT,
     );
+  } else if (f === "joy") {
+    line(["M", ax - 28, ay + 10, "Q", ax, ay - 24, ax + 28, ay + 10], 2.6);
+    line(["M", bx - 28, by + 10, "Q", bx, by - 24, bx + 28, by + 10], 2.6);
+    p.fill(
+      ["M", mx - 46, my + 50, "Q", mx, my + 124, mx + 46, my + 50, "Z"],
+      DOT,
+    );
+  } else if (f === "shiver") {
+    for (const [x, y] of EYES) p.fill(ell(x, y, r * 1.2, r * 1.25), DOT);
+    line(
+      [
+        "M",
+        mx - 50,
+        my + 70,
+        "L",
+        mx - 30,
+        my + 56,
+        "L",
+        mx - 10,
+        my + 72,
+        "L",
+        mx + 10,
+        my + 56,
+        "L",
+        mx + 30,
+        my + 72,
+        "L",
+        mx + 50,
+        my + 58,
+      ],
+      2.2,
+    );
   } else {
     line(["M", ax - 28, ay - 4, "Q", ax, ay + 18, ax + 28, ay - 4]);
     line(["M", bx - 28, by - 4, "Q", bx, by + 18, bx + 28, by - 4]);
     line(["M", mx - 16, my + 66, "Q", mx, my + 76, mx + 16, my + 66], 2);
   }
   // 바깥 끝이 처진 팔자 눈썹. 40px 아래에선 뭉개져 뺀다
-  if (f !== "squeeze" && k >= 0.04) {
+  if (f !== "squeeze" && f !== "joy" && k >= 0.04) {
     for (const [x, y, d] of [
       [ax, ay, -1],
       [bx, by, 1],

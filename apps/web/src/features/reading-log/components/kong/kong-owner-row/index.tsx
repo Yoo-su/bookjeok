@@ -50,7 +50,7 @@ export function PokeableKong({
   // 포인터로만 누르는 장식. 정보는 옆 글자가 전한다
   return (
     <span
-      onClick={flail.flail}
+      onClick={flail.poke}
       className={cn("cursor-pointer", className)}
       aria-hidden="true"
     >

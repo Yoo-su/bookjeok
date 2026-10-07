@@ -28,7 +28,7 @@ export function KongAboutDialog({ open, onOpenChange }: KongAboutDialogProps) {
         <div className="grid justify-items-center gap-1 text-center">
           <button
             type="button"
-            onClick={flail.flail}
+            onClick={flail.poke}
             aria-label={t("poke")}
             className="mt-1 cursor-pointer rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-stone-700"
           >
