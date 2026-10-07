@@ -4,7 +4,7 @@ import type {
   MountainLandmarkId,
 } from "@bookjeok/core";
 
-import { buildArt } from "./figure";
+import { buildArt } from "./figure-art";
 import { drawLandmark, LANDMARK_ART } from "./figure-landmarks";
 import { CLOUDS, drawCloud } from "./figure-sky";
 import {
@@ -18,7 +18,7 @@ import {
   outlineX,
 } from "./mountain-shape";
 import { createPencil } from "./pencil";
-import { bubbleItem, bubbleRect } from "./scene";
+import { bubbleItem, bubbleRect } from "./scene-common";
 import { type Cmds, f1, hashSeed, poly, type Pt, rng } from "./sketch";
 import type {
   MeasureText,

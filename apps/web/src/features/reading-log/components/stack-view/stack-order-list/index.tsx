@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { forwardRef, memo, useEffect, useMemo, useRef, useState } from "react";
 
 import { cm1 } from "../hooks/use-stack-copy";
-import { bookColor } from "../lib/scene";
+import { bookColor } from "../lib/scene-common";
 import {
   type Cmds,
   f1,
