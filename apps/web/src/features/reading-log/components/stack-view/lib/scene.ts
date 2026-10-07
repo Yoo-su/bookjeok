@@ -13,6 +13,7 @@ import {
   sketchPoly,
 } from "./sketch";
 import type { StackStatus } from "./status";
+import type { AuthorArt } from "./traced";
 import type {
   MeasureText,
   PathItem,
@@ -55,6 +56,8 @@ export interface SceneOptions {
   u?: number;
   /** 캐릭터 선 떨림용으로 세 벌 그릴지 */
   boil?: boolean;
+  /** 작가를 세울 때 시안에서 딴 전신(`author-art`). 없으면 코드로 그린 캐리커처 */
+  authorArt?: AuthorArt;
   /** false면 캐릭터·키 주석·말풍선 없이 쌓은 책만 그린다(공개 프로필). 축척도 쌓은 높이에 맞춘다 */
   figure?: boolean;
   /**
@@ -447,6 +450,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         character,
         heldColor: held,
         boil: o.boil ?? false,
+        authorArt: o.authorArt,
       }),
     });
   }

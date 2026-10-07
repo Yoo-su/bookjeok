@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 
+import { cachedAuthorArt } from "../lib/author-art";
 import { HEART_CENTER, WAVE_ELBOW } from "../lib/figure-authors";
 import { buildAuthorFigure } from "../lib/figure-person";
 import { SceneNodes } from "../lib/scene-svg";
@@ -180,6 +181,7 @@ export function AuthorPeek({
         colors: COLORS,
         u: 1,
         author,
+        art: cachedAuthorArt(author),
         heldColor: "#3F6E8C",
         boil: true,
         arm: action === "bow" ? undefined : action,

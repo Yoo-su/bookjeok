@@ -3,6 +3,7 @@ import { drawObject } from "./figure-objects";
 import { buildAuthorFigure } from "./figure-person";
 import { buildReaderFigure } from "./figure-reader";
 import { OBJECT_ART } from "./objects";
+import type { AuthorArt } from "./traced";
 import type {
   Mood,
   SceneColors,
@@ -31,11 +32,19 @@ export function buildFigure(opts: {
   arm?: "wave" | "heart";
   /** 작가만. `buildAuthorFigure` 참고 */
   peek?: boolean;
+  /** 작가만. 시안에서 딴 전신. `buildAuthorFigure` 참고 */
+  authorArt?: AuthorArt;
 }): SceneItem[] {
-  const { character, mood, arm, peek, ...person } = opts;
+  const { character, mood, arm, peek, authorArt, ...person } = opts;
   if (character === "M" || character === "F")
     return buildReaderFigure({ ...person, character, mood });
-  return buildAuthorFigure({ ...person, author: character, arm, peek });
+  return buildAuthorFigure({
+    ...person,
+    author: character,
+    arm,
+    peek,
+    art: authorArt,
+  });
 }
 
 /**

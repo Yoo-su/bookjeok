@@ -33,6 +33,12 @@ vi.mock("next/dynamic", async () => {
   };
 });
 
+// 작가 전신은 받은 뒤에 내보낸다. 테스트는 바로 받은 것으로 둔다
+vi.mock("@/features/reading-log/components/stack-view/lib/author-art", () => ({
+  loadAuthorArt: () => Promise.resolve({}),
+  cachedAuthorArt: () => undefined,
+}));
+
 class IO {
   constructor(private cb: IntersectionObserverCallback) {}
   observe() {
@@ -63,52 +69,66 @@ describe("AuthorGreeting", () => {
     document.body.innerHTML = "";
   });
 
-  it("넓은 화면에서 잠시 뒤 작가 한 명을 내보낸다", () => {
+  it("넓은 화면에서 잠시 뒤 작가 한 명을 내보낸다", async () => {
     render(<AuthorGreeting />);
     expect(screen.queryByTestId("peek")).toBeNull();
-    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS));
-    expect(["bow", "wave", "heart"]).toContain(
-      screen.getByTestId("peek").dataset.action,
-    );
+    await act(async () => {
+      vi.advanceTimersByTime(GREETING_FIRST_MS);
+    });
+    expect(screen.getByTestId("peek").dataset.action).toBe("bow");
   });
 
-  it("좁은 화면이나 동작 줄이기에서는 내보내지 않는다", () => {
+  it("좁은 화면이나 동작 줄이기에서는 내보내지 않는다", async () => {
     setWidth(GREETING_MIN_WIDTH - 1);
     const { unmount } = render(<AuthorGreeting />);
-    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS * 3));
+    await act(async () => {
+      vi.advanceTimersByTime(GREETING_FIRST_MS * 3);
+    });
     expect(screen.queryByTestId("peek")).toBeNull();
     unmount();
 
     setWidth(1280);
     reduce = true;
     render(<AuthorGreeting />);
-    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS * 3));
+    await act(async () => {
+      vi.advanceTimersByTime(GREETING_FIRST_MS * 3);
+    });
     expect(screen.queryByTestId("peek")).toBeNull();
   });
 
-  it("횟수 제한 없이 끝날 때마다 다음 작가를 내보낸다", () => {
+  it("횟수 제한 없이 끝날 때마다 다음 작가를 내보낸다", async () => {
     render(<AuthorGreeting />);
-    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS));
+    await act(async () => {
+      vi.advanceTimersByTime(GREETING_FIRST_MS);
+    });
     const keys = new Set<string>();
     for (let i = 0; i < 10; i++) {
       keys.add(screen.getByTestId("peek").dataset.key ?? "");
       // 끝나면 치우고, 다음 간격(최대 6초)을 기다린다
-      act(() => vi.advanceTimersByTime(1000));
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
       expect(screen.queryByTestId("peek")).toBeNull();
-      act(() => vi.advanceTimersByTime(6000));
+      await act(async () => {
+        vi.advanceTimersByTime(6000);
+      });
     }
     expect(keys.size).toBe(10);
   });
 
-  it("다른 창이 떠 있으면 건너뛰었다가 닫히면 내보낸다", () => {
+  it("다른 창이 떠 있으면 건너뛰었다가 닫히면 내보낸다", async () => {
     const dialog = document.createElement("div");
     dialog.setAttribute("role", "dialog");
     document.body.appendChild(dialog);
     render(<AuthorGreeting />);
-    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS));
+    await act(async () => {
+      vi.advanceTimersByTime(GREETING_FIRST_MS);
+    });
     expect(screen.queryByTestId("peek")).toBeNull();
     dialog.remove();
-    act(() => vi.advanceTimersByTime(GREETING_FIRST_MS));
+    await act(async () => {
+      vi.advanceTimersByTime(GREETING_FIRST_MS);
+    });
     expect(screen.getByTestId("peek")).toBeInTheDocument();
   });
 });
@@ -138,7 +158,7 @@ describe("인사용 캐릭터 그림", () => {
       ...o,
     });
 
-  it("손하트는 머리·팔뚝·하트를 따로 묶어 움직일 수 있게 한다", () => {
+  it("손하트는 머리·팔뚝·하트를 따로 묶어 움직일 수 있게 한다", async () => {
     expect(groups(figure({ arm: "heart", peek: true }))).toEqual([
       "stack-figure",
       "peek-head",
@@ -150,7 +170,7 @@ describe("인사용 캐릭터 그림", () => {
     );
   });
 
-  it("무대의 평소 그림에는 인사용 묶음이 없다", () => {
+  it("무대의 평소 그림에는 인사용 묶음이 없다", async () => {
     expect(groups(figure({}))).toEqual(["stack-figure"]);
   });
 });

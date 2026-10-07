@@ -7,6 +7,7 @@ import type {
   PeekAction,
   PeekSide,
 } from "@/features/reading-log/components/stack-view/author-peek";
+import { loadAuthorArt } from "@/features/reading-log/components/stack-view/lib/author-art";
 import { STACK_AUTHOR_IDS } from "@/features/reading-log/components/stack-view/lib/authors";
 import type { StackAuthor } from "@/features/reading-log/components/stack-view/lib/types";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
@@ -96,12 +97,19 @@ export function AuthorGreeting() {
       }
       count.current += 1;
       setPlaying(true);
-      setShot({
-        author: pick(STACK_AUTHOR_IDS),
-        side: pick(["left", "right"] as const),
-        action: pick(["bow", "wave", "heart"] as const),
-        key: count.current,
-      });
+      const key = count.current;
+      const author = pick(STACK_AUTHOR_IDS);
+      // 시안 전신을 받은 뒤에 내보낸다. 통째로 딴 그림이라 팔 동작 없이 인사한다
+      loadAuthorArt(author).then(
+        () =>
+          setShot({
+            author,
+            side: pick(["left", "right"] as const),
+            action: "bow",
+            key,
+          }),
+        () => setPlaying(false),
+      );
     }, wait);
     return () => clearTimeout(id);
   }, [reduce, wide, playing, retry]);

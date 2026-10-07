@@ -1,6 +1,7 @@
 import { drawAuthor } from "./figure-authors";
 import { createPencil } from "./pencil";
 import { f1, type Pt } from "./sketch";
+import { type AuthorArt, authorArtItems } from "./traced";
 import type { SceneColors, SceneItem, StackAuthor } from "./types";
 
 /** 사람 그림 공통 옵션. 300×1000 단위로 그리고 (fx, fy)에서 k배로 늘린다 */
@@ -14,6 +15,9 @@ export interface PersonOptions {
   /** 흔들림이 다른 세 벌을 만들어 화면이 번갈아 보이게 한다. 공유 이미지는 한 벌만 그린다 */
   boil: boolean;
 }
+
+/** 시안에서 딴 그림의 선색. 기본 캐릭터와 같은 갈색 연필 */
+const ART_LINE = "#2F2621";
 
 export const personTransform =
   ({ fx, fy, k }: PersonOptions) =>
@@ -55,8 +59,27 @@ export function buildAuthorFigure(
     arm?: "wave" | "heart";
     /** 머리를 `peek-head` 묶음으로 따로 둬 고개만 움직일 수 있게 한다 */
     peek?: boolean;
+    /**
+     * 시안에서 딴 전신(`author-art`). 있으면 코드 그림 대신 이것을 한 벌 그린다.
+     * 통째로 딴 그림이라 팔·고개를 따로 움직이는 인사 동작(`arm`·`peek`)은 쓰지 않는다
+     */
+    art?: AuthorArt;
   },
 ): SceneItem[] {
+  if (opts.art)
+    return [
+      personShadow(opts),
+      {
+        k: "g",
+        id: "figure-0",
+        cls: "stack-figure",
+        children: authorArtItems(opts.art, personTransform(opts), {
+          paper: opts.colors.paper,
+          line: ART_LINE,
+          held: opts.heldColor,
+        }),
+      },
+    ];
   const { colors: C, u, author, heldColor, boil, arm: raised } = opts;
   const T = personTransform(opts);
   const out: SceneItem[] = [personShadow(opts)];

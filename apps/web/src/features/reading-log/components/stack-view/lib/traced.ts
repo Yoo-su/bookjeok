@@ -10,8 +10,10 @@ export interface TracedArt {
   levels: string[];
 }
 
-/** 작가 시안의 선·피부색. 기본 캐릭터와 같은 갈색 연필 */
-export const TRACED_TONE = { skin: "#FCF2EA", line: "#2F2621" };
+/** 작가 전신. `book`은 손에 든 책 표지의 보이는 면(손에 가린 곳 제외)으로, 표지색을 칠한다 */
+export interface AuthorArt extends TracedArt {
+  book: string;
+}
 
 /** 층별 농도. 옅은 층부터 */
 const LEVEL_OPACITY = [0.3, 0.42, 0.78];
@@ -51,5 +53,22 @@ export function tracedItems(
         op: LEVEL_OPACITY[i],
       }),
     ),
+  ];
+}
+
+/** 작가 전신. 종이색 실루엣 → 책 표지색 → 연필 층 순서로 겹친다 */
+export function authorArtItems(
+  art: AuthorArt,
+  T: (x: number, y: number) => Pt,
+  o: { paper: string; line: string; held: string },
+): PathItem[] {
+  const [sil, ...levels] = tracedItems(art, T, {
+    skin: o.paper,
+    line: o.line,
+  });
+  return [
+    sil,
+    { k: "p", d: place(art.book, T), fill: o.held, rule: "evenodd" },
+    ...levels,
   ];
 }
