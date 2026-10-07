@@ -10,7 +10,7 @@ import { useAuthorArt } from "../hooks/use-author-art";
 import { useCanvasMeasure } from "../hooks/use-canvas-measure";
 import { cm1 } from "../hooks/use-stack-copy";
 import type { StackObjectSpec } from "../lib/objects";
-import type { SceneLabels } from "../lib/scene";
+import type { SceneLabels, SceneResult } from "../lib/scene";
 import { buildStackScene, objectSceneHeight } from "../lib/scene";
 import { SceneNodes } from "../lib/scene-svg";
 import { type StackStatus, stackStatus } from "../lib/status";
@@ -206,7 +206,10 @@ export function StackStage({
   const svgRef = useRef<SVGSVGElement>(null);
   const sparkRef = useRef<SVGGElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [displayMm, setDisplayMm] = useState(userMm);
+  const [display, setDisplay] = useState({ character, mm: userMm });
+  // 다른 인물을 이전 키로 한 프레임 그린 뒤 트윈하지 않는다.
+  const displayMm = display.character === character ? display.mm : userMm;
+  const setDisplayMm = (mm: number) => setDisplay({ character, mm });
   const measure = useCanvasMeasure();
 
   // 사물 무대는 폭에 맞춘 축척만큼만 높인다. 좁은 화면에서 위가 텅 비지 않게
@@ -254,6 +257,11 @@ export function StackStage({
   // 키가 바뀌는 동안에는 캐릭터를 한 벌만 그린다. 세 벌이 장면 생성 비용의 2/3다
   const [settling, setSettling] = useState(false);
   useEffect(() => {
+    if (display.character !== character) {
+      setDisplayMm(userMm);
+      setSettling(false);
+      return;
+    }
     const from = displayRef.current;
     if (from === userMm) return;
     const t0 = performance.now();
@@ -279,11 +287,11 @@ export function StackStage({
       cancelAnimationFrame(raf);
       clearTimeout(settle);
     };
-  }, [userMm, reducedMotion]);
+  }, [userMm, character, reducedMotion]);
 
   // 사물 무대는 높이가 바뀌는 동안에도 목표 높이로 그려 장면을 매 프레임 다시 만들지 않는다
   const height = objectHeight ?? size.height;
-  const scene = useMemo(() => {
+  const nextScene = useMemo(() => {
     // 작가 시안 전신을 받는 동안은 그리지 않는다. 옛 그림이 잠깐 보였다 바뀌지 않게
     if (!size.width || !height || (artPending && !object)) return null;
     const status = stackStatus(stackMm, displayMm);
@@ -343,9 +351,17 @@ export function StackStage({
     artPending,
   ]);
 
+  // 선택한 작가를 받는 동안 마지막 완성 장면을 유지한다. SVG를 지웠다 다시 붙이면
+  // 책 입장·제목 숫자가 재시작하고 캐리커처 없는 점선이 먼저 보인다.
+  const lastScene = useRef<SceneResult | null>(null);
+  useLayoutEffect(() => {
+    if (nextScene) lastScene.current = nextScene;
+  }, [nextScene]);
+  const scene = nextScene ?? (artPending ? lastScene.current : null);
+
   // 책을 한 권씩 떨어뜨린다. 보이지 않는 탭에서는 타임라인이 멈춰 책이 투명하게 남으므로 건너뛴다
   const ready = Boolean(scene);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const svg = svgRef.current;
     // 훅은 첫 렌더에 false라 첫 인트로에서는 직접 확인한다
     const reduce =
@@ -432,6 +448,7 @@ export function StackStage({
   return (
     <div
       ref={wrapRef}
+      aria-busy={artPending && !object}
       className={cn(
         "relative h-[520px] w-full md:h-[600px]",
         className,

@@ -1,6 +1,6 @@
 /**
  * 독서 키재기 장면을 이루는 도형 목록. 한 번 만든 목록을 화면(SVG)과 공유 이미지(Canvas)가
- * 같이 그린다. 그래서 좌표는 전부 px로 굳혀 두고 변환을 중첩하지 않는다.
+ * 같이 그린다. 일반 도형은 px 좌표이며, 큰 원화 경로는 그룹의 아핀 변환으로 배치한다.
  */
 export type FontRole = "hand" | "ui";
 
@@ -45,6 +45,8 @@ export interface GroupItem extends ItemBase {
   k: "g";
   cls: string;
   children: SceneItem[];
+  /** SVG/Canvas 공통 아핀 변환(a, b, c, d, e, f). 큰 원화 경로는 그대로 두고 배치만 바꾼다 */
+  transform?: [number, number, number, number, number, number];
 }
 
 export type SceneItem = PathItem | TextItem | GroupItem;

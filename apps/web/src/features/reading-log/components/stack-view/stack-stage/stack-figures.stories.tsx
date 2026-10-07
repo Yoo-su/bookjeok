@@ -32,7 +32,14 @@ function Figure({
 }) {
   const k = height / 1000;
   const pad = 12;
-  const { art } = useAuthorArt(character);
+  const { art, pending } = useAuthorArt(character);
+  if (pending)
+    return (
+      <div
+        style={{ width: 300 * k + pad * 2, height: height + pad * 2 + 10 }}
+        aria-busy="true"
+      />
+    );
   const items = buildFigure({
     fx: pad,
     fy: pad,
