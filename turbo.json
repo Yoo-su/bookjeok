@@ -1,5 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "tsconfig.base.json",
+    "packages/tsconfig.json",
+    "packages/tsup.config.base.ts"
+  ],
   "globalEnv": [
     "NODE_ENV",
     "PORT",
