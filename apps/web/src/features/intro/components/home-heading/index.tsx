@@ -1,9 +1,6 @@
 import { useTranslations } from "next-intl";
 
-/**
- * 홈 첫 머리글. 사이트 h1이다.
- * 좌우 끝에서 작가가 나와 인사하므로(`author-greeting`) 폭을 좁게 유지한다.
- */
+/** 홈 첫 머리글. 사이트 h1이다. */
 export const HomeHeading = () => {
   const t = useTranslations("home.heading");
 
