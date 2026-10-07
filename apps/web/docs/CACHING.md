@@ -271,7 +271,7 @@ next-intl은 `setRequestLocale`이 없으면 헤더에서 로케일을 읽고, �
 
 ## 서버 시딩 실패 처리 (2026-09-19)
 
-`ServerQueryBoundary`는 실패를 reject하는 `fetchQuery`/`fetchInfiniteQuery`를 병렬 실행하고 실패를 기록합니다. 마켓 기본 목록·리뷰 카테고리 피드·라운지 최신 피드는 `required: true`입니다. 이 쿼리가 실패하면 렌더 실패를 전파해 기존 정상 ISR을 유지하며, 최초 생성이라면 실패로 처리합니다. `[locale]/layout.tsx`의 `generateStaticParams: []`로 언어별 페이지의 빌드 시 사전 생성을 생략합니다. 마켓·리뷰 홈·라운지를 포함한 정적 페이지는 첫 방문에 생성하고 각 페이지의 `revalidate`를 유지하므로, 빌드 환경에 API 서버가 없어도 됩니다. 기존 동적 페이지의 요청별 렌더링은 유지됩니다. 배포 후 캐시가 없는 첫 요청은 생성 시간만큼 느릴 수 있습니다. 부가 쿼리는 성공한 나머지 데이터와 함께 폴백합니다.
+`ServerQueryBoundary`는 실패를 reject하는 `fetchQuery`/`fetchInfiniteQuery`를 병렬 실행하고 실패를 기록합니다. 마켓 기본 목록·리뷰 카테고리 피드·라운지 최신 피드는 `required: true`입니다. 이 쿼리가 실패하면 렌더 실패를 전파해 기존 정상 ISR을 유지하며, 최초 생성이라면 실패로 처리합니다. `[locale]/layout.tsx`의 `generateStaticParams: []`로 언어별 페이지의 빌드 시 사전 생성을 생략합니다. 마켓·리뷰 홈·라운지를 포함한 정적 페이지는 첫 방문에 생성하고 각 페이지의 `revalidate`를 유지하므로, 빌드 환경에 API 서버가 없어도 됩니다. 기존 동적 페이지의 요청별 렌더링은 유지됩니다. 배포 후 캐시가 없는 첫 요청은 생성 시간만큼 느릴 수 있습니다. 이 시간을 줄이려고 함수 리전을 API 서버와 가까운 서울(`vercel.json`의 `icn1`)로 둡니다. 부가 쿼리는 성공한 나머지 데이터와 함께 폴백합니다.
 
 라운지는 `readingLog.loungeFeed`의 첫 페이지를 `initialPageParam: null`로 시딩합니다(ISR 6시간, 클라이언트 staleTime 1분). sitemap은 `connection()`으로 빌드 시 API 조회를 생략합니다. 첫 요청부터 공개 리뷰·판매글을 50개씩 커서 순회하고 완성된 목록을 `unstable_cache`로 6시간 보관합니다. `next.config.ts`의 `/sitemap.xml` 전용 `Vercel-CDN-Cache-Control`로 XML 응답도 6시간 캐시합니다(만료 뒤 stale-while-revalidate 24시간). 이 헤더는 Vercel CDN 전용이고 preview는 no-store입니다. CDN MISS에서만 함수가 데이터 캐시를 읽어 XML을 직렬화합니다. 데이터·응답 캐시의 만료 시각이 다르므로 목록의 실제 신선도가 정확히 6시간 이내라는 보장은 하지 않습니다. 정상 데이터 캐시가 있으면 재검증 실패 시에도 기존 목록을 제공합니다. 최초 조회가 실패하면 오류를 반환합니다. 중간 API 실패·반복 커서는 부분 결과를 저장하지 않고 전파합니다. 단일 sitemap 5만 URL 한도를 넘기기 전에 분할해야 하며, 무한 순회 방지를 위해 글 수 약 2.5만에서 가드를 둡니다.
 
