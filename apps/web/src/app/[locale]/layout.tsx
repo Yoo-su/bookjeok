@@ -31,13 +31,10 @@ import { QueryProvider } from "@/shared/providers/query-provider";
 import { SocketProvider } from "@/shared/providers/socket-provider";
 import UserProvider from "@/shared/providers/user-provider";
 import {
-  bitcount,
-  diphylleia,
-  do_hyeon,
   gaegu,
   gowun_batang,
   nanum_gothic,
-  song_myung,
+  PRETENDARD_PRELOAD_URLS,
 } from "@/styles/fonts";
 
 // 메타데이터 생성
@@ -80,8 +77,20 @@ export default async function Layout({
   return (
     <html
       lang={locale}
-      className={`${nanum_gothic.variable} ${bitcount.variable} ${gowun_batang.variable} ${song_myung.variable} ${do_hyeon.variable} ${diphylleia.variable} ${gaegu.variable}`}
+      className={`${nanum_gothic.variable} ${gowun_batang.variable} ${gaegu.variable}`}
     >
+      <head>
+        {PRETENDARD_PRELOAD_URLS.map((href) => (
+          <link
+            key={href}
+            rel="preload"
+            href={href}
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+        ))}
+      </head>
       <body style={{ fontFamily: "var(--font-pretendard)" }}>
         <a
           href="#main-content"

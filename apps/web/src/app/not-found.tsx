@@ -6,12 +6,11 @@ import Link from "next/link";
 import { ArrowLeft } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
 import { BRAND_ASSETS } from "@/shared/constants/brand";
-import { song_myung } from "@/styles/fonts";
 
 // 글로벌 404 페이지 (Locale 미지정 시) - 루트 레이아웃을 대체하므로 html/body 필수 포함
 export default function NotFound() {
   return (
-    <html lang="ko" className={song_myung.variable}>
+    <html lang="ko">
       <body>
         <div className="flex min-h-dvh flex-col items-center justify-center bg-stone-50/50 px-4 relative overflow-hidden font-sans">
           {/* 배경 장식 요소 */}
