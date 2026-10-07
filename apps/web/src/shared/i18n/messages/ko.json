@@ -240,8 +240,6 @@
       "delete_note": "이 기록이 받은 콩 {count, number}알도 함께 사라져요."
     },
     "pill": {
-      "received": "받은 콩",
-      "empty": "아직 콩이 없어요",
       "aria": "받은 콩 {count, number}알, 콩 종지 열기",
       "aria_empty": "아직 받은 콩이 없어요. 콩이란? 열기"
     },

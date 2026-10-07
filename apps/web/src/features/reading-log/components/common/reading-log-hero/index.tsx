@@ -94,6 +94,10 @@ export function ReadingLogHero({
 
       {/* 히어로 본문 콘텐츠 영역 */}
       <div className="w-full px-4 md:px-6 lg:px-8 xl:max-w-7xl xl:mx-auto relative z-10 h-full flex flex-col justify-end pb-6 md:pb-10 pt-6">
+        {/* 받은 콩은 사진 모서리에 붙인 스티커처럼. 오른쪽 끝은 공개 스위치와 맞춘다 */}
+        <div className="absolute top-6 right-4 md:top-8 md:right-6 lg:right-8">
+          <KongPill onOpenDate={onOpenDate} isPublic={isPublic} />
+        </div>
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 w-full">
           {/* 타이포그래피 영역 */}
           <div className="space-y-4 max-w-2xl animate-in fade-in slide-in-from-bottom-6 duration-1000">
@@ -113,7 +117,7 @@ export function ReadingLogHero({
             </p>
           </div>
 
-          {/* 미니멀 공개 여부 스위치 & 자랑하기 버튼 (세로로 배치, 우측 정렬) */}
+          {/* 미니멀 공개 여부 스위치 (우측 정렬) */}
           <div className="flex flex-col items-end gap-3 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100 shrink-0">
             <div className="flex items-center gap-3 px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors duration-300 w-fit">
               <Label
@@ -130,7 +134,6 @@ export function ReadingLogHero({
                 className="data-[state=checked]:bg-sky-400 data-[state=unchecked]:bg-stone-500/50 border-transparent h-4 w-7 md:h-5 md:w-9 transition-colors duration-300"
               />
             </div>
-            <KongPill onOpenDate={onOpenDate} />
           </div>
         </div>
       </div>

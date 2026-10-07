@@ -240,8 +240,6 @@
       "delete_note": "The {count, plural, one {kong} other {# kongs}} it received will go too."
     },
     "pill": {
-      "received": "Kongs",
-      "empty": "No kongs yet",
       "aria": "{count, plural, one {# kong} other {# kongs}} received, open your kong bowl",
       "aria_empty": "No kongs yet. Open “What's a kong?”"
     },
