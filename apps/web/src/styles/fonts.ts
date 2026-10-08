@@ -1,26 +1,19 @@
-import { Gaegu, Gowun_Batang, Nanum_Gothic } from "next/font/google";
-
-export const nanum_gothic = Nanum_Gothic({
-  weight: ["400", "700", "800"],
-  variable: "--font-nanum-gothic",
-  display: "swap",
-  preload: false,
+/**
+ * Google 한글 글꼴은 google-fonts.css에서 직접 서빙한다(next/font/google과 같은 조각·대체 글꼴 보정).
+ * 쓰는 쪽이 next/font 객체처럼 `variable`·`className`·`style.fontFamily`를 그대로 쓰게 같은 모양으로 둔다
+ */
+const localFont = (slug: string, family: string) => ({
+  variable: `font-${slug}-vars`,
+  className: `font-${slug}`,
+  style: { fontFamily: `"${family}", "${family} Fallback"` },
 });
 
-export const gowun_batang = Gowun_Batang({
-  weight: ["400", "700"],
-  variable: "--font-gowun-batang",
-  display: "swap",
-  preload: false,
-});
+export const nanum_gothic = localFont("nanum-gothic", "Nanum Gothic");
+
+export const gowun_batang = localFont("gowun-batang", "Gowun Batang");
 
 /** 독서기록 「독서 키재기」의 손글씨 주석과 말풍선 */
-export const gaegu = Gaegu({
-  weight: ["400", "700"],
-  variable: "--font-gaegu",
-  display: "swap",
-  preload: false,
-});
+export const gaegu = localFont("gaegu", "Gaegu");
 
 /**
  * 본문 Pretendard(pretendard.css)에서 거의 모든 페이지가 쓰는 조각. CSS를 다 읽은 뒤에야 받기 시작하지 않게

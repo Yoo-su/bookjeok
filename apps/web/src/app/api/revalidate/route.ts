@@ -2,6 +2,9 @@ import { timingSafeEqual } from "crypto";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
+import { routing } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -54,10 +57,42 @@ export async function POST(request: NextRequest) {
   }
 
   let path: unknown;
+  let reviewId: unknown;
+  let removed: unknown;
   try {
-    ({ path } = await request.json());
+    ({ path, reviewId, removed } = await request.json());
   } catch {
     return NextResponse.json({ message: "Invalid body" }, { status: 400 });
+  }
+
+  if (reviewId !== undefined) {
+    if (
+      typeof reviewId !== "number" ||
+      !Number.isSafeInteger(reviewId) ||
+      reviewId <= 0 ||
+      typeof removed !== "boolean" ||
+      path !== undefined
+    ) {
+      return NextResponse.json(
+        { message: "Invalid review change" },
+        { status: 400 },
+      );
+    }
+    try {
+      for (const locale of routing.locales) {
+        revalidatePath(`/${locale}${PATHS.REVIEW_DETAIL(reviewId)}`);
+        if (removed) {
+          revalidatePath(`/${locale}${PATHS.REVIEWS}`);
+          revalidatePath(`/${locale}`);
+        }
+      }
+      return NextResponse.json({ revalidated: true, reviewId });
+    } catch {
+      return NextResponse.json(
+        { message: "Revalidation failed" },
+        { status: 500 },
+      );
+    }
   }
 
   if (typeof path !== "string" || !path) {

@@ -66,8 +66,21 @@ export class ReviewService {
    * @param userId 작성자 ID
    * @returns 생성된 리뷰
    */
-  @Transactional()
   async create(
+    createReviewDto: CreateReviewDto,
+    userId: number,
+  ): Promise<ReviewResponseDto> {
+    const saved = await this.persistCreate(createReviewDto, userId);
+    emitDomainEvent(this.eventEmitter, ReviewEvents.changed, {
+      reviewId: saved.id,
+      isPublic: saved.isPublic,
+      wasPublic: false,
+    });
+    return saved;
+  }
+
+  @Transactional()
+  private async persistCreate(
     createReviewDto: CreateReviewDto,
     userId: number,
   ): Promise<ReviewResponseDto> {
@@ -766,11 +779,17 @@ export class ReviewService {
     updateReviewDto: UpdateReviewDto,
     userId: number,
   ): Promise<ReviewResponseDto> {
-    const { saved, removedImages } = await this.persistUpdate(
+    const { saved, removedImages, wasPublic } = await this.persistUpdate(
       id,
       updateReviewDto,
       userId,
     );
+
+    emitDomainEvent(this.eventEmitter, ReviewEvents.changed, {
+      reviewId: id,
+      isPublic: saved.isPublic,
+      wasPublic,
+    });
 
     // 스토리지 삭제는 되돌릴 수 없으므로 커밋된 뒤에 한다. 트랜잭션 안에서
     // 지우면 이후 롤백된 리뷰가 이미지 없는 상태로 남는다.
@@ -786,7 +805,11 @@ export class ReviewService {
     id: number,
     updateReviewDto: UpdateReviewDto,
     userId: number,
-  ): Promise<{ saved: ReviewResponseDto; removedImages: string[] }> {
+  ): Promise<{
+    saved: ReviewResponseDto;
+    removedImages: string[];
+    wasPublic: boolean;
+  }> {
     const manager = this.txHost.tx;
 
     const review = await manager.findOne(Review, {
@@ -818,6 +841,7 @@ export class ReviewService {
       );
     }
 
+    const wasPublic = review.isPublic;
     Object.assign(review, {
       ...updateReviewDto,
       tags: undefined, // tags 속성은 엔티티에 없으므로 제외 (DTO에서만 사용)
@@ -831,6 +855,7 @@ export class ReviewService {
         tags: savedReview.tagEntities?.map((t) => t.name) || [],
       } as ReviewResponseDto,
       removedImages,
+      wasPublic,
     };
   }
 
@@ -846,6 +871,12 @@ export class ReviewService {
     userRole?: string,
   ): Promise<ReviewResponseDto> {
     const { deleted, images } = await this.persistRemove(id, userId, userRole);
+
+    emitDomainEvent(this.eventEmitter, ReviewEvents.changed, {
+      reviewId: id,
+      isPublic: false,
+      wasPublic: deleted.isPublic,
+    });
 
     // 스토리지 삭제는 커밋 뒤에. 먼저 지웠다가 삭제가 롤백되면 본문은 남고
     // 이미지만 사라진 리뷰가 된다.

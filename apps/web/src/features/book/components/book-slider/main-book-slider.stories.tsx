@@ -2,6 +2,7 @@ import { type BookInfo, bookKeys, HOME_PUBLISHERS } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import { HomeHeading } from "@/features/intro/components/home-heading";
 import { SAMPLE_BOOKS } from "@/features/reading-log/components/stack-view/lib/sample-books";
 
 import { HOME_PUBLISHER_BOOKS_DISPLAY } from "../../constants/queries";
@@ -56,3 +57,13 @@ type Story = StoryObj<typeof meta>;
  * 데스크톱은 글자 크기대로 가운데 모인다. 출판사를 바꾸면 흰 표시가 미끄러진다
  */
 export const Default: Story = {};
+
+/** 홈에서처럼 머리글 아래에 둔다. 머리글과 칩 사이 간격, 형광펜 획을 함께 본다 */
+export const WithHomeHeading: Story = {
+  render: () => (
+    <>
+      <HomeHeading />
+      <MainBookSlider />
+    </>
+  ),
+};

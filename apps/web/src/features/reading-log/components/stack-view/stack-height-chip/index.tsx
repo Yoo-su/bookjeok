@@ -12,6 +12,7 @@ import { cn } from "@/shared/utils";
 
 import { useStackComparison } from "../hooks/use-stack-comparison";
 import { useStackPerson } from "../hooks/use-stack-person";
+import { prefetchAuthorArts } from "../lib/author-art";
 import { STACK_AUTHOR_IDS, STACK_AUTHORS } from "../lib/authors";
 import { StackHeightCard } from "../stack-height-card";
 
@@ -21,7 +22,7 @@ export function StackHeightChip({ className }: { className?: string }) {
   const person = useStackPerson();
   const { author, setAuthor, heightCm, isDefaultHeight } = useStackComparison();
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => open && prefetchAuthorArts()}>
       <PopoverTrigger asChild>
         <button
           type="button"

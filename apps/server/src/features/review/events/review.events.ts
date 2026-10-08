@@ -7,6 +7,13 @@ export interface ReviewReactedEvent {
   isAdded: boolean;
 }
 
+export interface ReviewChangedEvent {
+  reviewId: number;
+  isPublic: boolean;
+  wasPublic: boolean;
+}
+
 export const ReviewEvents = {
   reacted: defineDomainEvent<ReviewReactedEvent>()('review.reacted'),
+  changed: defineDomainEvent<ReviewChangedEvent>()('review.changed'),
 };

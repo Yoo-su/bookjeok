@@ -13,6 +13,7 @@ import { ReviewImageHelper } from './helpers/review-image.helper';
 import { ReviewCleanupListener } from './listeners/review-cleanup.listener';
 import { ReviewNotificationListener } from './listeners/review-notification.listener';
 import { ReviewService } from './services/review.service';
+import { ReviewIndexingService } from './services/review-indexing.service';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ReviewService } from './services/review.service';
   controllers: [ReviewController],
   providers: [
     ReviewService,
+    ReviewIndexingService,
     ReviewImageHelper,
     ReviewNotificationListener,
     ReviewCleanupListener,

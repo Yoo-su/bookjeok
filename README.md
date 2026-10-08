@@ -405,6 +405,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | 서비스                                | 용도                                                      | 사용 위치                               |
 | ------------------------------------- | --------------------------------------------------------- | --------------------------------------- |
 | **네이버 / 카카오 OAuth**             | 소셜 로그인                                               | `server: auth` (Passport 전략)          |
+| **네이버 IndexNow**                   | 공개 리뷰 변경 URL 알림 (운영 플래그 활성화 시, 색인 보장 없음) | `server: review`, `web: /api/revalidate` |
 | **Google Gemini**                     | 도서 요약. RAG 추천의 의도 분류·합성·임베딩(웹 UI 비노출) | `server: llm, search`                   |
 | **토스페이먼츠**                      | 에스크로 결제 승인·취소·웹훅                              | `server: order`, `web: order`           |
 | **Delivery Tracker**                  | 택배 배송 상태 조회 및 30분 주기 폴링                     | `server: order`                         |
@@ -632,7 +633,8 @@ pnpm test
 | `NEXT_PUBLIC_KAKAO_APP_KEY`                          |  ✅  | 카카오 맵 JS SDK 키                                                                          |
 | `NEXT_PUBLIC_TOSS_PAYMENTS_CLIENT_KEY`               |      | 결제 위젯 클라이언트 키                                                                      |
 | `NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED`                |      | 웹 측 결제 기능 플래그                                                                       |
-| `USER_WEB_URL`                                       |      | 관리자 포털 서버가 갱신 요청을 보낼 사용자 웹 주소 (서버 전용)                               |
+| `USER_WEB_URL`                                       |      | 서버가 갱신 요청을 보낼 사용자 웹 주소. 운영 IndexNow는 `https://bookjeok.com`                |
+| `INDEXNOW_ENABLED`                                   |      | 서버 네이버 리뷰 변경 알림 플래그. 기본 false, 운영에서 true                                 |
 | `REVALIDATE_TOKEN`                                   |      | On-Demand ISR 갱신 시크릿 (서버 전용, 폴백 없음)                                             |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID`                      |      | Google Analytics                                                                             |
 | `NEXT_PUBLIC_CLARITY_PROJECT_ID`                     |      | Microsoft Clarity                                                                            |
@@ -668,7 +670,7 @@ pnpm test
 
 SEO·SNS 공유 점검 결과: [2026-09-19 SEO 감사](docs/seo-audit-2026-09-19.md) — 주요 페이지 운영 응답, 구조화 데이터 결함, 검색 발견성과 공유 개선 사항.
 
-도서 리뷰 검색 노출: [2026-10-07 리뷰 점검](docs/review-search-audit-2026-10-07.md) · [공식 가이드 조사](docs/review-search-official-guidance-2026-10-07.md). 같은 날 후속 적용으로 공개 리뷰의 검색·OG 제목에 도서명을 보충하고 RSS에 정제한 HTML 본문 전체를 제공합니다. IndexNow·서버 리뷰 링크·페이지네이션은 후속 과제입니다.
+도서 리뷰 검색 노출: [2026-10-07 리뷰 점검](docs/review-search-audit-2026-10-07.md) · [공식 가이드 조사](docs/review-search-official-guidance-2026-10-07.md). 공개 리뷰의 검색·OG 제목에 도서명을 보충하고 RSS에 정제한 HTML 본문 전체를 제공합니다. 공개 리뷰 생성·수정·삭제 후 서버 상세 재검증과 네이버 IndexNow 알림을 구현했으며 활성화·배포 순서는 [서버 리뷰 문서](apps/server/src/features/review/README.md)에 있습니다. 서버 리뷰 링크·페이지네이션은 후속 과제입니다.
 
 Vercel 사용량 점검: [2026-09-20 비용 진단](docs/vercel-usage-audit-2026-09-20.md) — 운영 캐시 반복 측정, 배포별 ISR 재생성, 사이트맵·404 렌더 및 응답 크기 분석.
 

@@ -17,7 +17,8 @@ review/
 ├── controllers/
 │   └── review.controller.ts
 ├── services/
-│   └── review.service.ts
+│   ├── review.service.ts
+│   └── review-indexing.service.ts    # 커밋 후 네이버 IndexNow 알림·재시도
 ├── dtos/
 │   ├── create-review.dto.ts
 │   ├── update-review.dto.ts
@@ -129,6 +130,24 @@ enum ReviewReactionType {
 
 ## 핵심 로직
 
+### 네이버 IndexNow 알림 (2026-10-07)
+
+`create`·`update`·`remove`는 트랜잭션을 수행하는 `persist*`가 커밋된 뒤 `ReviewEvents.changed`를 발행합니다. `ReviewIndexingService`는 요청에서 네트워크를 기다리지 않고 id별 메모리 큐에 넣습니다. 처음부터 비공개인 글은 제외하고, 공개→비공개 전환과 공개 글 삭제는 기존 URL 변경을 알립니다. 조회수·리액션은 대상이 아닙니다.
+
+작업은 현재 DB 상태를 다시 읽고 웹 `/api/revalidate`에 `reviewId`·`removed`를 전달합니다. ko/en 상세를 재검증하고, 삭제·비공개 전환은 목록·홈도 걷어냅니다. 정규 ko URL의 200 + 최신 `dateModified`, 비공개 글의 noindex 또는 삭제 글의 404/410, 루트 소유 확인 파일의 내용을 확인한 다음 네이버 IndexNow에 URL만 전송합니다. HTTP 200/202는 수신 성공이며 실제 색인 완료를 의미하지 않습니다.
+
+활성화 조건은 서버의 `INDEXNOW_ENABLED=true`, `NODE_ENV=production`, `USER_WEB_URL=https://bookjeok.com`, `REVALIDATE_TOKEN`입니다. 웹과 서버의 토큰은 같아야 합니다. 기본 플래그는 false이고 로컬·다른 호스트에서는 전송하지 않습니다. 신규 변수는 `.env.example`·`turbo.json/globalEnv`에 등록돼 있습니다.
+
+배포 순서:
+
+1. 웹을 먼저 배포하고 `https://bookjeok.com/527f958b193648ebbb4a9d98a1829e42.txt`가 리다이렉트 없이 200이며 파일명과 같은 문자열을 반환하는지 확인합니다. 이는 공개 소유 확인 값으로 시크릿이 아닙니다. 서버 상수와 파일을 함께 교체해야 하며 테스트가 일치를 검사합니다.
+2. 운영 웹·서버의 `REVALIDATE_TOKEN`을 동일한 임의 시크릿으로 설정하고 서버의 `USER_WEB_URL`을 위 주소로 설정합니다. 토큰을 URL·로그에 남기지 않습니다.
+3. 서버를 배포하고 플래그를 켭니다. 공개 리뷰 작성·수정 후 `Review IndexNow received <id>: HTTP 200/202` 로그를 확인합니다. 색인 여부는 서치어드바이저에서 별도로 확인합니다.
+
+전송·재검증·키 확인 실패는 10초→1분→5분→30분 간격으로 재시도하며 최초 포함 5회 실패하면 오류를 기록하고 중단합니다. 요청별 타임아웃은 10초, 큐 상한은 1,000 id, 한 번에 최대 10 id를 처리합니다. 전송 중 재수정된 id의 새 작업은 이전 작업 완료로 지우지 않습니다. **단일 프로세스 메모리 큐라 재시작·배포 시 대기 항목이 사라집니다.** 사이트맵·RSS는 기존 발견 경로로 남고 캐시 주기를 유지합니다. 기존 글 전체 재제출, 사용자 탈퇴에 따른 일괄 정리 알림, 영속 outbox는 이번 범위에 포함하지 않습니다.
+
+검증은 `review-indexing.service.spec.ts`의 전송·재시도·비공개·동시 변경과 `review.service.indexing.spec.ts`의 커밋 실패 계약, 웹 재검증 웹훅 테스트가 담당합니다. 운영 DB를 띄운 통합 테스트와 실제 네이버 제출은 별도 배포 확인입니다.
+
 ### 트랜잭션 경계
 
 `create`, `update`, `toggleReaction`은 `@Transactional()`로 묶여 있습니다. 리뷰 본문 저장 + 태그 upsert + 카운터 갱신이 부분 반영되지 않도록 하기 위함입니다.
@@ -151,6 +170,7 @@ Tiptap 본문에서 이미지 URL을 추출해, 수정·삭제 시 더 이상 �
 | 이벤트           | 리스너                       | 동작                                                                                        |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------------------------------- |
 | `review.reacted` | `ReviewNotificationListener` | 리뷰 작성자에게 `REVIEW_REACTION` 알림                                                      |
+| `review.changed` | `ReviewIndexingService` | 공개 리뷰 커밋 후 웹 상세 재검증·네이버 변경 URL 알림 (운영 설정 활성화 시) |
 | `user.withdrawn` | `ReviewCleanupListener`      | 탈퇴 회원의 리뷰·리액션 정리 (남의 리뷰 `reactionCount` 차감). 리뷰에 달린 댓글도 함께 삭제 |
 
 `review.reacted`의 `isAdded`는 새로 추가된 경우에만 `true`입니다. 종류 변경·취소·동시 요청으로 무시된 추가는 `false`입니다. 리스너는 같은 사람이 같은 리뷰로 이미 보낸 알림이 있으면 다시 보내지 않습니다. 껐다 켜기를 반복해도 작성자는 알림을 한 번만 받습니다.

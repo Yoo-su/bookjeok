@@ -130,8 +130,10 @@ describe("MarkAsReadButton 기록 이력 안내", () => {
     await screen.findByRole("button", { name: "processing" });
     resolveCreate({ id: "log-1", isbn: book.isbn, date: today } as ReadingLog);
 
-    await waitFor(() =>
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    // 닫힘 애니메이션이 끝나야 빠진다. CI에선 기본 1초를 넘기기도 한다
+    await waitFor(
+      () => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      { timeout: 3000 },
     );
     expect(queryClient.getQueryState(statusKey)?.isInvalidated).toBe(true);
     expect(apis.getReadingLogBookStatus).toHaveBeenCalledTimes(1);

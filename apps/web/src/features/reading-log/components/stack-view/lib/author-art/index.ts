@@ -33,3 +33,17 @@ export function loadAuthorArt(author: StackAuthor): Promise<AuthorArt> {
   }
   return p;
 }
+
+/**
+ * 작가를 고르기 전에(목록을 열 때·돌려 보기 시작할 때) 다섯 명을 미리 받는다. 실패는 고를 때 다시 받는다.
+ * `first`가 있으면 그 작가를 먼저 받아 첫 장면이 나머지와 대역폭을 나누지 않게 한다
+ */
+export function prefetchAuthorArts(first?: StackAuthor) {
+  const rest = () => {
+    for (const id of Object.keys(LOADERS) as StackAuthor[]) {
+      loadAuthorArt(id).catch(() => {});
+    }
+  };
+  if (first) loadAuthorArt(first).then(rest, rest);
+  else rest();
+}

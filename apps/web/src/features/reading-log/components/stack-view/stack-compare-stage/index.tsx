@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/shared/utils";
 
+import { prefetchAuthorArts } from "../lib/author-art";
 import { STACK_AUTHOR_IDS, STACK_AUTHORS } from "../lib/authors";
 import type { StackStatus } from "../lib/status";
 import type { StackAuthor } from "../lib/types";
@@ -56,6 +57,9 @@ export function StackCompareStage({
     : AUTHOR_ORDER;
   const [i, setI] = useState(0);
   const [auto, setAuto] = useState(autoCycle);
+  // 돌거나 칩을 누를 때마다 그 작가를 받느라 이전 그림이 남지 않게 첫 사람 다음에 나머지를 받아 둔다
+  const first = ids[0] === "me" ? undefined : ids[0];
+  useEffect(() => prefetchAuthorArts(first), [first]);
   useEffect(() => {
     if (!auto) return;
     const id = setInterval(() => setI((v) => (v + 1) % ids.length), CYCLE_MS);

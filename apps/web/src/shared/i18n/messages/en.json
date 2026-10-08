@@ -400,7 +400,7 @@
   "home": {
     "heading": {
       "title": "Bookjeok",
-      "tagline": "Bustling with people who love books"
+      "tagline": "<mark>Bustling</mark> with <br></br>people who love books"
     },
     "sections": {
       "main_books": {

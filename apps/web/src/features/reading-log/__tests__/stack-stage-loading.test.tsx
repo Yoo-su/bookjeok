@@ -83,6 +83,8 @@ it("작가를 받는 동안 이전 장면을 유지하고 책 입장을 다시 �
   view.rerender(<StackStage {...props} person={person("kafka", 1820)} />);
   expect(view.container.querySelector("svg")).not.toBeNull();
   expect(view.container.querySelector(".stack-book")).toBe(books[0]);
+  const wrap = view.container.firstElementChild!;
+  expect(wrap).toHaveClass("stack-art-pending");
   mock.pending = false;
   mock.art = {
     sil: "M0 0L600 0L600 2000L0 2000Z",
@@ -93,6 +95,7 @@ it("작가를 받는 동안 이전 장면을 유지하고 책 입장을 다시 �
   await waitFor(() =>
     expect(view.container.querySelector(".traced-art")).not.toBeNull(),
   );
+  expect(wrap).not.toHaveClass("stack-art-pending");
   expect(intro).toHaveBeenCalledTimes(1);
   expect(view.container.querySelector(".stack-book")).toBe(books[0]);
   expect(requestAnimationFrame).not.toHaveBeenCalled();
