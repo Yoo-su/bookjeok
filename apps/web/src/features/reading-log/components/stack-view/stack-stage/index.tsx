@@ -451,6 +451,8 @@ export function StackStage({
       aria-busy={artPending && !object}
       className={cn(
         "relative h-[520px] w-full md:h-[600px]",
+        // 작가를 받는 동안 남겨 둔 이전 인물·말풍선을 흐리게 해 바뀌는 중임을 알린다
+        !nextScene && scene && "stack-art-pending",
         className,
         object &&
           animateHeight &&

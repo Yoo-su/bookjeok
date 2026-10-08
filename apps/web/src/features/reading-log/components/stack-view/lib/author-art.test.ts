@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { loadAuthorArt } from "./author-art";
+import {
+  cachedAuthorArt,
+  loadAuthorArt,
+  prefetchAuthorArts,
+} from "./author-art";
 import { STACK_AUTHOR_IDS } from "./authors";
 import { buildFigure } from "./figure";
 
@@ -13,6 +17,12 @@ const C = {
 };
 
 describe("작가 시안 전신", () => {
+  it("목록을 열 때 다섯 명을 미리 받아 둔다", async () => {
+    prefetchAuthorArts("woolf");
+    await vi.waitFor(() =>
+      expect(STACK_AUTHOR_IDS.every((id) => cachedAuthorArt(id))).toBe(true),
+    );
+  });
   it.each(STACK_AUTHOR_IDS)(
     "%s: 받은 전신에 손에 든 책 색을 칠한다",
     async (id) => {

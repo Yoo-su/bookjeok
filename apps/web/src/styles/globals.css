@@ -451,6 +451,11 @@ html::-webkit-scrollbar {
   transform-box: fill-box;
   transform-origin: 40% 100%;
 }
+/* 고른 작가 그림을 받는 중. 금방 받으면 깜빡이지 않게 잠깐 기다렸다 흐린다 */
+.stack-art-pending :is(.stack-character, .stack-bubble) {
+  opacity: 0.3;
+  transition: opacity 0.2s 0.15s;
+}
 /* 라운지 북적 책동산: 산이 바닥에서 솟는다 */
 .mountain-rise {
   transform-box: fill-box;
