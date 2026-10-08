@@ -314,6 +314,38 @@ html::-webkit-scrollbar {
   }
 }
 
+/* 홈 머리글 형광펜. 큰 글자에선 직사각형 자국이 칠한 상자로 보여, 끝이 비스듬히 잘리고
+   위아래 가장자리가 고르지 않은 펜 자국 모양을 쓴다. 왼쪽부터 드러나며 한 번 그어진다. */
+.home-heading-mark {
+  position: absolute;
+  z-index: -1;
+  left: -0.12em;
+  bottom: 0.06em;
+  /* svg는 left·right만으로 늘어나지 않아 폭을 직접 준다 */
+  width: calc(100% + 0.22em);
+  height: 0.58em;
+  overflow: visible;
+  pointer-events: none;
+  fill: rgb(253 230 138 / 0.9);
+  animation: home-heading-stroke 560ms cubic-bezier(0.45, 0.05, 0.25, 1) 380ms
+    backwards;
+}
+
+@keyframes home-heading-stroke {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-heading-mark {
+    animation: none;
+  }
+}
+
 /* 도서 검색 히어로. transform·opacity만 움직여 컴포지터에서 돈다. */
 .search-hero-orb-a {
   animation: search-hero-orb-a 20s ease-in-out infinite;
