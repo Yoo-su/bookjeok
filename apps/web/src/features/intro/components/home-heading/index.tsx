@@ -1,5 +1,8 @@
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { preload } from "react-dom";
+
+import { HOME_HEADING_FONT_PRELOAD_URLS } from "@/styles/fonts";
 
 /** 「북적이는」에 형광펜을 한 번 긋는다. 서버 HTML만으로 그려지게 CSS로 움직인다 */
 const Highlight = (chunks: ReactNode) => (
@@ -19,6 +22,10 @@ const Highlight = (chunks: ReactNode) => (
 /** 홈 첫 머리글. 사이트 h1이다. */
 export const HomeHeading = () => {
   const t = useTranslations("home.heading");
+  // 머리글 글자만 담은 작은 글꼴을 HTML과 함께 받아, 대체 글꼴에서 바뀌는 순간을 없앤다
+  HOME_HEADING_FONT_PRELOAD_URLS.forEach((href) =>
+    preload(href, { as: "font", type: "font/woff2", crossOrigin: "anonymous" }),
+  );
 
   return (
     <div className="flex flex-col items-center px-4 pt-10 text-center md:pt-20">

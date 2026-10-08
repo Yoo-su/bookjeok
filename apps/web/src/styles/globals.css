@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "./pretendard.css";
 @import "./google-fonts.css";
+@import "./font-subsets.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));

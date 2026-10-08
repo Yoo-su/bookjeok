@@ -33,6 +33,7 @@ import UserProvider from "@/shared/providers/user-provider";
 import {
   gaegu,
   gowun_batang,
+  HEADER_FONT_PRELOAD_URLS,
   nanum_gothic,
   PRETENDARD_PRELOAD_URLS,
 } from "@/styles/fonts";
@@ -80,16 +81,18 @@ export default async function Layout({
       className={`${nanum_gothic.variable} ${gowun_batang.variable} ${gaegu.variable}`}
     >
       <head>
-        {PRETENDARD_PRELOAD_URLS.map((href) => (
-          <link
-            key={href}
-            rel="preload"
-            href={href}
-            as="font"
-            type="font/woff2"
-            crossOrigin="anonymous"
-          />
-        ))}
+        {[...PRETENDARD_PRELOAD_URLS, ...HEADER_FONT_PRELOAD_URLS].map(
+          (href) => (
+            <link
+              key={href}
+              rel="preload"
+              href={href}
+              as="font"
+              type="font/woff2"
+              crossOrigin="anonymous"
+            />
+          ),
+        )}
       </head>
       <body style={{ fontFamily: "var(--font-pretendard)" }}>
         <a
