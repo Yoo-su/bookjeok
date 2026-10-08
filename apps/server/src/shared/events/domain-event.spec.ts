@@ -20,6 +20,7 @@ import { ReadingLogCleanupListener } from '@/features/reading-log/listeners/read
 import { ReviewEvents } from '@/features/review/events/review.events';
 import { ReviewCleanupListener } from '@/features/review/listeners/review-cleanup.listener';
 import { ReviewNotificationListener } from '@/features/review/listeners/review-notification.listener';
+import { ReviewIndexingService } from '@/features/review/services/review-indexing.service';
 import { TradeEvents } from '@/features/trade/events/trade.events';
 import { tradeReviewCreatedEvent } from '@/features/trade/events/trade-review-created.event';
 import { TradeEventListener } from '@/features/trade/listeners/trade-event.listener';
@@ -60,6 +61,12 @@ const subscriptions = [
     ReviewNotificationListener.prototype,
     'handleReviewReacted',
     [{ event: 'review.reacted', options: undefined }],
+  ],
+  [
+    'ReviewIndexingService.handleChange',
+    ReviewIndexingService.prototype,
+    'handleChange',
+    [{ event: 'review.changed', options: undefined }],
   ],
   [
     'FeedbackNotifyListener.handleFeedbackCreated',
@@ -239,7 +246,7 @@ const subscriptions = [
 ] as const;
 
 describe('도메인 이벤트 계약', () => {
-  it('현재 이벤트 이름 26개를 유지한다', () => {
+  it('현재 이벤트 이름 27개를 유지한다', () => {
     const contracts = [
       chatRoomCreatedEvent,
       ...Object.values(CommentEvents),
@@ -272,6 +279,7 @@ describe('도메인 이벤트 계약', () => {
         'order.shipping_deadline_warning',
         'order.shipping_started',
         'order.unshipped_cancelled',
+        'review.changed',
         'review.reacted',
         'trade.completed',
         'trade.reservation_cancelled',
