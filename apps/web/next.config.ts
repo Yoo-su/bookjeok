@@ -86,6 +86,16 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Google 글꼴 조각. 다시 받으면 파일 이름이 바뀌므로 immutable 사용
+        source: "/fonts/:family(gaegu|gowun-batang|nanum-gothic)/:file*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         source: "/videos/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
       },
