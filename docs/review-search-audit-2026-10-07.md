@@ -8,7 +8,28 @@
 
 검증: RSS·SEO JSON-LD/공유·메타데이터 테스트 34건 통과(워커 1개, 파일 병렬 실행 없음). 변경한 TypeScript 파일 5개의 ESLint와 `git diff --check` 통과. 전체 빌드는 실행하지 않았다. pnpm 런처가 버전 검증용 레지스트리에 접속하지 못해, 설치된 `node_modules/.bin`의 Vitest·Prettier·ESLint를 직접 실행했다.
 
+## 같은 날 운영 재확인 — 네이버에 빠르게 알리기
+
+후속 질문에 맞춰 현재 코드와 운영 공개 GET을 다시 대조했다. Yeti User-Agent를 사용했지만 실제 네이버 검색로봇의 IP에서 수집한 결과는 아니다. 계정의 색인·수집 지표와 배포 이력은 조회하지 않았다.
+
+- `robots.txt` HTTP 200: 일반 크롤러를 허용하며 Yeti를 차단하는 규칙은 없다.
+- `sitemap.xml` HTTP 200: 리뷰 상세 URL 74개. 앞선 점검의 73개와 다른 시점의 응답이다.
+- `rss.xml` HTTP 200: 리뷰 30개. 최신 리뷰 81의 description은 정제한 HTML 2,486자여서, 이전 200자 발췌를 넘어선 전체 본문 제공 변경이 운영 피드에도 반영돼 있다.
+- 리뷰 80 HTTP 200: title은 `자기만의 방·3기니 리뷰: 전쟁을 만드는 마음 | 북적`. 초기 HTML에 article과 Review JSON-LD가 있다. 검색 제목 보강 역시 운영 응답에서 확인했다.
+- 리뷰 홈 HTTP 200: 초기 HTML의 서로 다른 개별 리뷰 링크 24개. 도서 `9788937461309` 상세 HTTP 200: 개별 리뷰 링크 0개.
+- 현행 생성 성공 처리는 클라이언트 목록을 갱신하지만 서버 ISR 목록·피드 갱신이나 IndexNow 전송은 하지 않는다. 리뷰 목록과 RSS의 ISR, sitemap의 데이터 캐시는 6시간이다. 코드의 TTL을 실제 반영 지연 상한으로 해석하지 않는다.
+
+다음 개발 우선순위는 **공개 리뷰 저장 커밋 후 IndexNow 자동 알림 → 발견용 피드 갱신 정책 → 도서 상세의 서버 리뷰 링크와 오래된 글 페이지네이션**이다. 변경 URL의 원문을 최신 상태로 제공한 뒤 알리고, 전송 실패 재시도·중복 제거·비공개 글 제외를 함께 설계한다. 공개였던 글의 삭제·비공개 전환도 기존 URL 변경을 알리는 대상으로 고려한다. IndexNow는 사이트맵/RSS가 갱신될 때까지 기다리지 않고 공개 원문 URL을 직접 알릴 수 있다. 전체 홈 캐시를 글마다 무효화할 필요는 없다.
+
+네이버는 IndexNow를 공식 지원하지만 요청 수신 200은 색인 보장이 아니다. 개별 수집요청 역시 실시간 방문을 보장하지 않는다. 목표는 ‘등록 직후 변경 알림과 원문 제공’으로 잡고 실제 수집·색인·노출은 서치어드바이저에서 확인해야 한다. [IndexNow FAQ](https://searchadvisor.naver.com/guide/indexnow-faq), [수집요청 정책](https://searchadvisor.naver.com/guide/request-crawl)
+
+독립 사이트 리뷰의 웹 검색 노출과 네이버 블로그·특정 도서 리뷰 영역 배치는 별개다. RSS나 IndexNow로 특정 영역 배치를 보장하는 방법은 확인하지 못했다. 공식 안내 재확인은 [조사 문서](review-search-official-guidance-2026-10-07.md)에 추가했다. 이번 재확인에서 서비스 코드·배포·검색엔진 제출은 변경하지 않았다.
+
 ## 결론
+
+후속 구현(같은 날): 공개 리뷰 생성·수정·삭제의 커밋 후 변경 이벤트, id별 중복 제거·실패 재시도, ko/en 상세 서버 재검증, 최신 HTML/noindex/404 확인, 루트 소유 확인 키 파일, 네이버 IndexNow 전송을 추가했다. 처음부터 비공개인 글·조회수·리액션은 전송하지 않는다. 기본은 비활성이며 운영 설정과 웹/서버 배포가 필요하다. sitemap/RSS 캐시 주기·일반 생성 시 홈/목록 정책은 유지했다. 배포 순서와 메모리 큐의 재시작 한계는 [서버 리뷰 문서](../apps/server/src/features/review/README.md)에 기록했다. 실제 네이버 제출·배포는 이 구현 검증에 포함하지 않았다.
+
+구현 검증: 서버 리뷰·도메인 이벤트 66건, 웹 웹훅·기존 재검증 16건 통과. 변경한 서버·웹 TypeScript 파일의 ESLint, 서버 `tsc --noEmit`, `git diff --check` 통과. 웹 전체 `tsc --noEmit`은 이번에 수정하지 않은 기존 테스트 6곳의 콜백 반환 타입 오류로 실패했다(`sitemap.test.ts`, `feedback-inbox.test.tsx` 2곳, `reading-log/__tests__/mutations.test.tsx`, `reading-height-view.test.tsx`, `reading-log-intro-view.test.tsx`). 전체 빌드·운영 DB 통합 검증은 실행하지 않았다.
 
 공개 리뷰의 원문 전달과 기본 SEO 장치는 이미 있다. 개선할 부분은 **책을 식별하기 쉬운 제목, 오래된 글까지 이어지는 서버 HTML 링크, 신규·변경 URL 알림, RSS 본문**이다. 실제 색인율·검색 순위·유입의 병목은 Search Console과 네이버 서치어드바이저 계정 지표를 봐야 확정할 수 있다.
 
