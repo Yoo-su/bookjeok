@@ -14,7 +14,8 @@
     "test:coverage": "vitest run --coverage",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "icons:gen": "node scripts/iconsax/generate.mjs"
+    "icons:gen": "node scripts/iconsax/generate.mjs",
+    "fonts:subset": "node scripts/fonts/subset.mjs"
   },
   "engines": {
     "node": "22.x"

@@ -1,13 +1,15 @@
 /* Google Fonts 한글 글꼴(Gaegu·고운바탕·나눔고딕) 직접 서빙.
    next/font/google이 빌드마다 조각 640여 개를 받다 CI에서 시간 초과로 실패해, 같은 조각·unicode-range·대체 글꼴 보정을 그대로 옮겼다.
+   첫 화면 고정 문구는 font-subsets.css의 작은 글꼴이 먼저 맡고, 나머지 글자만 아래 조각에서 받는다.
    다시 받기: Google Fonts css2 응답(woff2)을 public/fonts/<글꼴>/에 받고 url만 바꾼다. */
 
 :root,
 .font-gaegu-vars,
 .font-gowun-batang-vars,
 .font-nanum-gothic-vars {
-  --font-gaegu: "Gaegu", "Gaegu Fallback";
-  --font-gowun-batang: "Gowun Batang", "Gowun Batang Fallback";
+  --font-gaegu: "Gaegu Subset", "Gaegu", "Gaegu Fallback";
+  --font-gowun-batang:
+    "Gowun Batang Subset", "Gowun Batang", "Gowun Batang Fallback";
   --font-nanum-gothic: "Nanum Gothic", "Nanum Gothic Fallback";
 }
 
