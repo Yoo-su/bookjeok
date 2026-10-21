@@ -2,8 +2,12 @@ import { Metadata } from "next";
 
 import { BRAND_ASSETS } from "@/shared/constants/brand";
 
-/** 검색 결과·공유 카드에 찍히는 사이트명. 한국어 검색어("북적")와 표기를 맞춘다. */
-const getSiteName = (locale: string) => (locale === "en" ? "Bookjeok" : "북적");
+/** 검색 결과·공유 카드에 찍히는 사이트명. 「북적」 단독은 경쟁 앱과 겹쳐 「북적닷컴」으로 내보낸다. */
+const getSiteName = (locale: string) =>
+  locale === "en" ? "Bookjeok" : "북적닷컴";
+
+/** 홈 화면 아이콘 아래 이름. 서비스 안 표기라 짧은 「북적」을 쓴다. */
+const getAppLabel = (locale: string) => (locale === "en" ? "Bookjeok" : "북적");
 
 export const generateGlobalMetadata = (
   t: (key: string) => string,
@@ -28,7 +32,7 @@ export const generateGlobalMetadata = (
     },
     applicationName: siteName,
     appleWebApp: {
-      title: siteName,
+      title: getAppLabel(locale),
     },
     icons: {
       icon: [
