@@ -1,5 +1,14 @@
 import { BRAND_ASSETS } from "@/shared/constants/brand";
 
+/** 검색엔진이 사이트명으로 묶어 볼 별칭. 「북적닷컴」 검색어를 받는다. */
+const SITE_ALTERNATE_NAMES = [
+  "북적",
+  "북적닷컴",
+  "bookjeok",
+  "Bookjeok",
+  "bookjeok.com",
+];
+
 export const getJsonLd = (
   t: (key: string) => string,
   locale: string = "ko",
@@ -11,7 +20,7 @@ export const getJsonLd = (
       {
         "@type": "WebSite",
         name: t("json_ld.name"),
-        alternateName: ["북적", "bookjeok", "Bookjeok"],
+        alternateName: SITE_ALTERNATE_NAMES,
         description: t("json_ld.description"),
         url: siteUrl,
         potentialAction: {
@@ -23,6 +32,7 @@ export const getJsonLd = (
       {
         "@type": "Organization",
         name: t("json_ld.name"),
+        alternateName: SITE_ALTERNATE_NAMES,
         url: siteUrl,
         sameAs: ["https://www.threads.com/@bookjeok_books"],
         logo: {
