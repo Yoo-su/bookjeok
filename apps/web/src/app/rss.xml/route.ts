@@ -107,7 +107,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>북적 - 독서 기록, 리뷰, 중고 거래</title>
+    <title>북적(북적닷컴) - 독서 기록, 리뷰, 중고 거래</title>
     <link>https://bookjeok.com/ko</link>
     <description>독서 기록을 관리하고, 도서 리뷰를 공유하며, 중고책을 안전하게 거래하는 플랫폼 북적의 최신 소식입니다.</description>
     <language>ko</language>
