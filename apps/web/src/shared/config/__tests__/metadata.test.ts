@@ -45,7 +45,7 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
   });
 
   it.each([
-    ["ko", "북적"],
+    ["ko", "북적닷컴"],
     ["en", "Bookjeok"],
   ])("%s 사이트명은 %s로 통일한다", (locale, siteName) => {
     const page = createPageMetadata({
@@ -57,6 +57,9 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
     expect(page.openGraph?.siteName).toBe(siteName);
     expect(global.openGraph?.siteName).toBe(siteName);
     expect(global.applicationName).toBe(siteName);
+    expect(global.appleWebApp).toMatchObject({
+      title: locale === "en" ? "Bookjeok" : "북적",
+    });
   });
 
   it("세로 도서 표지는 작은 카드로 전달한다", () => {
@@ -84,7 +87,7 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
 
     // Open Graph 검증
     expect(meta.openGraph).toBeDefined();
-    expect(meta.openGraph?.title).toBe("테스트 제목 | 북적");
+    expect(meta.openGraph?.title).toBe("테스트 제목 | 북적닷컴");
     expect(meta.openGraph?.description).toBe("테스트 설명");
     expect(meta.openGraph?.images).toEqual([
       {
@@ -94,7 +97,7 @@ describe("createPageMetadata (페이지별 메타데이터 생성 헬퍼)", () =
         height: 630,
       },
     ]);
-    expect(meta.openGraph?.siteName).toBe("북적");
+    expect(meta.openGraph?.siteName).toBe("북적닷컴");
     expect(meta.openGraph?.url).toBe("https://bookjeok.com/ko/test-path");
 
     // Alternates 검증

@@ -153,7 +153,7 @@
     }
   },
   "json_ld": {
-    "name": "북적",
+    "name": "북적닷컴",
     "description": "북적닷컴(bookjeok.com)에서 읽은 책을 기록해 내 키와 재 보고, 솔직한 도서 리뷰를 나누고, 중고책을 거래하세요.",
     "nav": {
       "market": "중고마켓",
@@ -165,19 +165,19 @@
     }
   },
   "meta": {
-    "default_title": "북적(북적닷컴) - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
-    "template_title": "%s | 북적",
+    "default_title": "북적닷컴 - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
+    "template_title": "%s | 북적닷컴",
     "description": "읽은 책을 기록하고 실제 두께로 쌓아 내 키와 재 보세요. 솔직한 도서 리뷰와 동네 중고책 거래까지, 책을 좋아하는 사람들의 공간 북적닷컴(bookjeok.com).",
     "keywords": "북적, 북적닷컴, 북적 닷컴, bookjeok, Bookjeok, bookjeok.com, 독서 기록, 독서 기록 앱, 독서록, 독서 키재기, 올해 읽은 책, 연간 독서 결산, 독서량, 독서 캘린더, 도서 리뷰, 책 리뷰, 중고책, 중고책 거래, 중고 서점, 중고책 팔기, 독서 라운지, 책 추천, 책 검색",
     "og": {
-      "title": "북적(북적닷컴) - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
+      "title": "북적닷컴 - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
       "description": "읽은 책을 실제 두께로 쌓아 내 키와 재 보는 독서 기록, 솔직한 도서 리뷰, 동네 중고책 거래까지. 북적닷컴에서 시작하세요."
     },
     "twitter": {
-      "title": "북적(북적닷컴) - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
+      "title": "북적닷컴 - 독서 기록과 독서 키재기, 도서 리뷰, 중고책 거래",
       "description": "읽은 책이 내 키만큼 쌓일 때까지. 독서 기록, 리뷰, 중고 거래를 한 곳에서."
     },
-    "rss_title": "북적 RSS 피드"
+    "rss_title": "북적닷컴 RSS 피드"
   },
   "notification": {
     "title": "알림",
@@ -399,7 +399,7 @@
   },
   "home": {
     "heading": {
-      "title": "북적(북적닷컴)",
+      "title": "북적닷컴",
       "tagline": "책 좋아하는 사람들로 <br></br><mark>북적이는</mark> 곳"
     },
     "sections": {
@@ -491,7 +491,7 @@
   },
   "footer": {
     "description": "북적닷컴(bookjeok.com)은\n읽은 책을 기록하고, 리뷰를 나누고,\n중고책을 사고파는 독서 공간입니다.",
-    "copyright": "© {year} 북적(bookjeok.com). All rights reserved.",
+    "copyright": "© {year} 북적닷컴(bookjeok.com). All rights reserved.",
     "service": "서비스",
     "contact": "문의",
     "terms": "이용약관",
@@ -1201,7 +1201,7 @@
     "subtitle": "실시간으로 업데이트되는 서비스 통계를 확인해보세요",
     "metadata": {
       "title": "서비스 인사이트",
-      "description": "북적 서비스의 활동 현황과 통계를 한눈에 확인하세요."
+      "description": "북적닷컴의 활동 현황과 통계를 한눈에 확인하세요."
     },
     "live_stats": "Live Stats",
     "error": {
@@ -1524,7 +1524,7 @@
     "hero": {
       "metadata": {
         "title": "중고책 마켓",
-        "description": "다 읽은 책을 판매하고 가까운 독자의 중고책을 만나보세요. 도서명, 가격, 거래 지역을 확인하고 북적에서 거래를 시작하세요."
+        "description": "다 읽은 책을 판매하고 가까운 독자의 중고책을 만나보세요. 도서명, 가격, 거래 지역을 확인하고 북적닷컴에서 거래를 시작하세요."
       },
       "title_lead": "읽은 책을 팔고,",
       "title_main": "읽을 책을 삽니다",
@@ -1820,14 +1820,14 @@
   "terms_page": {
     "metadata": {
       "title": "이용약관",
-      "description": "북적(bookjeok) 서비스 이용약관입니다."
+      "description": "북적닷컴(bookjeok.com) 서비스 이용약관입니다."
     },
     "title": "이용약관"
   },
   "privacy_page": {
     "metadata": {
       "title": "개인정보처리방침",
-      "description": "북적(bookjeok) 서비스 개인정보처리방침입니다."
+      "description": "북적닷컴(bookjeok.com) 서비스 개인정보처리방침입니다."
     },
     "title": "개인정보처리방침"
   },

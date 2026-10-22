@@ -1,13 +1,7 @@
 import { BRAND_ASSETS } from "@/shared/constants/brand";
 
-/** 검색엔진이 사이트명으로 묶어 볼 별칭. 「북적닷컴」 검색어를 받는다. */
-const SITE_ALTERNATE_NAMES = [
-  "북적",
-  "북적닷컴",
-  "bookjeok",
-  "Bookjeok",
-  "bookjeok.com",
-];
+/** 검색엔진이 사이트명(북적닷컴)으로 묶어 볼 별칭. */
+const SITE_ALTERNATE_NAMES = ["북적", "bookjeok", "Bookjeok", "bookjeok.com"];
 
 export const getJsonLd = (
   t: (key: string) => string,
