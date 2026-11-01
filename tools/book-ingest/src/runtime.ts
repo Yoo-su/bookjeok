@@ -10,7 +10,16 @@ import type { IngestDeps } from "./ingest";
 import { withListCache } from "./list-cache";
 import { createR2Store } from "./r2";
 import type { ScanDeps } from "./scan";
-import { type BookSource, dimensionLender } from "./sources";
+import { type BookSource } from "./sources";
+import { createHtmlCache } from "./web/cache";
+import { createWebEnricher } from "./web/enrich";
+import { createHtmlRequest } from "./web/request";
+
+const requestHtml = createHtmlRequest();
+export const enrichFromWeb = createWebEnricher(
+  requestHtml,
+  createHtmlCache(resolve(DATA_DIR, "web-cache")),
+);
 
 export function openDb(): BookDb {
   return createBookDb(requireEnv("INGEST_DATABASE_URL"));
@@ -27,13 +36,9 @@ export function createScanDeps(db: BookDb, source: BookSource): ScanDeps {
 /**
  * R2 자격증명은 적재할 때만 필요합니다. 조회만 할 때는 없어도 됩니다.
  *
- * 판형을 주지 않는 공급처(카카오)의 책은 판형을 주는 공급처(알라딘)에서 ISBN으로
- * 빌려 옵니다. 빌려 줄 곳의 키가 없으면 판형 없이 표지색만 넣습니다.
+ * 후보 검색 공급처와 무관하게 알라딘 웹 + YES24 두께로 전 필드를 보강합니다.
  */
-export function createIngestDeps(
-  db: BookDb,
-  sources: Map<string, BookSource>,
-): IngestDeps {
+export function createIngestDeps(db: BookDb): IngestDeps {
   const store = createR2Store({
     accountId: requireEnv("R2_ACCOUNT_ID"),
     accessKeyId: requireEnv("R2_ACCESS_KEY_ID"),
@@ -43,17 +48,8 @@ export function createIngestDeps(
   const originalsDir = resolve(DATA_DIR, "originals");
 
   return {
-    async enrich(book) {
-      const source = sources.get(book.source);
-      if (!source) throw new Error(`공급처 ${book.source}의 키가 없습니다`);
-      const enriched = source.enrich ? await source.enrich(book) : book;
-      const lender = dimensionLender(sources, source.id);
-      if (!lender?.lookupDimensions) return enriched;
-      return {
-        ...enriched,
-        dimensions: await lender.lookupDimensions(enriched.isbn),
-      };
-    },
+    enrich: enrichFromWeb,
+    requireComplete: true,
     downloadCover,
     prepareCover,
     async saveOriginal(isbn, body, ext) {

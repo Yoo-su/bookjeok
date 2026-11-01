@@ -67,6 +67,8 @@ export async function runScan(
   journal: Journal,
   options: {
     maxPages?: number;
+    publishedSince?: string;
+    maxBooks?: number;
     today: string;
     onPage?: (p: PageProgress) => void;
   },
@@ -74,7 +76,13 @@ export async function runScan(
   const scans: ScanResult[] = [];
   const source = deps.source.id;
   for (const target of targets) {
-    const scan = await scanTarget(target, deps, options);
+    const found = scans.reduce((n, scan) => n + scan.fresh.length, 0);
+    if (options.maxBooks !== undefined && found >= options.maxBooks) break;
+    const scan = await scanTarget(target, deps, {
+      ...options,
+      maxBooks:
+        options.maxBooks === undefined ? undefined : options.maxBooks - found,
+    });
     const where = targetFields(target);
     for (const [result, books] of [
       ["fresh", scan.fresh],
@@ -149,6 +157,7 @@ export async function runApply(
   onBook?: (outcome: IngestOutcome, index: number, book: Candidate) => void,
 ): Promise<ApplySummary> {
   await deps.preflight();
+  journal.write({ type: "apply_plan", version: 1, books });
   const summary: ApplySummary = {
     total: books.length,
     inserted: 0,

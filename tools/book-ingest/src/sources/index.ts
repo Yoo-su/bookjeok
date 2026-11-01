@@ -1,4 +1,3 @@
-import { aladinSource } from "./aladin";
 import { kakaoSource } from "./kakao";
 import type { BookSource, ListCatalog, SourceDefinition } from "./types";
 
@@ -15,7 +14,7 @@ export type {
 } from "./types";
 
 /** 첫 항목이 기본 공급처입니다. */
-export const SOURCES: SourceDefinition[] = [kakaoSource, aladinSource];
+export const SOURCES: SourceDefinition[] = [kakaoSource];
 
 export interface SourceInfo {
   id: string;
@@ -36,21 +35,18 @@ export function describeSources(
   const sources = createSources(env);
   return SOURCES.map(
     ({ id, label, maxPages, envKey, enrichNote, listCatalog }) => {
-      const own = sources.get(id)?.lookupDimensions;
-      const lender = dimensionLender(sources, id);
       return {
         id,
         label,
         maxPages,
         envKey,
-        enrichNote: enrichNote ?? null,
+        enrichNote:
+          enrichNote ??
+          "선택한 신규 책만 알라딘 웹에서 서지·표지·긴 소개를, YES24에서 두께를 받습니다. 받은 상세는 24시간 캐시합니다.",
         available: sources.has(id),
         lists: listCatalog ?? null,
-        dimensionNote: own
-          ? "판형·쪽수와 표지색을 book_dimensions에 넣습니다."
-          : lender
-            ? `판형·쪽수는 ${lender.label}에서 ISBN으로 찾아 넣고, 표지색은 표지에서 뽑습니다.`
-            : "판형·쪽수를 받을 곳이 없어 표지색만 넣습니다. 크기는 서버가 추정합니다.",
+        dimensionNote:
+          "두께는 YES24, 나머지 판형은 알라딘 값입니다. 필수 정보가 빠지면 적재하지 않습니다.",
       };
     },
   );
@@ -66,18 +62,6 @@ export function createSources(
     if (key) sources.set(definition.id, definition.create(key));
   }
   return sources;
-}
-
-/**
- * 판형을 주지 않는 공급처의 책에 판형을 빌려 줄 공급처. 스스로 판형을 받는
- * 공급처(보강 조회에서 함께 받음)거나 빌려 줄 곳이 없으면 null.
- */
-export function dimensionLender(
-  sources: Map<string, BookSource>,
-  sourceId: string,
-): BookSource | null {
-  if (sources.get(sourceId)?.lookupDimensions) return null;
-  return [...sources.values()].find((s) => s.lookupDimensions) ?? null;
 }
 
 export const imageOrigins = (): string[] =>

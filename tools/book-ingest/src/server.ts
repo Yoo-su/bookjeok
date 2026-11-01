@@ -12,11 +12,14 @@ import type { IngestOutcome } from "./ingest";
 import { type Candidate, localToday } from "./normalize";
 import {
   buildListTarget,
+  defaultPublishedSince,
   LIST_INTERVALS,
   type ListInterval,
+  MAX_BATCH_BOOKS,
   type PageProgress,
   parseKeywordQuery,
   type ScanResult,
+  scanScope,
   type ScanTarget,
   SEARCH_FIELDS,
   SEARCH_SORTS,
@@ -31,6 +34,7 @@ export interface IngestServices {
     targets: ScanTarget[],
     maxPages: number,
     onPage: (progress: PageProgress) => void,
+    scope?: { publishedSince?: string; maxBooks: number },
   ): Promise<ScanResult[]>;
   apply(
     books: Candidate[],
@@ -144,6 +148,8 @@ export function createIngestServer({
           query?: { text?: unknown; field?: unknown; sort?: unknown };
           list?: ListBody;
           maxPages?: unknown;
+          publishedSince?: unknown;
+          maxBooks?: unknown;
         };
         const source = services.sources.find(
           (s) => s.id === body?.source && s.available,
@@ -165,7 +171,17 @@ export function createIngestServer({
           return sendJson(res, 400, { error: targets });
         }
         const pageCap = body.list ? source.lists!.maxPages : source.maxPages;
-        const maxPages = clamp(Number(body.maxPages ?? pageCap), 1, pageCap);
+        const maxPages = clamp(Number(body.maxPages ?? 2), 1, pageCap);
+        let scope;
+        try {
+          scope = scanScope(
+            body.publishedSince ??
+              (body.publishers ? defaultPublishedSince(today) : undefined),
+            body.maxBooks,
+          );
+        } catch (error) {
+          return sendJson(res, 400, { error: messageOf(error) });
+        }
         const emit = openStream(res);
         try {
           const result = await services.scan(
@@ -173,6 +189,7 @@ export function createIngestServer({
             targets,
             maxPages,
             (p) => emit({ type: "page", ...p }),
+            scope,
           );
           const scanId = randomUUID();
           scans.set(
@@ -199,11 +216,15 @@ export function createIngestServer({
           return sendJson(res, 404, {
             error: "조회 결과가 없습니다. 다시 찾아 주세요",
           });
-        if (!isStringArray(body.isbns) || body.isbns.length === 0) {
+        if (
+          !isStringArray(body.isbns) ||
+          body.isbns.length === 0 ||
+          body.isbns.length > MAX_BATCH_BOOKS
+        ) {
           return sendJson(res, 400, { error: "적재할 책을 고르세요" });
         }
         // 화면이 보낸 데이터가 아니라 서버가 조회해 둔 후보만 적재합니다.
-        const books = body.isbns.map((isbn) => scan.get(isbn));
+        const books = [...new Set(body.isbns)].map((isbn) => scan.get(isbn));
         if (books.some((b) => !b)) {
           return sendJson(res, 400, {
             error: "조회 결과에 없는 ISBN이 있습니다",

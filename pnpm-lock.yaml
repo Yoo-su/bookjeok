@@ -720,6 +720,9 @@ importers:
       '@bookjeok/core':
         specifier: workspace:*
         version: link:../../packages/core
+      parse5:
+        specifier: 8.0.1
+        version: 8.0.1
       pg:
         specifier: ^8.16.3
         version: 8.16.3
@@ -20240,7 +20243,6 @@ snapshots:
   parse5@8.0.1:
     dependencies:
       entities: 8.0.0
-    optional: true
 
   parseley@0.12.1:
     dependencies:

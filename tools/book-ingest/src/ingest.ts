@@ -3,6 +3,7 @@ import type { BookRow, DimensionRow, InsertResult } from "./db";
 import { type BookDimensions, hasMeasurement } from "./dimensions";
 import type { Candidate } from "./normalize";
 import { coverKey, type CoverStore } from "./r2";
+import { assertComplete } from "./web/fields";
 
 export interface IngestDeps {
   /** 공급처의 적재 직전 보강 조회. 보강할 것이 없는 공급처는 그대로 돌려줍니다. */
@@ -24,6 +25,8 @@ export interface IngestDeps {
   /** 적재를 시작하기 전에 쓰기 권한을 확인합니다. 없으면 던집니다. */
   preflight(): Promise<void>;
   cdnBase: string;
+  /** 운영 적재는 전 필드·500px 표지·표지색 확보를 요구합니다. */
+  requireComplete?: boolean;
 }
 
 export interface CoverReport {
@@ -101,6 +104,7 @@ export async function ingestBook(
 
   try {
     book = await deps.enrich(candidate);
+    if (deps.requireComplete) assertComplete(book);
 
     let original: Buffer | null = null;
     const existing = await deps.store.existingKey(book.isbn);
@@ -113,6 +117,9 @@ export async function ingestBook(
       );
       original = downloaded.body;
       const prepared = await deps.prepareCover(original);
+      if (deps.requireComplete && prepared.original.width < 500) {
+        throw new Error(`500px 표지 미확보 (${prepared.original.width}px)`);
+      }
       await deps.saveOriginal(
         book.isbn,
         original,
@@ -138,8 +145,22 @@ export async function ingestBook(
       throw new Error(`공개 URL이 200이 아닙니다: ${image}`);
     }
 
+    if (deps.requireComplete && original === null) {
+      original = await deps.downloadCover(image);
+      const prepared = await deps.prepareCover(original);
+      if (prepared.original.width < 500) {
+        throw new Error(
+          `재사용 표지가 500px 미만입니다 (${prepared.original.width}px). 기존 키는 덮어쓰지 않습니다`,
+        );
+      }
+      cover.sourceWidth = prepared.original.width;
+    }
+
     // 재사용한 표지는 원본을 받지 않았으므로 공개 URL에서 받아 색을 뽑습니다
     const color = await extractColor(original, image, deps);
+    if (deps.requireComplete && !color.coverColor) {
+      throw new Error(`표지색 미확보: ${color.colorError}`);
+    }
     const dimensionRow = toDimensionRow(book, color.coverColor);
     const inserted = await deps.insertBook(
       {

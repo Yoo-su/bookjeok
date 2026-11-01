@@ -4,6 +4,7 @@ import {
   buildListTarget,
   listWeeks,
   parseKeywordQuery,
+  scanScope,
   scanTarget,
 } from "../scan";
 import type { BookSource, SourcePage } from "../sources";
@@ -40,6 +41,34 @@ const publisher = (name: string) =>
   ({ kind: "publisher", publisher: name }) as const;
 
 describe("scanTarget — 출판사", () => {
+  it("기간 밖·보유 책을 후보 상한에서 제외하고 신규 2권까지만 찾는다", async () => {
+    const src = pages(
+      [book(1, { datetime: "2025-01-01" }), book(2), book(3), book(4), book(5)],
+      [book(6)],
+    );
+    const scan = await scanTarget(
+      publisher("민음사"),
+      {
+        source: src,
+        findExisting: async () => new Set(["9788937477502"]),
+      },
+      { today: "2026-11-01", publishedSince: "2026-09-01", maxBooks: 2 },
+    );
+    expect(scan.fresh.map((book) => book.title)).toEqual(["책 3", "책 4"]);
+    expect(scan.known.map((book) => book.title)).toEqual(["책 2"]);
+    expect(scan.excluded[0].reason).toBe("outside_period");
+    expect(src.searchPublisher).toHaveBeenCalledTimes(1);
+    expect(scan.incomplete).toContain("2권 상한");
+  });
+
+  it("기간·권수에 잘못된 값을 허용하지 않는다", () => {
+    expect(() => scanScope("2026-02-30", 30)).toThrow("시작일");
+    expect(() => scanScope(undefined, 101)).toThrow("최대 권수");
+    expect(scanScope("", undefined)).toEqual({
+      publishedSince: undefined,
+      maxBooks: 30,
+    });
+  });
   it("끝 페이지까지 훑어 DB에 없는 책만 신규로 고른다", async () => {
     const src = pages([book(1), book(2)], [book(3)]);
     const findExisting = vi.fn(async () => new Set(["9788937477502"]));

@@ -526,6 +526,22 @@
               <button class="primary" id="scanBtn" disabled>신간 찾기</button>
             </div>
           </div>
+          <div class="row">
+            <label class="small muted"
+              >출간 시작일 <input type="date" id="publishedSince"
+            /></label>
+            <label class="small muted"
+              >전체 신규 후보 최대
+              <input
+                type="number"
+                id="maxBooks"
+                min="1"
+                max="100"
+                value="30"
+                style="width: 80px"
+              />권</label
+            >
+          </div>
           <p class="small muted" id="selectedLine">
             ★ 즐겨찾기가 앞에 옵니다. 칩을 눌러 고르세요.
           </p>
@@ -627,6 +643,7 @@
       <div class="inner">
         <span id="applyCount"></span>
         <div class="meter"><div id="meter"></div></div>
+        <button id="retryBtn" hidden>실패한 책만 선택</button>
         <button class="primary" id="applyBtn">적재</button>
       </div>
       <div class="log inner" id="log"></div>
@@ -786,9 +803,9 @@
                   : `${n}페이지 (${n * 50}권)`,
             }),
           );
-        // 출판사 신간은 끝까지, 검색은 정확도순 앞쪽만 보면 충분하다
+        // 소규모 조회가 기본. 더 오래된 누락분은 기간·페이지를 명시적으로 넓힌다.
         $("maxPages").replaceChildren(...options());
-        $("maxPages").value = String(max);
+        $("maxPages").value = String(Math.min(2, max));
         $("searchPages").replaceChildren(...options());
         $("searchPages").value = "1";
       }
@@ -857,6 +874,7 @@
       function renderList() {
         const catalog = sourceById(state.source)?.lists;
         const label = $("listModeLabel");
+        label.hidden = !catalog;
         label.querySelector("input").disabled = !catalog || state.busy;
         label.title = catalog ? "" : "알라딘에서만 쓸 수 있습니다";
         if (!catalog) {
@@ -1111,6 +1129,10 @@
           (hidden ? ` · 숨겨진 선택 ${hidden}권은 적재하지 않음` : "");
         $("applyBtn").textContent = `선택 ${applicable.length}권 적재`;
         $("applyBtn").disabled = state.busy || applicable.length === 0;
+        $("retryBtn").hidden = ![...state.fresh.values()].some(
+          (e) => e.failed && !e.done,
+        );
+        $("retryBtn").disabled = state.busy;
       }
 
       // ── 카드 ──────────────────────────────────────────────────
@@ -1423,6 +1445,8 @@
         return runScan(publishers, {
           publishers,
           maxPages: Number($("maxPages").value),
+          publishedSince: $("publishedSince").value,
+          maxBooks: Number($("maxBooks").value),
         });
       }
 
@@ -1527,9 +1551,7 @@
         if (
           !confirm(
             `${label}에서 찾은 ${isbns.length}권을 운영 DB에 적재합니다.\n표지를 R2에 올린 뒤 books와 book_dimensions에 INSERT합니다.` +
-              (source?.enrichNote
-                ? `\n${label} 상세 조회를 ${isbns.length}회 씁니다(하루 ${DAILY_QUOTA.toLocaleString()}회). 쿼터가 끊기면 거기서 멈추고 남은 책은 선택된 채로 둡니다.`
-                : "") +
+              "\n알라딘 웹 + YES24 두께를 확인합니다. 필수 정보가 없으면 해당 책은 실패로 남고, 접근 제한이 감지되면 멈춥니다. 실패한 책은 다시 선택해 재시도할 수 있습니다." +
               "\n진행할까요?",
           )
         )
@@ -1550,6 +1572,7 @@
               const entry = state.fresh.get(ev.outcome.isbn);
               // 실패한 책은 선택된 채로 남겨 바로 다시 적재할 수 있게 한다
               entry.done = ev.outcome.status !== "failed";
+              entry.failed = ev.outcome.status === "failed";
               entry.stamp.textContent = LABEL[ev.outcome.status];
               entry.stamp.className = `stamp ${ev.outcome.status} show`;
               $("meter").style.width = `${((ev.index + 1) / ev.total) * 100}%`;
@@ -1613,6 +1636,11 @@
       $("listMode").addEventListener("submit", listScan);
       $("searchText").addEventListener("input", renderSearch);
       $("applyBtn").addEventListener("click", apply);
+      $("retryBtn").addEventListener("click", () => {
+        for (const entry of state.fresh.values())
+          setChecked(entry, Boolean(entry.failed));
+        updateApplyBar();
+      });
 
       (async () => {
         try {
@@ -1623,6 +1651,10 @@
           ]);
           $("target").textContent = `DB ${meta.target}`;
           state.sources = meta.sources;
+          const since = new Date();
+          since.setDate(since.getDate() - 90);
+          $("publishedSince").value =
+            `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, "0")}-${String(since.getDate()).padStart(2, "0")}`;
           const remembered = sourceById(store.get(SOURCE_KEY));
           state.source = (
             remembered?.available

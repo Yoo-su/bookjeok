@@ -1,5 +1,4 @@
-import type { BookDimensions } from "../dimensions";
-import type { Candidate, Normalized } from "../normalize";
+import type { Normalized } from "../normalize";
 
 export interface SourcePage<Raw> {
   items: Raw[];
@@ -68,18 +67,11 @@ export interface BookSource<Raw = unknown> {
     expectedPublisher: string | null,
     today: string,
   ): Normalized;
-  /** 적재 직전에 한 권씩 부르는 보강 조회. 검색 응답에 없는 값을 채웁니다. */
-  enrich?(book: Candidate): Promise<Candidate>;
   /** 베스트셀러 같은 목록. 주는 공급처만 있습니다. */
   lists?: {
     catalog: ListCatalog;
     search(query: ListQuery, page: number): Promise<SourcePage<Raw>>;
   };
-  /**
-   * ISBN으로 실측 판형을 찾습니다. 판형을 주지 않는 다른 공급처의 책에 빌려 줍니다.
-   * 공급처에 없는 책이면 null, 조회 자체가 실패하면 던집니다.
-   */
-  lookupDimensions?(isbn: string): Promise<BookDimensions | null>;
 }
 
 export interface SourceDefinition {

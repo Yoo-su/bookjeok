@@ -65,9 +65,27 @@ export function createBookDb(url: string): BookDb {
     max: 2,
   });
 
+  const readOnly = async <Row extends pg.QueryResultRow>(
+    sql: string,
+    values?: unknown[],
+  ) => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN READ ONLY");
+      const result = await client.query<Row>(sql, values);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  };
+
   return {
     async publisherStats(limit) {
-      const { rows } = await pool.query<{ publisher: string; count: number }>(
+      const { rows } = await readOnly<{ publisher: string; count: number }>(
         `SELECT publisher, COUNT(*)::int AS count
            FROM books
           WHERE publisher <> ''
@@ -81,7 +99,7 @@ export function createBookDb(url: string): BookDb {
 
     async findExisting(isbns) {
       if (isbns.length === 0) return new Set();
-      const { rows } = await pool.query<{ isbn: string }>(
+      const { rows } = await readOnly<{ isbn: string }>(
         "SELECT isbn FROM books WHERE isbn = ANY($1::text[])",
         [isbns],
       );
@@ -141,7 +159,7 @@ export function createBookDb(url: string): BookDb {
      * RLS가 켜진 테이블에서는 SELECT 정책까지 필요합니다(PGlite로 확인, 2026-09-25).
      */
     async assertWritable() {
-      const { rows } = await pool.query<{
+      const { rows } = await readOnly<{
         name: string;
         granted: boolean;
         rls: boolean;

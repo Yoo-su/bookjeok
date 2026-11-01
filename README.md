@@ -246,7 +246,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 
 - **리뷰** — Tiptap 리치 텍스트 에디터(이미지 리사이즈·하이라이트·정렬·링크·색상 확장), 제목 기반 반응형 목차·현재 절 강조·본문 읽기 진행률, 읽기 미리보기, 별점, 태그, 공개/비공개, 리액션(공감/인사이트/응원) 집계, 조회수 인터셉터, `sanitize-html` 기반 XSS 방어
 - **독서 기록** — 월별/연도별 독서 캘린더, 완독 도서·한줄평·감상문 기록, 개인 독서 통계와 공개 설정. 검색 유입용 공개 소개 페이지 `/reading-log`(예시 달력)
-- **독서 키재기** — 한 해에 읽은 책을 실제 두께로 쌓아 비교하고 그 장면을 이미지로 공유. 비교 대상은 두 가지: 쌓은 높이에 따라 다음 목표가 자동으로 올라오는 **사물 사다리**(각설탕부터 기린까지 13개)와, 내 키만 한 손그림 캐릭터 또는 작가 5명(카뮈·사르트르·쿤데라·울프·카프카) 캐리커처의 추정 키. 공개 프로필에서는 캐릭터 없이 쌓은 책만 보여 줌 (책 크기는 알라딘 종료 전 수확한 `book_dimensions`). 기록으로 사물·몸 부위·내 키를 넘으면 그 책이 쌓이는 장면을 띄우고, 넘은 사물은 한 해 단위 **사물 도감**에 그 책의 표지색으로 모임. 출시 후 30일간 접속 시 한 번 넘겨 보는 소개 모달로 알림(`announcement`), 검색 유입용 공개 소개 페이지 `/reading-height`
+- **독서 키재기** — 한 해에 읽은 책을 실제 두께로 쌓아 비교하고 그 장면을 이미지로 공유. 비교 대상은 두 가지: 쌓은 높이에 따라 다음 목표가 자동으로 올라오는 **사물 사다리**(각설탕부터 기린까지 13개)와, 내 키만 한 손그림 캐릭터 또는 작가 5명(카뮈·사르트르·쿤데라·울프·카프카) 캐리커처의 추정 키. 공개 프로필에서는 캐릭터 없이 쌓은 책만 보여 줌 (책 크기는 `book_dimensions`; 신규 적재는 알라딘 웹 판형 + YES24 두께). 기록으로 사물·몸 부위·내 키를 넘으면 그 책이 쌓이는 장면을 띄우고, 넘은 사물은 한 해 단위 **사물 도감**에 그 책의 표지색으로 모임. 출시 후 30일간 접속 시 한 번 넘겨 보는 소개 모달로 알림(`announcement`), 검색 유입용 공개 소개 페이지 `/reading-height`
 - **콩** — 공개 프로필 독서 키재기에서 남의 기록에 보내는 작은 리액션. 연필로 그린 까만 콩이 표지 위로 날아가 앉고, 누르면 팔다리를 꺼내 바둥거림. 한 기록에 한 알이며 거둬들이지 않음. 받은 수는 주인만 보고(독서기록 hero의 **콩 종지**, 달력·목록·하루 상세의 콩 표시), 받으면 그날 상세로 가는 알림이 옴
 - **독서 라운지** — `/lounge`에서 **북적 책동산**(공개 독서 기록 전체를 한 산으로 쌓은 높이와 다음 이정표), 다른 독자들의 실시간 독서 기록, 인기 도서, 활동 중인 독자, 같은 책을 읽는 독자를 조회
 
@@ -416,7 +416,7 @@ Socket.IO 게이트웨이 2종(채팅 / 알림)을 운영합니다.
 | **다음 우편번호**                     | 배송지 주소 입력                                          | `web: order/address-input`              |
 | **GA4 · Microsoft Clarity · AdSense** | 트래픽 분석, 행동 분석, 광고                              | `web: shared/components/analytics, ads` |
 | **카카오 책 검색 API**                | 신간 적재 (운영자 도구 전용, 런타임 경로 아님)            | `tools/book-ingest`                     |
-| **알라딘 Open API**                   | 신간 적재 (운영자 도구 전용, **2026-10-30 종료 시 제거**) | `tools/book-ingest`                     |
+| **알라딘 웹 / YES24 웹**              | 선택 도서의 서지·표지·소개·판형 / 두께 보강 (운영자 도구 전용) | `tools/book-ingest`                  |
 | **Cloudflare R2**                     | 도서 표지 원본 저장·서빙 (`cdn.bookjeok.com`)             | `tools/book-ingest`(업로드), web(표시)  |
 
 > **도서 데이터는 런타임에 외부 API를 쓰지 않습니다.** 과거에는 네이버 도서 API와
@@ -619,7 +619,7 @@ pnpm test
 | `CLIENT_DOMAIN`                                      |  ✅  | CORS 및 소셜 로그인 리다이렉트 대상                                                          |
 | `NAVER_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 네이버 소셜 로그인 (도서 검색에는 쓰지 않음)                                                 |
 | `KAKAO_CLIENT_ID` / `_SECRET` / `_CALLBACK_URL`      |  ✅  | 카카오 로그인                                                                                |
-| `ALADIN_TTB_KEY`                                     |      | **서버는 쓰지 않음.** 적재 도구의 알라딘 공급처 전용(10/30까지) — 지우지 말 것               |
+| `ALADIN_TTB_KEY`                                     |      | **현재 코드에서는 사용하지 않음.** 알라딘 API 종료로 적재 도구에서도 제거(예제 키 항목은 보존) |
 | `GEMINI_API_KEY`                                     |  ✅  | Google Gemini                                                                                |
 | `GEMINI_MODEL_NAME`                                  |      | AI 도서 추천(search, 웹 UI 비노출)의 Gemini 모델명. 기본 `gemini-3.1-flash-lite`, AI 요약(llm)은 상수 사용 |
 | `AI_SIMILARITY_THRESHOLD` / `AI_CANDIDATE_POOL_SIZE` |      | RAG 벡터 검색 튜닝 (기본 0.35 / 30, 웹 UI 비노출)                                           |
@@ -655,7 +655,7 @@ pnpm test
 | [apps/server/README.md](apps/server/README.md)                                                                                | 백엔드 개요, 모듈 구조, 개발 원칙                                      |
 | [apps/admin/README.md](apps/admin/README.md)                                                                                  | 관리자 포털 (초기 세팅만 된 미배포 앱)                                 |
 | [core](packages/core/README.md) · [api-client](packages/api-client/README.md) · [react-query](packages/react-query/README.md) | 공용 패키지 사용법                                                     |
-| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 운영자 적재 도구 — 신간·자유 검색, 표지 R2, books·book_dimensions 적재 |
+| [tools/book-ingest/README.md](tools/book-ingest/README.md)                                                                    | 소규모 출판사 적재 — 알라딘 웹·YES24 두께, 범위 제한·캐시·재시도 |
 
 ### 도메인 기능 문서
 
@@ -678,6 +678,7 @@ Vercel 사용량 점검: [2026-09-20 비용 진단](docs/vercel-usage-audit-2026
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [docs/used-book-pay-implementation.md](docs/used-book-pay-implementation.md) | 에스크로 결제 시스템 설계·상태 머신·엣지 케이스·단계별 실행 계획 (기능은 현재 플래그로 비활성)                                                                                                                                       |
 | [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)         | 알라딘 API 종료(2026-10-30) 대응 — 표지·서지·검색 탈외부화 계획과 진행 상황 (진행 중)                                                                                                                                                |
+| [docs/aladin-site-ingest-feasibility.md](docs/aladin-site-ingest-feasibility.md) | API 종료 후 신규 적재 가능성 조사(2026-11-01) — 표지·서지·소개 실측, 두께 대체 후보와 수집·저장 조건 |
 | [docs/manual-ddl-log.md](docs/manual-ddl-log.md)                             | 운영 DB에 수동 적용한 DDL 이력 (필독). 실행한 SQL 원본은 [docs/ddl/](docs/ddl/)                                                                                                                                                      |
 | [.agents/rules/](.agents/rules/)                                             | 코드베이스 컨벤션 — [모노레포/패키지](.agents/rules/01-monorepo-packages.md) · [서버](.agents/rules/02-server-conventions.md) · [프론트엔드](.agents/rules/03-frontend-conventions.md) · [체크리스트](.agents/rules/04-checklist.md) |
 
