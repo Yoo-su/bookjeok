@@ -149,7 +149,7 @@ describe('book-search-query', () => {
       expect(params.slice(0, 2)).toEqual(['%문학동네%', '문학동네']);
 
       const short = page('창비', { columns: searchColumnsFor('Publisher') });
-      expect(short.sql).toContain('(book.publisher ILIKE $1)');
+      expect(short.sql).toContain('(book.publisher LIKE $1)');
       expect(short.sql).not.toContain('book.title ILIKE');
     });
   });

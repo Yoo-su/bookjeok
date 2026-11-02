@@ -85,8 +85,8 @@ describe('LocalDbBookCatalogProvider', () => {
       await provider.search(params('한강 소년'));
 
       const [pageSql] = repo.query.mock.calls[1];
-      expect(pageSql).toContain('ILIKE $1');
-      expect(pageSql).toContain('ILIKE $2');
+      expect(pageSql).toContain('LIKE $1');
+      expect(pageSql).toContain('LIKE $2');
     });
 
     it('긴 단어가 있으면 붙여 쓰기 확인을 건너뛴다', async () => {
