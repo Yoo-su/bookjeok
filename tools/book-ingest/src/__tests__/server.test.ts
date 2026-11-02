@@ -282,6 +282,10 @@ describe("createIngestServer", () => {
       [{ kind: "publisher", publisher: "민음사" }],
       20,
       expect.any(Function),
+      expect.objectContaining({
+        maxBooks: 30,
+        publishedSince: expect.any(String),
+      }),
     );
   });
 
@@ -307,6 +311,7 @@ describe("createIngestServer", () => {
       ],
       1,
       expect.any(Function),
+      { maxBooks: 30, publishedSince: undefined },
     );
   });
 

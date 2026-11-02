@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -16,8 +17,8 @@ export interface Journal {
 export function openJournal(kind: "scan" | "apply", now = new Date()): Journal {
   const dir = resolve(DATA_DIR, "runs");
   mkdirSync(dir, { recursive: true });
-  const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\..+$/, "");
-  const path = resolve(dir, `${stamp}-${kind}.jsonl`);
+  const stamp = now.toISOString().replace(/[-:.]/g, "");
+  const path = resolve(dir, `${stamp}-${randomUUID()}-${kind}.jsonl`);
   return {
     path,
     write(record) {

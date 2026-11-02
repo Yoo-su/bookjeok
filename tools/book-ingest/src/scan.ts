@@ -28,8 +28,44 @@ export type ScanTarget =
 
 export interface ScanOptions {
   maxPages?: number;
+  publishedSince?: string;
+  maxBooks?: number;
   today: string;
   onPage?: (progress: PageProgress) => void;
+}
+
+export const DEFAULT_MAX_BOOKS = 30;
+export const MAX_BATCH_BOOKS = 100;
+
+export function defaultPublishedSince(today: string): string {
+  const date = new Date(`${today}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - 90);
+  return date.toISOString().slice(0, 10);
+}
+
+export function scanScope(
+  since: unknown,
+  limit: unknown,
+): { publishedSince?: string; maxBooks: number } {
+  const publishedSince =
+    since === undefined || since === "" ? undefined : String(since);
+  if (
+    publishedSince &&
+    (!/^\d{4}-\d{2}-\d{2}$/.test(publishedSince) ||
+      !Number.isFinite(Date.parse(publishedSince)) ||
+      new Date(publishedSince).toISOString().slice(0, 10) !== publishedSince)
+  ) {
+    throw new Error("출간 시작일은 올바른 YYYY-MM-DD여야 합니다");
+  }
+  const maxBooks = limit === undefined ? DEFAULT_MAX_BOOKS : Number(limit);
+  if (
+    !Number.isInteger(maxBooks) ||
+    maxBooks < 1 ||
+    maxBooks > MAX_BATCH_BOOKS
+  ) {
+    throw new Error(`최대 권수는 1~${MAX_BATCH_BOOKS}권이어야 합니다`);
+  }
+  return { publishedSince, maxBooks };
 }
 
 export interface PageProgress {
@@ -171,7 +207,7 @@ export function buildListTarget(
 export async function scanTarget(
   target: ScanTarget,
   { source, findExisting }: ScanDeps,
-  { maxPages, today, onPage }: ScanOptions,
+  { maxPages, today, onPage, publishedSince, maxBooks }: ScanOptions,
 ): Promise<ScanResult> {
   const label = targetLabel(target);
   const result: ScanResult = {
@@ -207,6 +243,21 @@ export async function scanTarget(
           excludedOnPage += 1;
           continue;
         }
+        if (
+          publishedSince &&
+          (!normalized.book.pubDate || normalized.book.pubDate < publishedSince)
+        ) {
+          result.excluded.push({
+            reason: "outside_period",
+            label: "출간 기간 밖·출간일 없음",
+            isbn: normalized.book.isbn,
+            title: normalized.book.title,
+            publisher: normalized.book.publisher,
+            raw: item,
+          });
+          excludedOnPage += 1;
+          continue;
+        }
         // 같은 책이 여러 페이지·목록에 걸쳐 다시 나오는 경우를 한 번만 셉니다.
         if (seen.has(normalized.book.isbn)) continue;
         seen.add(normalized.book.isbn);
@@ -228,6 +279,8 @@ export async function scanTarget(
         if (isKnown) {
           result.known.push(candidate);
         } else {
+          if (maxBooks !== undefined && result.fresh.length >= maxBooks)
+            continue;
           result.fresh.push(candidate);
           freshOnPage += 1;
         }
@@ -242,6 +295,10 @@ export async function scanTarget(
         excluded: excludedOnPage,
       });
 
+      if (maxBooks !== undefined && result.fresh.length >= maxBooks) {
+        result.incomplete = `신규 후보 ${maxBooks}권 상한에 도달했습니다. 범위를 넓히려면 최대 권수를 변경하세요`;
+        break;
+      }
       if (isEnd || items.length === 0) break;
     }
   };
@@ -265,6 +322,7 @@ export async function scanTarget(
     if (!lists) throw new Error(`${source.label}은(는) 목록을 주지 않습니다`);
     result.lists = 0;
     for (const list of target.lists) {
+      if (maxBooks !== undefined && result.fresh.length >= maxBooks) break;
       // 목록이 수백 개라 쿼터가 도중에 끊길 수 있습니다. 받은 데까지는 남깁니다.
       try {
         await scanFeed(

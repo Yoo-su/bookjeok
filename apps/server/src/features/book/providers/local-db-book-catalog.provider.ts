@@ -1,5 +1,5 @@
 import { BookInfo } from '@bookjeok/core';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -10,13 +10,14 @@ import {
   BookCatalogSearchParams,
   BookCatalogSearchResult,
 } from './book-catalog.types';
+import { planBookSearch } from './book-search-plan';
 import {
   buildAdjacentProbe,
   buildCountQuery,
   buildSearchQuery,
   canMatchAdjacent,
+  SEARCH_DOCUMENT_INDEX,
   searchColumnsFor,
-  tokenize,
 } from './book-search-query';
 
 /**
@@ -34,21 +35,43 @@ import {
  * 뜻하기 때문입니다. BookCatalogService가 장애와 도서 없음을 구분할 때 씁니다.
  */
 @Injectable()
-export class LocalDbBookCatalogProvider implements BookCatalogProvider {
+export class LocalDbBookCatalogProvider
+  implements BookCatalogProvider, OnModuleInit
+{
   readonly name = 'local-db';
   readonly kind: BookCatalogProviderKind = 'local';
+  private readonly logger = new Logger(LocalDbBookCatalogProvider.name);
+  private discoveryEnabled = false;
 
   constructor(
     @InjectRepository(Book)
     private readonly bookRepository: Repository<Book>,
   ) {}
 
+  async onModuleInit(): Promise<void> {
+    const rows: { ready: boolean }[] = await this.bookRepository.query(
+      `SELECT EXISTS (
+        SELECT 1 FROM pg_index i
+        JOIN pg_class c ON c.oid = i.indexrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE c.relname = $1 AND n.nspname = 'public'
+          AND i.indrelid = 'public.books'::regclass
+          AND i.indisvalid AND i.indisready
+      ) AS ready`,
+      [SEARCH_DOCUMENT_INDEX],
+    );
+    this.discoveryEnabled = rows[0]?.ready === true;
+    if (!this.discoveryEnabled) {
+      this.logger.warn('소개 검색용 GIN 인덱스가 없어 서지 검색만 사용합니다.');
+    }
+  }
+
   /**
-   * 자체 DB에서 도서를 검색합니다. 검색어를 단어로 나눠 **모든 단어가 들어 있는**
-   * 책을 찾고, 공백·기호는 무시합니다("사탄 탱고" → 『사탄탱고』, "라슬로 사탄" →
-   * 저자+제목).
+   * 원문 서지 검색을 유지하고, 통합 검색만 요청 표현·조사를 완화한 후보를 더합니다.
+   * 준비된 전문검색 인덱스가 있으면 소개까지 핵심 단어를 모두 만족하는 책을 찾습니다.
+   * 필드 지정 검색과 기호 포함 검색은 소개 검색으로 넓히지 않습니다.
    * - sort='date': 출간일 최신순 (예약 판매분은 뒤로, pubDate DESC NULLS LAST)
-   * - sort='sim' (기본): 관련도 순 (완전/접두/부분일치) -> 판매지수(salesPoint) 순
+   * - sort='sim' (기본): 서지 관련도 -> 상위 200권의 소개 점수 -> 판매지수 -> ISBN
    * @param params 검색 조건
    * @returns 정규화된 검색 결과
    */
@@ -58,10 +81,21 @@ export class LocalDbBookCatalogProvider implements BookCatalogProvider {
     const { query, display, start, field, sort } = params;
     // 공백·기호뿐인 검색어는 조건이 비어 모든 도서가 걸린다(실측 57,577행 /
     // 카운트에만 3초). 단어가 하나도 남지 않으면 질의하지 않는다.
-    const tokens = tokenize(query ?? '');
+    const { tokens, expandedTokens, discoveryQuery } = planBookSearch(
+      query ?? '',
+      field,
+    );
     if (tokens.length === 0) {
       return { total: 0, start, display, items: [] };
     }
+
+    const isbn = (query ?? '').replace(/[-\s]/g, '');
+    const exactIsbn =
+      field === 'Keyword' && /^(?:\d{13}|\d{9}[\dXx])$/.test(isbn)
+        ? isbn.toUpperCase()
+        : undefined;
+    const discovery =
+      this.discoveryEnabled && !exactIsbn ? discoveryQuery : undefined;
 
     const columns = searchColumnsFor(field);
     const adjacent =
@@ -76,6 +110,9 @@ export class LocalDbBookCatalogProvider implements BookCatalogProvider {
       adjacent,
       limit: display,
       offset,
+      expandedTokens,
+      exactIsbn,
+      discoveryQuery: discovery,
     });
     const rows: { isbn: string; total: string }[] =
       await this.bookRepository.query(page.sql, page.params);
@@ -83,7 +120,14 @@ export class LocalDbBookCatalogProvider implements BookCatalogProvider {
     let total = rows.length > 0 ? Number(rows[0].total) : 0;
     if (rows.length === 0 && offset > 0) {
       // 마지막 페이지를 넘긴 요청은 행이 없어 건수도 못 얻는다.
-      const count = buildCountQuery({ tokens, columns, adjacent });
+      const count = buildCountQuery({
+        tokens,
+        columns,
+        adjacent,
+        expandedTokens,
+        exactIsbn,
+        discoveryQuery: discovery,
+      });
       const [row] = await this.bookRepository.query(count.sql, count.params);
       total = Number(row?.total ?? 0);
     }

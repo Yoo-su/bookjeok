@@ -15,7 +15,7 @@ function deps(overrides: Partial<IngestDeps> = {}) {
     body: Buffer.from("webp"),
     ext: "webp",
     contentType: "image/webp",
-    original: { format: "jpeg", width: 458, height: 660, bytes: 50_000 },
+    original: { format: "jpeg", width: 500, height: 759, bytes: 50_000 },
     psnr: 38.2,
     converted: true,
   };
@@ -379,7 +379,7 @@ describe("runApply", () => {
       colorFailed: 0,
     });
     // 기록에 판형과 표지색이 남는다
-    expect(j.records[0]).toMatchObject({
+    expect(j.records[1]).toMatchObject({
       type: "ingest",
       dimension: { dimensions: { width: 152 }, coverColor: "#2a4b7c" },
     });
@@ -425,5 +425,60 @@ describe("runApply", () => {
     );
     expect(summary).toMatchObject({ inserted: 1, failed: 1 });
     expect(summary.stopped).toBeUndefined();
+  });
+});
+
+describe("운영 적재 전 필드 필수", () => {
+  it("재사용 표지도 500px 미만이면 덮어쓰거나 INSERT하지 않는다", async () => {
+    const { deps: d } = deps({
+      requireComplete: true,
+      store: { existingKey: async () => "covers/orphan.jpg", put: vi.fn() },
+    });
+    const prepared = await d.prepareCover(Buffer.from("jpeg"));
+    vi.mocked(d.prepareCover).mockResolvedValue({
+      ...prepared,
+      original: { ...prepared.original, width: 458 },
+    });
+    expect((await ingestBook(complete(), d)).outcome).toMatchObject({
+      status: "failed",
+      error: expect.stringContaining("재사용 표지가 500px 미만"),
+    });
+    expect(d.store.put).not.toHaveBeenCalled();
+    expect(d.insertBook).not.toHaveBeenCalled();
+  });
+  const complete = () =>
+    candidate({
+      salesPoint: 100,
+      dimensions: {
+        source: "aladin-web+yes24",
+        width: 135,
+        height: 205,
+        depth: 30,
+        pages: 416,
+        weight: 541,
+        binding: "반양장본",
+      },
+    });
+  it("필드 누락은 표지 업로드보다 먼저 실패한다", async () => {
+    const { deps: d } = deps({ requireComplete: true });
+    const book = complete();
+    book.dimensions!.depth = null;
+    expect((await ingestBook(book, d)).outcome.status).toBe("failed");
+    expect(d.store.put).not.toHaveBeenCalled();
+    expect(d.insertBook).not.toHaveBeenCalled();
+  });
+  it("표지색을 못 뽑으면 NULL로 성공 처리하지 않는다", async () => {
+    const { deps: d } = deps({
+      requireComplete: true,
+      coverColor: async () => {
+        throw new Error("추출 실패");
+      },
+    });
+    const { outcome } = await ingestBook(complete(), d);
+    expect(outcome).toMatchObject({
+      status: "failed",
+      error: expect.stringContaining("표지색 미확보"),
+    });
+    expect(d.insertBook).not.toHaveBeenCalled();
   });
 });

@@ -52,6 +52,7 @@ DDL_TARGET_DATABASE_URL=postgres://user:pass@localhost:5432/bookjeok_ddl   pnpm 
 | 2026-09-29 | `feedbacks` 테이블 생성 + RLS, 알림 enum에 `FEEDBACK_REPLIED` (사용자 문의·제보)       | `9546a94e`, 13절        |
 | 2026-09-29 | `books` 교재·학습서 2,174권 삭제 (DDL 아님, 데이터 정리. 용량 확보)                    | (SQL Editor), 14절      |
 | 2026-10-07 | `reading_log_kongs` 테이블 + RLS, 알림 enum에 `READING_LOG_KONG` (독서 기록 콩)        | 16절                    |
+| 2026-11-02 | `books` 소개 전문검색 GIN 표현식 인덱스 `IDX_books_search_document_gin` 추가           | 17절, 서버 미배포       |
 
 현재 운영에 남아 있는 채팅 인덱스는 **4개**입니다
 (`idx_read_receipts_message`는 테이블과 함께 사라졌습니다).
@@ -1354,8 +1355,6 @@ DROP TABLE public.feedbacks;
 서버를 이 변경 이전으로 먼저 내린 뒤 실행하세요. 테이블만 지우면 탈퇴가 막힙니다.
 `notification_type_enum`에 추가한 값은 3절과 같은 이유로 되돌리지 않습니다.
 
----
-
 ## 14. `books` 교재·학습서 2,174권 삭제 (2026-09-29)
 
 DDL이 아니라 데이터 정리입니다. Supabase 무료 500MB(당시 416MB)를 확보하려고 실행했습니다.
@@ -1497,3 +1496,46 @@ DROP TABLE public.reading_log_kongs;
 
 서버를 이 변경 이전으로 먼저 내린 뒤 실행하세요. 테이블만 지우면 탈퇴가 막힙니다.
 `notification_type_enum`에 추가한 값은 3절과 같은 이유로 되돌리지 않습니다.
+
+---
+
+## 17. 도서 소개 전문검색 인덱스 (2026-11-02)
+
+사용자 요청으로 제목·저자·출판사·소개의 PostgreSQL 기본 `simple` 전문검색 GIN 표현식
+인덱스를 운영에 추가했습니다. 기존 `IDX_books_search_key_trgm`을 직접 조회해 같은
+`IDX_books_<대상>_<종류>` 이름 규칙의 `IDX_books_search_document_gin`을 사용했습니다.
+기존 검색 키 인덱스·PK는 유지했고, 테이블·컬럼·확장·도서 데이터 변경은 없습니다.
+
+### 실행
+
+실행 원본: [`2026-10-29-book-discovery-index.sql`](ddl/2026-10-29-book-discovery-index.sql).
+CREATE 문 하나만 트랜잭션 밖에서 `CONCURRENTLY`로 실행했습니다. DDL 연결에는
+10분 statement_timeout·5초 lock_timeout을 걸었고, 사전·사후 SELECT는 READ ONLY
+트랜잭션에서 실행했습니다. 테이블 소유자 권한 상속·기존 이름과 정의·공간을 먼저 확인했습니다.
+
+### 확인 결과
+
+- 2026-11-02 10:34:59 KST 생성·검증 완료. CREATE 소요 167,946ms(약 2분 48초).
+- 도서 82,511권. 새 인덱스 `indisvalid=true`, `indisready=true`.
+- 인덱스 142,680,064바이트(약 142.7MB/136.1MiB).
+- Supabase 보고서 방식의 클러스터 DB 크기 합계는 278,933,681 → 421,613,745바이트.
+  500MB를 500,000,000바이트로 잡으면 약 78.4MB 여유이며 물리 디스크·WAL 측정과는 다릅니다.
+- 이후 READ ONLY 검색 비교 16조건×기존/개선 각 3회와 실행 계획을 확인했습니다.
+  새 GIN은 주제 검색에 사용됐고, 정확한 출판사 검색은 소개 조회를 건너뜁니다.
+  넓은 검색에서 설정한 3초 제한으로 3회 취소돼 배포 전 성능 보완이 남았습니다.
+- **서버는 배포하지 않았습니다.** 인덱스 생성만으로 기존 운영 서버의 검색 동작이 바뀌지는 않습니다.
+  성능 보완 후 코드를 배포·재시작해야 시작 시 인덱스 확인을 거쳐 소개 검색이 켜집니다.
+
+세부 측정과 후속 순서는 [범용 검색 개선](book-search-improvement-2026-10-29.md)에 있습니다.
+
+### 되돌리기
+
+소개 검색을 사용하는 서버를 배포했다면 먼저 이전 버전으로 되돌립니다.
+그 후 필요할 때만 아래 한 문장을 트랜잭션 밖에서 실행합니다(이번 작업에서 실행하지 않음).
+
+```sql
+DROP INDEX CONCURRENTLY public."IDX_books_search_document_gin";
+```
+
+현재 코드가 시작 시 인덱스 준비 여부를 기억하므로, 서버를 그대로 둔 채 인덱스를 제거하면
+소개 전체 스캔이 발생할 수 있습니다.

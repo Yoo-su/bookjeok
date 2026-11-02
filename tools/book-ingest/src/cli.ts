@@ -4,16 +4,28 @@ import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import { DATA_DIR, describeDatabase, loadEnv, requireEnv } from "./config";
+import { downloadCover, prepareCover } from "./cover";
+import { coverColor } from "./cover-color";
+import type { BookDb } from "./db";
 import { formatDimensions } from "./dimensions";
 import type { IngestOutcome } from "./ingest";
 import { openJournal } from "./journal";
-import { localToday } from "./normalize";
-import { createIngestDeps, createScanDeps, openDb } from "./runtime";
+import { type Candidate, localToday } from "./normalize";
+import { readRetryCandidates } from "./retry";
+import {
+  createIngestDeps,
+  createScanDeps,
+  enrichFromWeb,
+  openDb,
+} from "./runtime";
 import {
   buildListTarget,
+  defaultPublishedSince,
   LIST_INTERVALS,
   type ListInterval,
+  MAX_BATCH_BOOKS,
   parseKeywordQuery,
+  scanScope,
   type ScanTarget,
   SEARCH_FIELDS,
   SEARCH_SORTS,
@@ -39,13 +51,13 @@ const USAGE = `사용법: pnpm ingest <명령> [옵션]   (저장소 루트에�
       --field <f>                ${SEARCH_FIELDS.join(" | ")} (기본 all, ISBN은 자동 인식)
       --sort <s>                 ${SEARCH_SORTS.join(" | ")} (기본 accuracy)
       --source <id>              공급처: ${SOURCES.map((s) => s.id).join(" | ")} (기본 ${SOURCES[0].id})
-  scan  --source aladin --list Bestseller   베스트셀러 등 목록에서 DB에 없는 책을 찾습니다
-      --categories 0,1,170       분야 ID(0=종합, all=전 분야). 기본 0
-      --months <n>               오늘부터 몇 개월 전까지(기본 1=이번 주만)
-      --interval <i>             ${LIST_INTERVALS.join(" | ")} (기본 month — 달마다 1주차 하나)
-      --max-pages <n>            최대 페이지(출판사·목록 기본은 공급처 상한, 검색 기본은 1)
-  apply --publishers 민음사 --yes 찾은 책 전부를 적재합니다 (--list도 같음)
+      --since YYYY-MM-DD        출간 시작일(출판사 기본: 최근 90일, 검색 기본: 제한 없음)
+      --max-books <n>            전체 신규 후보 상한(기본 30, 최대 100)
+      --max-pages <n>            출판사별 최대 페이지(기본 2, 검색 기본 1)
+  apply --publishers 민음사 --yes 찾은 신규 후보를 적재합니다
       --isbn a,b                 이 ISBN만 적재 (--query는 필수)
+  inspect --isbn a,b             웹 보강·표지 확인만 합니다(DB·R2 쓰기 없음, 최대 5권)
+  retry --run <apply.jsonl> --yes 실패·미처리 책만 재시도합니다
   publishers [--limit 50]        DB 보유 수 상위 출판사`;
 
 const FAVORITES = resolve(DATA_DIR, "favorites.json");
@@ -65,6 +77,9 @@ async function main() {
       field: { type: "string" },
       sort: { type: "string" },
       "max-pages": { type: "string" },
+      since: { type: "string" },
+      "max-books": { type: "string" },
+      run: { type: "string" },
       isbn: { type: "string" },
       yes: { type: "boolean", default: false },
       port: { type: "string" },
@@ -74,6 +89,54 @@ async function main() {
   });
   const command = positionals[0];
   if (!command || values.help) return console.log(USAGE);
+
+  if (command === "inspect") {
+    const isbns = [
+      ...new Set(
+        (values.isbn ?? "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+    ];
+    if (
+      isbns.length < 1 ||
+      isbns.length > 5 ||
+      isbns.some((isbn) => !/^97[89]\d{10}$/.test(isbn))
+    ) {
+      throw new Error("inspect --isbn에 ISBN-13을 1~5개 넣으세요");
+    }
+    for (const isbn of isbns) {
+      const start = Date.now();
+      const book = await enrichFromWeb({
+        isbn,
+        publisher: "",
+        source: "kakao",
+        raw: { isbn, kind: "inspect" },
+      });
+      const image = await downloadCover(book.coverUrls[0]);
+      const prepared = await prepareCover(image);
+      if (prepared.original.width < 500) throw new Error("500px 표지 미확보");
+      const color = await coverColor(image);
+      console.log(
+        JSON.stringify({
+          isbn,
+          title: book.title,
+          author: book.author,
+          publisher: book.publisher,
+          pubDate: book.pubDate,
+          price: book.discount,
+          salesPoint: book.salesPoint,
+          dimensions: book.dimensions,
+          descriptionLength: book.description.length,
+          cover: prepared.original,
+          coverColor: color,
+          seconds: (Date.now() - start) / 1000,
+        }),
+      );
+    }
+    return;
+  }
 
   const db = openDb();
   console.log(`DB: ${describeDatabase(requireEnv("INGEST_DATABASE_URL"))}`);
@@ -92,21 +155,21 @@ async function main() {
         target: describeDatabase(requireEnv("INGEST_DATABASE_URL")),
         sources: describeSources(),
         publisherStats: (limit) => db.publisherStats(limit),
-        scan(sourceId, targets, pages, onPage) {
+        scan(sourceId, targets, pages, onPage, scope) {
           const source = sources.get(sourceId);
           if (!source) throw new Error(`공급처 ${sourceId}의 키가 없습니다`);
           return runScan(
             targets,
             createScanDeps(db, source),
             openJournal("scan"),
-            { maxPages: pages, today, onPage },
+            { maxPages: pages, today, onPage, ...scope },
           );
         },
         async apply(books, onBook) {
           const journal = openJournal("apply");
           const summary = await runApply(
             books,
-            createIngestDeps(db, sources),
+            createIngestDeps(db),
             journal,
             onBook,
           );
@@ -128,6 +191,23 @@ async function main() {
   }
 
   try {
+    if (command === "retry") {
+      if (!values.run)
+        throw new Error("retry --run에 apply 기록 경로를 넣으세요");
+      const pending = await readRetryCandidates(resolve(values.run));
+      const existing = await db.findExisting(
+        pending.flatMap((book) =>
+          book.isbn10 ? [book.isbn, book.isbn10] : [book.isbn],
+        ),
+      );
+      const books = pending.filter(
+        (book) =>
+          !existing.has(book.isbn) &&
+          (!book.isbn10 || !existing.has(book.isbn10)),
+      );
+      await applyBooks(books, db, values.yes);
+      return;
+    }
     if (command === "publishers") {
       const rows = await db.publisherStats(Number(values.limit ?? 50));
       for (const row of rows)
@@ -142,6 +222,11 @@ async function main() {
       const targets = parseTargets(values, definition.listCatalog, today);
       requireEnv(definition.envKey);
       const source = sources.get(sourceId)!;
+      const scope = scanScope(
+        values.since ??
+          (values.publishers ? defaultPublishedSince(today) : undefined),
+        values["max-books"],
+      );
       console.log(`공급처: ${source.label}`);
 
       const scanJournal = openJournal("scan");
@@ -154,7 +239,8 @@ async function main() {
             ? Number(values["max-pages"])
             : values.query
               ? 1
-              : undefined,
+              : 2,
+          ...scope,
           today,
           onPage: (p) =>
             process.stdout.write(
@@ -180,32 +266,7 @@ async function main() {
       const books = scans
         .flatMap((s) => s.fresh)
         .filter((b) => !onlyIsbns || onlyIsbns.has(b.isbn));
-      if (books.length === 0) return console.log("적재할 책이 없습니다.");
-      if (!values.yes) {
-        return console.log(
-          `\n${books.length}권을 적재하려면 --yes를 붙여 다시 실행하세요.`,
-        );
-      }
-
-      const journal = openJournal("apply");
-      const summary = await runApply(
-        books,
-        createIngestDeps(db, sources),
-        journal,
-        (o, i) =>
-          console.log(
-            `${i + 1}/${books.length} ${o.status} ${o.isbn}${describeOutcome(o)}`,
-          ),
-      );
-      console.log(
-        `\n적재 ${summary.inserted} · 이미 있음 ${summary.alreadyExists} · 실패 ${summary.failed}` +
-          ` · 표지 재사용 ${summary.reusedCovers} · 저자 없음 ${summary.emptyAuthor}` +
-          ` · 판형 행 ${summary.dimensionRows}(실측 ${summary.measured})` +
-          (summary.colorFailed ? ` · 표지색 실패 ${summary.colorFailed}` : ""),
-      );
-      if (summary.stopped) console.log(`⚠ 중단: ${summary.stopped}`);
-      console.log(`적재 기록: ${journal.path}`);
-      if (summary.failed > 0) process.exitCode = 1;
+      await applyBooks(books, db, values.yes);
       return;
     }
 
@@ -213,6 +274,32 @@ async function main() {
   } finally {
     await db.close();
   }
+}
+
+async function applyBooks(books: Candidate[], db: BookDb, yes: boolean) {
+  if (books.length === 0) return console.log("적재할 책이 없습니다.");
+  if (books.length > MAX_BATCH_BOOKS)
+    throw new Error(`한 번에 최대 ${MAX_BATCH_BOOKS}권까지 적재합니다`);
+  if (!yes)
+    return console.log(
+      `${books.length}권을 적재하려면 --yes를 붙여 다시 실행하세요.`,
+    );
+  const journal = openJournal("apply");
+  const summary = await runApply(
+    books,
+    createIngestDeps(db),
+    journal,
+    (outcome, index) =>
+      console.log(
+        `${index + 1}/${books.length} ${outcome.status} ${outcome.isbn}${describeOutcome(outcome)}`,
+      ),
+  );
+  console.log(
+    `적재 ${summary.inserted} · 이미 있음 ${summary.alreadyExists} · 실패 ${summary.failed}` +
+      ` · 판형 행 ${summary.dimensionRows} · 기록: ${journal.path}`,
+  );
+  if (summary.stopped) console.log(`중단: ${summary.stopped}`);
+  if (summary.failed > 0) process.exitCode = 1;
 }
 
 function parseTargets(
