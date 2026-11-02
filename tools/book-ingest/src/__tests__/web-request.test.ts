@@ -8,6 +8,28 @@ import { createHtmlCache } from "../web/cache";
 import { createHtmlRequest } from "../web/request";
 
 describe("웹 요청과 캐시", () => {
+  it.each([
+    new TypeError("terminated"),
+    new DOMException("timed out", "TimeoutError"),
+  ])(
+    "HTTP 200 뒤 본문 수신 오류도 전체 중단 오류로 반환한다: %s",
+    async (error) => {
+      const fetcher = vi.fn<typeof fetch>(async () => {
+        const response = new Response("<p>partial</p>");
+        vi.spyOn(response, "text").mockRejectedValue(error);
+        return response;
+      });
+      const request = createHtmlRequest({ fetcher, intervalMs: 0 });
+      await expect(
+        request("https://www.aladin.co.kr/book"),
+      ).rejects.toMatchObject({
+        fatal: true,
+        message: expect.stringContaining("네트워크 연결 실패·시간 초과"),
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    },
+  );
+
   it.each([403, 429])(
     "HTTP %s는 재요청하지 않고 전체 중단 오류로 반환한다",
     async (status) => {

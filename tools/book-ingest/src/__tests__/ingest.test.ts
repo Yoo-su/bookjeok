@@ -4,8 +4,16 @@ import type { PreparedCover } from "../cover";
 import type { BookDimensions } from "../dimensions";
 import { ingestBook, type IngestDeps } from "../ingest";
 import type { Journal } from "../journal";
+import { createWebEnricher } from "../web/enrich";
+import { createHtmlRequest } from "../web/request";
 import { runApply } from "../workflow";
 import { candidate } from "./fixtures";
+import {
+  aladinHtml,
+  descriptionHtml,
+  ISBN,
+  yes24SearchHtml,
+} from "./web-fixtures";
 
 const CDN = "https://cdn.bookjeok.com";
 
@@ -330,6 +338,57 @@ describe("runApply", () => {
     const records: Record<string, unknown>[] = [];
     return { path: "run.jsonl", records, write: (r) => void records.push(r) };
   };
+
+  it.each([1, 2, 4])(
+    "%s번째 본문 수신 중 연결이 끊기면 폴백·다음 책 요청과 쓰기를 멈춘다",
+    async (failAt) => {
+      let requests = 0;
+      const fetcher = vi.fn<typeof fetch>(async () => {
+        requests += 1;
+        const response = new Response(
+          requests === 1
+            ? aladinHtml()
+            : requests === 2
+              ? descriptionHtml
+              : yes24SearchHtml,
+        );
+        if (requests === failAt)
+          vi.spyOn(response, "text").mockRejectedValue(
+            new TypeError("terminated"),
+          );
+        return response;
+      });
+      const writeCache = vi.fn();
+      const enrich = vi.fn(
+        createWebEnricher(createHtmlRequest({ fetcher, intervalMs: 0 }), {
+          read: async () => null,
+          write: writeCache,
+        }),
+      );
+      const { deps: d } = deps({ enrich });
+      const j = journal();
+      const summary = await runApply(
+        [
+          candidate({ isbn: ISBN, publisher: "민음사" }),
+          candidate({ isbn: "9788937465024", isbn10: null }),
+        ],
+        d,
+        j,
+      );
+      expect(summary).toMatchObject({ total: 2, inserted: 0, failed: 1 });
+      expect(summary.stopped).toContain("네트워크 연결 실패·시간 초과");
+      expect(enrich).toHaveBeenCalledTimes(1);
+      expect(fetcher).toHaveBeenCalledTimes(failAt);
+      expect(writeCache).toHaveBeenCalledTimes(failAt - 1);
+      expect(d.store.put).not.toHaveBeenCalled();
+      expect(d.insertBook).not.toHaveBeenCalled();
+      expect(j.records[1]).toMatchObject({
+        type: "ingest",
+        status: "failed",
+        fatal: true,
+      });
+    },
+  );
 
   it("쓰기 권한이 없으면 보강 조회·표지 업로드 전에 멈춘다", async () => {
     const { deps: d } = deps({

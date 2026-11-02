@@ -40,6 +40,25 @@ function setup() {
 }
 
 describe("알라딘 전 필드 + YES24 두께", () => {
+  it("이름 안의 괄호·쉼표는 보존하고 링크 밖 역할로 저자와 역자를 구분한다", () => {
+    const html = aladinHtml()
+      .replace(">저자 하나</a>", ">저자 하나(필명)</a>")
+      .replace(">저자 둘</a>", ">저자 둘, 주니어</a>")
+      .replace(">역자</a>", ">역자(본명)</a>");
+    const { draft } = parseAladinDetail(html, ISBN);
+    expect(draft.authors).toEqual(["저자 하나(필명)", "저자 둘, 주니어"]);
+    expect(draft.translators).toEqual(["역자(본명)"]);
+  });
+
+  it("그림·엮은이 등 다른 역할도 저자로 유지한다", () => {
+    const html = aladinHtml()
+      .replace("(지은이)", "(그림)")
+      .replace("(옮긴이)", "(엮은이)");
+    const { draft } = parseAladinDetail(html, ISBN);
+    expect(draft.authors).toEqual(["저자 하나", "저자 둘", "역자"]);
+    expect(draft.translators).toEqual([]);
+  });
+
   it("부제 span은 제목에 포함하고 시리즈 링크는 포함하지 않는다", () => {
     const html = aladinHtml().replace(
       '<span class="Ere_bo_title">검증용 도서</span>',

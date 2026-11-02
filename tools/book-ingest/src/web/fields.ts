@@ -6,6 +6,7 @@ import {
   documentOf,
   elements,
   hasClass,
+  type HtmlNode,
   meta,
   textOf,
 } from "./html";
@@ -17,25 +18,33 @@ export interface AladinDetail {
   productCode: string;
 }
 
-/** Names with the same role share one parenthesis group, as in the old API. */
-function authorsOf(raw: string) {
+/** Names are links; only text outside those links describes their shared role. */
+function authorsOf(row: HtmlNode | undefined) {
   const authors: string[] = [];
   const translators: string[] = [];
   const translatorRoles = new Set(["옮긴이", "번역", "역자", "역"]);
-  const names = (value: string) =>
-    value
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  const group = /([^()]*)\(([^()]*)\)/g;
-  let rest = 0;
-  for (let match = group.exec(raw); match; match = group.exec(raw)) {
-    (translatorRoles.has(match[2].trim()) ? translators : authors).push(
-      ...names(match[1]),
-    );
-    rest = group.lastIndex;
-  }
-  authors.push(...names(raw.slice(rest)));
+  const pending: string[] = [];
+  const visit = (node: HtmlNode): boolean => {
+    if ("tagName" in node && node.tagName === "a") {
+      if (attr(node, "href").includes("PublisherSearch=")) return true;
+      if (attr(node, "href").includes("AuthorSearch=")) {
+        const name = compactText(node);
+        if (name) pending.push(name);
+        return false;
+      }
+    }
+    if ("value" in node) {
+      for (const match of node.value.matchAll(/\(([^()]*)\)/g)) {
+        (translatorRoles.has(match[1].trim()) ? translators : authors).push(
+          ...pending,
+        );
+        pending.length = 0;
+      }
+    }
+    return "childNodes" in node && node.childNodes.some(visit);
+  };
+  if (row) visit(row);
+  authors.push(...pending);
   return { authors, translators };
 }
 
@@ -94,18 +103,10 @@ export function parseAladinDetail(html: string, isbn: string): AladinDetail {
     root,
     (e) => e.tagName === "li" && hasClass(e, "Ere_sub2_title"),
   )[0];
-  let authorText = "";
-  for (const node of authorRow?.childNodes ?? []) {
-    if ("tagName" in node && attr(node, "href").includes("PublisherSearch="))
-      break;
-    authorText += textOf(node);
-  }
   const publisherLink =
     authorRow &&
     elements(authorRow, (e) => attr(e, "href").includes("PublisherSearch="))[0];
-  const { authors, translators } = authorsOf(
-    authorText.replace(/\s+/g, " ").trim(),
-  );
+  const { authors, translators } = authorsOf(authorRow);
   const priceRow = elements(root, (e) => hasClass(e, "info_list")).flatMap(
     (e) =>
       elements(

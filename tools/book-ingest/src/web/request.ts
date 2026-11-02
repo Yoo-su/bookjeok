@@ -77,7 +77,14 @@ export function createHtmlRequest({
             throw new Error(
               `${target.hostname} 요청 실패 (HTTP ${response.status})`,
             );
-          const html = await response.text();
+          let html: string;
+          try {
+            html = await response.text();
+          } catch {
+            throw new WebAccessError(
+              `${target.hostname}: 네트워크 연결 실패·시간 초과. 적재를 중단합니다`,
+            );
+          }
           if (!html.trim()) throw new Error(`${target.hostname}: 빈 HTML 응답`);
           if (html.length > 2 * 1024 * 1024)
             throw new Error("웹 응답 크기 초과");
