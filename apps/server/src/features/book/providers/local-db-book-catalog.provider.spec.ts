@@ -18,6 +18,9 @@ describe('LocalDbBookCatalogProvider', () => {
           Promise.resolve(respond(sql)),
         ),
         findBy: jest.fn(() => Promise.resolve([...books].reverse())),
+        findOneBy: jest.fn(({ isbn }: { isbn: string }) =>
+          Promise.resolve(books.find((item) => item.isbn === isbn) ?? null),
+        ),
       };
       return {
         repo,
@@ -82,8 +85,8 @@ describe('LocalDbBookCatalogProvider', () => {
       await provider.search(params('한강 소년'));
 
       const [pageSql] = repo.query.mock.calls[1];
-      expect(pageSql).toContain('ILIKE $1');
-      expect(pageSql).toContain('ILIKE $2');
+      expect(pageSql).toContain('LIKE $1');
+      expect(pageSql).toContain('LIKE $2');
     });
 
     it('긴 단어가 있으면 붙여 쓰기 확인을 건너뛴다', async () => {
@@ -112,6 +115,50 @@ describe('LocalDbBookCatalogProvider', () => {
 
       expect(result.total).toBe(0);
       expect(repo.query).toHaveBeenCalledTimes(1);
+    });
+
+    it('ISBN 후보를 기존 서지 검색에 합치고 페이지 밖에서도 합친 건수를 유지한다', async () => {
+      const isbn = '9788936434595';
+      const { repo, provider } = providerWith(
+        (sql) =>
+          sql.startsWith('SELECT count')
+            ? [{ total: '2' }]
+            : [{ isbn, total: '2' }],
+        [book(isbn)],
+      );
+      expect(
+        (await provider.search(params('978-89-364-3459-5'))).items[0].isbn,
+      ).toBe(isbn);
+      expect(repo.query.mock.calls[0][0]).toContain('UNION');
+      expect(repo.query.mock.calls[0][1]).toContain(isbn);
+      expect(repo.findOneBy).not.toHaveBeenCalled();
+      repo.query.mockImplementation((sql: string) =>
+        Promise.resolve(sql.startsWith('SELECT count') ? [{ total: '2' }] : []),
+      );
+      expect(await provider.search(params(isbn, 11))).toMatchObject({
+        total: 2,
+        items: [],
+      });
+      expect(repo.query.mock.calls.at(-1)?.[1]).toContain(isbn);
+    });
+
+    it('유효한 인덱스를 확인한 경우에만 소개 검색 SQL을 실행한다', async () => {
+      const { provider, repo } = providerWith((sql) =>
+        sql.startsWith('SELECT EXISTS') ? [{ ready: true }] : [],
+      );
+      await provider.onModuleInit();
+      await provider.search(params('인공지능 윤리'));
+      expect(repo.query.mock.calls[1][0]).toContain("to_tsvector('simple'");
+    });
+
+    it('인덱스가 없으면 소개를 풀스캔하지 않고 서지 확장만 실행한다', async () => {
+      const { provider, repo } = providerWith((sql) =>
+        sql.startsWith('SELECT EXISTS') ? [{ ready: false }] : [],
+      );
+      await provider.onModuleInit();
+      await provider.search(params('불안을 다루는 심리학 책'));
+      expect(repo.query.mock.calls[1][0]).not.toContain('to_tsvector');
+      expect(repo.query.mock.calls[1][1]).toContain('%불안%');
     });
   });
 

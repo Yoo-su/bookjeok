@@ -149,7 +149,7 @@ describe('book-search-query', () => {
       expect(params.slice(0, 2)).toEqual(['%문학동네%', '문학동네']);
 
       const short = page('창비', { columns: searchColumnsFor('Publisher') });
-      expect(short.sql).toContain('(book.publisher ILIKE $1)');
+      expect(short.sql).toContain('(book.publisher LIKE $1)');
       expect(short.sql).not.toContain('book.title ILIKE');
     });
   });
@@ -193,8 +193,8 @@ describe('book-search-query', () => {
           sql,
           'strpos(hit.n_title, $4) > 0 AND strpos(hit.n_title, $5) > 0',
         ),
-      ).toBe(4);
-      expect(rankOf(sql, 'hit.n_author = $3')).toBe(5);
+      ).toBe(5);
+      expect(rankOf(sql, 'hit.n_author = $3')).toBe(6);
     });
 
     it('정규화 값은 CTE에서 한 번만 계산한다', () => {

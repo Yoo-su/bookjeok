@@ -111,7 +111,11 @@
 
 ### 키워드 기반 도서 검색
 
-자체 DB에 적재한 도서 약 6.6만 종을 제목·저자·출판사로 검색합니다. `pg_trgm` GIN 인덱스 기반 부분일치이며, 관련도(완전일치 → 접두일치 → 부분일치)로 버킷을 나눈 뒤 알라딘 판매지수(`salesPoint`)로 순서를 가립니다. **런타임에 외부 도서 API를 호출하지 않습니다**(아래 「외부 서비스 연동」 참고). TanStack Query 기반 무한 스크롤로 결과를 점진적으로 탐색하며, 사용자 검색어는 정규화 후 별도로 기록되어(초성 제거·공백 정리·2글자 미만 폐기) 최근 1년 기준 인기 검색어 Top 10을 집계합니다.
+자체 DB에 적재한 도서 약 8.25만 종을 제목·저자·출판사로 검색합니다(2026-10-29 읽기 전용 확인). `pg_trgm` GIN 인덱스 기반 부분일치이며, 관련도와 알라딘 판매지수(`salesPoint`)로 순서를 가립니다. **런타임에 외부 도서 API를 호출하지 않습니다**(아래 「외부 서비스 연동」 참고). TanStack Query 기반 무한 스크롤로 결과를 점진적으로 탐색하며, 사용자 검색어는 정규화 후 별도로 기록되어(초성 제거·공백 정리·2글자 미만 폐기) 최근 1년 기준 인기 검색어 Top 10을 집계합니다.
+
+2026-10-29 범용 검색 개선 코드를 추가했습니다. 원문 검색을 유지하면서 요청 표현·조사를 완화하고, 저자·제목 조합의 순위와 ISBN 정확 조회를 보강합니다. ISBN 후보도 기존 서지 결과에 합쳐 숫자 제목을 누락하지 않습니다(2026-10-30 보완). 별도 테이블 없이 기본 전문검색 GIN 인덱스가 준비된 경우에만 소개 기반 후보 검색이 켜집니다. **운영 인덱스는 2026-11-02 생성·확인했고, 서버는 아직 배포하지 않았습니다.** 비용·운영 측정·적용 순서는 [범용 검색 개선](docs/book-search-improvement-2026-10-29.md)에 있습니다.
+
+정확한 저자·출판사명은 소개 확장을 생략하고 기존 서지 경로를 유지합니다. 소개 재정렬은 200권으로 제한하지만 운영 응답시간을 보장하는 제한은 아닙니다. 2026-11-02 후보별 PK 재조회·관련도 중복 계산과 짧은 한글 검색의 대소문자 변환 비용을 줄였습니다. 운영 READ ONLY의 16조건×3회는 수정 후 모두 3초 안에 완료했고, 별도 검증에서 전체 결과·건수·페이지 순서가 이전 커밋과 같았습니다. HTTP·동시 요청 검증과 서버 배포는 남아 있습니다.
 
 ---
 
@@ -489,6 +493,8 @@ bookjeok/
 ├── docs/                         # 운영·설계 문서
 │   ├── used-book-pay-implementation.md
 │   ├── book-data-migration-plan.md
+│   ├── book-search-baseline-2026-10-29.md
+│   ├── book-search-improvement-2026-10-29.md
 │   ├── manual-ddl-log.md
 │   ├── seo-audit-2026-09-19.md
 │   ├── review-search-audit-2026-10-07.md
@@ -678,6 +684,8 @@ Vercel 사용량 점검: [2026-09-20 비용 진단](docs/vercel-usage-audit-2026
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [docs/used-book-pay-implementation.md](docs/used-book-pay-implementation.md) | 에스크로 결제 시스템 설계·상태 머신·엣지 케이스·단계별 실행 계획 (기능은 현재 플래그로 비활성)                                                                                                                                       |
 | [docs/book-data-migration-plan.md](docs/book-data-migration-plan.md)         | 알라딘 API 종료(2026-10-30) 대응 — 표지·서지·검색 탈외부화 계획과 진행 상황 (진행 중)                                                                                                                                                |
+| [docs/book-search-baseline-2026-10-29.md](docs/book-search-baseline-2026-10-29.md) | 도서 검색 품질 기준선·평가 도구·저자와 제목 조합의 순위 개선 대상 |
+| [docs/book-search-improvement-2026-10-29.md](docs/book-search-improvement-2026-10-29.md) | 범용 검색 개선 구현·로컬/운영 비교·인덱스 비용·적용 순서 (운영 인덱스 적용, 서버 미배포) |
 | [docs/aladin-site-ingest-feasibility.md](docs/aladin-site-ingest-feasibility.md) | API 종료 후 신규 적재 가능성 조사(2026-11-01) — 표지·서지·소개 실측, 두께 대체 후보와 수집·저장 조건 |
 | [docs/manual-ddl-log.md](docs/manual-ddl-log.md)                             | 운영 DB에 수동 적용한 DDL 이력 (필독). 실행한 SQL 원본은 [docs/ddl/](docs/ddl/)                                                                                                                                                      |
 | [.agents/rules/](.agents/rules/)                                             | 코드베이스 컨벤션 — [모노레포/패키지](.agents/rules/01-monorepo-packages.md) · [서버](.agents/rules/02-server-conventions.md) · [프론트엔드](.agents/rules/03-frontend-conventions.md) · [체크리스트](.agents/rules/04-checklist.md) |
