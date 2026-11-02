@@ -147,7 +147,7 @@ class Params {
 /**
  * 검색 조건. 모든 단어가 들어 있는 책만 남깁니다.
  * - 3글자 이상 단어: 정규화한 검색 키에 LIKE — 인덱스를 탑니다.
- * - 짧은 단어: 원래 입력 그대로 컬럼에 ILIKE. 정규화하면 `c++`가 `c`가 되어
+ * - 짧은 단어: 원래 입력 그대로 컬럼에 LIKE/ILIKE. 정규화하면 `c++`가 `c`가 되어
  *   수천 건이 걸리기 때문입니다(실측 7건 → 4,164건).
  * - adjacent: 붙여 쓴 형태 하나로만 찾습니다(canMatchAdjacent 참조).
  * 단일 필드 검색이면 검색 키로 좁힌 뒤 그 필드에 실제로 있는지 다시 봅니다.
@@ -174,7 +174,14 @@ function matchConditions(
   return tokens.flatMap((token) => {
     if (!isShort(token)) return byKey(token.norm);
     const like = params.add(`%${escapeLike(token.raw)}%`);
-    return [`(${columns.map((c) => `book.${c} ILIKE ${like}`).join(' OR ')})`];
+    // 한글·ASCII 숫자에는 대소문자가 없다. ILIKE의 행 전체 소문자 변환을 생략한다.
+    // 영문·다른 문자·기호는 로케일별 대소문자와 원문 의미를 보존한다.
+    const operator = /^[\p{Script=Hangul}0-9]+$/u.test(token.raw)
+      ? 'LIKE'
+      : 'ILIKE';
+    return [
+      `(${columns.map((c) => `book.${c} ${operator} ${like}`).join(' OR ')})`,
+    ];
   });
 }
 
@@ -354,24 +361,28 @@ function candidateCte(
   where: string,
   discovery: string,
   identity: string,
+  withSortFields = false,
 ): string {
   const query = `to_tsquery('simple', ${discovery})`;
+  // 후보 수집 시 읽은 서지를 재사용해 후보마다 books를 PK로 다시 읽지 않는다.
+  const fields = withSortFields
+    ? 'book.isbn, book.author, book.publisher, book.title, book."salesPoint", book."pubDate"'
+    : 'book.isbn, book.author, book.publisher';
   return `metadata AS MATERIALIZED (
-  SELECT book.isbn, book.author, book.publisher FROM books book WHERE ${where}
+  SELECT ${fields} FROM books book WHERE ${where}
 ), exact_entity AS MATERIALIZED (
   SELECT EXISTS (
     SELECT 1 FROM metadata book
     WHERE ${normalizedColumnSql('publisher')} = ${identity}
        OR ${identity} = ANY(${AUTHOR_NAMES_SQL})
   ) AS matched
-), candidates AS MATERIALIZED (
-  SELECT isbn FROM metadata
-  UNION
-  SELECT book.isbn
+), matched AS (
+  SELECT ${withSortFields ? '*' : 'isbn'} FROM metadata
+  UNION ALL
+  SELECT ${withSortFields ? fields : 'book.isbn'}
     FROM books book WHERE NOT (SELECT matched FROM exact_entity)
       AND (${SEARCH_DOCUMENT_SQL}) @@ ${query}
-), matched AS (
-  SELECT isbn FROM candidates
+      AND NOT EXISTS (SELECT 1 FROM metadata WHERE metadata.isbn = book.isbn)
 )`;
 }
 
@@ -383,6 +394,8 @@ function candidateCte(
  * 402ms). 건수는 `count(*) OVER ()`로 같은 스캔에서 셉니다. 따로 COUNT를 돌리면
  * 인덱스를 못 타는 짧은 검색어가 테이블을 두 번 훑습니다.
  *
+ * 소개 검색의 관련도는 작은 scored CTE에 한 번 저장해 200권 선정과 최종 정렬에서
+ * 재사용합니다. 정규화 문자열을 최종 창 함수까지 운반하지 않습니다.
  * 정렬 순서가 흔들리면 OFFSET 페이지네이션에서 중복과 누락이 생기므로 마지막
  * 키는 항상 isbn입니다. 소개 검색은 전체 후보를 유지하되, 서지 관련도·판매지수로
  * 고른 200권만 소개 점수를 다시 계산합니다. 나머지는 서지 관련도·판매지수 순입니다.
@@ -411,15 +424,20 @@ export function buildSearchQuery(options: SearchQueryOptions): SqlQuery {
   ) {
     normalized += `, ${AUTHOR_NAMES_SQL} AS author_names`;
   }
+  const relevance = byDate ? [] : [relevanceCaseSql(tokens, columns, params)];
+  if (!byDate && options.expandedTokens?.length) {
+    relevance.push(relevanceCaseSql(options.expandedTokens, columns, params));
+  }
+  // 상위 200권 선정과 최종 정렬이 같은 관련도 값을 공유한다.
+  const cacheRelevance = !byDate && !!discovery;
   const orderBy = byDate
     ? [
         `(${PUBLISHED_FIRST_SQL}) DESC NULLS LAST`,
         'hit."pubDate" DESC NULLS LAST',
       ]
-    : [relevanceCaseSql(tokens, columns, params)];
-  if (!byDate && options.expandedTokens?.length) {
-    orderBy.push(relevanceCaseSql(options.expandedTokens, columns, params));
-  }
+    : relevance.map((sql, index) =>
+        cacheRelevance ? `hit.relevance_${index}` : sql,
+      );
   if (!byDate && options.exactIsbn) {
     orderBy.unshift(`(hit.isbn = ${params.add(options.exactIsbn)}) DESC`);
   }
@@ -428,8 +446,10 @@ export function buildSearchQuery(options: SearchQueryOptions): SqlQuery {
   // 후보·전체 건수는 자르지 않는다. 비싼 소개 재분석만 고정된 200권에 제한한다.
   const rerank =
     !byDate && discovery
-      ? `, shortlist AS MATERIALIZED (
-  SELECT hit.isbn FROM hit ORDER BY ${orderBy.join(', ')} LIMIT 200
+      ? `, scored AS MATERIALIZED (
+  SELECT hit.isbn, hit."salesPoint", ${relevance.map((sql, index) => `${sql} AS relevance_${index}`).join(', ')} FROM hit
+), shortlist AS MATERIALIZED (
+  SELECT hit.isbn FROM scored hit ORDER BY ${orderBy.join(', ')} LIMIT 200
 ), ranked AS MATERIALIZED (
   SELECT book.isbn, ts_rank_cd((${SEARCH_DOCUMENT_SQL}), to_tsquery('simple', ${discovery}), 32) AS content_score
   FROM books book JOIN shortlist ON shortlist.isbn = book.isbn
@@ -445,13 +465,13 @@ export function buildSearchQuery(options: SearchQueryOptions): SqlQuery {
     );
   }
 
-  const sql = `WITH ${discovery && identity ? `${candidateCte(where, discovery, identity)},\n` : ''}hit AS MATERIALIZED (
+  const sql = `WITH ${discovery && identity ? `${candidateCte(where, discovery, identity, true)},\n` : ''}hit AS MATERIALIZED (
   SELECT book.isbn, book."salesPoint", book."pubDate"${normalized}
-    FROM books book
-   ${discovery ? 'JOIN matched ON matched.isbn = book.isbn' : `WHERE ${where}`}
+    FROM ${discovery ? 'matched' : 'books'} book
+   ${discovery ? '' : `WHERE ${where}`}
 )${rerank}
 SELECT hit.isbn, count(*) OVER () AS total
-  FROM hit
+  FROM ${cacheRelevance ? 'scored hit' : 'hit'}
   ${rerank ? 'LEFT JOIN ranked ON ranked.isbn = hit.isbn' : ''}
  ORDER BY ${orderBy.join(', ')}
  LIMIT ${params.add(limit)} OFFSET ${params.add(offset)}`;

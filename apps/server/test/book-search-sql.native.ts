@@ -16,7 +16,9 @@ import {
   buildCountQuery,
   buildSearchQuery,
   canMatchAdjacent,
+  escapeLike,
   searchColumnsFor,
+  tokenize,
 } from '@/features/book/providers/book-search-query';
 
 void describe('도서 검색 SQL (실제 PostgreSQL 실행)', () => {
@@ -206,6 +208,57 @@ void describe('도서 검색 SQL (실제 PostgreSQL 실행)', () => {
     );
   });
 
+  void it('짧은 한글·숫자·영문·기호 검색은 원문 ILIKE의 후보를 그대로 유지한다', async () => {
+    await db.exec(`INSERT INTO books (isbn,title,author,publisher,description) VALUES
+      ('mixed-case', 'ABC 사랑 12 SF C++ 50% A_B', 'ㄱ 한강', '출판 Q&A', ''),
+      ('lower-case', 'abc 사랑 12 sf c++ 50% a_b', 'ㄱ 한강', '출판 q&a', ''),
+      ('literal-symbols', '50점 A-B C 언어', '작가', '출판', '')`);
+    for (const query of [
+      '사랑',
+      '한강',
+      'ㄱ',
+      '12',
+      'SF',
+      'c++',
+      '50%',
+      'A_B',
+      'Q&A',
+      '사랑 SF',
+    ]) {
+      const tokens = tokenize(query);
+      for (const field of [
+        'Keyword',
+        'Title',
+        'Author',
+        'Publisher',
+      ] as const) {
+        const columns = searchColumnsFor(field);
+        const original = await db.query<{ isbn: string }>(
+          `SELECT isbn FROM books book WHERE ${tokens.map((_, index) => `(${columns.map((column) => `book.${column} ILIKE $${index + 1}`).join(' OR ')})`).join(' AND ')} ORDER BY isbn`,
+          tokens.map((token) => `%${escapeLike(token.raw)}%`),
+        );
+        const built = buildSearchQuery({
+          tokens,
+          columns,
+          adjacent: false,
+          sort: 'sim',
+          limit: 1000,
+          offset: 0,
+        });
+        const actual = await db.query<{ isbn: string; total: number }>(
+          built.sql,
+          built.params,
+        );
+        deepStrictEqual(
+          actual.rows.map((row) => row.isbn).sort(),
+          original.rows.map((row) => row.isbn),
+        );
+        if (actual.rows.length)
+          equal(Number(actual.rows[0].total), original.rows.length);
+      }
+    }
+  });
+
   void it('ISBN 정확 후보를 더해도 숫자로 찾던 제목을 누락하지 않는다', async () => {
     const exactIsbn = '9788936434595';
     const options = {
@@ -303,15 +356,27 @@ void describe('도서 검색 SQL (실제 PostgreSQL 실행)', () => {
   });
 
   void it('서지·소개가 모두 맞아도 중복 없이 세고 페이지 밖 건수도 일치한다', async () => {
-    const options = optionsFor('인공지능 윤리', 'Keyword', 20);
-    const page = buildSearchQuery(options);
-    const count = buildCountQuery(options);
-    deepStrictEqual((await db.query(page.sql, page.params)).rows, []);
-    const counted = await db.query<{ total: number }>(count.sql, count.params);
-    equal(Number(counted.rows[0].total), 2);
-    const result = await search('인공지능 윤리');
-    equal(new Set(result.rows.map((row) => row.isbn)).size, 2);
-    equal(Number(result.rows[0].total), 2);
+    await db.exec('BEGIN');
+    try {
+      await db.exec(`INSERT INTO books (isbn,title,author,publisher,description)
+        VALUES ('ai-both','인공지능 윤리','작가','출판사','인공지능과 윤리적 책임을 다룬다')`);
+      const options = optionsFor('인공지능 윤리', 'Keyword', 20);
+      const page = buildSearchQuery(options);
+      const count = buildCountQuery(options);
+      deepStrictEqual((await db.query(page.sql, page.params)).rows, []);
+      const counted = await db.query<{ total: number }>(
+        count.sql,
+        count.params,
+      );
+      equal(Number(counted.rows[0].total), 3);
+      const result = await search('인공지능 윤리');
+      equal(result.rows.length, 3);
+      equal(new Set(result.rows.map((row) => row.isbn)).size, 3);
+      equal(Number(result.rows[0].total), 3);
+      equal(result.rows.filter((row) => row.isbn === 'ai-both').length, 1);
+    } finally {
+      await db.exec('ROLLBACK');
+    }
   });
 
   void it('신간순에서도 소개 후보를 포함하고 순위 점수용 매개변수를 남기지 않는다', async () => {
