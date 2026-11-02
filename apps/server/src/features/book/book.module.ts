@@ -28,7 +28,7 @@ import { BookCatalogService } from './services/book-catalog.service';
       /**
        * 검색 체인. 자체 DB 단독입니다.
        * 외부 공급처를 런타임 경로에 두지 않으며, 신규 도서는 오프라인 수집 파이프라인으로 확보합니다.
-       * pg_trgm 인덱스 및 관련도 정렬을 기반으로 검색을 수행합니다.
+       * pg_trgm 서지 검색과, 인덱스 준비 시 기본 전문검색을 통한 소개 검색을 결합합니다.
        */
       provide: BOOK_SEARCH_PROVIDERS,
       useFactory: (localDb: LocalDbBookCatalogProvider) => [localDb],

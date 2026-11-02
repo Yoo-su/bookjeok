@@ -12,6 +12,8 @@ import { UsedBookSale } from '@/features/used-book-sale/entities/used-book-sale.
 // 운영에는 TypeORM 데코레이터로 표현할 수 없는 인덱스가 있다(연산자 클래스·표현식).
 //   IDX_books_search_key_trgm — 검색이 쓰는 인덱스. 지우면 검색이 풀스캔이 된다.
 //     식은 book-search-query.ts의 SEARCH_KEY_SQL과 같아야 한다 (manual-ddl-log 10절).
+//   IDX_books_search_document_gin — 소개 검색용(2026-11-02 운영 적용, manual-ddl-log 17절).
+//     SEARCH_DOCUMENT_SQL과 같은 식이어야 하며, 없으면 서버는 소개 검색을 끈다.
 //   (컬럼별 IDX_books_title/author/publisher_trgm은 2026-09-23에 제거했다. 10절)
 @Entity({ name: 'books' })
 export class Book {
