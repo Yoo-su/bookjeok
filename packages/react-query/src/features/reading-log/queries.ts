@@ -219,12 +219,17 @@ export const useReceivedKongsQuery = (options?: { enabled?: boolean }) => {
  */
 export const useSentKongsQuery = (
   handle: string,
-  options?: { enabled?: boolean },
+  options?: {
+    enabled?: boolean;
+    /** 캐시만 채우고 값이 바뀌어도 다시 그리지 않는다. 미리 받아 두는 쪽에서 */
+    prefetchOnly?: boolean;
+  },
 ) => {
   return useQuery({
     queryKey: readingLogKeys.kongsSent(handle).queryKey,
     queryFn: () => getSentKongs(handle),
     staleTime: 5 * 60 * 1000,
     enabled: options?.enabled,
+    notifyOnChangeProps: options?.prefetchOnly ? [] : undefined,
   });
 };

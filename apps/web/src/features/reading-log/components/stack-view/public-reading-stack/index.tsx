@@ -58,8 +58,12 @@ export function PublicReadingStack({
     year,
   );
   const viewer = useAuthStore((s) => s.user);
-  // 책을 열 때 콩 줄만 늦게 뜨지 않게 내가 보낸 콩을 미리 받아 둔다(콩 줄과 같은 캐시)
-  useSentKongsQuery(handle, { enabled: !!viewer && viewer.handle !== handle });
+  // 책을 열 때 콩 줄만 늦게 뜨지 않게 내가 보낸 콩을 미리 받아 둔다(콩 줄과 같은 캐시).
+  // 콩을 보낼 때마다 무대 전체가 다시 그려져 날아가는 콩이 끊기지 않게 구독은 하지 않는다
+  useSentKongsQuery(handle, {
+    enabled: !!viewer && viewer.handle !== handle,
+    prefetchOnly: true,
+  });
 
   const books = useMemo(() => data?.items ?? [], [data]);
   const stackMm = useMemo(
