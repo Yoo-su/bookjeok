@@ -225,26 +225,29 @@ export function KongVisitorRow({
               aria-label={t("aria", { name: nickname, title: bookTitle })}
               className="group flex shrink-0 cursor-pointer flex-col items-center rounded-2xl px-1.5 outline-none focus-visible:ring-2 focus-visible:ring-stone-700 disabled:cursor-default"
             >
-              <motion.span
-                ref={buttonKongRef}
-                className="block transition-transform duration-150 pointer-fine:group-hover:-rotate-6"
-                animate={
-                  squashing
-                    ? { scaleX: 1.25, scaleY: 0.7 }
-                    : { scaleX: 1, scaleY: 1 }
-                }
-                transition={{ duration: SQUASH_MS / 1000 }}
-                style={{
-                  transformOrigin: "50% 100%",
-                  visibility: flight ? "hidden" : "visible",
-                }}
-              >
-                {squashing ? (
-                  <KongFigure size={BUTTON_SIZE} face="squeeze" />
-                ) : (
-                  <FlailingKong size={BUTTON_SIZE} flail={buttonFlail} boil />
-                )}
-              </motion.span>
+              {/* hover 기울임은 바깥에. motion 요소에 CSS transition을 함께 걸면 납작해지는 동작이 뒤처진다 */}
+              <span className="block origin-bottom transition-[rotate] duration-150 pointer-fine:group-hover:-rotate-6">
+                <motion.span
+                  ref={buttonKongRef}
+                  className="block"
+                  animate={
+                    squashing
+                      ? { scaleX: 1.25, scaleY: 0.7 }
+                      : { scaleX: 1, scaleY: 1 }
+                  }
+                  transition={{ duration: SQUASH_MS / 1000 }}
+                  style={{
+                    transformOrigin: "50% 100%",
+                    visibility: flight ? "hidden" : "visible",
+                  }}
+                >
+                  {squashing ? (
+                    <KongFigure size={BUTTON_SIZE} face="squeeze" />
+                  ) : (
+                    <FlailingKong size={BUTTON_SIZE} flail={buttonFlail} boil />
+                  )}
+                </motion.span>
+              </span>
               <span className="-mt-0.5 font-[family-name:var(--font-gaegu)] text-[15px] text-stone-500">
                 {t("button")}
               </span>
