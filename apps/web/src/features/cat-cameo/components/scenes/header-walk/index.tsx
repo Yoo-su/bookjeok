@@ -5,9 +5,14 @@ import { createPortal } from "react-dom";
 
 import { drawWalkingCat } from "../../../lib/draw";
 import { pickStopCenter, type Span } from "../../../lib/free-gap";
-import { CatPart } from "../cat-part";
 import { spriteFrame } from "../sprite-frames";
 import type { CameoSceneProps } from "../types";
+import {
+  REST_FRAME_INDEX,
+  RestPose,
+  WALK_CROP as CROP,
+  WALK_IMAGE,
+} from "./rest-pose";
 import atlas from "./walk.json";
 
 /** 멈춰 서서 이쪽을 보는 시간(ms). 고개 돌리기 → 천천히 눈 감았다 뜨기 → 다시 앞 */
@@ -24,14 +29,14 @@ const STRIDE = atlas.durationsMs.reduce(
 );
 const WALK_FRAMES = (() => {
   let elapsed = 0;
-  const frames = atlas.frames.map((frame, i) => {
-    const keyframe = spriteFrame(frame, elapsed / STRIDE);
+  const frames = atlas.frames.map((_, offset) => {
+    const i = (REST_FRAME_INDEX + offset) % atlas.frames.length;
+    const keyframe = spriteFrame(atlas.frames[i], elapsed / STRIDE);
     elapsed += atlas.durationsMs[i];
     return keyframe;
   });
-  return [...frames, { ...frames[frames.length - 1], offset: 1 }];
+  return [...frames, { ...frames[0], offset: 1 }];
 })();
-const CROP = { x: 16, y: 24, width: 164, height: 125, ground: 145 };
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
@@ -68,7 +73,7 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<SVGImageElement>(null);
-  const profileRef = useRef<SVGSVGElement>(null);
+  const profileRef = useRef<SVGGElement>(null);
   const frontRef = useRef<SVGGElement>(null);
   const eyesRef = useRef<SVGGElement>(null);
   const fled = useRef(false);
@@ -240,8 +245,6 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
     run.onfinish = () => onDone();
   };
 
-  const [far1, far2] = cat.farLegs;
-  const [near1, near2] = cat.nearLegs;
   return createPortal(
     <div
       aria-hidden
@@ -265,21 +268,28 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
           style={plan.dir < 0 ? { transform: "scaleX(-1)" } : undefined}
         >
           <svg
-            ref={profileRef}
             x={(cat.width - spriteWidth) / 2}
             width={spriteWidth}
             height={CROP.height * spriteScale}
             viewBox={`${CROP.x} ${CROP.y} ${CROP.width} ${CROP.height}`}
             overflow="hidden"
           >
-            <image
-              ref={stripRef}
-              href="/cat-cameo/walk.png"
-              width={atlas.sheetWidth}
-              height={atlas.sheetHeight}
-              onLoad={() => setReady(true)}
-              onError={onDone}
-            />
+            <g ref={profileRef}>
+              <image
+                ref={stripRef}
+                href={WALK_IMAGE}
+                width={atlas.sheetWidth}
+                height={atlas.sheetHeight}
+                style={{
+                  transform: `translateX(${-atlas.frames[REST_FRAME_INDEX].x}px)`,
+                }}
+                onLoad={() => setReady(true)}
+                onError={onDone}
+              />
+            </g>
+            <g ref={frontRef} style={{ opacity: 0, visibility: "hidden" }}>
+              <RestPose eyesRef={eyesRef} />
+            </g>
             <path
               d="M25 60 Q21 103 51 104 Q54 114 55 143 H139 L145 106 Q173 101 173 77 Q170 64 155 56 L146 30 L127 51 L112 35 L101 69 Q77 63 55 78 Q38 82 35 56Z"
               fill="transparent"
@@ -288,26 +298,6 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
               onPointerDown={flee}
             />
           </svg>
-          <g
-            ref={frontRef}
-            style={{ opacity: 0, visibility: "hidden" }}
-            className="cursor-pointer"
-            pointerEvents="visiblePainted"
-            onPointerDown={flee}
-          >
-            <CatPart part={cat.tail} />
-            <CatPart part={far1} />
-            <CatPart part={far2} />
-            <CatPart items={cat.body} />
-            <CatPart part={near1} />
-            <CatPart part={near2} />
-            <CatPart items={cat.front.face} />
-            <CatPart
-              ref={eyesRef}
-              pivot={cat.front.eyeCenter}
-              items={[...cat.front.eyes, ...cat.front.pupils]}
-            />
-          </g>
         </svg>
       </div>
     </div>,

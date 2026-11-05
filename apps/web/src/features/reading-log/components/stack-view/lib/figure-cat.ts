@@ -6,8 +6,12 @@ import type { PathItem, SceneColors, SceneItem } from "./types";
 /** 쌓은 책 위 검정고양이 자세. 높을수록 늘어진다 */
 export type CatPose = "sit" | "loaf" | "flop";
 
-/** 노란 눈. 무대에서 책 표지색 말고 유일하게 쓰는 유채색 */
-export const CAT_EYE = "#EFC24A";
+/** 연한 꿀색 눈. 무대에서 책 표지색 말고 유일하게 쓰는 유채색 */
+export const CAT_EYE = "#ECD4AA";
+export const CAT_EYE_GLINT = "#FFF3DC";
+export const CAT_NOSE = "#786B60";
+export const CAT_EYE_Y = 0.19;
+export const SITTING_CAT_HEIGHT_MM = 248;
 
 const ratioOf = (key: "knee" | "waist") =>
   BODY_PARTS.find((p) => p.key === key)?.ratio ?? 0;
@@ -36,7 +40,13 @@ export interface CatResult {
 function extents(pose: CatPose, H: number, tailDown: boolean) {
   if (pose === "sit") {
     const ox = sitOrigin(H);
-    return { x0: ox - 72, x1: ox + 77, top: -248, bottom: 0, upper: ox - 72 };
+    return {
+      x0: ox - 72,
+      x1: ox + 77,
+      top: -SITTING_CAT_HEIGHT_MM,
+      bottom: 0,
+      upper: ox - 72,
+    };
   }
   if (pose === "loaf")
     return tailDown
@@ -213,24 +223,24 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
       X(47),
       -24,
       X(46),
-      -69,
+      -61,
       X(34),
-      -105,
+      -91,
       "C",
       X(30),
-      -118,
+      -102,
       X(22),
-      -127,
+      -111,
       X(10),
-      -132,
+      -116,
       "L",
       X(-14),
-      -129,
+      -113,
       "C",
       X(-42),
-      -114,
+      -100,
       X(-64),
-      -84,
+      -76,
       X(-68),
       -46,
       "C",
@@ -242,10 +252,10 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
       0,
       "Z",
     ]);
-    fur(["M", X(27), -72, "C", X(26), -45, X(26), -21, X(28), -3]);
+    fur(["M", X(27), -64, "C", X(26), -41, X(26), -21, X(28), -3]);
     fur(["M", X(-54), -6, "C", X(-28), -8, X(-18), -33, X(-32), -60]);
-    fur(["M", X(-20), -120, "C", X(-44), -105, X(-58), -84, X(-61), -60], 0.3);
-    catHead(p, { hx: X(8), hy: -146, r: 39.5, lid: 0.42, look: 0.05 });
+    fur(["M", X(-20), -104, "C", X(-44), -93, X(-58), -75, X(-61), -56], 0.3);
+    catHead(p, { hx: X(7), hy: -130, r: 42, lid: 0.36, look: 0.015 });
     // 앞발을 감싼 꼬리. 끝만 따로 묶어 가끔 까딱인다
     const tail = limb(
       ["M", X(-50), -6, "C", X(-26), 7, X(20), 8, X(56), -2],
@@ -325,7 +335,7 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
     fur(["M", H - 36, -5, "Q", H - 22, -11, H - 8, -4], 0.5);
     fur(["M", -58, -8, "C", -40, -10, -28, -40, -42, -70]);
     fur(["M", H - 62, -92, "C", 10, -100, -30, -98, -48, -82], 0.3);
-    catHead(p, { hx: H - 34, hy: -86, r: 37, lid: 0.55, look: 0.04 });
+    catHead(p, { hx: H - 34, hy: -86, r: 37, lid: 0.48, look: 0.015 });
     return [tailGroup(tail), ...p.items];
   }
 
@@ -518,54 +528,81 @@ export function catHead(
     "C",
     -1.03,
     -0.58,
-    -0.6,
-    -0.9,
+    -0.62,
+    -0.86,
     0,
-    -0.9,
+    -0.86,
     "C",
-    0.6,
-    -0.9,
+    0.62,
+    -0.86,
     1.03,
     -0.58,
     1.03,
     0.02,
     "C",
-    1.05,
-    0.59,
-    0.57,
-    0.84,
+    1.06,
+    0.63,
+    0.62,
+    0.85,
     0,
-    0.84,
+    0.85,
     "C",
-    -0.57,
-    0.84,
-    -1.05,
-    0.59,
+    -0.62,
+    0.85,
+    -1.06,
+    0.63,
     -1.03,
     0.02,
     "Z",
   ]);
   p.fill(cheeks, C.ink);
   p.pen(cheeks, { w: 0.9, a: 0.25, closed: true, op: 0.4 });
+  p.fill(
+    at([
+      "M",
+      -0.08,
+      0.42,
+      "Q",
+      0,
+      0.375,
+      0.08,
+      0.42,
+      "Q",
+      0.07,
+      0.48,
+      0,
+      0.5,
+      "Q",
+      -0.07,
+      0.48,
+      -0.08,
+      0.42,
+      "Z",
+    ]),
+    CAT_NOSE,
+  );
   for (const side of [-1, 1]) {
-    const ex = hx + side * 0.4 * r;
-    const ey = hy + 0.08 * r;
-    eyes.fill(ell(ex, ey, 0.225 * r, (0.16 - lid * 0.05) * r), CAT_EYE);
+    const ex = hx + side * 0.37 * r;
+    const ey = hy + CAT_EYE_Y * r;
+    const eyeHeight = (0.194 - lid * 0.025) * r;
+    const pupilX = ex + look * r;
+    eyes.fill(ell(ex, ey, 0.188 * r, eyeHeight), CAT_EYE);
+    pupils.fill(ell(pupilX, ey, 0.093 * r, eyeHeight * 0.62), C.ink);
     pupils.fill(
-      ell(ex + (0.015 + look) * r, ey + 0.012 * r, 0.07 * r, 0.09 * r),
-      C.ink,
+      ell(pupilX - 0.027 * r, ey - 0.031 * r, 0.019 * r, 0.019 * r),
+      CAT_EYE_GLINT,
     );
     for (const i of [0, 1])
       p.hatch(
         at([
           "M",
           side * 0.57,
-          0.43 + i * 0.11,
+          0.5 + i * 0.09,
           "Q",
           side * 1.02,
-          0.42 + i * 0.13,
-          side * 1.38,
-          0.34 + i * 0.25,
+          0.49 + i * 0.12,
+          side * 1.26,
+          0.43 + i * 0.2,
         ]),
         { color: C.faint, w: 0.55, op: 0.7 },
       );
