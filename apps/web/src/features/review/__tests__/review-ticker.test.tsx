@@ -2,12 +2,14 @@
  * 최신 리뷰 티커의 레이아웃 계약 검증.
  *
  * 전환 자체(모션 완료 콜백)는 jsdom에서 재현이 불안정해 브라우저로 확인하고,
- * 여기서는 되돌아오기 쉬운 두 가지만 고정한다.
+ * 여기서는 레이아웃과 모바일 resize 회귀를 고정한다.
  * - 뷰포트 높이를 5줄로 잠그는가 (안 잠그면 회전할 때마다 아래 광고·푸터가 들썩인다)
  * - "동작 줄이기"에서 회전을 아예 끄는가
+ * - 화면 높이만 바뀌는 resize에서 높이를 유지하고, 너비 변경에는 다시 재는가
+ * - 자동 이동하는 행을 스크롤 앵커에서 제외하는가
  */
 import { Review } from "@bookjeok/core";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -57,10 +59,9 @@ const makeReviews = (count: number): Review[] =>
 
 /** jsdom은 레이아웃을 계산하지 않아 offsetHeight가 항상 0이다 */
 const stubRowHeight = (height: number) =>
-  Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
-    configurable: true,
-    get: () => height,
-  });
+  vi
+    .spyOn(HTMLElement.prototype, "offsetHeight", "get")
+    .mockReturnValue(height);
 
 const setReducedMotion = (reduce: boolean) => {
   window.matchMedia = vi.fn().mockReturnValue({
@@ -99,6 +100,39 @@ describe("ReviewTicker", () => {
 
     expect(findLockedViewport(container)).toBeUndefined();
     expect(container.querySelectorAll("a")).toHaveLength(4);
+  });
+
+  it("모바일 주소창 때문에 화면 높이만 바뀌어도 뷰포트 높이를 유지한다", () => {
+    const { container } = render(<ReviewTicker reviews={makeReviews(20)} />);
+
+    // 회전 후 다른 리뷰가 첫 행이 된 상태에서 높이만 바뀌는 resize가 온다.
+    stubRowHeight(ROW_HEIGHT + 36);
+    fireEvent(window, new Event("resize"));
+
+    expect(findLockedViewport(container)?.style.height).toBe(
+      `${ROW_HEIGHT * VISIBLE_COUNT}px`,
+    );
+  });
+
+  it("자동으로 이동하는 리뷰를 스크롤 앵커 후보에서 제외한다", () => {
+    const { container } = render(<ReviewTicker reviews={makeReviews(20)} />);
+
+    expect(findLockedViewport(container)?.style.overflowAnchor).toBe("none");
+  });
+
+  it("화면 너비가 바뀌면 행 높이를 다시 측정한다", () => {
+    const width = vi
+      .spyOn(HTMLElement.prototype, "offsetWidth", "get")
+      .mockReturnValue(375);
+    const { container } = render(<ReviewTicker reviews={makeReviews(20)} />);
+
+    width.mockReturnValue(768);
+    stubRowHeight(ROW_HEIGHT + 20);
+    fireEvent(window, new Event("resize"));
+
+    expect(findLockedViewport(container)?.style.height).toBe(
+      `${(ROW_HEIGHT + 20) * VISIBLE_COUNT}px`,
+    );
   });
 
   it("동작 줄이기에서는 회전하지 않고 상위 5건만 그린다", () => {

@@ -30,8 +30,8 @@ interface ReviewTickerProps {
  * 순간에도 뷰포트 높이가 변하지 않습니다 — 행을 흐름에서 빼는 방식은 컨테이너가
  * 한 줄만큼 줄었다 늘며 아래 광고·푸터까지 같이 들썩입니다.
  *
- * 행 높이는 표지 썸네일이 정하고 `sm`에서 한 번 바뀌므로, 화면이 바뀔 때마다
- * 실측합니다. 실측 전(그리고 JS가 없을 때)에는 잘라내기 없이 상위 5건을 그대로
+ * 행은 요약·태그 유무와 무관하게 같은 높이를 유지합니다. 너비가 바뀔 때만
+ * 실측하며 모바일 주소창의 높이 변화는 무시합니다. 실측 전에는 상위 5건을 그대로
  * 그리므로 서버가 구운 HTML과 첫 클라이언트 렌더가 일치합니다.
  */
 export const ReviewTicker = ({ reviews }: ReviewTickerProps) => {
@@ -50,9 +50,12 @@ export const ReviewTicker = ({ reviews }: ReviewTickerProps) => {
 
   // 행 자체는 전환 중에도 높이가 변하지 않으므로 애니메이션과 무관하게 잰다
   useEffect(() => {
+    let measuredWidth: number | undefined;
     const measure = () => {
       const node = rowRef.current;
-      if (node) setRowHeight(node.offsetHeight);
+      if (!node || node.offsetWidth === measuredWidth) return;
+      measuredWidth = node.offsetWidth;
+      setRowHeight(node.offsetHeight);
     };
 
     measure();
@@ -99,7 +102,11 @@ export const ReviewTicker = ({ reviews }: ReviewTickerProps) => {
         "border-t border-stone-200/80",
         isTicking && "overflow-hidden",
       )}
-      style={isTicking ? { height: rowHeight * VISIBLE_COUNT } : undefined}
+      // 움직이는 행을 앵커로 삼으면 브라우저가 페이지 스크롤까지 보정한다.
+      style={{
+        overflowAnchor: "none",
+        ...(isTicking ? { height: rowHeight * VISIBLE_COUNT } : {}),
+      }}
       // 읽는 중에 줄이 사라지지 않도록 멈춘다. 포커스까지 보는 이유는 키보드로
       // 3번째 줄에 들어간 사용자가 그 줄과 함께 포커스를 잃기 때문이다
       onMouseEnter={() => setIsPaused(true)}

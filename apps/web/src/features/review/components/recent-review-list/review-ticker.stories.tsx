@@ -92,3 +92,28 @@ export const NotEnoughToRotate: Story = {
     reviews: Array.from({ length: 4 }, (_, i) => makeReview(i)),
   },
 };
+
+/** 모바일에서 긴 태그와 태그 없는 리뷰를 번갈아 넘기며 스크롤을 확인한다. */
+export const MobileScroll: Story = {
+  args: {
+    reviews: Array.from({ length: 20 }, (_, i) => ({
+      ...makeReview(i),
+      tags:
+        i % 2 === 0
+          ? []
+          : [
+              "매우 긴 첫번째 독서 태그",
+              "두번째 독서 기록 태그",
+              "또 하나의 태그",
+            ],
+    })),
+  },
+  parameters: { viewport: { defaultViewport: "mobile" } },
+  render: (args) => (
+    <div>
+      <div className="h-dvh" />
+      <ReviewTicker {...args} />
+      <div className="h-dvh" />
+    </div>
+  ),
+};

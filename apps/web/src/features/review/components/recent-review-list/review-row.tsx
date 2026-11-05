@@ -61,10 +61,11 @@ export const ReviewRow = ({ review }: ReviewRowProps) => {
       </div>
 
       {/* 2. 리뷰 텍스트 콘텐츠 */}
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5">
+      {/* 티커의 이동 거리와 맞도록 요약·태그 유무와 무관하게 높이를 유지한다. */}
+      <div className="flex-1 min-w-0 h-24 flex flex-col justify-center">
+        <div className="flex items-center gap-x-2 mb-1.5">
           {review.rating > 0 && (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0.5 shrink-0">
               <span className="text-amber-400 text-xs sm:text-[13px]">★</span>
               <span className="text-xs sm:text-[11px] font-medium text-stone-500">
                 {review.rating.toFixed(1)}
@@ -77,7 +78,7 @@ export const ReviewRow = ({ review }: ReviewRowProps) => {
             </span>
           )}
           {book?.title && (
-            <span className="text-[11px] text-stone-400 truncate max-w-[180px] sm:max-w-[300px] font-light">
+            <span className="min-w-0 text-[11px] text-stone-400 truncate max-w-[180px] sm:max-w-[300px] font-light">
               {book.title}
             </span>
           )}
@@ -97,9 +98,12 @@ export const ReviewRow = ({ review }: ReviewRowProps) => {
 
         {/* 태그 영역 */}
         {review.tags && review.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex gap-1.5 overflow-hidden whitespace-nowrap shrink-0">
             {review.tags.slice(0, 3).map((tag: string) => (
-              <span key={tag} className="text-[10px] text-stone-400 font-light">
+              <span
+                key={tag}
+                className="text-[10px] text-stone-400 font-light shrink-0"
+              >
                 #{tag}
               </span>
             ))}
