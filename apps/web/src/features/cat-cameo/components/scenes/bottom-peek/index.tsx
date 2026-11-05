@@ -9,6 +9,7 @@ import atlas from "./peek.json";
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 const DURATION = 4900;
+const PEEK_IMAGE = "/cat-cameo/peek.png";
 const CROP = { x: 25, y: 12, width: 142, height: 104 };
 const HIDDEN = "translateY(105%)";
 const FACES = [
@@ -121,7 +122,7 @@ export function BottomPeek({ host, rand, onDone }: CameoSceneProps) {
         >
           <image
             ref={stripRef}
-            href="/cat-cameo/peek.png"
+            href={PEEK_IMAGE}
             width={atlas.sheetWidth}
             height={atlas.sheetHeight}
             onLoad={() => setReady(true)}
