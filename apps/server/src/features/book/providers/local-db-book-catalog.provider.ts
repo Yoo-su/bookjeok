@@ -95,7 +95,9 @@ export class LocalDbBookCatalogProvider
         ? isbn.toUpperCase()
         : undefined;
     const discovery =
-      this.discoveryEnabled && !exactIsbn ? discoveryQuery : undefined;
+      this.discoveryEnabled && params.discovery !== false && !exactIsbn
+        ? discoveryQuery
+        : undefined;
 
     const columns = searchColumnsFor(field);
     const adjacent =

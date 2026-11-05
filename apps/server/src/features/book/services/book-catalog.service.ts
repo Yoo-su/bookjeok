@@ -57,6 +57,7 @@ export class BookCatalogService {
       ),
       sort: params.sort ?? 'sim',
       field: params.field ?? 'Keyword',
+      discovery: params.discovery ?? true,
     };
 
     const result = await this.runChain(
