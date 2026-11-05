@@ -189,6 +189,12 @@ describe("비교 대상 없는 무대의 쌓은 높이", () => {
   });
 });
 
+const pointsOf = (d: string) =>
+  [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [
+    Number(m[1]),
+    Number(m[2]),
+  ]);
+
 /** 고양이를 그린 경로의 점. 손그림 선이라 1~2px 간격으로 촘촘하다 */
 function catPoints(items: SceneItem[]): number[][] | null {
   const g = find(items, "cat");
@@ -274,6 +280,25 @@ describe("쌓은 책 위 고양이", () => {
             }
             const bubble = bubbleBox(items);
             if (bubble && touches(bubble, cat)) found.push("말풍선");
+            // 남은 높이 화살표. 아래 화살촉(첫 세 점)과 세로 점선
+            const line = find(items, "remain-line");
+            const head = find(items, "remain-head");
+            if (line?.k === "p" && head?.k === "p") {
+              const [[x, ya], [, yb]] = pointsOf(line.d);
+              const tip = pointsOf(head.d).slice(0, 3);
+              const xs = tip.map((p) => p[0]);
+              const ys = tip.map((p) => p[1]);
+              const boxes = [
+                { x0: x, y0: Math.min(ya, yb), x1: x, y1: Math.max(ya, yb) },
+                {
+                  x0: Math.min(...xs),
+                  y0: Math.min(...ys),
+                  x1: Math.max(...xs),
+                  y1: Math.max(...ys),
+                },
+              ];
+              if (boxes.some((b) => touches(b, cat, 2))) found.push("화살표");
+            }
             if (cat.some(([x, y]) => x < 0 || x > width || y < 0))
               found.push("무대 밖");
             if (found.length) failures.push(`${tag}: ${found.join(", ")}`);
