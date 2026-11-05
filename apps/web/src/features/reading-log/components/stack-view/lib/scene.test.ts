@@ -188,3 +188,120 @@ describe("비교 대상 없는 무대의 쌓은 높이", () => {
     expect(failures).toEqual([]);
   });
 });
+
+/** 고양이를 그린 경로의 점. 손그림 선이라 1~2px 간격으로 촘촘하다 */
+function catPoints(items: SceneItem[]): number[][] | null {
+  const g = find(items, "cat");
+  if (g?.k !== "g") return null;
+  const pts: number[][] = [];
+  const walk = (list: SceneItem[]) =>
+    list.forEach((it) => {
+      if (it.k === "g") walk(it.children);
+      else if (it.k === "p")
+        for (const m of it.d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g))
+          pts.push([Number(m[1]), Number(m[2])]);
+    });
+  walk(g.children);
+  return pts;
+}
+
+/** 상자에 고양이 점이 들어오는지. 꼬리·다리 굵기 반만큼 상자를 넓혀 본다 */
+const touches = (b: Box, pts: number[][], pad = 3) =>
+  pts.some(
+    ([x, y]) =>
+      x > b.x0 - pad && x < b.x1 + pad && y > b.y0 - pad && y < b.y1 + pad,
+  );
+
+describe("쌓은 책 위 고양이", () => {
+  it("자세가 어떻든 이름표·남은 높이·말풍선과 겹치지 않고 무대 안에 있다", () => {
+    const failures: string[] = [];
+    for (const width of [262, 310, 420, 620])
+      for (const height of [520, 600])
+        for (const n of [0, 2, 6, 19, 46, 92])
+          for (const cm of [150, 161, 173, 190]) {
+            const books = booksOf(n);
+            const stackMm = books.reduce((a, b) => a + b.depth, 0);
+            const userMm = cm * 10;
+            const status = stackStatus(stackMm, userMm);
+            const { items } = buildStackScene({
+              width,
+              height,
+              books,
+              stackMm,
+              userMm,
+              character: "F",
+              status,
+              labels: {
+                myHeight: `내 키 ${cm}cm`,
+                remain: `${Math.ceil((userMm - stackMm) / 10)}cm 남음`,
+                approxBooks: "약 10권",
+                stackHeight: `${(stackMm / 10).toFixed(1)}cm`,
+                bubble: ["무릎은 넘었다!", "허리까지 9cm"],
+              },
+              colors: COLORS,
+              measure,
+              cat: true,
+            });
+            const tag = `${width}×${height} ${n}권 키 ${cm}`;
+            const cat = catPoints(items);
+            if (!cat) {
+              failures.push(`${tag}: 고양이 없음`);
+              continue;
+            }
+            const found: string[] = [];
+            const texts: TextItem[] = [];
+            const collect = (list: SceneItem[]) =>
+              list.forEach((it) =>
+                it.k === "g"
+                  ? collect(it.children)
+                  : it.k === "t" && !it.id?.startsWith("tick-label-")
+                    ? texts.push(it)
+                    : null,
+              );
+            // 책 제목은 꼬리·앞발이 덮어도 된다(실제로 책 위에 걸쳐 있다)
+            collect(
+              items.filter(
+                (it) => it.id !== "cat" && !it.id?.startsWith("book-"),
+              ),
+            );
+            // 내 키 이름표는 고양이 위에 그려져 겹쳐도 읽힌다. 키와 쌓은 높이가 거의 같을 때만 생긴다
+            const catAt = items.findIndex((it) => it.id === "cat");
+            const myAt = items.findIndex((it) => it.id === "my-height");
+            for (const t of texts) {
+              if (!touches(inkBox(t), cat)) continue;
+              if (t.id === "my-height" && myAt > catAt) continue;
+              found.push(`글자「${t.t}」`);
+            }
+            const bubble = bubbleBox(items);
+            if (bubble && touches(bubble, cat)) found.push("말풍선");
+            if (cat.some(([x, y]) => x < 0 || x > width || y < 0))
+              found.push("무대 밖");
+            if (found.length) failures.push(`${tag}: ${found.join(", ")}`);
+          }
+    expect(failures).toEqual([]);
+  });
+
+  it("고양이를 켜지 않으면 그리지 않는다", () => {
+    const books = booksOf(6);
+    const stackMm = books.reduce((a, b) => a + b.depth, 0);
+    const { items } = buildStackScene({
+      width: 400,
+      height: 520,
+      books,
+      stackMm,
+      userMm: 1730,
+      character: "M",
+      status: stackStatus(stackMm, 1730),
+      labels: {
+        myHeight: "내 키 173cm",
+        remain: "",
+        approxBooks: "",
+        stackHeight: "",
+        bubble: ["", ""],
+      },
+      colors: COLORS,
+      measure,
+    });
+    expect(find(items, "cat")).toBeUndefined();
+  });
+});
