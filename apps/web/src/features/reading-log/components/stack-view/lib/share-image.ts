@@ -218,6 +218,7 @@ export async function renderStackShareImage(o: {
     u,
     boil: false,
     object: o.object,
+    cat: !o.object,
   });
   ctx.save();
   ctx.translate(M - 12, sceneTop);

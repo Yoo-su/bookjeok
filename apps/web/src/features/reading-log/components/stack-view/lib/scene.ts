@@ -1,6 +1,7 @@
 import { inkColorFor, type ReadingStackBook } from "@bookjeok/core";
 
 import { buildFigure, buildObject } from "./figure";
+import { buildCat, catPoseFor, type CatResult } from "./figure-cat";
 import { OBJECT_ART, objectArtHeightMm, type StackObjectSpec } from "./objects";
 import { bookColor, bubbleItem, bubbleRect } from "./scene-common";
 import {
@@ -70,6 +71,8 @@ export interface SceneOptions {
    * 바늘처럼 가늘어지지 않게 가로만 덜 줄인다. 높이(눈금)는 그대로다
    */
   minStackWidthPx?: number;
+  /** 캐릭터 무대에서 맨 위 책에 검정고양이를 올린다. 자세는 쌓은 높이로 정한다 */
+  cat?: boolean;
 }
 
 export interface SceneResult {
@@ -341,6 +344,9 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   // 한 권이 1px보다 얇으면 1px로 올려 보이게 하되, 그러면 쌓은 높이가 눈금보다 커지는
   // 다독(한 권 평균 1px 미만)일 때는 실제 두께 그대로 그린다
   const minBookPx = stackMm * s >= books.length ? 1 : 0;
+  // 맨 위 책 가운데와 가로 절반(px). 고양이가 여기 앉는다
+  let topCx = tcx;
+  let topHalf = 105 * sx;
   books.forEach((b) => {
     const r = rng(hashSeed(`${b.isbn}:${b.logId}`));
     const jx = r() - 0.5;
@@ -351,6 +357,8 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     y -= h;
     const cx = tcx + jx * 12 * sx;
     const cy = y + h / 2;
+    topCx = cx;
+    topHalf = w / 2;
     const rot = (jr * (h > 6 ? 2.4 : 1.4) * Math.PI) / 180;
     const cs = rectCorners(cx, cy, w, h, rot);
     cs.forEach((p) => {
@@ -433,6 +441,33 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     right = tcx + 20 * u;
   }
 
+  // 고양이. 실제 크기로 앉히되 많이 쌓아 축척이 작아지면 알아볼 만큼은 키운다
+  let cat: CatResult | null = null;
+  if (figure && o.cat) {
+    const scale = Math.max(s, 0.15 * u);
+    const catAt = (tailDown: boolean) =>
+      buildCat({
+        cx: topCx,
+        surfaceY: topY,
+        halfMm: topHalf / scale,
+        scale,
+        pose: catPoseFor(status.ratio, books.length > 0),
+        colors: C,
+        u,
+        boil: o.boil ?? false,
+        tailDown,
+      });
+    cat = catAt(true);
+    // 좁은 무대라 쌓은 높이 글자가 눈금자에 막혀 늘어진 꼬리 바깥으로 못 비키면 꼬리를 책 위에 만다
+    const labelEnd =
+      rulerW - 13 * u + measure(labels.stackHeight, 16 * u, 700, "hand");
+    if (books.length && labelEnd + 4 * u > cat.box.x0) cat = catAt(false);
+    out.push(...cat.items);
+  }
+  // 책 더미 위로 솟은 것까지 친 꼭대기와 오른쪽 끝
+  const pileTop = cat ? Math.min(topY, cat.box.y0) : topY;
+  const pileRight = cat ? Math.max(right, cat.box.x1) : right;
+
   // 캐릭터. 왼손에 가장 최근에 읽은 책
   if (figure) {
     const held = books.length ? bookColor(books[books.length - 1]) : "#E7E5E4";
@@ -507,7 +542,9 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       measure,
     );
     const overStack =
-      r0.x < right + 2 * u && r0.x + r0.w > left - 2 * u && r0.y + r0.h > topY;
+      r0.x < pileRight + 2 * u &&
+      r0.x + r0.w > left - 2 * u &&
+      r0.y + r0.h > pileTop;
     if (overStack) {
       const r1 = bubbleRect(
         fcx,
@@ -515,11 +552,11 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         labels.bubble,
         u,
         bubbleW,
-        right + 6 * u,
+        pileRight + 6 * u,
         measure,
       );
-      if (r1.x + r1.w <= bubbleW - 3 * u) bubbleMinX = right + 6 * u;
-      else bubbleBottom = Math.min(bubbleBottom, topY - 8 * u);
+      if (r1.x + r1.w <= bubbleW - 3 * u) bubbleMinX = pileRight + 6 * u;
+      else bubbleBottom = Math.min(bubbleBottom, pileTop - 8 * u);
     }
   }
 
@@ -533,8 +570,14 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         stackW / 2 + 2 * u,
         Math.min(W - stackW / 2 - 2 * u, (left + right) / 2),
       )
-    : Math.max(left - 6 * u, rx - u + stackW);
+    : // 고양이 꼬리가 맨 위 책 왼쪽 모서리로 늘어지면 그 바깥에 적는다
+      Math.max(
+        (cat ? Math.min(left, cat.box.x0) : left) - 6 * u,
+        rx - u + stackW,
+      );
   let ly = above ? Math.max(size / 2 + 2 * u, topY - size) : topY;
+  // 아주 좁은 무대는 꼬리를 말아도 글자가 고양이 엉덩이에 닿는다. 책 위로 한 줄 내려 적는다
+  if (cat && !above && lx + 2 * u > cat.box.x0) ly = topY + 11 * u;
   const stackBox = books.length
     ? labelBox(above ? lx - stackW / 2 : lx, ly, labels.stackHeight, !above)
     : null;
@@ -549,15 +592,26 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       two ? measure(labels.approxBooks, 14 * u, 700, "hand") : 0,
     ) +
     10 * u;
-  // 글자 상자(종이색)가 눈금자를 덮지 않게 눈금자 오른쪽으로 민다
-  const remainX = Math.max(tcx, rulerW + 6 * u + bw / 2);
+  // 글자 상자(종이색)가 눈금자를 덮지 않게 눈금자 오른쪽으로 민다.
+  // 고양이가 있으면 화살표는 고양이 왼쪽으로, 글자 상자는 고양이 머리 위로 비킨다
+  const remainMinX = rulerW + 6 * u + bw / 2;
+  let remainX = Math.max(
+    remainMinX,
+    cat ? Math.min(tcx, cat.upperLeft - 9 * u) : tcx,
+  );
   const bh = (two ? 38 : 20) * u;
+  let remainY = (topY + fy) / 2;
+  if (cat && remainX + bw / 2 > cat.box.x0) {
+    const clear = cat.box.y0 - 4 * u - bh / 2;
+    if (clear >= fy + 4 * u + bh / 2) remainY = Math.min(remainY, clear);
+    else remainX = Math.max(remainMinX, cat.box.x0 - 4 * u - bw / 2);
+  }
   const remainBox: Box | null = remain
     ? {
         x0: remainX - bw / 2,
-        y0: (topY + fy) / 2 - bh / 2,
+        y0: remainY - bh / 2,
         x1: remainX + bw / 2,
-        y1: (topY + fy) / 2 + bh / 2,
+        y1: remainY + bh / 2,
       }
     : null;
 
@@ -599,7 +653,10 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       texts.map((t) => ({ t, y })),
     );
     const pile: Box = { x0: left, y0: topY, x1: right, y1: floorY };
-    const words = [stackBox, remainBox].filter((b): b is Box => b !== null);
+    // 고양이는 글자처럼 피한다. 테두리 글자가 검은 털 위에 앉으면 고양이가 끊겨 보인다
+    const words = [stackBox, remainBox, cat?.box ?? null].filter(
+      (b): b is Box => b !== null,
+    );
     const badness = (c: { t: string; y: number }) => {
       const b = labelBox(rx + 6 * u, c.y, c.t);
       return (
@@ -660,7 +717,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       `M${f1(x - 4.5 * u)},${f1(y2 + 6 * u)} L${f1(x)},${f1(y2)} L${f1(x + 4.5 * u)},${f1(y2 + 6 * u)} M${f1(x - 4.5 * u)},${f1(y1 - 6 * u)} L${f1(x)},${f1(y1)} L${f1(x + 4.5 * u)},${f1(y1 - 6 * u)}`,
       { stroke: C.pen, sw: 1.6 * u, cap: "round", join: "round" },
     );
-    const my = (y1 + y2) / 2;
+    const my = remainY;
     A(
       `M${f1(x - bw / 2)},${f1(my - bh / 2)} h${f1(bw)} v${f1(bh)} h${f1(-bw)} Z`,
       { fill: C.paper },
@@ -689,8 +746,9 @@ export function buildStackScene(o: SceneOptions): SceneResult {
       });
     // 쌓은 책 꼭대기가 몸의 어디쯤인지 잇는 점선
     const bx = figure ? fx + 8 * k : targetLeft - 3 * u;
-    if (books.length && bx - right > 14 * u) {
-      A(`M${f1(right + 5 * u)},${f1(topY)} L${f1(bx)},${f1(topY)}`, {
+    // 고양이가 앞발을 내렸으면 그 너머에서 시작한다
+    if (books.length && bx - pileRight > 14 * u) {
+      A(`M${f1(pileRight + 5 * u)},${f1(topY)} L${f1(bx)},${f1(topY)}`, {
         stroke: C.muted,
         sw: 1.2 * u,
         dash: [1.5 * u, 3.5 * u],

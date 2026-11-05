@@ -52,12 +52,14 @@ function Situation({
   width,
   height,
   boil,
+  cat,
 }: {
   character: StackReaderCharacter;
   ratio: number;
   width: number;
   height: number;
   boil: boolean;
+  cat: boolean;
 }) {
   const userMm = USER_MM[character];
   const { sceneLabels } = useStackCopy();
@@ -80,12 +82,13 @@ function Situation({
           status,
           stackMm,
           userMm,
-          avgDepthMm: stackMm / books.length,
+          avgDepthMm: books.length ? stackMm / books.length : 20,
           authorName: null,
         }),
         colors: COLORS,
         measure,
         boil,
+        cat,
       }),
     [
       width,
@@ -97,6 +100,7 @@ function Situation({
       status,
       sceneLabels,
       boil,
+      cat,
     ],
   );
   return (
@@ -122,11 +126,14 @@ function Situations({
   width,
   height,
   boil,
+  cat,
   characters,
 }: {
   width: number;
   height: number;
   boil: boolean;
+  /** 맨 위 책의 검정고양이. 무릎 아래 앉기 · 허리 아래 식빵 · 그 위 엎드려 앞발 내리기 */
+  cat: boolean;
   characters: StackReaderCharacter[];
 }) {
   return (
@@ -141,6 +148,7 @@ function Situations({
               width={width}
               height={height}
               boil={boil}
+              cat={cat}
             />
           ))}
         </div>
@@ -152,7 +160,7 @@ function Situations({
 const meta: Meta<typeof Situations> = {
   title: "Features/ReadingLog/Stack/StackReaderSituations",
   component: Situations,
-  args: { boil: true, characters: ["M", "F"] },
+  args: { boil: true, cat: true, characters: ["M", "F"] },
 };
 
 export default meta;
@@ -162,6 +170,27 @@ type Story = StoryObj<typeof Situations>;
 export const Phone360: Story = { args: { width: 310, height: 520 } };
 /** 데스크톱 무대(오른쪽 진행률 칸을 뺀 폭) */
 export const Desktop: Story = { args: { width: 620, height: 600 } };
+/** 고양이 자세가 바뀌는 경계 앞뒤(무릎 28%·허리 60%)와 빈 무대를 데스크톱 폭으로 */
+export const CatPoses: Story = {
+  args: { width: 620, height: 600, characters: ["F"] },
+  render: (args) => (
+    <div className="grid gap-8 bg-stone-50 p-4">
+      <div className="flex flex-wrap items-start gap-6">
+        {[0, 0.05, 0.27, 0.3, 0.58, 0.62, 0.86, 1.4].map((r) => (
+          <Situation
+            key={r}
+            character="F"
+            ratio={r}
+            width={args.width}
+            height={args.height}
+            boil={args.boil}
+            cat={args.cat}
+          />
+        ))}
+      </div>
+    </div>
+  ),
+};
 /** 남자만 */
 export const Male: Story = {
   args: { width: 310, height: 520, characters: ["M"] },

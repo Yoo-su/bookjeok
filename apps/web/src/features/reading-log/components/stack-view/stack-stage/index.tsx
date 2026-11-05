@@ -159,6 +159,8 @@ interface StackStageProps {
   fitObjectHeight?: boolean;
   /** 쌓은 책만 그릴 때 책 폭 하한(px). 작은 무대에서 다독이 바늘처럼 보이지 않게 */
   minStackWidthPx?: number;
+  /** 사람 무대에서 맨 위 책에 검정고양이를 올린다 */
+  cat?: boolean;
   /** 무대 높이 등을 덮어쓴다 */
   className?: string;
   /** 사람 무대 높이(px). 사물 무대는 objectMaxHeight 안에서 내용만큼 줄인다 */
@@ -187,6 +189,7 @@ export function StackStage({
   objectMaxHeight = OBJECT_STAGE.max,
   fitObjectHeight = true,
   minStackWidthPx,
+  cat = false,
   className,
   height: fixedHeight,
   replayKey,
@@ -333,6 +336,7 @@ export function StackStage({
       figure: Boolean(labelsFor),
       authorArt,
       minStackWidthPx,
+      cat,
     });
   }, [
     size.width,
@@ -347,6 +351,7 @@ export function StackStage({
     reducedMotion,
     settling,
     minStackWidthPx,
+    cat,
     authorArt,
     artPending,
   ]);
@@ -390,6 +395,29 @@ export function StackStage({
         ? STACK_ENTER_LAND_MS
         : groups.length * stackIntroStepMs(groups.length) + STACK_INTRO_LAND_MS;
     const ann = svg.querySelector("g.stack-annotations");
+    const catEl = svg.querySelector("g.stack-cat");
+    // 책이 다 쌓이면 고양이가 오른쪽 아래에서 뛰어올라 앉는다
+    if (catEl)
+      animations.push(
+        catEl.animate(
+          [
+            {
+              transform: "translate(18px, 14px)",
+              opacity: 0,
+              easing: "cubic-bezier(.25,.6,.45,1)",
+            },
+            {
+              transform: "translate(7px, -12px)",
+              opacity: 1,
+              offset: 0.48,
+              easing: "cubic-bezier(.5,0,.85,.5)",
+            },
+            { transform: "translate(0, 1.5px)", offset: 0.82 },
+            { transform: "none", opacity: 1 },
+          ],
+          { duration: 520, delay: after + 40, fill: "backwards" },
+        ),
+      );
     const bubble = svg.querySelector("g.stack-bubble");
     const spark = sparkRef.current;
     if (spark) {

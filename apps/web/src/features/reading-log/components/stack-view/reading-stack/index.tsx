@@ -257,6 +257,7 @@ export function ReadingStack({ year }: { year: number }) {
             stackMm={totals.stackMm}
             person={person}
             object={mode === "object" ? objectStage : undefined}
+            cat
             replayKey={replayKey}
             onIntroStart={handleIntroStart}
             onStackClick={() =>

@@ -485,6 +485,57 @@ html::-webkit-scrollbar {
   transform-box: fill-box;
   transform-origin: 40% 100%;
 }
+/* 쌓은 책 위 고양이: 늘어뜨린 꼬리는 가끔 흔들고, 앞발을 감싼 꼬리는 끝만 까딱인다 */
+.stack-cat-tail,
+.stack-cat-tip {
+  transform-box: fill-box;
+}
+.stack-cat-tail {
+  transform-origin: 100% 0%;
+  animation: stack-cat-sway 7.5s ease-in-out 2s infinite;
+}
+.stack-cat-tip {
+  transform-origin: 0% 100%;
+  animation: stack-cat-flick 6s ease-in-out 1.5s infinite;
+}
+@keyframes stack-cat-sway {
+  0%,
+  72%,
+  100% {
+    transform: none;
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+  88% {
+    transform: rotate(-2.5deg);
+  }
+  94% {
+    transform: rotate(1deg);
+  }
+}
+@keyframes stack-cat-flick {
+  0%,
+  82%,
+  100% {
+    transform: none;
+  }
+  86% {
+    transform: rotate(-24deg);
+  }
+  90% {
+    transform: rotate(6deg);
+  }
+  94% {
+    transform: rotate(-10deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-cat-tail,
+  .stack-cat-tip {
+    animation: none;
+  }
+}
 /* 고른 작가 그림을 받는 중. 금방 받으면 깜빡이지 않게 잠깐 기다렸다 흐린다 */
 .stack-art-pending :is(.stack-character, .stack-bubble) {
   opacity: 0.3;
