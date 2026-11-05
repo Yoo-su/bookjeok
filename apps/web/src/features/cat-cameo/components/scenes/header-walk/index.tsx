@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { drawWalkingCat } from "../../../lib/draw";
 import { pickStopCenter, type Span } from "../../../lib/free-gap";
-import { CatPart } from "../cat-part";
+import { spriteFrame } from "../sprite-frames";
 import type { CameoSceneProps } from "../types";
+import {
+  REST_FRAME_INDEX,
+  RestPose,
+  WALK_CROP as CROP,
+  WALK_IMAGE,
+} from "./rest-pose";
+import atlas from "./walk.json";
 
 /** 멈춰 서서 이쪽을 보는 시간(ms). 고개 돌리기 → 천천히 눈 감았다 뜨기 → 다시 앞 */
 const STOP_MS = 2600;
@@ -16,7 +23,20 @@ const TURN_OUT = 2150;
 const BLINK_AT = 620;
 const BLINK = [360, 280, 380] as const;
 /** 한 걸음(다리 한 바퀴) 시간(ms) */
-const STRIDE = 520;
+const STRIDE = atlas.durationsMs.reduce(
+  (total, duration) => total + duration,
+  0,
+);
+const WALK_FRAMES = (() => {
+  let elapsed = 0;
+  const frames = atlas.frames.map((_, offset) => {
+    const i = (REST_FRAME_INDEX + offset) % atlas.frames.length;
+    const keyframe = spriteFrame(atlas.frames[i], elapsed / STRIDE);
+    elapsed += atlas.durationsMs[i];
+    return keyframe;
+  });
+  return [...frames, { ...frames[0], offset: 1 }];
+})();
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
@@ -52,28 +72,28 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
   }, [rand, size.w, cat.width]);
 
   const wrapRef = useRef<HTMLDivElement>(null);
-  const legRefs = useRef<(SVGGElement | null)[]>([]);
-  const tailRef = useRef<SVGGElement>(null);
+  const stripRef = useRef<SVGImageElement>(null);
   const profileRef = useRef<SVGGElement>(null);
   const frontRef = useRef<SVGGElement>(null);
   const eyesRef = useRef<SVGGElement>(null);
   const fled = useRef(false);
   const anims = useRef<Animation[]>([]);
+  const [ready, setReady] = useState(false);
+  const spriteScale = cat.groundY / (CROP.ground - CROP.y);
+  const spriteWidth = CROP.width * spriteScale;
 
   useEffect(() => {
     const wrap = wrapRef.current;
-    if (!wrap) return;
-    let list: Animation[] = [];
+    if (!ready || !wrap) return;
     // 고양이는 아직 알약 밖이다. 상단바가 자리 잡은 뒤(로그인 버튼·검색 아이콘 등) 멈출 틈을 잰다
     const id = window.setTimeout(() => {
-      list = walk(wrap);
-      anims.current = list;
+      anims.current = walk(wrap);
     }, 250);
     return () => {
       window.clearTimeout(id);
-      list.forEach((a) => a.cancel());
+      anims.current.forEach((a) => a.cancel());
     };
-  }, [plan, cat, onDone]);
+  }, [ready, plan, cat, onDone]);
 
   function walk(wrap: HTMLDivElement): Animation[] {
     const { start, end, speed } = plan;
@@ -122,49 +142,31 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
         { duration: total, fill: "both" },
       ),
     );
-    // 대각선 두 쌍이 번갈아 딛는다. 멈출 때 한 쌍은 땅을 딛고 있다
-    // 0·2가 뒷다리. 허벅지가 엉덩이 밖으로 덜 나가게 덜 벌린다
-    legRefs.current.forEach((el, i) => {
-      if (!el) return;
-      const phase = i === 0 || i === 3 ? 0 : 0.5;
-      const step = stepFrames(i % 2 ? cat.swing : cat.hindSwing, cat.lift);
+    if (stripRef.current)
       list.push(
-        el.animate(step, {
+        stripRef.current.animate(WALK_FRAMES, {
           duration: STRIDE,
           iterations: n1,
-          iterationStart: phase,
         }),
-        el.animate(step, {
+        stripRef.current.animate(WALK_FRAMES, {
           duration: STRIDE,
           iterations: n2,
-          iterationStart: phase,
           delay: t1 + STOP_MS,
         }),
       );
-    });
-    if (tailRef.current)
-      list.push(
-        tailRef.current.animate(
-          [
-            { transform: "rotate(0deg)" },
-            { transform: "rotate(-7deg)" },
-            { transform: "rotate(3deg)" },
-            { transform: "rotate(0deg)" },
-          ],
-          { duration: 1700, iterations: Infinity, easing: "ease-in-out" },
-        ),
-      );
     // 고개 돌리기는 그림을 바꿔 끼운다. 사이를 짧게 겹쳐 툭 끊기지 않게
     const turn = (show: boolean): Keyframe[] => {
-      const a = show ? 0 : 1;
-      const b = show ? 1 : 0;
+      const visible = { opacity: 1, visibility: "visible" };
+      const hidden = { opacity: 0, visibility: "hidden" };
+      const a = show ? hidden : visible;
+      const b = show ? visible : hidden;
       return [
-        { offset: 0, opacity: a },
-        { offset: at(t1 + TURN_IN), opacity: a },
-        { offset: at(t1 + TURN_IN + 70), opacity: b },
-        { offset: at(t1 + TURN_OUT), opacity: b },
-        { offset: at(t1 + TURN_OUT + 70), opacity: a },
-        { offset: 1, opacity: a },
+        { offset: 0, ...a },
+        { offset: at(t1 + TURN_IN), ...a },
+        { offset: at(t1 + TURN_IN + 70), ...b },
+        { offset: at(t1 + TURN_OUT), ...b },
+        { offset: at(t1 + TURN_OUT + 70), ...a },
+        { offset: 1, ...a },
       ];
     };
     if (frontRef.current)
@@ -210,6 +212,7 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
     const wrap = wrapRef.current;
     if (fled.current || !wrap) return;
     fled.current = true;
+    const runMs = 640;
     const now = new DOMMatrixReadOnly(getComputedStyle(wrap).transform).m41;
     anims.current.forEach((a) => a.cancel());
     const x = (v: number) => `translateX(${v.toFixed(1)}px)`;
@@ -229,24 +232,19 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
           transform: `${x(plan.dir > 0 ? size.w + 4 : -cat.width - 4)} translateY(0px)`,
         },
       ],
-      { duration: 640, fill: "both" },
+      { duration: runMs, fill: "both" },
     );
-    legRefs.current.forEach((el, i) =>
-      el?.animate(
-        stepFrames((i % 2 ? cat.swing : cat.hindSwing) * 1.4, cat.lift * 1.6),
-        {
-          duration: 190,
-          iterations: Infinity,
-          iterationStart: i === 0 || i === 3 ? 0 : 0.5,
-          delay: 200,
-        },
-      ),
-    );
+    anims.current = [run];
+    if (stripRef.current)
+      anims.current.push(
+        stripRef.current.animate(WALK_FRAMES, {
+          duration: runMs / 2,
+          iterations: 2,
+        }),
+      );
     run.onfinish = () => onDone();
   };
 
-  const [far1, far2] = cat.farLegs;
-  const [near1, near2] = cat.nearLegs;
   return createPortal(
     <div
       aria-hidden
@@ -269,51 +267,40 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
           overflow="visible"
           style={plan.dir < 0 ? { transform: "scaleX(-1)" } : undefined}
         >
-          <g
-            className="cursor-pointer"
-            pointerEvents="visiblePainted"
-            onPointerDown={flee}
+          <svg
+            x={(cat.width - spriteWidth) / 2}
+            width={spriteWidth}
+            height={CROP.height * spriteScale}
+            viewBox={`${CROP.x} ${CROP.y} ${CROP.width} ${CROP.height}`}
+            overflow="hidden"
           >
-            <CatPart ref={tailRef} part={cat.tail} />
-            <CatPart ref={(el) => void (legRefs.current[0] = el)} part={far1} />
-            <CatPart ref={(el) => void (legRefs.current[1] = el)} part={far2} />
-            <CatPart items={cat.body} />
-            <CatPart
-              ref={(el) => void (legRefs.current[2] = el)}
-              part={near1}
-            />
-            <CatPart
-              ref={(el) => void (legRefs.current[3] = el)}
-              part={near2}
-            />
-            <CatPart ref={profileRef} items={cat.profile} />
-            <g ref={frontRef} style={{ opacity: 0 }}>
-              <CatPart items={cat.front.face} />
-              <CatPart
-                ref={eyesRef}
-                pivot={cat.front.eyeCenter}
-                items={[...cat.front.eyes, ...cat.front.pupils]}
+            <g ref={profileRef}>
+              <image
+                ref={stripRef}
+                href={WALK_IMAGE}
+                width={atlas.sheetWidth}
+                height={atlas.sheetHeight}
+                style={{
+                  transform: `translateX(${-atlas.frames[REST_FRAME_INDEX].x}px)`,
+                }}
+                onLoad={() => setReady(true)}
+                onError={onDone}
               />
             </g>
-          </g>
+            <g ref={frontRef} style={{ opacity: 0, visibility: "hidden" }}>
+              <RestPose eyesRef={eyesRef} />
+            </g>
+            <path
+              d="M25 60 Q21 103 51 104 Q54 114 55 143 H139 L145 106 Q173 101 173 77 Q170 64 155 56 L146 30 L127 51 L112 35 L101 69 Q77 63 55 78 Q38 82 35 56Z"
+              fill="transparent"
+              pointerEvents="visibleFill"
+              className="cursor-pointer"
+              onPointerDown={flee}
+            />
+          </svg>
         </svg>
       </div>
     </div>,
     host,
   );
-}
-
-/**
- * 다리 한 바퀴. 0은 몸 아래를 딛고 지나가는 순간, 뒤로 밀고(+), 들어 올려 앞으로(-) 내딛는다.
- * 축이 다리 위 끝이라 +각도면 발이 뒤로 간다
- */
-function stepFrames(swing: number, lift: number): Keyframe[] {
-  const r = (d: number) => `rotate(${d.toFixed(1)}deg)`;
-  return [
-    { transform: `translateY(0px) ${r(0)}` },
-    { transform: `translateY(0px) ${r(swing)}` },
-    { transform: `translateY(${(-lift).toFixed(2)}px) ${r(0)}` },
-    { transform: `translateY(0px) ${r(-swing)}` },
-    { transform: `translateY(0px) ${r(0)}` },
-  ];
 }

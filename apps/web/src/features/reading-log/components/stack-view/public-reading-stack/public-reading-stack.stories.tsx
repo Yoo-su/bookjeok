@@ -44,7 +44,7 @@ const meta: Meta<typeof PublicReadingStack> = {
 export default meta;
 type Story = StoryObj<typeof PublicReadingStack>;
 
-/** 46권. 캐릭터 없이 쌓은 책만, 축척은 쌓은 높이에 맞춘다 */
+/** 46권과 맨 위 책에 앉은 고양이. 축척은 쌓은 높이에 맞춘다 */
 export const Default: Story = {
   decorators: [withPublicStack({ 2026: SAMPLE_BOOKS, 2025: [] })],
 };

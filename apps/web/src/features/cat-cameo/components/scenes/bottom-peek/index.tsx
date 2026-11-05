@@ -1,31 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { drawPeekingCat } from "../../../lib/draw";
-import { CatPart } from "../cat-part";
+import { spriteFrame } from "../sprite-frames";
 import type { CameoSceneProps } from "../types";
+import atlas from "./peek.json";
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
-
-/**
- * 화면 아래 모서리 너머에서 귀 끝부터 올라와 두리번거리고 쏙 내려가는 고양이.
- * 시각(ms)은 귀 → 갸웃 → 눈까지 → 앞발 → 왼쪽·오른쪽 → 깜빡 → 쏙
- */
-const T = {
-  ears: 700,
-  tilt: 1050,
-  untilt: 1350,
-  up: 1950,
-  paws: 2300,
-  lookL: 2650,
-  lookR: 3250,
-  lookC: 3850,
-  blink: 4050,
-  stay: 4650,
-  gone: 4900,
-} as const;
+const DURATION = 4900;
+const PEEK_IMAGE = "/cat-cameo/peek.png";
+const CROP = { x: 25, y: 12, width: 142, height: 104 };
+const HIDDEN = "translateY(105%)";
+const FACES = [
+  [0, 0],
+  [950, 1],
+  [1400, 0],
+  [2320, 2],
+  [2820, 0],
+  [2960, 3],
+  [3680, 0],
+  [4050, 4],
+  [4170, 0],
+  [DURATION, 0],
+].map(([at, frame]) => spriteFrame(atlas.frames[frame], at / DURATION));
 
 /** 화면에 붙어 떠 있는 요소(빠른 메뉴·떠 있는 버튼 등)가 그 점을 덮고 있는지 */
 function coveredByFixed(x: number, y: number) {
@@ -56,188 +54,89 @@ export function BottomPeek({ host, rand, onDone }: CameoSceneProps) {
         (t) => !coveredByFixed(x0 + w * t, vh - r * 0.8),
       );
     });
-    return { r, ...(free ?? tries[0]) };
+    return { w, ...(free ?? tries[0]) };
   }, [rand]);
-  const cat = useMemo(() => drawPeekingCat(layout.r), [layout.r]);
-  const headRef = useRef<SVGGElement>(null);
-  const pawsRef = useRef<SVGGElement>(null);
-  const eyesRef = useRef<SVGGElement>(null);
-  const pupilsRef = useRef<SVGGElement>(null);
-  const fled = useRef(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<SVGImageElement>(null);
   const anims = useRef<Animation[]>([]);
-
-  const hidden = cat.height + 2;
-  const earsOnly = cat.height - 0.5 * cat.r;
-  const pawsHidden = 0.75 * cat.r;
+  const fled = useRef(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const head = headRef.current;
-    const paws = pawsRef.current;
-    if (!head || !paws) return;
-    const total = T.gone;
-    const at = (ms: number) => ms / total;
-    const y = (v: number, deg = 0) =>
-      `translateY(${v.toFixed(1)}px) rotate(${deg}deg)`;
-    const list: Animation[] = [
-      head.animate(
-        [
-          {
-            offset: 0,
-            transform: y(hidden),
-            easing: "cubic-bezier(.2,.7,.3,1)",
-          },
-          { offset: at(T.ears), transform: y(earsOnly), easing: "ease-in-out" },
-          {
-            offset: at(T.tilt),
-            transform: y(earsOnly, -8),
-            easing: "ease-in-out",
-          },
-          {
-            offset: at(T.untilt),
-            transform: y(earsOnly),
-            easing: "cubic-bezier(.3,.6,.3,1.25)",
-          },
-          { offset: at(T.up), transform: y(0) },
-          {
-            offset: at(T.stay),
-            transform: y(0),
-            easing: "cubic-bezier(.6,0,.9,.6)",
-          },
-          { offset: 1, transform: y(hidden) },
-        ],
-        { duration: total, fill: "both" },
-      ),
-      paws.animate(
-        [
-          { offset: 0, transform: y(pawsHidden) },
-          {
-            offset: at(T.up),
-            transform: y(pawsHidden),
-            easing: "cubic-bezier(.3,.7,.4,1.2)",
-          },
-          { offset: at(T.paws), transform: y(0) },
-          { offset: at(T.stay - 60), transform: y(0), easing: "ease-in" },
-          { offset: at(T.stay + 140), transform: y(pawsHidden) },
-          { offset: 1, transform: y(pawsHidden) },
-        ],
-        { duration: total, fill: "both" },
-      ),
-    ];
-    const look = 0.13 * cat.r;
-    if (pupilsRef.current)
-      list.push(
-        pupilsRef.current.animate(
-          [
-            { offset: 0, transform: "translateX(0px)" },
-            {
-              offset: at(T.lookL),
-              transform: "translateX(0px)",
-              easing: "ease-in-out",
-            },
-            { offset: at(T.lookL + 180), transform: `translateX(${-look}px)` },
-            {
-              offset: at(T.lookR),
-              transform: `translateX(${-look}px)`,
-              easing: "ease-in-out",
-            },
-            { offset: at(T.lookR + 200), transform: `translateX(${look}px)` },
-            {
-              offset: at(T.lookC),
-              transform: `translateX(${look}px)`,
-              easing: "ease-in-out",
-            },
-            { offset: at(T.lookC + 160), transform: "translateX(0px)" },
-            { offset: 1, transform: "translateX(0px)" },
-          ],
-          { duration: total, fill: "both" },
-        ),
-      );
-    if (eyesRef.current)
-      list.push(
-        eyesRef.current.animate(
-          [
-            { offset: 0, transform: "scaleY(1)" },
-            { offset: at(T.blink), transform: "scaleY(1)", easing: "ease-in" },
-            {
-              offset: at(T.blink + 70),
-              transform: "scaleY(0.08)",
-              easing: "ease-out",
-            },
-            { offset: at(T.blink + 190), transform: "scaleY(1)" },
-            { offset: 1, transform: "scaleY(1)" },
-          ],
-          { duration: total },
-        ),
-      );
-    anims.current = list;
-    list[0].onfinish = () => {
+    const wrap = wrapRef.current;
+    const strip = stripRef.current;
+    if (!ready || !wrap || !strip) return;
+    const options = { duration: DURATION, fill: "both" as const };
+    const reveal = wrap.animate(
+      [
+        { transform: HIDDEN, easing: "cubic-bezier(.2,.7,.3,1)" },
+        { offset: 0.15, transform: "translateY(76%)", easing: "ease-in-out" },
+        {
+          offset: 0.28,
+          transform: "translateY(76%)",
+          easing: "cubic-bezier(.2,.65,.32,1)",
+        },
+        { offset: 0.43, transform: "translateY(0%)" },
+        { offset: 0.93, transform: "translateY(0%)", easing: "ease-in" },
+        { transform: HIDDEN },
+      ],
+      options,
+    );
+    anims.current = [reveal, strip.animate(FACES, options)];
+    reveal.onfinish = () => {
       if (!fled.current) onDone();
     };
-    return () => list.forEach((a) => a.cancel());
-  }, [cat, hidden, earsOnly, pawsHidden, onDone]);
+    return () => anims.current.forEach((animation) => animation.cancel());
+  }, [ready, onDone]);
 
-  /** 누르면 놀라서 쏙 숨는다 */
   const duck = () => {
-    const head = headRef.current;
-    const paws = pawsRef.current;
-    if (fled.current || !head || !paws) return;
+    const wrap = wrapRef.current;
+    if (fled.current || !wrap) return;
     fled.current = true;
-    const from = (el: Element) => getComputedStyle(el).transform;
-    const headFrom = from(head);
-    const pawsFrom = from(paws);
-    anims.current.forEach((a) => a.cancel());
-    const opts = {
+    const from = getComputedStyle(wrap).transform;
+    anims.current[0].cancel();
+    // 표정은 누른 순간 그대로 유지하면서 내려간다.
+    anims.current[1].pause();
+    const hide = wrap.animate([{ transform: from }, { transform: HIDDEN }], {
       duration: 220,
       easing: "cubic-bezier(.5,0,.9,.5)",
-      fill: "both" as const,
-    };
-    paws.animate(
-      [{ transform: pawsFrom }, { transform: `translateY(${pawsHidden}px)` }],
-      opts,
-    );
-    head.animate(
-      [{ transform: headFrom }, { transform: `translateY(${hidden}px)` }],
-      { ...opts, delay: 40 },
-    ).onfinish = () => onDone();
+      fill: "both",
+    });
+    anims.current[0] = hide;
+    hide.onfinish = onDone;
   };
 
   return createPortal(
     <div
       aria-hidden
       data-cat-cameo
-      className="pointer-events-none fixed bottom-0 z-[45]"
-      style={{
-        [layout.right ? "right" : "left"]: layout.inset,
-        width: cat.width,
-        height: cat.height,
-      }}
+      className="pointer-events-none fixed bottom-0 z-[45] overflow-hidden"
+      style={{ [layout.right ? "right" : "left"]: layout.inset }}
     >
-      <svg width={cat.width} height={cat.height}>
-        <g
-          className="cursor-pointer"
-          pointerEvents="visiblePainted"
-          onPointerDown={duck}
+      <div ref={wrapRef} style={{ transform: HIDDEN }}>
+        <svg
+          className="block"
+          viewBox={`${CROP.x} ${CROP.y} ${CROP.width} ${CROP.height}`}
+          width={layout.w}
+          height={(layout.w * CROP.height) / CROP.width}
         >
-          <g
-            ref={headRef}
-            style={{
-              transform: `translateY(${hidden}px)`,
-              transformOrigin: `${cat.width / 2}px ${cat.height}px`,
-            }}
-          >
-            <CatPart items={cat.front.face} />
-            <CatPart
-              ref={eyesRef}
-              pivot={cat.front.eyeCenter}
-              items={cat.front.eyes}
-            />
-            <CatPart ref={pupilsRef} items={cat.front.pupils} />
-          </g>
-          <g ref={pawsRef} style={{ transform: `translateY(${pawsHidden}px)` }}>
-            <CatPart items={cat.paws} />
-          </g>
-        </g>
-      </svg>
+          <image
+            ref={stripRef}
+            href={PEEK_IMAGE}
+            width={atlas.sheetWidth}
+            height={atlas.sheetHeight}
+            onLoad={() => setReady(true)}
+            onError={onDone}
+          />
+          <path
+            d="M40 116 Q36 105 49 96 Q47 76 57 60 L53 15 L85 43 Q98 37 112 43 L143 15 L140 58 Q151 77 145 97 Q158 103 153 116Z"
+            fill="transparent"
+            pointerEvents="visibleFill"
+            className="cursor-pointer"
+            onPointerDown={duck}
+          />
+        </svg>
+      </div>
     </div>,
     host,
   );

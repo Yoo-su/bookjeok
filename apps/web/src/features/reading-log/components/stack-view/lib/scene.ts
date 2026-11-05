@@ -1,7 +1,12 @@
 import { inkColorFor, type ReadingStackBook } from "@bookjeok/core";
 
 import { buildFigure, buildObject } from "./figure";
-import { buildCat, catPoseFor, type CatResult } from "./figure-cat";
+import {
+  buildCat,
+  catPoseFor,
+  type CatResult,
+  SITTING_CAT_HEIGHT_MM,
+} from "./figure-cat";
 import { OBJECT_ART, objectArtHeightMm, type StackObjectSpec } from "./objects";
 import { bookColor, bubbleItem, bubbleRect } from "./scene-common";
 import {
@@ -203,6 +208,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     measure,
   } = o;
   const u = o.u ?? 1;
+  const size = 16 * u;
   const obj = o.object;
   const figure = !obj && o.figure !== false;
   // 쌓은 책 옆에 무언가(캐릭터·사물)를 세우는지
@@ -443,15 +449,23 @@ export function buildStackScene(o: SceneOptions): SceneResult {
 
   // 고양이. 실제 크기로 앉히되 많이 쌓아 축척이 작아지면 알아볼 만큼은 키운다
   let cat: CatResult | null = null;
-  if (figure && o.cat) {
-    const scale = Math.max(s, 0.15 * u);
+  if (o.cat && !obj && (figure || books.length > 0)) {
+    const naturalScale = Math.max(s, 0.15 * u);
+    // 공개 무대는 적은 책을 확대한다. 고양이는 맨 위 책과 위쪽 여백 안에 맞춘다.
+    const scale = figure
+      ? naturalScale
+      : Math.min(
+          naturalScale,
+          topHalf / 100,
+          (topY - 2 * size - 4 * u) / SITTING_CAT_HEIGHT_MM,
+        );
     const catAt = (tailDown: boolean) =>
       buildCat({
         cx: topCx,
         surfaceY: topY,
         halfMm: topHalf / scale,
         scale,
-        pose: catPoseFor(status.ratio, books.length > 0),
+        pose: figure ? catPoseFor(status.ratio, books.length > 0) : "sit",
         colors: C,
         u,
         boil: o.boil ?? false,
@@ -517,7 +531,6 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   const AT = (item: Omit<TextItem, "k" | "halo" | "hw">) =>
     ann.push({ k: "t", halo: C.paper, hw: 5 * u, ...item });
   // 이름표 글자가 차지하는 자리. 글자 테두리만큼 둘레를 넓힌다
-  const size = 16 * u;
   const labelBox = (x: number, y: number, t: string, end = false): Box => {
     const w = measure(t, size, 700, "hand");
     const x0 = end ? x - w : x;
@@ -575,7 +588,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
         (cat ? Math.min(left, cat.box.x0) : left) - 6 * u,
         rx - u + stackW,
       );
-  let ly = above ? Math.max(size / 2 + 2 * u, topY - size) : topY;
+  let ly = above ? Math.max(size / 2 + 2 * u, pileTop - size) : topY;
   // 아주 좁은 무대는 꼬리를 말아도 글자가 고양이 엉덩이에 닿는다. 책 위로 한 줄 내려 적는다
   if (cat && !above && lx + 2 * u > cat.box.x0) ly = topY + 11 * u;
   const stackBox = books.length

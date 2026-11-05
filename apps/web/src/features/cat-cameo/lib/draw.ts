@@ -1,5 +1,8 @@
 import {
   CAT_EYE,
+  CAT_EYE_GLINT,
+  CAT_EYE_Y,
+  CAT_NOSE,
   catHead,
 } from "@/features/reading-log/components/stack-view/lib/figure-cat";
 import {
@@ -77,8 +80,18 @@ function faceOf(
     face: fur.items,
     eyes: eyes.items,
     pupils: pupils.items,
-    eyeCenter: T(hx, hy + 0.08 * r),
+    eyeCenter: T(hx, hy + CAT_EYE_Y * r),
   };
+}
+
+/** 정지한 스프라이트의 목과 맞춘 정면. 좌표는 스프라이트 한 칸 기준이다. */
+export function drawRestingCatFace(): CatFace {
+  return faceOf((x, y) => [x, y], 0.55, 371, {
+    hx: 124,
+    hy: 66,
+    r: 24.5,
+    lid: 0.25,
+  });
 }
 
 // 걷는 고양이 좌표(단위). 땅이 y=0, 앞이 +x. 꼬리 끝·귀 끝·수염 끝까지 담는다
@@ -408,18 +421,18 @@ export function drawWalkingCat(k: number, seed = 311): WalkingCat {
     "Q",
     45.6,
     -56.1,
-    47.8,
+    46.9,
     -54.2,
     "Q",
-    49.4,
-    -52.6,
-    48.6,
-    -50.6,
+    48.7,
+    -52.2,
+    47.8,
+    -49.8,
     "C",
-    47.2,
-    -46.2,
-    39,
-    -42,
+    45.5,
+    -44.9,
+    38.5,
+    -41.5,
     31,
     -42,
     "C",
@@ -465,31 +478,10 @@ export function drawWalkingCat(k: number, seed = 311): WalkingCat {
     w: 0.6,
     op: 0.4,
   });
-  // 수평에 가까운 작은 눈과 짧고 둥근 동공.
-  prof.fill(
-    [
-      "M",
-      38.6,
-      -56.1,
-      "C",
-      39.5,
-      -57.8,
-      42.9,
-      -57.8,
-      44.2,
-      -56.1,
-      "C",
-      43.1,
-      -54.1,
-      39.9,
-      -53.9,
-      38.6,
-      -56.1,
-      "Z",
-    ],
-    CAT_EYE,
-  );
-  prof.fill(ell(41.9, -55.95, 0.95, 1.05), C.ink);
+  prof.fill(ell(39, -56, 2.6, 2.35), CAT_EYE);
+  prof.fill(ell(39.35, -56, 1.3, 1.62), C.ink);
+  prof.fill(ell(38.97, -56.55, 0.32, 0.32), CAT_EYE_GLINT);
+  prof.fill(ell(47.4, -53, 1.05, 0.73), CAT_NOSE);
   for (const [y0, y1] of [
     [-50, -51.5],
     [-48.5, -46],

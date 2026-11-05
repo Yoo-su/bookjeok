@@ -159,7 +159,7 @@ interface StackStageProps {
   fitObjectHeight?: boolean;
   /** 쌓은 책만 그릴 때 책 폭 하한(px). 작은 무대에서 다독이 바늘처럼 보이지 않게 */
   minStackWidthPx?: number;
-  /** 사람 무대에서 맨 위 책에 검정고양이를 올린다 */
+  /** 사람 무대나 책이 있는 단독 책 더미에 검정고양이를 올린다 */
   cat?: boolean;
   /** 무대 높이 등을 덮어쓴다 */
   className?: string;
@@ -178,7 +178,7 @@ interface StackStageProps {
 }
 
 /**
- * 쌓은 책과 내 키 캐릭터를 같은 축척으로 그리는 무대. person이 없으면 쌓은 책만 그린다.
+ * 쌓은 책과 내 키 캐릭터를 같은 축척으로 그리는 무대. person이 없으면 키 비교를 생략한다.
  * 키가 바뀌면 축척·캐릭터를 부드럽게 다시 맞추고, replayKey가 바뀌면 책을 다시 쌓는다.
  */
 export function StackStage({

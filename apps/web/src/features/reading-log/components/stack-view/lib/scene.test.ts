@@ -73,6 +73,68 @@ function booksOf(n: number): ReadingStackBook[] {
   }));
 }
 
+describe("공개 프로필의 쌓은 책 위 고양이", () => {
+  it.each([0, 3, 19, 46])(
+    "좁은 화면의 %i권에서 책이 있을 때만 고양이를 그린다",
+    (count) => {
+      const books = booksOf(count);
+      const stackMm = books.reduce((sum, book) => sum + book.depth, 0);
+      const width = 262;
+      const { items, stack } = buildStackScene({
+        width,
+        height: 380,
+        books,
+        stackMm,
+        userMm: 0,
+        character: "M",
+        status: stackStatus(stackMm, 0),
+        labels: {
+          myHeight: "",
+          remain: "",
+          approxBooks: "",
+          stackHeight: `${(stackMm / 10).toFixed(1)}cm`,
+          bubble: ["", ""],
+        },
+        colors: COLORS,
+        measure,
+        figure: false,
+        cat: true,
+      });
+      const kitten = find(items, "cat-0");
+      expect(find(items, "character")).toBeUndefined();
+      if (!count) {
+        expect(kitten).toBeUndefined();
+        return;
+      }
+      expect(kitten?.k).toBe("g");
+      if (kitten?.k !== "g") return;
+      const coords = kitten.children.flatMap((item) =>
+        item.k === "p"
+          ? [...item.d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [
+              Number(m[1]),
+              Number(m[2]),
+            ])
+          : [],
+      );
+      const top = Math.min(...coords.map(([, y]) => y));
+      const bottom = Math.max(...coords.map(([, y]) => y));
+      const left = Math.min(...coords.map(([x]) => x));
+      const right = Math.max(...coords.map(([x]) => x));
+      expect(top).toBeGreaterThan(0);
+      expect(top).toBeLessThan(stack.top);
+      expect(Math.abs(bottom - stack.top)).toBeLessThan(4);
+      expect(left).toBeGreaterThan(0);
+      expect(right).toBeLessThan(width);
+      const label = find(items, "stack-height");
+      expect(label?.k).toBe("t");
+      if (label?.k === "t")
+        expect(
+          hits(inkBox(label), { x0: left, y0: top, x1: right, y1: bottom }),
+        ).toBe(false);
+    },
+  );
+});
+
 describe("독서 키재기 이름표 배치", () => {
   it("폭·키·쌓은 높이가 어떻든 내 키와 쌓은 높이가 겹치지 않고, 쌓은 높이는 꼭대기 옆에 있다", () => {
     const failures: string[] = [];

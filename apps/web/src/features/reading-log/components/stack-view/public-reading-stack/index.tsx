@@ -34,7 +34,7 @@ interface PublicReadingStackProps {
 }
 
 /**
- * 공개 프로필의 독서 키재기. 주인의 키는 기기에만 있으므로 캐릭터 없이 쌓은 책만 세운다.
+ * 공개 프로필의 독서 키재기. 쌓은 책과 그 위에 앉은 고양이를 보여 준다.
  * 공유·키 입력은 없다.
  */
 export function PublicReadingStack({
@@ -169,6 +169,7 @@ export function PublicReadingStack({
             key={year}
             books={books}
             stackMm={stackMm}
+            cat
             className="h-[380px] md:h-[440px]"
             replayKey={replayKey}
             onStackClick={() =>
