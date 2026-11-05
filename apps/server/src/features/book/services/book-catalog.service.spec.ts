@@ -124,6 +124,7 @@ describe('BookCatalogService', () => {
         start: 1,
         sort: 'sim',
         field: 'Keyword',
+        discovery: true,
       });
     });
   });

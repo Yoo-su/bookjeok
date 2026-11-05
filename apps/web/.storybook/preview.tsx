@@ -8,11 +8,17 @@ import React, { useState } from "react";
 import { useAuthStore } from "../src/features/auth/stores/use-auth-store";
 import messages from "../src/shared/i18n/messages/ko.json";
 import { MotionProvider } from "../src/shared/providers/motion-provider";
-import { gaegu, gowun_batang } from "../src/styles/fonts";
+import { gaegu, gowun_batang, nanum_gothic } from "../src/styles/fonts";
 
 /** 앱 레이아웃처럼 html에 건다. 포털로 뜨는 모달도 받게 */
 if (typeof document !== "undefined") {
-  document.documentElement.classList.add(gaegu.variable, gowun_batang.variable);
+  document.documentElement.classList.add(
+    gaegu.variable,
+    gowun_batang.variable,
+    nanum_gothic.variable,
+  );
+  // 앱 레이아웃은 <body>에 Pretendard를 건다. 없으면 스토리가 시스템 글꼴로 그려진다
+  document.body.style.fontFamily = "var(--font-pretendard)";
 }
 
 /**

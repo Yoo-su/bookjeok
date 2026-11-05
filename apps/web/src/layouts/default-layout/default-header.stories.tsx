@@ -1,10 +1,12 @@
 import { readingLogKeys, type User } from "@bookjeok/core";
 import type { Meta, StoryObj } from "@storybook/react";
-import { userEvent, within } from "@storybook/test";
+import { fireEvent, userEvent, within } from "@storybook/test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { sampleReceivedKongs } from "@/features/reading-log/components/kong/lib/sample-kongs";
+import { installSearchPreviewMock } from "@/features/search/lib/sample-search-preview";
+import { useRecentSearchesStore } from "@/features/search/stores/use-recent-searches-store";
 
 import { DefaultHeader } from "./default-header";
 
@@ -136,4 +138,97 @@ export const MobileMenu: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "메뉴 열기" }));
   },
+};
+
+const PREVIEW_USER = {
+  id: 1,
+  nickname: "미리보기",
+  handle: "preview",
+  profileImageUrl: null,
+} as unknown as User;
+
+/** 미리보기·인기 검색어를 가짜 응답으로 바꾸고 최근 검색어를 넣어 둔다 */
+const withSearchMock = (loggedIn: boolean) => () => {
+  if (loggedIn) useAuthStore.setState({ user: PREVIEW_USER });
+  useRecentSearchesStore.setState({ queries: ["작별하지 않는다", "데미안"] });
+  const restore = installSearchPreviewMock();
+  return () => {
+    restore();
+    useRecentSearchesStore.setState({ queries: [] });
+  };
+};
+
+/**
+ * 통합 검색(1280). 「05 검색」을 누르거나 `/`를 누르면 연다.
+ * - 메뉴가 위로 빠지고 그 자리 정중앙에서 검색창이 양옆으로 펼쳐진다. 연필 밑줄이 왼쪽부터 그어진다
+ * - 입력 전에는 최근·인기 검색어, 두 글자부터 도서·리뷰·중고 미리보기
+ * - Esc는 닫고 「05 검색」으로 포커스를 돌린다. 바깥을 누르면 그냥 닫는다
+ * - 「한강」「데미안」「양장」「양자역학」을 쳐 보자
+ */
+export const GlobalSearch: Story = {
+  ...ScrollToExpand,
+  parameters: {
+    ...meta.parameters,
+    nextjs: { appDirectory: true, navigation: { pathname: "/ko/lounge" } },
+    viewport: { defaultViewport: "desktop" },
+  },
+  beforeEach: withSearchMock(true),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: /검색/ }));
+    // user-event 입력이 onChange에 반영되지 않아(원인 미확인, 실제 키보드 입력은 정상) 값을 직접 넣는다
+    fireEvent.change(await canvas.findByRole("combobox"), {
+      target: { value: "한강" },
+    });
+  },
+};
+
+/** 메뉴와 우측 버튼 사이가 가장 좁은 폭(1062). 검색창이 로고·알림과 겹치지 않아야 한다 */
+export const GlobalSearchTightDesktop: Story = {
+  ...GlobalSearch,
+  parameters: {
+    ...GlobalSearch.parameters,
+    viewport: {
+      viewports: {
+        tightDesktop: {
+          name: "Tight desktop",
+          styles: { width: "1024px", height: "800px" },
+        },
+      },
+      defaultViewport: "tightDesktop",
+    },
+  },
+};
+
+/**
+ * 모바일 통합 검색(375). 돋보기를 누르면 전체 화면으로 덮는다.
+ * 실제 폰에서는 누르는 순간 키보드가 함께 올라와야 한다
+ */
+export const GlobalSearchMobile: Story = {
+  ...GlobalSearch,
+  parameters: {
+    ...GlobalSearch.parameters,
+    viewport: { defaultViewport: "mobile" },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "검색 열기" }),
+    );
+    const body = within(canvasElement.ownerDocument.body);
+    // user-event 입력이 onChange에 반영되지 않아(원인 미확인, 실제 키보드 입력은 정상) 값을 직접 넣는다
+    fireEvent.change(await body.findByRole("combobox"), {
+      target: { value: "데미안" },
+    });
+  },
+};
+
+/** 가장 좁은 폰(320), 로그인 상태. 헤더에 돋보기·알림·아바타가 함께 들어가야 한다 */
+export const GlobalSearchNarrowHeader: Story = {
+  ...ScrollToExpand,
+  parameters: {
+    ...meta.parameters,
+    viewport: { defaultViewport: "narrow" },
+  },
+  beforeEach: withSearchMock(true),
 };

@@ -9,6 +9,7 @@ import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { CatCameoHost } from "@/features/cat-cameo/components/host/cat-cameo-host";
 import { ChatProvider } from "@/features/chat/providers/chat-provider";
 import { ConfirmHost } from "@/features/confirm";
 import { GlobalMusicHost, MusicPlayerModal } from "@/features/music";
@@ -136,6 +137,7 @@ export default async function Layout({
               </QueryProvider>
               <ConfirmHost />
               <StackMilestoneHost />
+              <CatCameoHost />
               <GlobalMusicHost />
               <MusicPlayerModal />
               {/* 하단 dock(약 56px) 위로 띄움 */}

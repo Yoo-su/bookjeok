@@ -35,6 +35,11 @@ export interface BookCatalogSearchParams {
   start: number;
   sort: BookSortParam;
   field: BookSearchField;
+  /**
+   * 소개 전문검색으로 후보를 넓힐지. 기본 true.
+   * 입력 중에 부르는 통합 검색 미리보기는 false로 서지(제목·저자·출판사) 인덱스만 쓴다.
+   */
+  discovery?: boolean;
 }
 
 export interface BookCatalogSearchResult {

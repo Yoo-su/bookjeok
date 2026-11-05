@@ -12,8 +12,9 @@
 search/
 ├── search.module.ts
 ├── controllers/
-│   └── search.controller.ts       # POST /search/ai, POST /search/ai/stream
+│   └── search.controller.ts       # POST /search/ai, POST /search/ai/stream, GET /search/preview
 ├── services/
+│   ├── search-preview.service.ts  # 상단바 통합 검색 미리보기
 │   ├── search.service.ts          # 파이프라인 오케스트레이션 + AI 요청 로깅
 │   ├── rag.service.ts             # Gemini 호출 (의도 분류 / 합성 / 파라메트릭 추천)
 │   ├── embedding.service.ts       # gemini-embedding-001 768차원 임베딩 + L2 정규화
@@ -23,6 +24,7 @@ search/
 ├── dtos/
 │   └── ai-search.dto.ts
 └── utils/
+    ├── search-preview-sql.ts      # 미리보기 SQL·검색어 분리·미리보기 문장 (spec·PGlite 검증 있음)
     ├── sse-stream-writer.ts       # SSE 이벤트 직렬화 (spec 있음)
     └── book-deduplicator.util.ts  # 제목 정규화 기반 중복 도서 제거 (spec 있음)
 ```
@@ -31,12 +33,36 @@ search/
 
 ## API 엔드포인트
 
-| 메서드 | 경로                | 인증   | Rate Limit | 설명                     |
-| ------ | ------------------- | ------ | :--------: | ------------------------ |
-| POST   | `/search/ai`        | 🔒 JWT |  10회/분   | 추천 결과를 한 번에 반환 |
-| POST   | `/search/ai/stream` | 🔒 JWT |  10회/분   | SSE로 단계별 스트리밍    |
+| 메서드 | 경로                | 인증   | Rate Limit | 설명                      |
+| ------ | ------------------- | ------ | :--------: | ------------------------- |
+| POST   | `/search/ai`        | 🔒 JWT |  10회/분   | 추천 결과를 한 번에 반환  |
+| POST   | `/search/ai/stream` | 🔒 JWT |  10회/분   | SSE로 단계별 스트리밍     |
+| GET    | `/search/preview`   | 공개   |  240회/분  | 상단바 통합 검색 미리보기 |
 
-두 엔드포인트 모두 **회원 전용**입니다. LLM 호출 비용이 발생하므로 엔드포인트 단위 Throttler를 별도로 적용했습니다.
+AI 두 엔드포인트는 **회원 전용**입니다. LLM 호출 비용이 발생하므로 엔드포인트 단위 Throttler를 별도로 적용했습니다.
+
+---
+
+## 통합 검색 미리보기 (`GET /search/preview?q=`)
+
+웹 상단바 검색창이 입력 중에 부릅니다(200ms 쉬었다 호출). 계약은 `@bookjeok/core`의 `SearchPreview`.
+
+| 영역   | 건수 | 찾는 방법                                                                                                   |
+| ------ | ---- | ----------------------------------------------------------------------------------------------------------- |
+| 도서   | 4    | `BookCatalogService.search({ discovery: false })`. 도서 검색과 같은 서지 관련도 경로에서 소개 전문검색만 끔 |
+| 리뷰   | 3    | 공개 리뷰. 제목·책 제목·태그·작성자·본문                                                                    |
+| 판매글 | 3    | 판매중·예약중만. 제목·책 제목·저자·본문                                                                     |
+
+- 검색어는 공백으로 나눠 앞뒤 기호를 뗀 뒤 최대 5단어(`previewTerms`). 2글자 미만이면 DB를 부르지 않고 빈 결과.
+- 리뷰·판매글은 **모든 단어가 어느 필드에든 맞아야** 한다(AND). 점수는 단어별로 걸린 필드 중 가장 높은 가중치의 합(리뷰: 제목 8 · 책 제목 4 · 태그 3 · 작성자 2 · 본문 1 / 판매글: 제목 8 · 책 제목 4 · 저자 3 · 본문 1). 같은 점수면 최신순(판매글은 판매중 먼저).
+- 리뷰 본문은 HTML이라 태그를 지우고 엔티티를 푼 순수 텍스트에서 찾는다(`REVIEW_TEXT_SQL`). HTML에 바로 `ILIKE`를 걸면 `strong` 검색이 공개 리뷰 74건 중 62건에 걸렸다(실제 글자 0건).
+- 태그는 조인하지 않고 하위 질의로 이어 붙인다. 조인하면 행이 태그 수만큼 불어난다.
+- `%`·`_`는 이스케이프해 글자로 찾는다.
+- 도서 결과에는 책별 공개 리뷰 수·판매중/예약중 판매글 수를 붙인다(isbn 인덱스).
+
+**인덱스를 걸지 않은 이유**: 2026-11-05 기준 공개 리뷰 74건·판매글 29건이라 플래너가 인덱스를 써도 훑는 쪽을 고른다. 운영 READ ONLY 실측 왕복 시간은 리뷰 약 30ms(본문 변환 포함), 판매글 약 7ms, 도서(소개 검색 끔) 8~65ms. 리뷰가 수천 건이 되거나 응답이 50ms를 넘으면 순수 텍스트 컬럼을 두고 `pg_trgm` GIN 인덱스를 건다(DDL 로그에 기록).
+
+SQL은 `test/search-preview-sql.native.ts`가 PGlite(실제 PostgreSQL)에서 검증한다.
 
 ---
 

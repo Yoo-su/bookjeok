@@ -119,6 +119,7 @@ export const API_PATHS = {
   },
   search: {
     ai: "/search/ai",
+    preview: "/search/preview",
     aiStream: "/search/ai/stream",
   },
   order: {

@@ -19,6 +19,7 @@ export * from "./features/notification";
 export * from "./features/order";
 export * from "./features/reading-log";
 export * from "./features/review";
+export * from "./features/search";
 export * from "./features/trade";
 export * from "./features/user";
 

@@ -6,6 +6,8 @@ export const PATHS = {
   VERIFY_EMAIL: "/verify-email",
   CALLBACK: "/callback",
   BOOK_SEARCH: "/book/search",
+  BOOK_SEARCH_BY_QUERY: (query: string) =>
+    `/book/search?q=${encodeURIComponent(query)}`,
   BOOK_DETAIL: (isbn: string) => `/book/${isbn}/detail`,
   BOOK_SALES_REGISTER: "/book/sales/register",
   BOOK_SALES_DETAIL: (id: string | number) => `/book/sales/${id}`,
@@ -17,6 +19,9 @@ export const PATHS = {
     `/book/reviews?tag=${encodeURIComponent(tag)}`,
   REVIEWS_BY_ISBN: (isbn: string) =>
     `/book/reviews?isbn=${encodeURIComponent(isbn)}`,
+  /** 리뷰 목록은 아직 `search`를 URL에서 읽지 않는다(통합 검색 3단계에서 연결) */
+  REVIEWS_BY_SEARCH: (query: string) =>
+    `/book/reviews?search=${encodeURIComponent(query)}`,
   REVIEW_WRITE: "/book/reviews/write",
   REVIEW_DETAIL: (id: string | number) => `/book/reviews/${id}`,
   REVIEW_EDIT: (id: string | number) => `/book/reviews/${id}/edit`,
@@ -28,6 +33,8 @@ export const PATHS = {
   ADMIN_FEEDBACK: "/admin/feedback",
   MY_PAGE_WISHLIST: "/my-page/wishlist",
   BOOK_MARKET: "/book/market",
+  BOOK_MARKET_BY_SEARCH: (query: string) =>
+    `/book/market?search=${encodeURIComponent(query)}`,
   USER_PROFILE: (handle: string) => `/users/${handle}`,
   /** 카드덱 공유 링크(폐지). 옛 링크를 프로필로 보내는 라우트만 남았다 */
   SHARE_DECK: (handle: string) => `/share/deck/${handle}`,
