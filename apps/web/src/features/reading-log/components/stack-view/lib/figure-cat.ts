@@ -211,41 +211,41 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
       0,
       "C",
       X(47),
-      -32,
+      -24,
       X(46),
-      -92,
+      -69,
       X(34),
-      -140,
+      -105,
       "C",
       X(30),
-      -158,
+      -118,
       X(22),
-      -170,
+      -127,
       X(10),
-      -176,
+      -132,
       "L",
       X(-14),
-      -172,
+      -129,
       "C",
       X(-42),
-      -152,
+      -114,
       X(-64),
-      -112,
+      -84,
       X(-68),
-      -62,
+      -46,
       "C",
       X(-72),
-      -26,
+      -20,
       X(-66),
       -4,
       X(-52),
       0,
       "Z",
     ]);
-    fur(["M", X(27), -96, "C", X(26), -60, X(26), -28, X(28), -3]);
-    fur(["M", X(-54), -6, "C", X(-28), -8, X(-18), -44, X(-32), -80]);
-    fur(["M", X(-20), -160, "C", X(-44), -140, X(-58), -112, X(-61), -80], 0.3);
-    catHead(p, { hx: X(8), hy: -196, r: 33, lid: 0.42, look: 0.05 });
+    fur(["M", X(27), -72, "C", X(26), -45, X(26), -21, X(28), -3]);
+    fur(["M", X(-54), -6, "C", X(-28), -8, X(-18), -33, X(-32), -60]);
+    fur(["M", X(-20), -120, "C", X(-44), -105, X(-58), -84, X(-61), -60], 0.3);
+    catHead(p, { hx: X(8), hy: -146, r: 39.5, lid: 0.42, look: 0.05 });
     // 앞발을 감싼 꼬리. 끝만 따로 묶어 가끔 까딱인다
     const tail = limb(
       ["M", X(-50), -6, "C", X(-26), 7, X(20), 8, X(56), -2],
@@ -325,7 +325,7 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
     fur(["M", H - 36, -5, "Q", H - 22, -11, H - 8, -4], 0.5);
     fur(["M", -58, -8, "C", -40, -10, -28, -40, -42, -70]);
     fur(["M", H - 62, -92, "C", 10, -100, -30, -98, -48, -82], 0.3);
-    catHead(p, { hx: H - 30, hy: -86, r: 31, lid: 0.55, look: 0.04 });
+    catHead(p, { hx: H - 34, hy: -86, r: 37, lid: 0.55, look: 0.04 });
     return [tailGroup(tail), ...p.items];
   }
 
@@ -452,7 +452,7 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
     w: 0.8,
     op: 0.5,
   });
-  catHead(p, { hx: H - 14, hy: -30, r: 30, lid: 0.8, look: 0 });
+  catHead(p, { hx: H - 18, hy: -30, r: 36, lid: 0.8, look: 0 });
   return [
     tailGroup(tail),
     farLeg,
@@ -465,142 +465,109 @@ function drawCat(p: Pencil, c: Ctx): SceneItem[] {
   ];
 }
 
-/**
- * 정면을 보는 머리. 뾰족한 귀와 위로 살짝 치켜 올라간 아몬드 눈이 시크함을 맡는다.
- * lid는 윗눈꺼풀이 덮은 정도(0 뜸 ~ 1 감음), look은 눈동자를 오른쪽으로 미는 정도(r 배수).
- * parts를 주면 눈과 눈동자를 거기에 따로 그린다. 깜빡이거나 시선을 옮길 때
- */
+/** 짧은 귀와 둥근 볼의 아기고양이 정면. 카메오와 책 위 자세가 같은 얼굴을 쓴다. */
 export function catHead(
   p: Pencil,
   o: { hx: number; hy: number; r: number; lid: number; look: number },
   parts?: { eyes: Pencil; pupils: Pencil },
 ) {
   const { hx, hy, r, lid, look } = o;
-  const eyeP = parts?.eyes ?? p;
-  const pupilP = parts?.pupils ?? p;
-  for (const s of [-1, 1]) {
-    const ear: Cmds = [
+  const C = p.C;
+  const eyes = parts?.eyes ?? p;
+  const pupils = parts?.pupils ?? p;
+  const at = (cmds: Cmds): Cmds => {
+    let axis = 0;
+    return cmds.map((value) =>
+      typeof value === "number" ? (axis++ % 2 ? hy : hx) + value * r : value,
+    );
+  };
+  for (const side of [-1, 1]) {
+    const ear = at([
       "M",
-      hx + s * 0.9 * r,
-      hy - 0.4 * r,
+      side * 0.91,
+      -0.24,
       "C",
-      hx + s * 0.9 * r,
-      hy - 0.9 * r,
-      hx + s * 0.86 * r,
-      hy - 1.3 * r,
-      hx + s * 0.8 * r,
-      hy - 1.55 * r,
-      "C",
-      hx + s * 0.6 * r,
-      hy - 1.32 * r,
-      hx + s * 0.42 * r,
-      hy - 1.08 * r,
-      hx + s * 0.24 * r,
-      hy - 0.92 * r,
+      side * 0.98,
+      -0.64,
+      side * 0.92,
+      -1.06,
+      side * 0.84,
+      -1.28,
+      "Q",
+      side * 0.8,
+      -1.36,
+      side * 0.72,
+      -1.25,
+      "L",
+      side * 0.26,
+      -0.78,
       "Z",
-    ];
-    p.fill(ear, p.C.ink);
-    p.pen(ear, { w: 1, a: 0.35, closed: true });
-    p.hatch(
-      [
-        "M",
-        hx + s * 0.56 * r,
-        hy - 0.86 * r,
-        "L",
-        hx + s * 0.76 * r,
-        hy - 1.3 * r,
-      ],
-      { color: p.C.muted, w: 0.7, op: 0.5 },
-    );
+    ]);
+    p.fill(ear, C.ink);
+    p.pen(ear, { w: 0.85, a: 0.25, closed: true, op: 0.4 });
+    p.hatch(at(["M", side * 0.59, -0.75, "L", side * 0.79, -1.1]), {
+      color: C.muted,
+      w: 0.6,
+      op: 0.35,
+    });
   }
-  const face: Cmds = [
+  const cheeks = at([
     "M",
-    hx - r,
-    hy,
+    -1.03,
+    0.02,
     "C",
-    hx - r,
-    hy - 0.72 * r,
-    hx - 0.55 * r,
-    hy - r,
-    hx,
-    hy - r,
+    -1.03,
+    -0.58,
+    -0.6,
+    -0.9,
+    0,
+    -0.9,
     "C",
-    hx + 0.55 * r,
-    hy - r,
-    hx + r,
-    hy - 0.72 * r,
-    hx + r,
-    hy,
+    0.6,
+    -0.9,
+    1.03,
+    -0.58,
+    1.03,
+    0.02,
     "C",
-    hx + r,
-    hy + 0.58 * r,
-    hx + 0.52 * r,
-    hy + 0.86 * r,
-    hx,
-    hy + 0.86 * r,
+    1.05,
+    0.59,
+    0.57,
+    0.84,
+    0,
+    0.84,
     "C",
-    hx - 0.52 * r,
-    hy + 0.86 * r,
-    hx - r,
-    hy + 0.58 * r,
-    hx - r,
-    hy,
+    -0.57,
+    0.84,
+    -1.05,
+    0.59,
+    -1.03,
+    0.02,
     "Z",
-  ];
-  p.fill(face, p.C.ink);
-  p.pen(face, { w: 1.05, a: 0.4, closed: true });
-
-  const w = 0.46 * r;
-  const h = 0.36 * r;
-  for (const s of [-1, 1]) {
-    const ex = hx + s * 0.4 * r;
-    const ey = hy + 0.04 * r;
-    // 바깥 눈꼬리가 위로. 눈꺼풀은 윗곡선만 낮춘다
-    const inner: [number, number] = [ex - s * w * 0.5, ey + 0.14 * h];
-    const outer: [number, number] = [ex + s * w * 0.5, ey - 0.22 * h];
-    const upper = ey - h * (0.95 - lid * 0.95);
-    const lower = ey + h * 0.8;
-    eyeP.fill(
-      [
-        "M",
-        inner[0],
-        inner[1],
-        "Q",
-        ex,
-        upper,
-        outer[0],
-        outer[1],
-        "Q",
-        ex + s * 0.08 * w,
-        lower,
-        inner[0],
-        inner[1],
-        "Z",
-      ],
-      CAT_EYE,
+  ]);
+  p.fill(cheeks, C.ink);
+  p.pen(cheeks, { w: 0.9, a: 0.25, closed: true, op: 0.4 });
+  for (const side of [-1, 1]) {
+    const ex = hx + side * 0.4 * r;
+    const ey = hy + 0.08 * r;
+    eyes.fill(ell(ex, ey, 0.225 * r, (0.16 - lid * 0.05) * r), CAT_EYE);
+    pupils.fill(
+      ell(ex + (0.015 + look) * r, ey + 0.012 * r, 0.07 * r, 0.09 * r),
+      C.ink,
     );
-    const top = (inner[1] + outer[1] + 2 * upper) / 4;
-    const bottom = (inner[1] + outer[1] + 2 * lower) / 4;
-    const py = (top + bottom) / 2 + 0.02 * r;
-    const ph = Math.max(0.02 * r, (bottom - top) * 0.42);
-    pupilP.fill(ell(ex + look * r, py, 0.05 * r, ph), p.C.ink);
-  }
-  // 수염. 회색이라 검은 얼굴 위와 흰 종이 위에서 다 보인다
-  for (const s of [-1, 1])
-    for (const i of [0, 1, 2]) {
-      const y0 = hy + 0.46 * r + i * 0.08 * r;
+    for (const i of [0, 1])
       p.hatch(
-        [
+        at([
           "M",
-          hx + s * 0.32 * r,
-          y0,
+          side * 0.57,
+          0.43 + i * 0.11,
           "Q",
-          hx + s * 0.95 * r,
-          y0 - 0.12 * r + i * 0.06 * r,
-          hx + s * 1.5 * r,
-          y0 - 0.18 * r + i * 0.2 * r,
-        ],
-        { color: p.C.faint, w: 0.6, op: 0.85 },
+          side * 1.02,
+          0.42 + i * 0.13,
+          side * 1.38,
+          0.34 + i * 0.25,
+        ]),
+        { color: C.faint, w: 0.55, op: 0.7 },
       );
-    }
+  }
 }
