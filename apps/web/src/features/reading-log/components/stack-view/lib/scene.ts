@@ -584,7 +584,7 @@ export function buildStackScene(o: SceneOptions): SceneResult {
 
   // 남은 높이 화살표와 글자 상자. 목표 이름표가 피할 수 있게 먼저 자리를 잡는다
   const gap = topY - fy;
-  const remain = target && gap > 34 * u;
+  let remain = target && gap > 34 * u;
   const two = gap > 80 * u;
   const bw =
     Math.max(
@@ -606,6 +606,11 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     if (clear >= fy + 4 * u + bh / 2) remainY = Math.min(remainY, clear);
     else remainX = Math.max(remainMinX, cat.box.x0 - 4 * u - bw / 2);
   }
+  // 좁은 무대라 고양이 왼쪽으로 못 비키면 화살표를 고양이 등 위에서 멈춘다
+  const catTop = cat?.topWithin(remainX - 8 * u, remainX + 8 * u) ?? null;
+  const remainEnd =
+    catTop === null ? topY - 6 * u : Math.min(topY - 6 * u, catTop - 6 * u);
+  if (remainEnd - fy < 28 * u) remain = false;
   const remainBox: Box | null = remain
     ? {
         x0: remainX - bw / 2,
@@ -705,9 +710,10 @@ export function buildStackScene(o: SceneOptions): SceneResult {
   }
   if (remain) {
     const x = remainX;
-    const y1 = topY - 6 * u;
+    const y1 = remainEnd;
     const y2 = fy + 6 * u;
     A(`M${f1(x)},${f1(y1)} L${f1(x)},${f1(y2)}`, {
+      id: "remain-line",
       stroke: C.pen,
       sw: 1.6 * u,
       dash: [4 * u, 4 * u],
@@ -715,7 +721,13 @@ export function buildStackScene(o: SceneOptions): SceneResult {
     });
     A(
       `M${f1(x - 4.5 * u)},${f1(y2 + 6 * u)} L${f1(x)},${f1(y2)} L${f1(x + 4.5 * u)},${f1(y2 + 6 * u)} M${f1(x - 4.5 * u)},${f1(y1 - 6 * u)} L${f1(x)},${f1(y1)} L${f1(x + 4.5 * u)},${f1(y1 - 6 * u)}`,
-      { stroke: C.pen, sw: 1.6 * u, cap: "round", join: "round" },
+      {
+        id: "remain-head",
+        stroke: C.pen,
+        sw: 1.6 * u,
+        cap: "round",
+        join: "round",
+      },
     );
     const my = remainY;
     A(

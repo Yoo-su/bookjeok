@@ -28,6 +28,8 @@ export interface CatResult {
   box: { x0: number; y0: number; x1: number; y1: number };
   /** 책 윗면보다 위로 솟은 몸의 왼쪽 끝(px). 남은 높이 화살표가 이 왼쪽으로 비킨다 */
   upperLeft: number;
+  /** x0~x1(px) 사이에서 책 윗면 위로 솟은 털·꼬리의 꼭대기 y. 없으면 null */
+  topWithin: (x0: number, x1: number) => number | null;
 }
 
 /** 자세별 크기(mm, 책 가운데 기준). 위는 음수. H는 맨 위 책 가로의 절반. 수염까지 친다 */
@@ -109,10 +111,26 @@ export function buildCat(o: {
   const e = extents(pose, H, tailDown);
   const [x0, y0] = T(e.x0, e.top);
   const [x1, y1] = T(e.x1, e.bottom);
+  // 첫 벌의 실제 선 위 점. 선 굵기는 topWithin 쓰는 쪽에서 여유로 둔다
+  const pts: [number, number][] = [];
+  const walk = (list: SceneItem[]) =>
+    list.forEach((it) => {
+      if (it.k === "g") walk(it.children);
+      else if (it.k === "p")
+        for (const m of it.d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g))
+          if (Number(m[2]) < surfaceY) pts.push([Number(m[1]), Number(m[2])]);
+    });
+  walk([children[0]]);
   return {
     items: [{ k: "g", id: "cat", cls: "stack-cat", children }],
     box: { x0, y0, x1, y1 },
     upperLeft: T(e.upper, 0)[0],
+    topWithin: (a, b) => {
+      let top: number | null = null;
+      for (const [x, y] of pts)
+        if (x >= a && x <= b && (top === null || y < top)) top = y;
+      return top;
+    },
   };
 }
 
