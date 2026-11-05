@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { SceneNodes } from "@/features/reading-log/components/stack-view/lib/scene-svg";
+import { DefaultFooter } from "@/layouts/default-layout/default-footer";
 import { DefaultHeader } from "@/layouts/default-layout/default-header";
 
 import type { CameoScene } from "../../constants";
@@ -151,6 +152,60 @@ export const HeaderWalkOnRealHeader: Story = {
 };
 /** 화면 아래 모서리에서 귀부터 올라와 두리번거리다 쏙 내려간다 */
 export const BottomPeekLoop: Story = { render: () => <Loop scene="peek" /> };
+
+function SitePreview() {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const [playback, setPlayback] = useState<{ scene: CameoScene; id: number }>({
+    scene: "walk",
+    id: 0,
+  });
+  const onDone = useCallback(() => {}, []);
+  useEffect(() => {
+    setHost(document.querySelector<HTMLElement>("[data-site-header] > div"));
+  }, []);
+  const replay = (scene: CameoScene) =>
+    setPlayback(({ id }) => ({ scene, id: id + 1 }));
+  const Scene = playback.scene === "walk" ? HeaderWalk : BottomPeek;
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-stone-50">
+      <DefaultHeader />
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-wrap content-start gap-3 px-4 pt-6 pb-12">
+        <button
+          type="button"
+          className="rounded-lg border bg-white px-3 py-2"
+          onClick={() => replay("walk")}
+        >
+          헤더 산책 재생
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border bg-white px-3 py-2"
+          onClick={() => replay("peek")}
+        >
+          하단 빼꼼 재생
+        </button>
+      </main>
+      <DefaultFooter />
+      {host && (
+        <Scene
+          key={playback.id}
+          host={playback.scene === "walk" ? host : document.body}
+          rand={Math.random}
+          onDone={onDone}
+        />
+      )}
+    </div>
+  );
+}
+
+/** 서비스의 실제 헤더·푸터와 같은 장면 컴포넌트를 함께 확인한다. */
+export const OnRealHeaderAndFooter: Story = {
+  render: () => <SitePreview />,
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: "/ko/lounge" } },
+  },
+};
 /** 걷는 옆모습 · 멈춰 정면 · 빼꼼 */
 export const StillPoses: Story = { render: () => <Poses /> };
 
