@@ -1,14 +1,28 @@
 "use client";
 
-import { motion, type Variants } from "motion/react";
+import { AnimatePresence, motion, type Variants } from "motion/react";
 import { useTranslations } from "next-intl";
-import { type PointerEvent, useEffect, useState } from "react";
+import {
+  type PointerEvent,
+  type Ref,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { saveReturnUrl } from "@/features/auth/utils/return-url";
 import { HeaderMusicButton } from "@/features/music";
 import { NotificationPopover } from "@/features/notification/components/notification-popover";
+import {
+  focusGlobalSearchInput,
+  HeaderSearch,
+} from "@/features/search/components/header-search";
+import { MobileSearchOverlay } from "@/features/search/components/mobile-search-overlay";
+import { Search } from "@/shared/components/icons/iconsax";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -146,6 +160,58 @@ const ChapterLink = ({ href, index, label, active }: ChapterLinkProps) => {
   );
 };
 
+interface ChapterSearchButtonProps {
+  index: string;
+  label: string;
+  active: boolean;
+  onOpen: () => void;
+  buttonRef: Ref<HTMLButtonElement>;
+}
+
+/** 마지막 챕터는 페이지로 가지 않고 그 자리에서 통합 검색창으로 바뀐다 */
+const ChapterSearchButton = ({
+  index,
+  label,
+  active,
+  onOpen,
+  buttonRef,
+}: ChapterSearchButtonProps) => {
+  const { hovered, hoverProps } = useMouseHover();
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      onClick={onOpen}
+      aria-haspopup="dialog"
+      aria-keyshortcuts="/"
+      {...hoverProps}
+      className={cn(
+        NAV_ITEM_CLASS,
+        "outline-none cursor-pointer",
+        active ? "text-stone-900" : "text-stone-500 hover:text-stone-900",
+      )}
+    >
+      <span className={indexNumClass(active)}>{index}</span>
+      <span className="tracking-tight">{label}</span>
+      <Search
+        className="h-3.5 w-3.5 text-stone-400 transition-colors group-hover:text-stone-700"
+        aria-hidden="true"
+      />
+      <HandDrawnUnderline
+        state={active ? "active" : hovered ? "preview" : "idle"}
+      />
+    </button>
+  );
+};
+
+/** 입력 중이 아닐 때 `/`로 검색을 연다 */
+const isEditableTarget = (target: EventTarget | null) =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+
+const LG_QUERY = "(min-width: 1024px)";
+
 interface ChapterMenuItem {
   href: string;
   label: string;
@@ -238,6 +304,7 @@ const ChapterMenu = ({
 
 export const DefaultHeader = () => {
   const t = useTranslations("header");
+  const tSearch = useTranslations("search.global");
   const user = useAuthStore((state) => state.user);
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
@@ -251,6 +318,46 @@ export const DefaultHeader = () => {
   }, []);
 
   const currentUser = mounted ? user : null;
+
+  // 열 때 화면 폭으로 정한다. 첫 렌더에 폭을 모르는 동안 눌러도 엉뚱한 쪽이 열리지 않게
+  const [searchMode, setSearchMode] = useState<"desktop" | "mobile" | null>(
+    null,
+  );
+  const desktopTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const openSearch = useCallback(() => {
+    // iOS는 탭 이벤트 안에서 포커스해야 키보드가 열려 즉시 그린 뒤 포커스
+    const mode = window.matchMedia(LG_QUERY).matches ? "desktop" : "mobile";
+    flushSync(() => setSearchMode(mode));
+    focusGlobalSearchInput();
+  }, []);
+  const dismissSearch = useCallback(() => setSearchMode(null), []);
+  const closeSearch = useCallback(() => {
+    // 메뉴의 inert가 풀린 뒤라야 「05 검색」에 포커스가 간다
+    flushSync(() => setSearchMode(null));
+    const trigger =
+      searchMode === "desktop"
+        ? desktopTriggerRef.current
+        : mobileTriggerRef.current;
+    trigger?.focus({ preventScroll: true });
+  }, [searchMode]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (isEditableTarget(e.target)) return;
+      e.preventDefault();
+      openSearch();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [openSearch]);
+
+  // 화면을 옮기면 닫는다. 뒤로가기는 검색창의 이동 처리를 거치지 않는다
+  useEffect(() => {
+    setSearchMode(null);
+  }, [pathname]);
 
   const isActive = (path: string) => !!pathname?.startsWith(path);
   // 비로그인이면 가드에 막히는 내 독서 기록 대신 공개 소개로 보낸다
@@ -267,7 +374,7 @@ export const DefaultHeader = () => {
     >
       <div
         className={cn(
-          "mx-auto flex w-full items-center justify-between rounded-full border border-stone-200/70 bg-white/80 px-4 py-2.5 backdrop-blur-xl sm:px-6",
+          "relative mx-auto flex w-full items-center justify-between rounded-full border border-stone-200/70 bg-white/80 px-4 py-2.5 backdrop-blur-xl sm:px-6",
           // 폭·그림자만 전환한다. 메뉴 구성이 스크롤에 따라 바뀌면 누르려던 것이
           // 움직이므로 건드리지 않는다.
           "transition-[max-width,box-shadow,background-color] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
@@ -291,9 +398,17 @@ export const DefaultHeader = () => {
         </div>
 
         {/* 중앙: 데스크탑 에디토리얼 챕터 인덱스 네비게이션 */}
-        <nav
+        {/* 검색을 여는 동안에는 이 자리를 검색창이 차지한다 */}
+        <motion.nav
           className="hidden lg:flex items-center gap-5.5 xl:gap-7 whitespace-nowrap shrink-0 font-[family-name:var(--font-gowun-batang)]"
           aria-label={t("nav.main_menu")}
+          inert={searchMode === "desktop"}
+          initial={false}
+          animate={
+            searchMode === "desktop"
+              ? { opacity: 0, y: -6, transition: { duration: 0.16 } }
+              : { opacity: 1, y: 0, transition: { duration: 0.3, delay: 0.08 } }
+          }
         >
           <ChapterLink
             href={PATHS.LOUNGE}
@@ -345,19 +460,36 @@ export const DefaultHeader = () => {
               },
             ]}
           />
-          <ChapterLink
-            href={PATHS.BOOK_SEARCH}
+          <ChapterSearchButton
             index="05"
             label={t("nav.menu_search")}
             active={isActive(PATHS.BOOK_SEARCH)}
+            onOpen={openSearch}
+            buttonRef={desktopTriggerRef}
           />
-        </nav>
+        </motion.nav>
+
+        <AnimatePresence>
+          {searchMode === "desktop" && (
+            <HeaderSearch onClose={closeSearch} onDismiss={dismissSearch} />
+          )}
+        </AnimatePresence>
 
         {/* 우측: 사용자 메뉴 & BGM */}
         <div className="flex shrink-0 items-center justify-end gap-2.5 sm:gap-3 lg:flex-1">
           {/* 폰에서는 숨기고 모바일 시트 상단에 둔다 */}
           <HeaderMusicButton className="hidden sm:inline-flex" />
           <LanguageSwitcher className="hidden lg:flex shrink-0" />
+          <button
+            ref={mobileTriggerRef}
+            type="button"
+            onClick={openSearch}
+            aria-label={tSearch("open")}
+            aria-haspopup="dialog"
+            className="lg:hidden -mx-1 flex size-9 items-center justify-center rounded-full text-stone-600 transition-[color,scale] duration-150 hover:text-stone-900 active:scale-90 motion-reduce:transition-none"
+          >
+            <Search className="h-5 w-5" aria-hidden="true" />
+          </button>
           {!mounted ? (
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-stone-100/80 animate-pulse border border-stone-200/40 flex items-center justify-center">
@@ -385,6 +517,11 @@ export const DefaultHeader = () => {
           )}
         </div>
       </div>
+      <AnimatePresence>
+        {searchMode === "mobile" && (
+          <MobileSearchOverlay onClose={closeSearch} />
+        )}
+      </AnimatePresence>
     </header>
   );
 };

@@ -2802,5 +2802,38 @@
       "saved": "Saved.",
       "save_error": "Couldn't save."
     }
+  },
+  "search": {
+    "global": {
+      "label": "Search",
+      "open": "Open search",
+      "close": "Close search",
+      "placeholder": "Books, reviews, used books",
+      "clear": "Clear search",
+      "results": "Search preview",
+      "section_books": "Books",
+      "section_reviews": "Reviews",
+      "section_sales": "Used books",
+      "section_recent": "Recent",
+      "section_popular": "Popular",
+      "clear_recent": "Clear all",
+      "remove_recent": "Remove recent search {query}",
+      "more_books": "See all {count} books",
+      "more_reviews": "See all {count} reviews",
+      "more_sales": "See all {count} listings",
+      "count_review": "{count} reviews",
+      "count_sale": "{count} used",
+      "sale_reserved": "Reserved",
+      "price": "₩{price}",
+      "intro": "Find books, reviews and used books at once",
+      "short": "Type two or more characters",
+      "empty": "Nothing matches “{query}”",
+      "error": "Could not load the preview",
+      "search_books": "Search more in Books",
+      "go_book_search": "Go to book search",
+      "hint_enter": "Book search",
+      "hint_move": "Move",
+      "hint_close": "Close"
+    }
   }
 }
