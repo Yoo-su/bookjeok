@@ -21,10 +21,12 @@ export function dayKey(now: number) {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-/** 페이지에 들어와 주사위를 굴리기까지 기다릴 시간(ms) */
-export function cameoDelay(rand: () => number) {
-  const { delayMin, delayMax } = CAMEO_RULES;
-  return delayMin + rand() * (delayMax - delayMin);
+/** 다음 주사위까지 기다릴 시간(ms). 첫 주사위는 짧게, 같은 페이지에서 다시 굴릴 땐 길게 */
+export function cameoDelay(rand: () => number, retry = false) {
+  const { delayMin, delayMax, retryMin, retryMax } = CAMEO_RULES;
+  return retry
+    ? retryMin + rand() * (retryMax - retryMin)
+    : delayMin + rand() * (delayMax - delayMin);
 }
 
 /**
@@ -37,6 +39,8 @@ export function rollCameo(o: {
   session: CameoSession;
   available: CameoScene[];
   rand: () => number;
+  /** 같은 페이지에서 다시 굴리는 주사위 */
+  retry?: boolean;
 }): CameoScene | null {
   const { now, ledger, session, available, rand } = o;
   if (!available.length) return null;
@@ -45,7 +49,8 @@ export function rollCameo(o: {
   if (session.shown >= CAMEO_RULES.perSession) return null;
   if (session.shown > 0 && now - session.lastAt < CAMEO_RULES.minGap)
     return null;
-  if (rand() >= CAMEO_RULES.chance) return null;
+  if (rand() >= (o.retry ? CAMEO_RULES.retryChance : CAMEO_RULES.chance))
+    return null;
   const fresh = available.filter((s) => s !== ledger.lastScene);
   const pool = fresh.length ? fresh : available;
   return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))];

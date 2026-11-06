@@ -27,6 +27,21 @@ describe("rollCameo", () => {
     expect(rollCameo({ ...base, rand: seq(CAMEO_RULES.chance) })).toBeNull();
   });
 
+  it("같은 페이지에서 다시 굴릴 땐 다시 굴리는 확률을 쓴다", () => {
+    const between = (CAMEO_RULES.retryChance + CAMEO_RULES.chance) / 2;
+    expect(rollCameo({ ...base, rand: seq(between, 0) })).toBe("walk");
+    expect(
+      rollCameo({ ...base, retry: true, rand: seq(between, 0) }),
+    ).toBeNull();
+    expect(
+      rollCameo({
+        ...base,
+        retry: true,
+        rand: seq(CAMEO_RULES.retryChance - 0.01, 0),
+      }),
+    ).toBe("walk");
+  });
+
   it("바로 전 장면은 다른 장면이 있으면 피한다", () => {
     const ledger = { ...fresh, lastScene: "walk" as const };
     expect(rollCameo({ ...base, ledger, rand: seq(0, 0) })).toBe("peek");

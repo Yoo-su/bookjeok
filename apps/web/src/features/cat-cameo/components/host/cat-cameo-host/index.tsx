@@ -109,18 +109,25 @@ export function CatCameoHost() {
       const id = window.setTimeout(() => start(forced, false), 900);
       return () => window.clearTimeout(id);
     }
-    const id = window.setTimeout(() => {
-      if (playing.current || isBusy()) return;
-      const ledger = useCatCameoStore.getState();
-      const scene = rollCameo({
-        now: Date.now(),
-        ledger,
-        session: readSession(),
-        available: CAMEO_SCENES.filter((s) => hostOf(s)),
-        rand: Math.random,
-      });
-      if (scene) start(scene, true);
-    }, cameoDelay(Math.random));
+    let id = 0;
+    // 머무는 동안 계속 기회를 준다. 한도·간격은 rollCameo가 지킨다
+    const tick = (retry: boolean) => {
+      id = window.setTimeout(() => {
+        if (!playing.current && !isBusy()) {
+          const scene = rollCameo({
+            now: Date.now(),
+            ledger: useCatCameoStore.getState(),
+            session: readSession(),
+            available: CAMEO_SCENES.filter((s) => hostOf(s)),
+            rand: Math.random,
+            retry,
+          });
+          if (scene) start(scene, true);
+        }
+        tick(true);
+      }, cameoDelay(Math.random, retry));
+    };
+    tick(false);
     return () => window.clearTimeout(id);
   }, [pathname, reduce]);
 
