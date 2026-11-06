@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { drawWalkingCat } from "../../../lib/draw";
 import { pickStopCenter, type Span } from "../../../lib/free-gap";
 import { spriteFrame } from "../sprite-frames";
 import type { CameoSceneProps } from "../types";
+import { useSpriteReady } from "../use-sprite-ready";
 import {
   REST_FRAME_INDEX,
   RestPose,
@@ -78,7 +79,7 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
   const eyesRef = useRef<SVGGElement>(null);
   const fled = useRef(false);
   const anims = useRef<Animation[]>([]);
-  const [ready, setReady] = useState(false);
+  const ready = useSpriteReady(WALK_IMAGE, onDone);
   const spriteScale = cat.groundY / (CROP.ground - CROP.y);
   const spriteWidth = CROP.width * spriteScale;
 
@@ -283,8 +284,6 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
                 style={{
                   transform: `translateX(${-atlas.frames[REST_FRAME_INDEX].x}px)`,
                 }}
-                onLoad={() => setReady(true)}
-                onError={onDone}
               />
             </g>
             <g ref={frontRef} style={{ opacity: 0, visibility: "hidden" }}>

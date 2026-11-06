@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { spriteFrame } from "../sprite-frames";
 import type { CameoSceneProps } from "../types";
+import { useSpriteReady } from "../use-sprite-ready";
 import atlas from "./peek.json";
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
@@ -60,7 +61,7 @@ export function BottomPeek({ host, rand, onDone }: CameoSceneProps) {
   const stripRef = useRef<SVGImageElement>(null);
   const anims = useRef<Animation[]>([]);
   const fled = useRef(false);
-  const [ready, setReady] = useState(false);
+  const ready = useSpriteReady(PEEK_IMAGE, onDone);
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -125,8 +126,6 @@ export function BottomPeek({ host, rand, onDone }: CameoSceneProps) {
             href={PEEK_IMAGE}
             width={atlas.sheetWidth}
             height={atlas.sheetHeight}
-            onLoad={() => setReady(true)}
-            onError={onDone}
           />
           <path
             d="M40 116 Q36 105 49 96 Q47 76 57 60 L53 15 L85 43 Q98 37 112 43 L143 15 L140 58 Q151 77 145 97 Q158 103 153 116Z"
