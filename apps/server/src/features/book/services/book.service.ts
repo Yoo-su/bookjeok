@@ -1,5 +1,7 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Cache } from 'cache-manager';
 import { In, Repository } from 'typeorm';
 
 import { ReadingLogService } from '@/features/reading-log/services/reading-log.service';
@@ -11,6 +13,7 @@ import { Book } from '../entities/book.entity';
 
 /** 인기 도서 노출 개수. 홈 화면 슬라이더가 이 수만큼 받는다. */
 const POPULAR_BOOK_LIMIT = 10;
+const POPULAR_BOOKS_TTL_MS = 60_000;
 
 @Injectable()
 export class BookService {
@@ -19,6 +22,7 @@ export class BookService {
     private readonly bookRepository: Repository<Book>,
     private readonly readingLogService: ReadingLogService,
     private readonly wishlistService: WishlistService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   /**
@@ -73,7 +77,15 @@ export class BookService {
    *
    * @returns 인기도 상위 10권
    */
-  async findPopularBooks(): Promise<Book[]> {
+  findPopularBooks(): Promise<Book[]> {
+    return this.cacheManager.wrap(
+      'books:popular',
+      () => this.loadPopularBooks(),
+      POPULAR_BOOKS_TTL_MS,
+    );
+  }
+
+  private async loadPopularBooks(): Promise<Book[]> {
     const rawResults = await this.bookRepository
       .createQueryBuilder('book')
       .leftJoin(

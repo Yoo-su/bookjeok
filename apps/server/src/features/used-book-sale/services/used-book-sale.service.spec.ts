@@ -1,7 +1,8 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DataSource, EntityManager } from 'typeorm';
+import { createCache } from 'cache-manager';
+import { DataSource, EntityManager, QueryRunner } from 'typeorm';
 
 import { BookService } from '@/features/book/services/book.service';
 import { Order, OrderStatus } from '@/features/order/entities/order.entity';
@@ -11,6 +12,7 @@ import { BusinessException } from '@/shared/exceptions/business.exception';
 
 import { CreateBookSaleDto } from '../dtos/create-book-sale.dto';
 import { SaleStatus, UsedBookSale } from '../entities/used-book-sale.entity';
+import { UsedBookSaleCacheSubscriber } from '../subscribers/used-book-sale-cache.subscriber';
 import { UsedBookSaleService } from './used-book-sale.service';
 
 describe('UsedBookSaleService', () => {
@@ -24,6 +26,8 @@ describe('UsedBookSaleService', () => {
     save: jest.fn(),
     remove: jest.fn(),
     merge: jest.fn(),
+    createQueryBuilder: jest.fn(),
+    find: jest.fn(),
   };
 
   const mockOrderRepository = {
@@ -77,11 +81,7 @@ describe('UsedBookSaleService', () => {
         { provide: DataSource, useValue: mockDataSource },
         {
           provide: CACHE_MANAGER,
-          useValue: {
-            get: jest.fn(),
-            set: jest.fn(),
-            del: jest.fn(),
-          },
+          useValue: createCache(),
         },
       ],
     }).compile();
@@ -91,6 +91,109 @@ describe('UsedBookSaleService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('마켓 캐시 무효화', () => {
+    let subscriber: UsedBookSaleCacheSubscriber;
+    let queryRunner: QueryRunner;
+    const getRawMany = jest.fn();
+
+    beforeEach(() => {
+      const dataSource = new DataSource({ type: 'postgres' });
+      subscriber = new UsedBookSaleCacheSubscriber(dataSource, service);
+      subscriber.onModuleInit();
+      queryRunner = dataSource.createQueryRunner();
+      jest.spyOn(queryRunner, 'query').mockResolvedValue(undefined);
+
+      getRawMany.mockResolvedValue([]);
+      mockUsedBookSaleRepository.createQueryBuilder.mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        addGroupBy: jest.fn().mockReturnThis(),
+        getRawMany,
+      });
+      mockUsedBookSaleRepository.find.mockResolvedValue([{ id: 1 }]);
+    });
+
+    it('삭제 커밋까지 캐시를 유지하고 응답 전에 인기 목록과 지역 목록을 모두 비운다', async () => {
+      getRawMany
+        .mockResolvedValueOnce([{ id: 1 }])
+        .mockResolvedValueOnce([{ city: '서울', district: '강남구' }]);
+      await expect(service.findPopularSales()).resolves.toEqual([{ id: 1 }]);
+      await expect(service.getAvailableRegions()).resolves.toEqual({
+        서울: ['강남구'],
+      });
+
+      await queryRunner.startTransaction();
+      await subscriber.afterRemove({ queryRunner });
+      await expect(service.findPopularSales()).resolves.toEqual([{ id: 1 }]);
+
+      await queryRunner.commitTransaction();
+      await expect(service.findPopularSales()).resolves.toEqual([]);
+      await expect(service.getAvailableRegions()).resolves.toEqual({});
+      expect(getRawMany).toHaveBeenCalledTimes(4);
+    });
+
+    it('롤백한 상태 변경과 조회수 갱신은 인기 목록을 무효화하지 않는다', async () => {
+      await service.findPopularSales();
+      await queryRunner.startTransaction();
+      await subscriber.afterUpdate({
+        queryRunner,
+        entity: { status: SaleStatus.RESERVED },
+        updatedColumns: [],
+        updatedRelations: [],
+      });
+      await queryRunner.rollbackTransaction();
+      await queryRunner.startTransaction();
+      await queryRunner.commitTransaction();
+
+      await subscriber.afterUpdate({
+        queryRunner,
+        entity: {
+          viewCount: () => 'viewCount + 1',
+          updatedAt: () => 'updatedAt',
+        },
+        updatedColumns: [],
+        updatedRelations: [],
+      });
+      await service.findPopularSales();
+      expect(getRawMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('커밋 전에 시작한 조회가 이전 인기 목록을 다시 캐싱하지 않는다', async () => {
+      let finishOldQuery!: (sales: { id: number }[]) => void;
+      let signalOldQueryStarted!: () => void;
+      const oldQueryStarted = new Promise<void>((resolve) => {
+        signalOldQueryStarted = resolve;
+      });
+      mockUsedBookSaleRepository.find.mockImplementationOnce(() => {
+        signalOldQueryStarted();
+        return new Promise((resolve) => {
+          finishOldQuery = resolve;
+        });
+      });
+      getRawMany.mockResolvedValueOnce([{ id: 1 }]);
+      const oldRequest = service.findPopularSales();
+      await oldQueryStarted;
+
+      await queryRunner.startTransaction();
+      await subscriber.afterUpdate({
+        queryRunner,
+        entity: { status: SaleStatus.RESERVED },
+        updatedColumns: [],
+        updatedRelations: [],
+      });
+      await queryRunner.commitTransaction();
+
+      finishOldQuery([{ id: 1 }]);
+      await oldRequest;
+      await expect(service.findPopularSales()).resolves.toEqual([]);
+    });
   });
 
   describe('createUsedBookSale', () => {

@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
 import { In, Repository } from 'typeorm';
@@ -48,12 +48,19 @@ const SALE_LIST_SELECT = [
   'book',
 ];
 
+interface MarketCacheEntry<T> {
+  generation: number;
+  value: T;
+}
+
 @Injectable()
 export class UsedBookSaleService {
   // 인기 판매글 및 지역 목록 캐시 키/TTL
   private static readonly POPULAR_SALES_CACHE_KEY = 'popular_sales';
   private static readonly REGIONS_CACHE_KEY = 'available_book_sale_regions';
-  private static readonly CACHE_TTL = 600000;
+  private static readonly CACHE_TTL = 600_000;
+  private readonly logger = new Logger(UsedBookSaleService.name);
+  private marketCacheGeneration = 0;
 
   constructor(
     @InjectRepository(UsedBookSale)
@@ -86,7 +93,6 @@ export class UsedBookSaleService {
     });
 
     const savedSale = await this.usedBookSaleRepository.save(newSale);
-    await this.cacheManager.del(UsedBookSaleService.REGIONS_CACHE_KEY);
 
     // 저장 후 도서·유저 정보를 포함하여 다시 조회
     return (await this.usedBookSaleRepository.findOne({
@@ -211,30 +217,15 @@ export class UsedBookSaleService {
    * 인기 판매글을 조회합니다.
    * 최근 POPULAR_SALE_MONTHS개월 내 조회수 높은 순으로 6개 반환 (결과 캐싱)
    */
-  async findPopularSales(): Promise<UsedBookSale[]> {
-    // 1. 캐시 확인
-    const cached = await this.cacheManager.get<UsedBookSale[]>(
+  findPopularSales(): Promise<UsedBookSale[]> {
+    return this.getMarketCache(
       UsedBookSaleService.POPULAR_SALES_CACHE_KEY,
+      async () => {
+        const idResults = await this.getPopularSaleIds(6);
+        if (idResults.length === 0) return [];
+        return this.findSalesByIdsInOrder(idResults.map(({ id }) => id));
+      },
     );
-    if (cached) return cached;
-
-    // 2. 인기 판매글 ID 조회
-    const idResults = await this.getPopularSaleIds(6);
-    if (idResults.length === 0) return [];
-
-    const ids = idResults.map((r) => r.id);
-
-    // 3. 엔티티 상세 조회 및 순서 유지
-    const result = await this.findSalesByIdsInOrder(ids);
-
-    // 4. 결과 캐싱 (10분)
-    await this.cacheManager.set(
-      UsedBookSaleService.POPULAR_SALES_CACHE_KEY,
-      result,
-      UsedBookSaleService.CACHE_TTL,
-    );
-
-    return result;
   }
 
   /**
@@ -259,7 +250,7 @@ export class UsedBookSaleService {
    */
   private async findSalesByIdsInOrder(ids: number[]): Promise<UsedBookSale[]> {
     const sales = await this.usedBookSaleRepository.find({
-      where: { id: In(ids) },
+      where: { id: In(ids), status: SaleStatus.FOR_SALE },
       relations: ['user', 'book'],
     });
 
@@ -522,12 +513,13 @@ export class UsedBookSaleService {
    * 현재 판매 중인 중고책 게시글이 존재하는 지역(시/도 -> 시/군/구[]) 목록을 조회합니다.
    * 결과는 10분간 캐싱됩니다.
    */
-  async getAvailableRegions(): Promise<Record<string, string[]>> {
-    const cached = await this.cacheManager.get<Record<string, string[]>>(
-      UsedBookSaleService.REGIONS_CACHE_KEY,
+  getAvailableRegions(): Promise<Record<string, string[]>> {
+    return this.getMarketCache(UsedBookSaleService.REGIONS_CACHE_KEY, () =>
+      this.loadAvailableRegions(),
     );
-    if (cached) return cached;
+  }
 
+  private async loadAvailableRegions(): Promise<Record<string, string[]>> {
     const rawResults = await this.usedBookSaleRepository
       .createQueryBuilder('sale')
       .select('sale.city', 'city')
@@ -548,11 +540,38 @@ export class UsedBookSaleService {
       }
     }
 
-    await this.cacheManager.set(
-      UsedBookSaleService.REGIONS_CACHE_KEY,
-      result,
-      UsedBookSaleService.CACHE_TTL,
-    );
     return result;
+  }
+
+  async invalidateMarketCache(): Promise<void> {
+    this.marketCacheGeneration += 1;
+    try {
+      await this.cacheManager.mdel([
+        UsedBookSaleService.POPULAR_SALES_CACHE_KEY,
+        UsedBookSaleService.REGIONS_CACHE_KEY,
+      ]);
+    } catch (error) {
+      this.logger.error('마켓 캐시 삭제 실패', error);
+    }
+  }
+
+  private async getMarketCache<T>(
+    key: string,
+    load: () => Promise<T>,
+  ): Promise<T> {
+    const cached = await this.cacheManager.get<MarketCacheEntry<T>>(key);
+    const generation = this.marketCacheGeneration;
+    if (cached?.generation === generation) return cached.value;
+
+    const value = await load();
+    // 커밋 전에 시작한 조회가 무효화 이후 이전 결과를 다시 채우지 않게 한다.
+    if (generation === this.marketCacheGeneration) {
+      await this.cacheManager.set(
+        key,
+        { generation, value },
+        UsedBookSaleService.CACHE_TTL,
+      );
+    }
+    return value;
   }
 }

@@ -1,5 +1,7 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { createCache } from 'cache-manager';
 
 import { ReadingLogService } from '@/features/reading-log/services/reading-log.service';
 import { WishlistService } from '@/features/wishlist/services/wishlist.service';
@@ -23,6 +25,7 @@ describe('BookService', () => {
     module = await Test.createTestingModule({
       providers: [
         BookService,
+        { provide: CACHE_MANAGER, useValue: createCache() },
         {
           provide: getRepositoryToken(Book),
           useValue: {
@@ -174,6 +177,30 @@ describe('BookService', () => {
 
       expect(result).toEqual([]);
       expect(repo.findBy).not.toHaveBeenCalled();
+    });
+
+    it('동시 요청과 1분 안의 반복 요청은 같은 집계 결과를 쓴다', async () => {
+      const repo = module.get(getRepositoryToken(Book));
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(buildQb(['1']));
+      (repo.findBy as jest.Mock).mockResolvedValue([{ isbn: '1' }]);
+      const now = jest.spyOn(Date, 'now').mockReturnValue(100_000);
+
+      try {
+        const results = await Promise.all([
+          service.findPopularBooks(),
+          service.findPopularBooks(),
+        ]);
+        now.mockReturnValue(159_999);
+        await expect(service.findPopularBooks()).resolves.toEqual(results[0]);
+        expect(results[0]).toEqual(results[1]);
+        expect(repo.createQueryBuilder).toHaveBeenCalledTimes(1);
+
+        now.mockReturnValue(160_001);
+        await service.findPopularBooks();
+        expect(repo.createQueryBuilder).toHaveBeenCalledTimes(2);
+      } finally {
+        now.mockRestore();
+      }
     });
   });
 

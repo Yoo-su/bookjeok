@@ -102,6 +102,7 @@ resolveBook(isbn)
 
 - `BookViewCountInterceptor`(공용 `BaseViewCountInterceptor` 확장)가 중복 요청을 걸러 `viewCount`를 증가시킵니다.
 - `findPopularBooks`는 단순 조회수 대신 사용자 활동 데이터(독서기록, 위시리스트, 리뷰)와 정규화된 판매지수(`ln(salesPoint + 1)`)를 결합하여 인기 도서를 선별합니다.
+- `GET /book/popular`는 순위와 상세를 합친 결과를 서버 프로세스에 60초간 저장합니다. 캐시가 비었을 때 동시에 들어온 요청은 같은 집계를 기다립니다. 홈 ISR 재생성과 브라우저의 재조회가 이 캐시를 함께 사용합니다.
 
 ### 도서 공급처 (`BookCatalogService` + `providers/`)
 

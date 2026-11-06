@@ -25,6 +25,8 @@ used-book-sale/
 │   └── used-book-view-count.interceptor.ts
 ├── listeners/
 │   └── used-book-sale-cleanup.listener.ts   # user.withdrawn
+├── subscribers/
+│   └── used-book-sale-cache.subscriber.ts   # 커밋 후 마켓 캐시 무효화
 └── utils/
     └── sale-query.builder.ts    # 커서 페이지네이션, 위치 정렬
 ```
@@ -45,6 +47,12 @@ used-book-sale/
 | DELETE | `/book/sales/:id`        | 🔒   | 판매글 삭제                      |
 | POST   | `/book/sales/:id/view`   | -    | 판매글 조회수 기록               |
 | GET    | `/book/:isbn/sales`      | -    | ISBN별 판매글                    |
+
+## 마켓 캐시
+
+인기 판매글과 판매 가능 지역 목록은 서버 프로세스에서 10분간 캐시합니다. 판매글의 등록·수정·삭제와 상태 변경은 TypeORM 커밋 후 두 캐시를 비웁니다. 직거래 예약·취소·완료와 회원 탈퇴의 일괄 상태 변경도 같은 규칙을 따릅니다.
+
+조회수 갱신은 TTL 주기에 반영합니다. 커밋 전에 시작한 조회 결과는 무효화된 캐시를 다시 채우지 않습니다. 마켓 ISR이 판매글 삭제 후 재생성되면 같은 서버 복제본의 API에서 갱신된 목록을 받습니다.
 
 ## SaleStatus Enum
 

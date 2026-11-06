@@ -12,6 +12,7 @@ import { UsedBookSale } from './entities/used-book-sale.entity';
 import { UsedBookViewCountInterceptor } from './interceptors/used-book-view-count.interceptor';
 import { UsedBookSaleCleanupListener } from './listeners/used-book-sale-cleanup.listener';
 import { UsedBookSaleService } from './services/used-book-sale.service';
+import { UsedBookSaleCacheSubscriber } from './subscribers/used-book-sale-cache.subscriber';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsedBookSaleService } from './services/used-book-sale.service';
     UsedBookSaleService,
     UsedBookViewCountInterceptor,
     UsedBookSaleCleanupListener,
+    UsedBookSaleCacheSubscriber,
   ],
   exports: [UsedBookSaleService],
 })
