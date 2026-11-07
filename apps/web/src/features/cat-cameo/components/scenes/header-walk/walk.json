@@ -1,5 +1,5 @@
 {
-  "sheetWidth": 1536,
+  "sheetWidth": 1728,
   "sheetHeight": 160,
   "frames": [
     {
@@ -49,7 +49,22 @@
       "y": 0,
       "w": 192,
       "h": 160
+    },
+    {
+      "x": 1536,
+      "y": 0,
+      "w": 192,
+      "h": 160
     }
   ],
-  "durationsMs": [83, 83, 83, 83, 83, 83, 83, 83]
+  "durationsMs": [65, 65, 65, 65, 65, 65, 65, 65, 65],
+  "walkFrames": 8,
+  "restFrame": 8,
+  "stride": 64,
+  "restEye": {
+    "cx": 139.6,
+    "cy": 64.2,
+    "rx": 7.6,
+    "ry": 6.4
+  }
 }
