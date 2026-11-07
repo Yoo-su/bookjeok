@@ -77,7 +77,7 @@ refetchOnWindowFocus: false,
 
 `ServerQueryBoundary`는 `dehydrate()` 대신 `dehydrateStable()`을 씁니다. 시드 쿼리의 `dataUpdatedAt`·`dehydratedAt`을 0으로 고정합니다.
 
-Vercel은 재검증 결과가 이전과 같으면 ISR 쓰기를 과금하지 않습니다. 시각이 섞이면 데이터가 그대로여도 매번 전체 크기만큼 쓰기가 잡힙니다. 2026-09-25 실측에서 최근 12시간 ISR 쓰기의 60%가 홈·목록 재생성이었습니다. 로컬 프로덕션 빌드에서 ISR 페이지 9종을 재검증 전후로 비교해 HTML·RSC가 바이트 단위로 같음을 확인했습니다.
+Vercel은 재검증 결과가 이전과 같으면 ISR 쓰기를 과금하지 않습니다. 시각이 섞이면 데이터가 그대로여도 매번 전체 크기만큼 쓰기가 잡힙니다.
 
 - 클라이언트에서는 시드가 staleTime과 무관하게 stale로 복원돼 마운트 시 refetch됩니다. 원래도 스냅샷은 대개 staleTime보다 오래돼 있었으므로 동작 차이는 거의 없습니다. 예외는 staleTime이 `Infinity`인 쿼리로, 그대로 fresh입니다.
 - `hydrate()`는 `dataUpdatedAt`이 더 클 때만 덮어쓰므로, 시드는 이미 캐시에 있는 데이터를 덮지 않습니다.
