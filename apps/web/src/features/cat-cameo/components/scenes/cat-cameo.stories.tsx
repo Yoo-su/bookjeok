@@ -13,7 +13,7 @@ import {
 } from "../../lib/draw";
 import { BottomPeek } from "./bottom-peek";
 import { HeaderWalk } from "./header-walk";
-import { RestPose, WALK_CROP } from "./header-walk/rest-pose";
+import { WALK_CROP, WALK_SPRITE } from "./header-walk/walk-sprite";
 
 /** 상단바 알약과 같은 크기·여백. 실제 헤더는 다른 기능(검색·알림)을 끌어와 여기선 모양만 흉내 낸다 */
 function FakeHeader() {
@@ -110,14 +110,19 @@ function Poses({ scale = 2 }: { scale?: number }) {
       {pose(1)}
       {pose(-1)}
       <svg
-        aria-label="산책하다 멈춰 돌아보는 고양이"
+        aria-label="산책하다 멈춰 선 고양이"
         role="img"
         viewBox={`${WALK_CROP.x} ${WALK_CROP.y} ${WALK_CROP.width} ${WALK_CROP.height}`}
         width={walk.width}
         height={(walk.width * WALK_CROP.height) / WALK_CROP.width}
         className="max-w-full bg-white"
       >
-        <RestPose />
+        <image
+          href={WALK_SPRITE.image}
+          x={-WALK_SPRITE.frames[WALK_SPRITE.restFrame].x}
+          width={WALK_SPRITE.sheetWidth}
+          height={WALK_SPRITE.sheetHeight}
+        />
       </svg>
       <svg
         aria-label="모서리에서 빼꼼"
@@ -208,7 +213,7 @@ export const OnRealHeaderAndFooter: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: "/ko/lounge" } },
   },
 };
-/** 걷는 옆모습 · 멈춰 정면 · 빼꼼 */
+/** 걷는 옆모습 · 멈춰 선 모습 · 빼꼼 */
 export const StillPoses: Story = { render: () => <Poses /> };
 
 /** 헤더에서 보이는 크기로 눈과 실루엣을 확인한다 */

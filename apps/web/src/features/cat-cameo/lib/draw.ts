@@ -84,16 +84,6 @@ function faceOf(
   };
 }
 
-/** 정지한 스프라이트의 목과 맞춘 정면. 좌표는 스프라이트 한 칸 기준이다. */
-export function drawRestingCatFace(): CatFace {
-  return faceOf((x, y) => [x, y], 0.55, 371, {
-    hx: 124,
-    hy: 66,
-    r: 24.5,
-    lid: 0.25,
-  });
-}
-
 // 걷는 고양이 좌표(단위). 땅이 y=0, 앞이 +x. 꼬리 끝·귀 끝·수염 끝까지 담는다
 const WX0 = -57;
 const WX1 = 70;

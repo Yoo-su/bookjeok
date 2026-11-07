@@ -5,39 +5,35 @@ import { createPortal } from "react-dom";
 
 import { drawWalkingCat } from "../../../lib/draw";
 import { pickStopCenter, type Span } from "../../../lib/free-gap";
-import { spriteFrame } from "../sprite-frames";
 import type { CameoSceneProps } from "../types";
 import { useSpriteReady } from "../use-sprite-ready";
 import {
-  REST_FRAME_INDEX,
-  RestPose,
+  cycleMs,
   WALK_CROP as CROP,
-  WALK_IMAGE,
-} from "./rest-pose";
-import atlas from "./walk.json";
+  WALK_SPRITE,
+  walkKeyframes,
+  type WalkSprite,
+} from "./walk-sprite";
 
-/** 멈춰 서서 이쪽을 보는 시간(ms). 고개 돌리기 → 천천히 눈 감았다 뜨기 → 다시 앞 */
+/** 빈 틈에 멈춰 서 있는 시간(ms). 옆모습 그대로 눈을 깜빡인다 */
 const STOP_MS = 2600;
-const TURN_IN = 160;
-const TURN_OUT = 2150;
 /** 고양이가 천천히 눈을 감았다 뜨는 건 "편하다"는 인사다 */
 const BLINK_AT = 620;
 const BLINK = [360, 280, 380] as const;
-/** 한 걸음(다리 한 바퀴) 시간(ms) */
-const STRIDE = atlas.durationsMs.reduce(
-  (total, duration) => total + duration,
-  0,
-);
-const WALK_FRAMES = (() => {
-  let elapsed = 0;
-  const frames = atlas.frames.map((_, offset) => {
-    const i = (REST_FRAME_INDEX + offset) % atlas.frames.length;
-    const keyframe = spriteFrame(atlas.frames[i], elapsed / STRIDE);
-    elapsed += atlas.durationsMs[i];
-    return keyframe;
-  });
-  return [...frames, { ...frames[0], offset: 1 }];
-})();
+/** 천천히 깜빡인 뒤 한 번 더 짧게 깜빡인다(ms: 시작, 감기, 감은 채, 뜨기) */
+const QUICK_BLINK = [1950, 70, 50, 90] as const;
+/** 눈꺼풀 색. 정지 프레임 눈 둘레 털 색 */
+const LID = "#1F1C1A";
+/** 들어와 멈출 때까지, 다시 걸어 나갈 때의 이동 easing */
+const APPROACH = "cubic-bezier(.3,0,.55,1)";
+const LEAVE = "cubic-bezier(.45,0,.7,1)";
+/** 누르면 걷던 자리에서 점점 빨라지며 내달린다. 다리도 같은 easing으로 빨라진다 */
+const RUN = "cubic-bezier(.4,0,1,1)";
+/** 달아나는 평균 속도(px/s) 범위와, 다리가 한 바퀴 도는 평균 횟수(초당) */
+const RUN_SPEED = [180, 320] as const;
+const RUN_CADENCE = 3.5;
+/** 들켰을 때: 움찔 → 부르르 → 내달림(ms) */
+const CAUGHT = { flinch: 55, settle: 190, run: 420 } as const;
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
 
@@ -56,7 +52,12 @@ function takenSpans(host: HTMLElement): Span[] {
 }
 
 /** 상단바 알약 안쪽 바닥을 걸어 지나가는 고양이. 가운데쯤에서 멈춰 이쪽을 본다 */
-export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
+export function HeaderWalk({
+  host,
+  rand,
+  onDone,
+  sprite = WALK_SPRITE,
+}: CameoSceneProps & { sprite?: WalkSprite }) {
   const size = useMemo(() => {
     const w = host.clientWidth;
     const h = host.clientHeight;
@@ -73,15 +74,19 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
   }, [rand, size.w, cat.width]);
 
   const wrapRef = useRef<HTMLDivElement>(null);
+  const flinchRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<SVGImageElement>(null);
-  const profileRef = useRef<SVGGElement>(null);
-  const frontRef = useRef<SVGGElement>(null);
-  const eyesRef = useRef<SVGGElement>(null);
+  const lidRef = useRef<SVGEllipseElement>(null);
+  const lidLineRef = useRef<SVGPathElement>(null);
   const fled = useRef(false);
   const anims = useRef<Animation[]>([]);
-  const ready = useSpriteReady(WALK_IMAGE, onDone);
+  const ready = useSpriteReady(sprite.image, onDone);
   const spriteScale = cat.groundY / (CROP.ground - CROP.y);
   const spriteWidth = CROP.width * spriteScale;
+  /** 한 걸음(다리 한 바퀴) 시간(ms) */
+  const cycle = cycleMs(sprite);
+  /** 한 걸음에 나아가는 거리(px). 정해져 있으면 이동을 걸음에 맞춘다 */
+  const strideLength = sprite.stride && sprite.stride * spriteScale;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -94,7 +99,7 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
       window.clearTimeout(id);
       anims.current.forEach((a) => a.cancel());
     };
-  }, [ready, plan, cat, onDone]);
+  }, [ready, plan, cat, onDone, sprite]);
 
   function walk(wrap: HTMLDivElement): Animation[] {
     const { start, end, speed } = plan;
@@ -115,11 +120,14 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
       (0.3 + rand() * 0.4) * size.w;
     const stop = center - cat.width / 2;
     const steps = (d: number) =>
-      Math.max(2, Math.round(Math.abs(d) / speed / (STRIDE / 1000)));
+      Math.max(
+        2,
+        Math.round(Math.abs(d) / (strideLength || (speed * cycle) / 1000)),
+      );
     const n1 = steps(stop - start);
     const n2 = steps(end - stop);
-    const t1 = n1 * STRIDE;
-    const t2 = n2 * STRIDE;
+    const t1 = n1 * cycle;
+    const t2 = n2 * cycle;
     const total = t1 + STOP_MS + t2;
     const at = (ms: number) => ms / total;
     const list: Animation[] = [];
@@ -127,78 +135,64 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
     list.push(
       wrap.animate(
         [
-          {
-            offset: 0,
-            transform: x(start),
-            easing: "cubic-bezier(.3,0,.55,1)",
-          },
+          { offset: 0, transform: x(start), easing: APPROACH },
           { offset: at(t1), transform: x(stop) },
-          {
-            offset: at(t1 + STOP_MS),
-            transform: x(stop),
-            easing: "cubic-bezier(.45,0,.7,1)",
-          },
+          { offset: at(t1 + STOP_MS), transform: x(stop), easing: LEAVE },
           { offset: 1, transform: x(end) },
         ],
         { duration: total, fill: "both" },
       ),
     );
+    // 보폭이 정해진 그림은 다리도 이동과 같은 easing으로 돌려 디딘 발을 땅에 붙인다
     if (stripRef.current)
       list.push(
-        stripRef.current.animate(WALK_FRAMES, {
-          duration: STRIDE,
-          iterations: n1,
+        stripRef.current.animate(walkKeyframes(sprite, n1), {
+          duration: t1,
+          easing: strideLength ? APPROACH : "linear",
         }),
-        stripRef.current.animate(WALK_FRAMES, {
-          duration: STRIDE,
-          iterations: n2,
+        stripRef.current.animate(walkKeyframes(sprite, n2), {
+          duration: t2,
           delay: t1 + STOP_MS,
+          easing: strideLength ? LEAVE : "linear",
         }),
       );
-    // 고개 돌리기는 그림을 바꿔 끼운다. 사이를 짧게 겹쳐 툭 끊기지 않게
-    const turn = (show: boolean): Keyframe[] => {
-      const visible = { opacity: 1, visibility: "visible" };
-      const hidden = { opacity: 0, visibility: "hidden" };
-      const a = show ? hidden : visible;
-      const b = show ? visible : hidden;
-      return [
-        { offset: 0, ...a },
-        { offset: at(t1 + TURN_IN), ...a },
-        { offset: at(t1 + TURN_IN + 70), ...b },
-        { offset: at(t1 + TURN_OUT), ...b },
-        { offset: at(t1 + TURN_OUT + 70), ...a },
-        { offset: 1, ...a },
-      ];
-    };
-    if (frontRef.current)
-      list.push(
-        frontRef.current.animate(turn(true), { duration: total, fill: "both" }),
-      );
-    if (profileRef.current)
-      list.push(
-        profileRef.current.animate(turn(false), {
-          duration: total,
-          fill: "both",
-        }),
-      );
-    if (eyesRef.current) {
+    // 옆모습 그대로 서서 눈을 깜빡인다: 털색 눈꺼풀이 위에서 내려와 덮고, 다 감으면 감은 눈 선이 보인다
+    if (sprite.restEye && lidRef.current && lidLineRef.current) {
       const [close, hold, open] = BLINK;
-      const b0 = t1 + BLINK_AT;
+      const [q0, qc, qh, qo] = QUICK_BLINK;
+      const o = (ms: number) => ms / STOP_MS;
+      const lid = (ms: number, v: number, easing = "linear") => ({
+        offset: o(ms),
+        transform: `scaleY(${v})`,
+        easing,
+      });
+      const timing = { duration: STOP_MS, delay: t1 };
       list.push(
-        eyesRef.current.animate(
+        lidRef.current.animate(
           [
-            { offset: 0, transform: "scaleY(1)" },
-            { offset: at(b0), transform: "scaleY(1)", easing: "ease-in" },
-            { offset: at(b0 + close), transform: "scaleY(0.08)" },
-            {
-              offset: at(b0 + close + hold),
-              transform: "scaleY(0.08)",
-              easing: "ease-out",
-            },
-            { offset: at(b0 + close + hold + open), transform: "scaleY(1)" },
-            { offset: 1, transform: "scaleY(1)" },
+            lid(0, 0),
+            lid(BLINK_AT, 0, "ease-in"),
+            lid(BLINK_AT + close, 1),
+            lid(BLINK_AT + close + hold, 1, "ease-out"),
+            lid(BLINK_AT + close + hold + open, 0),
+            lid(q0, 0, "ease-in"),
+            lid(q0 + qc, 1),
+            lid(q0 + qc + qh, 1, "ease-out"),
+            lid(q0 + qc + qh + qo, 0),
+            lid(STOP_MS, 0),
           ],
-          { duration: total },
+          timing,
+        ),
+        lidLineRef.current.animate(
+          [
+            { offset: 0, opacity: 0 },
+            { offset: o(BLINK_AT + close - 30), opacity: 0 },
+            { offset: o(BLINK_AT + close), opacity: 1 },
+            { offset: o(BLINK_AT + close + hold), opacity: 1 },
+            { offset: o(BLINK_AT + close + hold + 60), opacity: 0 },
+            { offset: 1, opacity: 0 },
+          ],
+          timing,
         ),
       );
     }
@@ -208,41 +202,65 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
     return list;
   }
 
-  /** 누르면 깜짝 놀라 하던 방향으로 내뺀다 */
+  /** 누르면 들킨 듯 이쪽을 보며 움찔하고, 돌아서 하던 방향으로 후다닥 내달린다. 뛰어오르지 않는다 */
   const flee = () => {
     const wrap = wrapRef.current;
     if (fled.current || !wrap) return;
     fled.current = true;
-    const runMs = 640;
     const now = new DOMMatrixReadOnly(getComputedStyle(wrap).transform).m41;
     anims.current.forEach((a) => a.cancel());
+    const end = plan.dir > 0 ? size.w + 4 : -cat.width - 4;
+    const back = now - plan.dir * 3;
+    const dist = Math.abs(end - back);
+    // 멀수록 빠르게. 데스크톱 끝에서 끝도 3초 남짓
+    const speed = clamp(dist / 1.8, ...RUN_SPEED);
+    const duration = Math.max(450, (dist / speed) * 1000);
+    const total = CAUGHT.run + duration;
+    const at = (ms: number) => ms / total;
+    const timing = { duration: total, fill: "both" } as const;
     const x = (v: number) => `translateX(${v.toFixed(1)}px)`;
+    // 놀라 살짝 물러섰다가, 굳은 자리에서 점점 빨라지며 내달린다
     const run = wrap.animate(
       [
-        { transform: `${x(now)} translateY(0px)` },
-        {
-          transform: `${x(now - plan.dir * 3)} translateY(-7px)`,
-          offset: 0.22,
-        },
-        {
-          transform: `${x(now)} translateY(0px)`,
-          offset: 0.4,
-          easing: "ease-in",
-        },
-        {
-          transform: `${x(plan.dir > 0 ? size.w + 4 : -cat.width - 4)} translateY(0px)`,
-        },
+        { offset: 0, transform: x(now), easing: "ease-out" },
+        { offset: at(CAUGHT.flinch), transform: x(back) },
+        { offset: at(CAUGHT.run), transform: x(back), easing: RUN },
+        { offset: 1, transform: x(end) },
       ],
-      { duration: runMs, fill: "both" },
+      timing,
     );
-    anims.current = [run];
-    if (stripRef.current)
-      anims.current.push(
-        stripRef.current.animate(WALK_FRAMES, {
-          duration: runMs / 2,
-          iterations: 2,
-        }),
+    const list = [run];
+    // 움찔: 발밑을 기준으로 납작해졌다가 돌아오고, 부르르 떤다
+    const shake = (dx: number, sx = 1, sy = 1) =>
+      `translateX(${dx}px) scale(${sx}, ${sy})`;
+    if (flinchRef.current)
+      list.push(
+        flinchRef.current.animate(
+          [
+            { offset: 0, transform: shake(0) },
+            { offset: at(CAUGHT.flinch), transform: shake(0, 1.08, 0.84) },
+            { offset: at(120), transform: shake(0, 0.98, 1.03) },
+            { offset: at(CAUGHT.settle), transform: shake(0) },
+            { offset: at(225), transform: shake(-0.8) },
+            { offset: at(260), transform: shake(0.8) },
+            { offset: at(295), transform: shake(-0.5) },
+            { offset: at(330), transform: shake(0) },
+            { offset: 1, transform: shake(0) },
+          ],
+          timing,
+        ),
       );
+    if (stripRef.current)
+      list.push(
+        stripRef.current.animate(
+          walkKeyframes(
+            sprite,
+            Math.max(2, Math.round((duration / 1000) * RUN_CADENCE)),
+          ),
+          { duration, delay: CAUGHT.run, easing: RUN },
+        ),
+      );
+    anims.current = list;
     run.onfinish = () => onDone();
   };
 
@@ -262,42 +280,70 @@ export function HeaderWalk({ host, rand, onDone }: CameoSceneProps) {
           transform: `translateX(${plan.start}px)`,
         }}
       >
-        <svg
-          width={cat.width}
-          height={cat.height}
-          overflow="visible"
-          style={plan.dir < 0 ? { transform: "scaleX(-1)" } : undefined}
+        <div
+          ref={flinchRef}
+          style={{ transformOrigin: `${cat.width / 2}px ${cat.groundY}px` }}
         >
           <svg
-            x={(cat.width - spriteWidth) / 2}
-            width={spriteWidth}
-            height={CROP.height * spriteScale}
-            viewBox={`${CROP.x} ${CROP.y} ${CROP.width} ${CROP.height}`}
-            overflow="hidden"
+            width={cat.width}
+            height={cat.height}
+            overflow="visible"
+            style={plan.dir < 0 ? { transform: "scaleX(-1)" } : undefined}
           >
-            <g ref={profileRef}>
-              <image
-                ref={stripRef}
-                href={WALK_IMAGE}
-                width={atlas.sheetWidth}
-                height={atlas.sheetHeight}
-                style={{
-                  transform: `translateX(${-atlas.frames[REST_FRAME_INDEX].x}px)`,
-                }}
+            <svg
+              x={(cat.width - spriteWidth) / 2}
+              width={spriteWidth}
+              height={CROP.height * spriteScale}
+              viewBox={`${CROP.x} ${CROP.y} ${CROP.width} ${CROP.height}`}
+              overflow="hidden"
+            >
+              <g>
+                <image
+                  ref={stripRef}
+                  href={sprite.image}
+                  width={sprite.sheetWidth}
+                  height={sprite.sheetHeight}
+                  style={{
+                    transform: `translateX(${-sprite.frames[sprite.restFrame].x}px)`,
+                  }}
+                />
+              </g>
+              {sprite.restEye && (
+                <g>
+                  <ellipse
+                    ref={lidRef}
+                    cx={sprite.restEye.cx}
+                    cy={sprite.restEye.cy}
+                    rx={sprite.restEye.rx}
+                    ry={sprite.restEye.ry}
+                    fill={LID}
+                    style={{
+                      transform: "scaleY(0)",
+                      transformBox: "fill-box",
+                      transformOrigin: "50% 0%",
+                    }}
+                  />
+                  <path
+                    ref={lidLineRef}
+                    d={`M${sprite.restEye.cx - 5} ${sprite.restEye.cy + 1.2}Q${sprite.restEye.cx} ${sprite.restEye.cy + 4.2} ${sprite.restEye.cx + 5} ${sprite.restEye.cy + 1.2}`}
+                    fill="none"
+                    stroke="#E8D0A8"
+                    strokeWidth={1}
+                    strokeLinecap="round"
+                    opacity={0}
+                  />
+                </g>
+              )}
+              <path
+                d="M25 60 Q21 103 51 104 Q54 114 55 143 H139 L145 106 Q173 101 173 77 Q170 64 155 56 L146 30 L127 51 L112 35 L101 69 Q77 63 55 78 Q38 82 35 56Z"
+                fill="transparent"
+                pointerEvents="visibleFill"
+                className="cursor-pointer"
+                onPointerDown={flee}
               />
-            </g>
-            <g ref={frontRef} style={{ opacity: 0, visibility: "hidden" }}>
-              <RestPose eyesRef={eyesRef} />
-            </g>
-            <path
-              d="M25 60 Q21 103 51 104 Q54 114 55 143 H139 L145 106 Q173 101 173 77 Q170 64 155 56 L146 30 L127 51 L112 35 L101 69 Q77 63 55 78 Q38 82 35 56Z"
-              fill="transparent"
-              pointerEvents="visibleFill"
-              className="cursor-pointer"
-              onPointerDown={flee}
-            />
+            </svg>
           </svg>
-        </svg>
+        </div>
       </div>
     </div>,
     host,
