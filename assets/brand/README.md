@@ -47,12 +47,6 @@ node apps/web/scripts/check-brand-assets.mjs
 
 ## 배포와 SNS
 
-새 버전의 favicon·manifest 아이콘·OG 이미지 URL은 이전 브라우저/공유 이미지 캐시와 구분된다. 기존에 설치된 홈 화면 아이콘과 이미 발행된 SNS 링크의 썸네일은 플랫폼의 갱신 시점에 따라 남을 수 있다. 배포 후 새 페이지 metadata, 이미지 응답, manifest를 다시 확인한다. 배포 전에 운영 화면이 변경되었다고 보고하지 않는다.
+새 버전의 favicon·manifest 아이콘·OG 이미지 URL은 이전 브라우저/공유 이미지 캐시와 구분된다. 기존에 설치된 홈 화면 아이콘과 이미 발행된 SNS 링크의 썸네일은 플랫폼의 갱신 시점에 따라 남을 수 있다. 배포 후 새 페이지 metadata, 이미지 응답, manifest를 다시 확인한다.
 
 Instagram·Threads `bookjeok_books`의 프로필 교체는 사용자 직접 수행으로 확정했다. `public/brand/pen-v1/social-profile.png`를 두 계정에 올리고 원형 미리보기에서 책과 잎을 확인한다. 계정 프로필은 이 저장소 변경만으로 바뀌지 않는다.
-
-## 전환 검증 (2026-10-06)
-
-자산 검사에서 참조 URL 20개, PNG·공유 카드 규격, ICO 16/32/48px 프레임, 이전 주소와 새 파일의 일치, 원형 크롭 안전 영역, B 보존을 확인했다. 변경 코드 ESLint와 관련 테스트 42개(3개 파일)가 통과했다. 실제 Storybook의 A 상단바와 자산 화면도 확인하고 `output/logo-matisse/production-*.jpg`에 캡처했다. 확인 후 Storybook 서버는 종료했다.
-
-웹 전체 타입 검사는 이 작업에서 수정하지 않은 테스트 5개 파일의 기존 오류 6건으로 실패했다(`sitemap`, `feedback-inbox`, `reading-log/mutations`, `reading-height-view`, `reading-log-intro-view`). 전체 빌드·운영 배포 완료를 의미하지 않는다.
