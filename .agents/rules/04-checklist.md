@@ -32,8 +32,7 @@
 
 ```bash
 # 1. 공용 패키지 빌드 (의존 관계 순서)
-#    core 빌드는 기본 힙으로는 OOM으로 죽습니다. NODE_OPTIONS를 반드시 붙이세요.
-NODE_OPTIONS="--max-old-space-size=8192" pnpm --filter @bookjeok/core build
+pnpm --filter @bookjeok/core build
 pnpm --filter @bookjeok/api-client build
 pnpm --filter @bookjeok/react-query build
 
@@ -50,24 +49,10 @@ pnpm test
 > **`packages/core`를 수정했다면 웹 테스트 전에 반드시 1번을 먼저 돌리세요.**
 > 웹은 소스가 아니라 `dist`를 참조하므로, 재빌드하지 않으면 옛 코드로 테스트합니다.
 
-> 로컬에 운영과 같은 스키마의 Postgres가 없어 **서버를 띄운 통합 검증은 해 본 적이 없습니다.**
-> 배포 후 실제 페이지로 확인하세요. (Docker 가용 여부는 머신마다 다릅니다 — `AGENTS.md` 참고)
->
-> ```bash
-> curl -sL -o /dev/null -w "%{http_code}\n" https://bookjeok.com/ko
-> ```
-
 ---
 
 ## 3. 코드 점검·리팩터링 시
 
-- **모든 지적에 재현 경로나 실측치를 붙이세요.** 근거 없는 심각도 판정은 시간을 낭비시킵니다.
-- **성능 수치는 웜/콜드를 구분해 여러 번 재세요.** 콜드 캐시 1회 측정으로 "4.9초 장애"라고
-  보고했다가 웜에서 442ms인 것을 확인하고 정정한 전례가 있습니다
-  (`docs/book-data-migration-plan.md` 9-c).
-- **프론트 캐시를 함께 보세요.** 느린 엔드포인트라도 페이지가 `revalidate`로 ISR 캐시하면
-  사용자 체감은 다릅니다.
-- **테이블 크기를 확인하고 인덱스를 권하세요.** 수십 행짜리 테이블은 인덱스가 있어도
-  Postgres가 Seq Scan을 택합니다.
-- 이미 검토하고 기각한 제안은 `docs/book-data-migration-plan.md` 9-c에 근거와 함께
-  있습니다. 먼저 확인해 같은 논의를 반복하지 마세요.
+- 지적에는 재현 경로나 실측치를 붙입니다.
+- 성능은 캐시 유무를 구분해 여러 번 측정합니다.
+- 인덱스를 제안하기 전에 테이블 크기와 실행 계획을 확인합니다.

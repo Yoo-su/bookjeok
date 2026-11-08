@@ -23,7 +23,9 @@ out
 
 # Env
 .env
+.env.*
 .env*.local
+!.env.example
 
 # Logs
 *.log
@@ -31,9 +33,12 @@ out
 # Temp
 .temp
 .tmp
-# 표지 마이그레이션 산출물 (docs/book-data-migration-plan.md Phase 0)
+# 표지 마이그레이션 산출물
 cover-originals/
 covers-manifest-input.jsonl
 cover-survey-report.json
 book-search-report.json
 cover-fetch.log
+
+# 로컬 운영 문서
+/.local-docs/
