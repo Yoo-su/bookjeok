@@ -27,6 +27,8 @@ import {
 } from "@/shared/components/shadcn/form";
 import { Input } from "@/shared/components/shadcn/input";
 import { ImageUploader } from "@/shared/components/ui/image-uploader";
+import { PATHS } from "@/shared/constants/paths";
+import { useFormCancel } from "@/shared/hooks/use-form-cancel";
 
 import { useBookSaleForm } from "../../../hooks/use-book-sale-form";
 import { UploadProgressModal } from "../../common/upload-progress-modal";
@@ -49,6 +51,7 @@ const MapLocationSelector = dynamic(
 
 export const BookSaleForm = () => {
   const t = useTranslations("market.form");
+  const tCommon = useTranslations("common.actions");
   const tVerify = useTranslations("auth.verification.alert");
   const user = useAuthStore((state) => state.user);
   const isEmailUnverified = !!user && !user.isEmailVerified;
@@ -66,6 +69,12 @@ export const BookSaleForm = () => {
     isModalOpen,
     onSubmit,
   } = useBookSaleForm();
+  const { isDirty } = form.formState;
+  const handleCancel = useFormCancel(
+    !isSubmitDisabled && (isDirty || imagePreviews.length > 0),
+    PATHS.BOOK_MARKET,
+    [PATHS.BOOK_MARKET, PATHS.MY_PAGE_SALES],
+  );
 
   return (
     <Card className="w-full border-none shadow-none sm:border sm:border-stone-200/90 dark:sm:border-stone-800 sm:shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:sm:shadow-[0_2px_12px_rgba(0,0,0,0.25)]">
@@ -176,30 +185,34 @@ export const BookSaleForm = () => {
                 </div>
                 <MapLocationSelector
                   onLocationSelect={(lat, lng, addressInfo) => {
-                    form.setValue("latitude", lat);
-                    form.setValue("longitude", lng);
+                    form.setValue("latitude", lat, { shouldDirty: true });
+                    form.setValue("longitude", lng, { shouldDirty: true });
 
                     if (addressInfo) {
                       if (addressInfo.city) {
                         form.setValue("city", addressInfo.city, {
                           shouldValidate: true,
+                          shouldDirty: true,
                         });
                       }
                       if (addressInfo.district) {
                         form.setValue("district", addressInfo.district, {
                           shouldValidate: true,
+                          shouldDirty: true,
                         });
                       }
                       if (addressInfo.placeName) {
-                        form.setValue("placeName", addressInfo.placeName);
+                        form.setValue("placeName", addressInfo.placeName, {
+                          shouldDirty: true,
+                        });
                       } else {
-                        form.setValue("placeName", "");
+                        form.setValue("placeName", "", { shouldDirty: true });
                       }
                     } else {
                       if (!addressInfo && (lat !== 0 || lng !== 0)) {
                         toast.error(t("error_location"));
                       }
-                      form.setValue("placeName", "");
+                      form.setValue("placeName", "", { shouldDirty: true });
                     }
                   }}
                 />
@@ -258,20 +271,30 @@ export const BookSaleForm = () => {
               <SaleContentField />
             </fieldset>
 
-            <StatefulButton
-              type="submit"
-              status={
-                uploadStep === "success"
-                  ? "success"
-                  : uploadStep === "idle"
-                    ? "idle"
-                    : "loading"
-              }
-              className="w-full mt-10"
-              disabled={isSubmitDisabled || isEmailUnverified}
-            >
-              {t("submit")}
-            </StatefulButton>
+            <div className="flex gap-3 mt-10">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitDisabled}
+              >
+                {tCommon("cancel")}
+              </Button>
+              <StatefulButton
+                type="submit"
+                status={
+                  uploadStep === "success"
+                    ? "success"
+                    : uploadStep === "idle"
+                      ? "idle"
+                      : "loading"
+                }
+                className="flex-1"
+                disabled={isSubmitDisabled || isEmailUnverified}
+              >
+                {t("submit")}
+              </StatefulButton>
+            </div>
           </form>
         </Form>
         <UploadProgressModal

@@ -15,11 +15,10 @@ vi.mock("@bookjeok/react-query", () => ({
   usePopularKeywordsQuery: () => ({ data: fixture.keywords, isLoading: false }),
 }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
-vi.mock("@/shared/config/i18n/routing", () => ({
-  usePathname: () => "/ko/book/search",
-}));
 
-beforeEach(() => window.history.replaceState(null, "", "/ko/book/search"));
+beforeEach(() =>
+  window.history.replaceState(null, "", "/en/book/search?ref=home"),
+);
 afterEach(cleanup);
 
 describe("히어로 인기검색어", () => {
@@ -28,7 +27,9 @@ describe("히어로 인기검색어", () => {
     expect(screen.getAllByRole("button")).toHaveLength(3);
     expect(screen.queryByText("소설")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "데미안" }));
+    expect(window.location.pathname).toBe("/en/book/search");
     expect(new URLSearchParams(window.location.search).get("q")).toBe("데미안");
+    expect(new URLSearchParams(window.location.search).get("ref")).toBe("home");
   });
 
   it("데이터가 없으면 임의의 검색어를 표시하지 않는다", () => {

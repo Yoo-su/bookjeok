@@ -58,7 +58,7 @@ export const SignupForm = () => {
   const { mutate: signup, isPending: isLoading } = useEmailSignupMutation({
     onSuccess: () => {
       toast.success(t("success"));
-      router.push(PATHS.LOGIN);
+      router.replace(PATHS.LOGIN);
     },
     onError: (error) => {
       if (axios.isAxiosError(error) && error.response?.status === 409) {
@@ -338,6 +338,7 @@ export const SignupForm = () => {
           <span className="text-gray-500">{t("has_account")} </span>
           <Link
             href={PATHS.LOGIN}
+            replace
             className="font-medium text-emerald-600 hover:text-emerald-500"
           >
             {t("login_link")}

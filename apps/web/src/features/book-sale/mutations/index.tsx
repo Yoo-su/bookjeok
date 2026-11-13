@@ -21,6 +21,7 @@ import { useAuthStore } from "@/features/auth/stores/use-auth-store";
 import { revalidateBookSale } from "@/shared/actions/revalidate";
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { splitLocalizedPath } from "@/shared/utils/browser-navigation";
 import { handleMutationError } from "@/shared/utils/error-handler";
 import { purgeRouteCache } from "@/shared/utils/purge-route-cache";
 
@@ -103,7 +104,7 @@ export const useCreateBookSaleMutation = () => {
     onSuccess: () => {
       toast.success(t("create_success"));
       queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
-      router.push(PATHS.MY_PAGE_SALES);
+      router.replace(PATHS.MY_PAGE_SALES);
     },
     onError: (error: Error) => {
       handleMutationError(error, "판매글 등록");
@@ -220,7 +221,7 @@ export const useUpdateBookSaleMutation = () => {
         }),
         () => router.refresh(),
       );
-      router.push(PATHS.MY_PAGE_SALES);
+      router.replace(PATHS.MY_PAGE_SALES);
     },
     onError: (error: Error) => {
       handleMutationError(error, "판매글 수정");
@@ -299,13 +300,29 @@ export const useDeleteBookSaleMutation = () => {
   const pendingImagesRef = useRef(new Map<number, string[]>());
 
   const sharedMutation = useSharedDeleteBookSaleMutation({
-    onSuccess: (_data, saleId) => {
+    onSuccess: async (_data, saleId) => {
       toast.success(t("delete_success"));
       queryClient.invalidateQueries({ queryKey: bookSaleKeys._def });
 
       const imageUrls = pendingImagesRef.current.get(saleId) ?? [];
       pendingImagesRef.current.delete(saleId);
       void removeSaleImages(imageUrls);
+
+      await purgeRouteCache(
+        revalidateBookSale({
+          saleId,
+          deleted: true,
+          accessToken: useAuthStore.getState().accessToken,
+        }),
+        () => router.refresh(),
+      );
+      if (
+        typeof window !== "undefined" &&
+        splitLocalizedPath(window.location.pathname).pathname ===
+          PATHS.BOOK_SALES_DETAIL(saleId)
+      ) {
+        router.replace(PATHS.MY_PAGE_SALES);
+      }
     },
     onError: (error: Error, saleId) => {
       pendingImagesRef.current.delete(saleId);
@@ -323,24 +340,7 @@ export const useDeleteBookSaleMutation = () => {
       imageUrls: string[];
     }) => {
       pendingImagesRef.current.set(saleId, imageUrls);
-      return sharedMutation.mutate(saleId, {
-        onSuccess: async () => {
-          await purgeRouteCache(
-            revalidateBookSale({
-              saleId,
-              deleted: true,
-              accessToken: useAuthStore.getState().accessToken,
-            }),
-            () => router.refresh(),
-          );
-          if (
-            typeof window !== "undefined" &&
-            window.location.pathname.includes(PATHS.BOOK_SALES_DETAIL(saleId))
-          ) {
-            router.push(PATHS.MY_PAGE_SALES);
-          }
-        },
-      });
+      return sharedMutation.mutate(saleId);
     },
     mutateAsync: async ({
       saleId,
@@ -350,23 +350,7 @@ export const useDeleteBookSaleMutation = () => {
       imageUrls: string[];
     }) => {
       pendingImagesRef.current.set(saleId, imageUrls);
-      return sharedMutation.mutateAsync(saleId).then(async (res: void) => {
-        await purgeRouteCache(
-          revalidateBookSale({
-            saleId,
-            deleted: true,
-            accessToken: useAuthStore.getState().accessToken,
-          }),
-          () => router.refresh(),
-        );
-        if (
-          typeof window !== "undefined" &&
-          window.location.pathname.includes(PATHS.BOOK_SALES_DETAIL(saleId))
-        ) {
-          router.push(PATHS.MY_PAGE_SALES);
-        }
-        return res;
-      });
+      return sharedMutation.mutateAsync(saleId);
     },
   };
 };

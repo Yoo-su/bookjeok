@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
+import { clearAuthNavigation } from "@/features/auth/utils/return-url";
 import { useFeedbackDialogStore } from "@/features/feedback/stores/use-feedback-dialog-store";
 import { KongMenuCount } from "@/features/reading-log/components/kong/kong-menu-count";
 import {
@@ -52,6 +53,7 @@ export default function UserPopover() {
       console.warn("Server logout notification failed:", e);
     } finally {
       clearAuth();
+      clearAuthNavigation();
       // 하드 내비게이션으로 브라우저 힙을 폐기한다.
       // SPA 이동(router.push)은 이전 사용자의 쿼리 캐시 · Router Cache · 소켓을
       // 그대로 남겨, 같은 브라우저에서 다음 사용자가 로그인할 때 노출된다.

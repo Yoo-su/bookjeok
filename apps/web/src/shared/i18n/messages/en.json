@@ -1,5 +1,11 @@
 {
   "common": {
+    "unsaved_changes": {
+      "title": "Leave without saving?",
+      "description": "Your unsaved changes will be lost.",
+      "confirm": "Leave without saving",
+      "cancel": "Keep editing"
+    },
     "new": "NEW",
     "won": "₩",
     "unknown": "Unknown",
@@ -1766,8 +1772,7 @@
       "description": "The page you requested may not exist or may have been deleted.",
       "back_home": "Back to Home",
       "default_message": "The requested page could not be found.",
-      "countdown": "Redirecting automatically in {countdown}s...",
-      "btn_prev": "Previous Page",
+      "btn_continue": "Go to list",
       "btn_home": "Go to Home",
       "home_button": "Go to Home"
     },

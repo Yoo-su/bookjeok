@@ -10,6 +10,7 @@ import { Button } from "@/shared/components/shadcn/button";
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { Link, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { returnToApp } from "@/shared/utils/browser-navigation";
 
 interface OrderDetailViewProps {
   orderId: string;
@@ -53,7 +54,12 @@ export const OrderDetailView = ({ orderId }: OrderDetailViewProps) => {
         <p className="text-xs text-stone-500">{t("errors.not_authorized")}</p>
         <div className="pt-2 flex justify-center gap-3">
           <Button
-            onClick={() => router.back()}
+            onClick={() =>
+              returnToApp(router, PATHS.MY_PAGE_PURCHASES, [
+                PATHS.MY_PAGE_PURCHASES,
+                PATHS.MY_PAGE_SALES_ORDERS,
+              ])
+            }
             variant="outline"
             size="sm"
             className="border-stone-200 dark:border-stone-700"

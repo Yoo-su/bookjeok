@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { Home, RefreshCw } from "@/shared/components/icons/iconsax";
 import { config } from "@/shared/config/env";
 import { BRAND_ASSETS } from "@/shared/constants/brand";
+import { PATHS } from "@/shared/constants/paths";
+import { hardRedirect } from "@/shared/utils/session";
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -34,8 +36,22 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
         <main className="z-10 flex flex-col items-center text-center animate-in fade-in zoom-in duration-500">
           {/* 로고 — Logo 컴포넌트는 providers 의존이라 img로 직접 렌더링 */}
           <div className="mb-8 scale-125">
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 루트 레이아웃 밖이라 next/link 사용 불가 */}
-            <a href="/" className="inline-flex items-center gap-1">
+            {}
+            <a
+              href={PATHS.HOME}
+              onClick={(event) => {
+                if (
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey
+                )
+                  return;
+                event.preventDefault();
+                hardRedirect(PATHS.HOME);
+              }}
+              className="inline-flex items-center gap-1"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element -- 루트 레이아웃 밖이라 next/image 사용 불가 */}
               <img
                 src={BRAND_ASSETS.symbol}
@@ -77,9 +93,7 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
 
               <button
                 type="button"
-                onClick={() => {
-                  window.location.href = "/";
-                }}
+                onClick={() => hardRedirect(PATHS.HOME)}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full border border-stone-200 hover:bg-white/50 hover:text-stone-900 text-stone-700 text-sm font-medium transition-all cursor-pointer"
               >
                 <Home className="w-4 h-4" />

@@ -179,19 +179,20 @@ describe("ReadingLogCalendar 연 단위 조회", () => {
     ).toHaveAttribute("aria-busy", "false");
   });
 
-  it("딥링크 날짜는 기록을 받은 뒤 한 번만 연다", async () => {
+  it("이력의 날짜에 맞춰 상세를 열고 닫고 다시 연다", async () => {
     const openDate = new Date(2026, 6, 10);
-    const onOpenDateHandled = vi.fn();
+    const onOpenDay = vi.fn();
+    const onCloseDay = vi.fn();
     const { rerender } = render(
-      ui(new Date(2026, 6, 10), { openDate, onOpenDateHandled }),
+      ui(openDate, { openDate, onOpenDay, onCloseDay }),
     );
 
-    await waitFor(() => expect(onOpenDateHandled).toHaveBeenCalledTimes(1));
-    // 부모가 openDate를 비우기 전에 다시 그려져도 또 열지 않는다
-    rerender(ui(new Date(2026, 6, 10), { openDate, onOpenDateHandled }));
-    rerender(ui(new Date(2026, 6, 10), { openDate, onOpenDateHandled }));
-
-    expect(onOpenDateHandled).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("desc_write")).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(onCloseDay).toHaveBeenCalledTimes(1);
+    rerender(ui(openDate, { openDate: null, onOpenDay, onCloseDay }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    rerender(ui(openDate, { openDate, onOpenDay, onCloseDay }));
     expect(screen.getAllByText("desc_write")).toHaveLength(1);
   });
 });

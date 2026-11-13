@@ -73,7 +73,7 @@ export const UserProfile = ({ handle }: UserProfileProps) => {
   }
 
   if (error || !profile) {
-    return <NotFoundRedirect message={t("not_found")} useBack />;
+    return <NotFoundRedirect message={t("not_found")} />;
   }
 
   const reviewCount = sellerStats?.totalReviews ?? 0;

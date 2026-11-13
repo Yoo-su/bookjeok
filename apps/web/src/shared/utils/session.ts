@@ -1,4 +1,7 @@
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { PATHS } from "@/shared/constants/paths";
+
+import { localizedPath, splitLocalizedPath } from "./browser-navigation";
 
 /**
  * 세션 종료(로그아웃 · 토큰 만료 · 인증 실패) 처리 유틸
@@ -14,10 +17,6 @@ import { PATHS } from "@/shared/constants/paths";
 
 /** 하드 내비게이션 이후에 띄울 토스트 메시지 보관 키 */
 const PENDING_TOAST_KEY = "bookjeok:pending-session-toast";
-
-/** 현재 URL에서 로케일 추출 (localePrefix: "always" 전제) */
-const getCurrentLocale = (): string =>
-  window.location.pathname.split("/")[1] === "en" ? "en" : "ko";
 
 /**
  * 세션 종료 직후 보여줄 토스트를 예약합니다.
@@ -50,10 +49,21 @@ export const consumeSessionToast = (): string | null => {
  */
 export const hardRedirect = (path: string) => {
   if (typeof window === "undefined") return;
-  window.location.href = `/${getCurrentLocale()}${path === "/" ? "" : path}`;
+  const { locale } = splitLocalizedPath(window.location.pathname);
+  window.location.replace(localizedPath(path, locale ?? "ko"));
 };
 
 /** 인증이 끊긴 상태에서 로그인 페이지로 보냅니다. */
 export const redirectToLogin = () => {
+  if (typeof window === "undefined") return;
+  const { pathname: route } = splitLocalizedPath(window.location.pathname);
+  const pathname = route.replace(/\/+$/, "");
+  if (
+    pathname === PATHS.LOGIN ||
+    pathname === PATHS.SIGNUP ||
+    pathname === PATHS.CALLBACK
+  )
+    return;
+  saveCurrentReturnUrl();
   hardRedirect(PATHS.LOGIN);
 };

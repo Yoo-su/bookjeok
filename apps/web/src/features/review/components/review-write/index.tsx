@@ -25,7 +25,7 @@ export const ReviewWrite = () => {
       await createReview({ ...data, idempotencyKey } as ReviewFormValues & {
         idempotencyKey?: string;
       });
-      router.push(PATHS.REVIEWS);
+      router.replace(PATHS.REVIEWS);
     });
   };
 

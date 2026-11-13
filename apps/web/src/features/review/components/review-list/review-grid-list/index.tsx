@@ -29,6 +29,7 @@ interface ReviewGridListProps {
   onDeleteReview?: (id: number) => void;
   onEditReview?: (id: number) => void;
   userId?: number;
+  listQuery?: string;
 }
 
 export function ReviewGridList({
@@ -40,6 +41,7 @@ export function ReviewGridList({
   onDeleteReview,
   onEditReview,
   userId,
+  listQuery,
 }: ReviewGridListProps) {
   // 데이터 조회
   const {
@@ -178,7 +180,17 @@ export function ReviewGridList({
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
         {reviews.map((review, index) => (
           <li key={review.id}>
-            <ReviewCard.Root review={review} priority={index < 4}>
+            <ReviewCard.Root
+              review={review}
+              priority={index < 4}
+              href={
+                listQuery
+                  ? PATHS.REVIEW_DETAIL(review.id) +
+                    "?" +
+                    new URLSearchParams({ from: listQuery })
+                  : undefined
+              }
+            >
               <ReviewCard.Image />
               <ReviewCard.Content>
                 <ReviewCard.Meta />

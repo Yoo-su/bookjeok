@@ -21,9 +21,8 @@ import {
 } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
-import { useOverlay } from "@/shared/hooks/use-overlay";
 import { cn } from "@/shared/utils";
 
 import { MONTH_TURN } from "../../../constants/ui";
@@ -86,9 +85,10 @@ interface ReadingLogCalendarProps {
   /** 넘기면 보기 모드를 밖에서 제어한다(내 독서기록 페이지가 마지막 보기를 기억한다) */
   viewMode?: ReadingLogViewMode;
   onViewModeChange?: (mode: ReadingLogViewMode) => void;
-  /** 이 날짜의 상세를 그해 기록을 받은 뒤 한 번 띄움(dock 달력 패널에서 넘어온 딥링크) */
+  /** 내 독서기록에서는 URL에 지정된 날짜의 상세를 표시한다. */
   openDate?: Date | null;
-  onOpenDateHandled?: () => void;
+  onOpenDay?: (date: Date) => void;
+  onCloseDay?: () => void;
 }
 
 export function ReadingLogCalendar({
@@ -99,10 +99,11 @@ export function ReadingLogCalendar({
   viewMode: controlledViewMode,
   onViewModeChange,
   openDate,
-  onOpenDateHandled,
+  onOpenDay,
+  onCloseDay,
 }: ReadingLogCalendarProps) {
   const t = useTranslations("reading_log.calendar");
-  const overlay = useOverlay();
+  const [localOpenDate, setLocalOpenDate] = useState<Date | null>(null);
   const [innerViewMode, setInnerViewMode] =
     useState<ReadingLogViewMode>("calendar");
   const viewMode = controlledViewMode ?? innerViewMode;
@@ -173,38 +174,35 @@ export function ReadingLogCalendar({
   const handleDayClick = (date: Date) => {
     // 다른 해를 받는 동안 남아 있는 이전 달 칸이 열리지 않게(키보드 포함)
     if (isWaiting) return;
-    overlay.open(({ isOpen, close }) => (
-      <DayDetailsDialog
-        date={date}
-        logs={getLogsForDate(date)}
-        open={isOpen}
-        onOpenChange={(open) => !open && close()}
-        readOnly={readOnly}
-      />
-    ));
+    if (onOpenDay) onOpenDay(date);
+    else setLocalOpenDate(date);
   };
 
-  // 부모가 openDate를 비우기 전에 다시 그려져도 한 번만 띄움
-  const openedDateRef = useRef<Date | null>(null);
-  useEffect(() => {
-    if (
-      !openDate ||
-      openedDateRef.current === openDate ||
-      readOnly ||
-      viewMode !== "calendar" ||
-      isLoading ||
-      isWaiting
-    )
-      return;
-    // 그 달로 넘어가기 전 렌더에서는 이전 달 기록이라 기다림
-    if (!isSameMonth(openDate, monthStart)) return;
-    openedDateRef.current = openDate;
-    handleDayClick(openDate);
-    onOpenDateHandled?.();
-  });
+  const dialogDate = onOpenDay ? openDate : localOpenDate;
+  const showDay =
+    dialogDate &&
+    (!onOpenDay ||
+      (!isLoading &&
+        !isWaiting &&
+        viewMode === "calendar" &&
+        isSameMonth(dialogDate, monthStart)));
 
   return (
     <div className="w-full mx-auto space-y-6">
+      {showDay && (
+        <DayDetailsDialog
+          key={dialogDate.getTime()}
+          date={dialogDate}
+          logs={getLogsForDate(dialogDate)}
+          open
+          onOpenChange={(open) => {
+            if (open) return;
+            if (onCloseDay) onCloseDay();
+            else setLocalOpenDate(null);
+          }}
+          readOnly={readOnly}
+        />
+      )}
       {!readOnly && (
         <ReadingLogStats
           month={monthStart}

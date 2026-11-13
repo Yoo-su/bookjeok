@@ -1,29 +1,98 @@
-const STORAGE_KEY = "auth-return-url";
+import type { Locale } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
+import { splitLocalizedPath } from "@/shared/utils/browser-navigation";
 
-/**
- * 로그인 페이지로 이동하기 전에 현재 경로를 저장합니다.
- * sessionStorage를 사용하여 탭 단위로 격리하고, 탭 닫힘 시 자동 정리됩니다.
- */
-export function saveReturnUrl(url: string) {
+const STORAGE_KEY = "auth-return-url";
+const SOCIAL_LOCALE_KEY = "auth-social-locale";
+const RETURN_URL_TTL = 30 * 60 * 1000;
+const TRANSIENT_ROUTES: ReadonlySet<string> = new Set([
+  PATHS.LOGIN,
+  PATHS.SIGNUP,
+  PATHS.CALLBACK,
+  PATHS.VERIFY_EMAIL,
+  PATHS.ORDER_PAYMENT_SUCCESS,
+  PATHS.ORDER_PAYMENT_FAIL,
+]);
+
+function parseReturnUrl(href: string) {
+  if (!href.startsWith("/") || href.startsWith("//")) return null;
+  const url = new URL(href, window.location.origin);
+  if (url.origin !== window.location.origin) return null;
+
+  const { pathname, locale } = splitLocalizedPath(url.pathname);
+  const route = decodeURIComponent(pathname).replace(/\/+$/, "");
+  if (route.startsWith("//") || TRANSIENT_ROUTES.has(route)) return null;
+  return { href: pathname + url.search + url.hash, locale };
+}
+
+export function saveReturnUrl(href: string) {
   try {
-    // next-intl 라우터와 호환되도록 언어 접두사(/ko, /en)가 포함된 경우 제거하여 저장
-    const cleanUrl = url.replace(/^\/(ko|en)(\/|$)/, "/");
-    sessionStorage.setItem(STORAGE_KEY, cleanUrl);
+    const target = parseReturnUrl(href);
+    if (!target) return;
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        href,
+        locale:
+          target.locale ?? splitLocalizedPath(window.location.pathname).locale,
+        expiresAt: Date.now() + RETURN_URL_TTL,
+      }),
+    );
   } catch {
-    // SSR 또는 sessionStorage 접근 불가 환경 무시
+    // 저장소에 접근할 수 없으면 로그인 후 기본 목적지로 이동한다.
   }
 }
 
-/**
- * 저장된 return URL을 꺼내고 즉시 삭제합니다.
- * 한 번만 사용되어야 하므로 consume 패턴을 사용합니다.
- */
-export function consumeReturnUrl(): string | null {
+export function saveCurrentReturnUrl() {
+  const { pathname, search, hash } = window.location;
+  saveReturnUrl(pathname + search + hash);
+}
+
+export function consumeReturnUrl() {
   try {
-    const url = sessionStorage.getItem(STORAGE_KEY);
+    const stored = sessionStorage.getItem(STORAGE_KEY);
     sessionStorage.removeItem(STORAGE_KEY);
-    return url;
+    if (!stored) return null;
+    // 배포 전에 열린 탭에는 기존 문자열 값이 남아 있을 수 있다.
+    if (stored.startsWith("/")) return parseReturnUrl(stored);
+    const { href, locale, expiresAt } = JSON.parse(stored);
+    if (typeof href !== "string" || !(expiresAt > Date.now())) return null;
+    const target = parseReturnUrl(href);
+    if (!target) return null;
+    return {
+      href: target.href,
+      locale:
+        target.locale ??
+        (locale === "ko" || locale === "en" ? locale : undefined),
+    };
   } catch {
     return null;
+  }
+}
+
+export function saveSocialLoginLocale(locale: Locale) {
+  try {
+    sessionStorage.setItem(SOCIAL_LOCALE_KEY, locale);
+  } catch {
+    // 콜백의 기본 언어를 사용한다.
+  }
+}
+
+export function consumeSocialLoginLocale(): Locale | undefined {
+  try {
+    const locale = sessionStorage.getItem(SOCIAL_LOCALE_KEY);
+    sessionStorage.removeItem(SOCIAL_LOCALE_KEY);
+    return locale === "en" || locale === "ko" ? locale : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function clearAuthNavigation() {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(SOCIAL_LOCALE_KEY);
+  } catch {
+    // 저장소에 접근할 수 없는 환경
   }
 }

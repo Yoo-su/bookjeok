@@ -8,8 +8,8 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
-import { Link, usePathname } from "@/shared/config/i18n/routing";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
+import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
 import { useKongFlail } from "../hooks/use-kong-flail";
@@ -53,7 +53,6 @@ export function KongVisitorRow({
 }: KongVisitorRowProps) {
   const t = useTranslations("kong.send");
   const user = useAuthStore((s) => s.user);
-  const pathname = usePathname();
   const reduced = useReducedMotion();
 
   const { data, isPending } = useSentKongsQuery(handle, { enabled: !!user });
@@ -266,7 +265,7 @@ export function KongVisitorRow({
             {t("login_bubble")}
             <Link
               href={PATHS.LOGIN}
-              onClick={() => saveReturnUrl(pathname)}
+              onNavigate={saveCurrentReturnUrl}
               className="inline-flex h-8 items-center rounded-full bg-stone-900 px-3 text-xs font-semibold text-white hover:bg-stone-700"
             >
               {t("login")}

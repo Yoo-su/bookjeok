@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 import { StatefulButton } from "@/shared/components/aceternityui/stateful-button";
+import { Button } from "@/shared/components/shadcn/button";
 import {
   Card,
   CardContent,
@@ -21,6 +22,8 @@ import {
 } from "@/shared/components/shadcn/form";
 import { Input } from "@/shared/components/shadcn/input";
 import { ImageUploader } from "@/shared/components/ui/image-uploader";
+import { PATHS } from "@/shared/constants/paths";
+import { useFormCancel } from "@/shared/hooks/use-form-cancel";
 
 import { useBookSaleEditForm } from "../../../hooks/use-book-sale-edit-form";
 import { UploadProgressModal } from "../../common/upload-progress-modal";
@@ -47,6 +50,7 @@ interface BookSaleEditFormProps {
 
 export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
   const t = useTranslations("market.form");
+  const tCommon = useTranslations("common.actions");
   const {
     form,
     existingImages,
@@ -60,6 +64,15 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
     isModalOpen,
     onSubmit,
   } = useBookSaleEditForm({ sale });
+  const { isDirty } = form.formState;
+  const handleCancel = useFormCancel(
+    !isSubmitDisabled &&
+      (isDirty ||
+        newImagePreviews.length > 0 ||
+        existingImages.length !== sale.imageUrls.length),
+    PATHS.MY_PAGE_SALES,
+    [PATHS.MY_PAGE_SALES, PATHS.BOOK_SALES_DETAIL(sale.id)],
+  );
 
   const totalImages = existingImages.length + newImagePreviews.length;
 
@@ -115,24 +128,28 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
                     defaultLat={sale.latitude ?? undefined}
                     defaultLng={sale.longitude ?? undefined}
                     onLocationSelect={(lat, lng, addressInfo) => {
-                      form.setValue("latitude", lat);
-                      form.setValue("longitude", lng);
+                      form.setValue("latitude", lat, { shouldDirty: true });
+                      form.setValue("longitude", lng, { shouldDirty: true });
 
                       if (addressInfo) {
                         if (addressInfo.city) {
                           form.setValue("city", addressInfo.city, {
                             shouldValidate: true,
+                            shouldDirty: true,
                           });
                         }
                         if (addressInfo.district) {
                           form.setValue("district", addressInfo.district, {
                             shouldValidate: true,
+                            shouldDirty: true,
                           });
                         }
                         if (addressInfo.placeName) {
-                          form.setValue("placeName", addressInfo.placeName);
+                          form.setValue("placeName", addressInfo.placeName, {
+                            shouldDirty: true,
+                          });
                         } else {
-                          form.setValue("placeName", "");
+                          form.setValue("placeName", "", { shouldDirty: true });
                         }
                       }
                     }}
@@ -194,20 +211,30 @@ export const BookSaleEditForm = ({ sale }: BookSaleEditFormProps) => {
               <SaleContentField />
             </fieldset>
 
-            <StatefulButton
-              type="submit"
-              status={
-                uploadStep === "success"
-                  ? "success"
-                  : uploadStep === "idle"
-                    ? "idle"
-                    : "loading"
-              }
-              className="w-full mt-10"
-              disabled={isSubmitDisabled}
-            >
-              {t("submit_edit")}
-            </StatefulButton>
+            <div className="flex gap-3 mt-10">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitDisabled}
+              >
+                {tCommon("cancel")}
+              </Button>
+              <StatefulButton
+                type="submit"
+                status={
+                  uploadStep === "success"
+                    ? "success"
+                    : uploadStep === "idle"
+                      ? "idle"
+                      : "loading"
+                }
+                className="flex-1"
+                disabled={isSubmitDisabled}
+              >
+                {t("submit_edit")}
+              </StatefulButton>
+            </div>
           </form>
         </Form>
         <UploadProgressModal

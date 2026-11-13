@@ -111,7 +111,7 @@ export const SaleContentField = () => {
                     form.setValue(
                       "content",
                       currentContent ? `${currentContent}\n${tag}` : tag,
-                      { shouldValidate: true },
+                      { shouldValidate: true, shouldDirty: true },
                     );
                   }
                 }}

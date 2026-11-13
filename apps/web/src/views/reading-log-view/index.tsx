@@ -1,56 +1,105 @@
 "use client";
 
-import { startOfDay, startOfMonth } from "date-fns";
-import { Suspense, useCallback, useState } from "react";
+import { startOfDay } from "date-fns";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import { ReadingLogCalendar } from "@/features/reading-log/components/calendar-view/reading-log-calendar";
+import type { ReadingLogViewMode } from "@/features/reading-log/components/calendar-view/reading-log-controls";
 import { ReadingLogHero } from "@/features/reading-log/components/common/reading-log-hero";
 import { useReadingLogViewStore } from "@/features/reading-log/stores/use-reading-log-view-store";
-import type { ReadingLogLink } from "@/features/reading-log/utils/reading-log-link";
+import {
+  parseReadingLogLink,
+  type ReadingLogLink,
+  readingLogParams,
+} from "@/features/reading-log/utils/reading-log-link";
 import { parseCalendarDate } from "@/shared/utils/format-date";
 
-import { ReadingLogDeepLink } from "./reading-log-deep-link";
+const DAY_ENTRY = "bookjeokReadingLogDay";
 
 export function ReadingLogView() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  // 딥링크로 받은 날짜. 그 달 기록을 받은 뒤 상세를 띄우고 비움
-  const [openDate, setOpenDate] = useState<Date | null>(null);
-  const viewMode = useReadingLogViewStore((s) => s.viewMode);
-  const setViewMode = useReadingLogViewStore((s) => s.setViewMode);
-
-  const applyLink = useCallback(
-    ({ date, month, view }: ReadingLogLink) => {
-      if (date) {
-        setViewMode("calendar");
-        setCurrentDate(date);
-        // 미래 날짜는 기록할 수 없어 상세를 띄우지 않음
-        if (date <= startOfDay(new Date())) setOpenDate(date);
-        return;
-      }
-      if (view) setViewMode(view);
-      if (month) setCurrentDate(startOfMonth(month));
-    },
-    [setViewMode],
+  return (
+    <Suspense fallback={null}>
+      <ReadingLogContent />
+    </Suspense>
   );
+}
+
+function ReadingLogContent() {
+  const searchParams = useSearchParams();
+  const preferredView = useReadingLogViewStore((s) => s.viewMode);
+  const setPreferredView = useReadingLogViewStore((s) => s.setViewMode);
+  const link = parseReadingLogLink(new URLSearchParams(searchParams));
+  const today = startOfDay(new Date());
+  const currentDate = link?.date ?? link?.month ?? today;
+  const viewMode = link?.date ? "calendar" : (link?.view ?? preferredView);
+  const openDate = link?.date && link.date <= today ? link.date : null;
+
+  const buildUrl = (next: ReadingLogLink) => {
+    const url = new URL(window.location.href);
+    readingLogParams(next, url.searchParams);
+    return url.pathname + url.search + url.hash;
+  };
+
+  const navigate = (next: ReadingLogLink) => {
+    const { pathname, search, hash } = window.location;
+    const href = buildUrl(next);
+    if (href === pathname + search + hash) return;
+    if (!link?.date) {
+      const currentHref = buildUrl({ month: currentDate, view: viewMode });
+      if (currentHref !== pathname + search + hash) {
+        window.history.replaceState(null, "", currentHref);
+      }
+    }
+    window.history.pushState(
+      next.date ? { [DAY_ENTRY]: true } : null,
+      "",
+      href,
+    );
+  };
+
+  const openDay = (date: Date) => {
+    navigate(
+      date <= today
+        ? { date, view: "calendar" }
+        : { month: date, view: "calendar" },
+    );
+  };
+
+  const closeDay = () => {
+    if (window.history.state?.[DAY_ENTRY]) {
+      window.history.back();
+      return;
+    }
+    window.history.replaceState(
+      null,
+      "",
+      buildUrl({ month: currentDate, view: viewMode }),
+    );
+  };
+
+  const changeView = (view: ReadingLogViewMode) => {
+    if (view === viewMode) return;
+    navigate({ month: currentDate, view });
+    setPreferredView(view);
+  };
 
   return (
     <div className="relative min-h-dvh pb-20">
-      <Suspense fallback={null}>
-        <ReadingLogDeepLink onApply={applyLink} />
-      </Suspense>
       <ReadingLogHero
         currentDate={currentDate}
-        onOpenDate={(date) => applyLink({ date: parseCalendarDate(date) })}
+        onOpenDate={(date) => openDay(parseCalendarDate(date))}
       />
 
       <div className="relative z-10 w-full">
         <ReadingLogCalendar
           currentDate={currentDate}
-          onDateChange={setCurrentDate}
+          onDateChange={(month) => navigate({ month, view: viewMode })}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={changeView}
           openDate={openDate}
-          onOpenDateHandled={() => setOpenDate(null)}
+          onOpenDay={openDay}
+          onCloseDay={closeDay}
         />
       </div>
     </div>

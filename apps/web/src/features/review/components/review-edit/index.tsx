@@ -12,6 +12,7 @@ import { useUpdateReviewMutation } from "@/features/review/mutations";
 import { AlertTriangle } from "@/shared/components/icons/iconsax";
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { returnToApp } from "@/shared/utils/browser-navigation";
 
 import { ReviewEditSkeleton } from "./skeleton";
 
@@ -47,7 +48,8 @@ export const ReviewEdit = ({ id }: ReviewEditProps) => {
   // 본문에서 빠진 이미지는 서버가 수정을 커밋한 뒤 지운다
   const handleSubmit = async (data: ReviewFormValues) => {
     await updateReview({ id, data });
-    router.push(PATHS.REVIEW_DETAIL(id));
+    const detail = PATHS.REVIEW_DETAIL(id);
+    returnToApp(router, detail, [detail]);
   };
 
   // 로딩 중: 스켈레톤 UI 표시
@@ -85,7 +87,8 @@ export const ReviewEdit = ({ id }: ReviewEditProps) => {
         onSubmit={handleSubmit}
         submitLabel={t("buttons.submit_edit")}
         isSubmitting={isSubmitting || isSuccess}
-        isEditMode={true}
+        cancelHref={PATHS.REVIEW_DETAIL(id)}
+        isEditMode
       />
     </div>
   );

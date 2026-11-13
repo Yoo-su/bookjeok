@@ -2,10 +2,13 @@
 
 import { exchangeAuthTicket } from "@bookjeok/api-client";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { consumeReturnUrl } from "@/features/auth/utils/return-url";
+import {
+  consumeReturnUrl,
+  consumeSocialLoginLocale,
+} from "@/features/auth/utils/return-url";
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -18,25 +21,32 @@ import { PATHS } from "@/shared/constants/paths";
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const handledTicket = useRef<string | null>(null);
   const setAuth = useAuthStore((state) => state.setAuth);
 
   useEffect(() => {
     const handleAuth = async () => {
       const ticket = searchParams.get("ticket");
       if (!ticket) {
-        router.replace(PATHS.LOGIN);
+        router.replace(PATHS.LOGIN, { locale: consumeSocialLoginLocale() });
         return;
       }
+
+      if (handledTicket.current === ticket) return;
+      handledTicket.current = ticket;
+      const locale = consumeSocialLoginLocale();
 
       try {
         const data = await exchangeAuthTicket(ticket);
         // 토큰과 사용자를 한 번에 바꾼다. 따로 넣으면 그 사이 이전 사용자 정보가 남는다
         setAuth(data);
-        const returnUrl = consumeReturnUrl();
-        router.replace(returnUrl || PATHS.HOME);
+        const target = consumeReturnUrl();
+        router.replace(target?.href ?? PATHS.HOME, {
+          locale: target?.locale ?? locale,
+        });
       } catch (error) {
         console.error("Failed to exchange auth ticket:", error);
-        router.replace(PATHS.LOGIN);
+        router.replace(PATHS.LOGIN, { locale });
       }
     };
 

@@ -10,10 +10,13 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
+import { clearAuthNavigation } from "@/features/auth/utils/return-url";
 import { revalidateUserProfile } from "@/shared/actions/revalidate";
 import { useRouter } from "@/shared/config/i18n/routing";
+import { PATHS } from "@/shared/constants/paths";
 import { handleMutationError } from "@/shared/utils/error-handler";
 import { purgeRouteCache } from "@/shared/utils/purge-route-cache";
+import { hardRedirect, markSessionToast } from "@/shared/utils/session";
 
 /**
  * 위시리스트 추가 뮤테이션 훅
@@ -83,8 +86,6 @@ export const useWithdrawMutation = () => {
     // 홈으로 떠나기 전에 먼저 걷어낸다. `window.location` 이동이 진행 중인 서버
     // 액션을 끊으므로 순서가 중요하다. Router Cache는 그 이동이 통째로 버린다.
     onSuccess: async () => {
-      toast.success(t("withdraw_success"));
-
       if (handle) {
         try {
           await revalidateUserProfile({
@@ -98,9 +99,9 @@ export const useWithdrawMutation = () => {
       }
 
       clearAuth();
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
+      clearAuthNavigation();
+      markSessionToast(t("withdraw_success"));
+      hardRedirect(PATHS.HOME);
     },
     onError: (error: unknown) => {
       handleMutationError(error, "회원 탈퇴");

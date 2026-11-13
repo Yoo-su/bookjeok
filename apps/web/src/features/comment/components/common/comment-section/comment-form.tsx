@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import {
   Avatar,
   AvatarFallback,
@@ -14,7 +14,7 @@ import {
 import { Button } from "@/shared/components/shadcn/button";
 import { Spinner } from "@/shared/components/shadcn/spinner";
 import { Textarea } from "@/shared/components/shadcn/textarea";
-import { Link, usePathname } from "@/shared/config/i18n/routing";
+import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { useSafeSubmit } from "@/shared/hooks/use-safe-submit";
 import { cn } from "@/shared/utils";
@@ -33,7 +33,6 @@ interface CommentFormProps {
 export const CommentForm = ({ targetType, targetId }: CommentFormProps) => {
   const [content, setContent] = useState("");
   const user = useAuthStore((state) => state.user);
-  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -83,7 +82,7 @@ export const CommentForm = ({ targetType, targetId }: CommentFormProps) => {
             link: (chunks) => (
               <Link
                 href={PATHS.LOGIN}
-                onClick={() => saveReturnUrl(pathname)}
+                onNavigate={saveCurrentReturnUrl}
                 className="text-primary underline hover:no-underline"
               >
                 {chunks}

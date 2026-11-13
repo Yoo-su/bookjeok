@@ -10,7 +10,7 @@ import { Separator } from "@/shared/components/shadcn/separator";
 import { ShareButton } from "@/shared/components/ui/share-button";
 import { StarRating } from "@/shared/components/ui/star-rating";
 import { UserAvatarMenu } from "@/shared/components/ui/user-avatar-menu";
-import { Link } from "@/shared/config/i18n/routing";
+import { getPathname, Link, type Locale } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { formatDate } from "@/shared/utils/format-date";
 
@@ -23,6 +23,10 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
   const t = useTranslations("review.detail");
   const tAria = useTranslations("common.aria");
   const locale = useLocale();
+  const sharePath = getPathname({
+    href: PATHS.REVIEW_DETAIL(review.id),
+    locale: locale as Locale,
+  });
 
   return (
     <header className="relative bg-white pt-20 pb-12">
@@ -66,6 +70,11 @@ export function ReviewDetailHeader({ review, book }: ReviewDetailHeaderProps) {
               title={review.title}
               description={getReviewShareDescription(review)}
               imageUrl={book?.image ?? undefined}
+              url={
+                typeof window === "undefined"
+                  ? undefined
+                  : window.location.origin + sharePath
+              }
             />
           </div>
         </div>

@@ -35,6 +35,7 @@ import {
 import { Skeleton } from "@/shared/components/shadcn/skeleton";
 import { Link, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
+import { returnToApp } from "@/shared/utils/browser-navigation";
 
 interface OrderPaymentViewProps {
   orderId: string;
@@ -392,7 +393,12 @@ export const OrderPaymentView = ({ orderId }: OrderPaymentViewProps) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 dark:border-stone-800 pb-4">
         <div>
           <button
-            onClick={() => router.back()}
+            onClick={() =>
+              returnToApp(router, PATHS.ORDER_DETAIL(orderId), [
+                PATHS.ORDER_DETAIL(orderId),
+                PATHS.MY_PAGE_PURCHASES,
+              ])
+            }
             className="flex items-center gap-1.5 text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 mb-1 transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
