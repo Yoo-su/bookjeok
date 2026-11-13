@@ -98,14 +98,18 @@ export const VerifyEmailView = () => {
                 asChild
                 className="w-full bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200 rounded-xl h-11 text-sm font-medium transition-colors"
               >
-                <Link href={PATHS.MY_PAGE}>{t("btn_mypage")}</Link>
+                <Link href={PATHS.MY_PAGE} replace>
+                  {t("btn_mypage")}
+                </Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 className="w-full border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-xl h-11 text-sm font-medium transition-colors"
               >
-                <Link href={PATHS.HOME}>{t("btn_home")}</Link>
+                <Link href={PATHS.HOME} replace>
+                  {t("btn_home")}
+                </Link>
               </Button>
             </div>
           </div>
@@ -128,14 +132,18 @@ export const VerifyEmailView = () => {
                 asChild
                 className="w-full bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200 rounded-xl h-11 text-sm font-medium transition-colors"
               >
-                <Link href={PATHS.LOGIN}>{t("btn_login")}</Link>
+                <Link href={PATHS.LOGIN} replace>
+                  {t("btn_login")}
+                </Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 className="w-full border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 rounded-xl h-11 text-sm font-medium transition-colors"
               >
-                <Link href={PATHS.HOME}>{t("btn_home")}</Link>
+                <Link href={PATHS.HOME} replace>
+                  {t("btn_home")}
+                </Link>
               </Button>
             </div>
           </div>

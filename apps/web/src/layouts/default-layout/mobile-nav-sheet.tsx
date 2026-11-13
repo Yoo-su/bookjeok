@@ -3,7 +3,6 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
 import { HeaderMusicButton } from "@/features/music";
 import { Menu } from "@/shared/components/icons/iconsax";
 import {
@@ -147,13 +146,6 @@ export const MobileNavSheet = () => {
     },
   ];
 
-  const handleLinkClick = (href: string) => {
-    if (!currentUser) {
-      saveReturnUrl(href);
-    }
-    setOpen(false);
-  };
-
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -209,7 +201,7 @@ export const MobileNavSheet = () => {
                     <motion.div key={item.href} variants={ITEM_VARIANTS}>
                       <Link
                         href={item.href}
-                        onClick={() => handleLinkClick(item.href)}
+                        onClick={() => setOpen(false)}
                         className={cn(
                           "flex items-center justify-between py-2 px-3 text-sm rounded-md",
                           // 누르는 동안 행이 살짝 눌려 들어간다

@@ -1,13 +1,13 @@
 import { useEmailLoginMutation } from "@bookjeok/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { createLoginSchema, LoginSchemaType } from "@/features/auth/schema"; // Using centralized schema
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { consumeReturnUrl } from "@/features/auth/utils/return-url";
+import { saveSocialLoginLocale } from "@/features/auth/utils/return-url";
 import { Logo } from "@/layouts/common/logo";
 import { Loader2 } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
@@ -20,14 +20,16 @@ import {
 } from "@/shared/components/shadcn/form";
 import { Input } from "@/shared/components/shadcn/input";
 import { config } from "@/shared/config/env";
-import { Link, useRouter } from "@/shared/config/i18n/routing";
+import { Link, type Locale } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { API_ERROR_CODES, getErrorCode } from "@/shared/utils/error-handler";
 
 export const LoginForm = () => {
   const t = useTranslations("auth.login");
+  const locale = useLocale() as Locale;
   const handleSocialLogin = (callbackUrl: string) => {
-    window.location.href = `${config.NEXT_PUBLIC_API_URL}/${callbackUrl}`;
+    saveSocialLoginLocale(locale);
+    window.location.replace(`${config.NEXT_PUBLIC_API_URL}/${callbackUrl}`);
   };
 
   return (
@@ -99,6 +101,7 @@ export const LoginForm = () => {
         <span className="text-gray-500">{t("no_account")} </span>
         <Link
           href={PATHS.SIGNUP}
+          replace
           className="font-medium text-emerald-600 hover:text-emerald-500"
         >
           {t("signup_link")}
@@ -111,7 +114,6 @@ export const LoginForm = () => {
 function EmailLoginForm() {
   const t = useTranslations("auth.login");
   const tValidation = useTranslations("auth.validation");
-  const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   const form = useForm<LoginSchemaType>({
@@ -126,8 +128,6 @@ function EmailLoginForm() {
     onSuccess: (data) => {
       setAuth(data);
       toast.success(t("success"));
-      const returnUrl = consumeReturnUrl();
-      router.push(returnUrl || "/");
     },
     onError: (error) => {
       if (axios.isAxiosError(error) && error.response?.status === 401) {

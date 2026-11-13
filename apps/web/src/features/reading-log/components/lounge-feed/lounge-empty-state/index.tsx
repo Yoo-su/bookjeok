@@ -4,16 +4,15 @@ import { useUserProfileQuery } from "@bookjeok/react-query";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { BookOpen, LogIn, PenLine } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
-import { Link, usePathname } from "@/shared/config/i18n/routing";
+import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
 export function LoungeEmptyState() {
   const t = useTranslations("lounge.feed.empty");
   const { data: user } = useUserProfileQuery();
-  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -46,7 +45,7 @@ export function LoungeEmptyState() {
           </Button>
         </Link>
       ) : (
-        <Link href={PATHS.LOGIN} onClick={() => saveReturnUrl(pathname)}>
+        <Link href={PATHS.LOGIN} onNavigate={saveCurrentReturnUrl}>
           <Button className="bg-stone-900 text-white hover:bg-stone-800 h-12 px-8 rounded-full font-medium text-sm transition-all duration-300 hover:shadow-lg">
             <LogIn className="mr-2" size={18} />
             {t("cta_login")}

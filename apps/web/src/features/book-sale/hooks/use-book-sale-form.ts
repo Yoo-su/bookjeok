@@ -67,7 +67,7 @@ export const useBookSaleForm = () => {
   const selectedBook = form.watch("book");
 
   const handleBookSelect = (book: BookInfo | null) => {
-    form.setValue("book", book, { shouldValidate: true });
+    form.setValue("book", book, { shouldValidate: true, shouldDirty: true });
   };
 
   const onSubmit = (data: SellFormValues) => {

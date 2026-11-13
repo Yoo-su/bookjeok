@@ -11,11 +11,11 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { useToggleReviewReactionMutation } from "@/features/review/mutations";
 import { Burst } from "@/shared/components/ui/burst";
 import { RollingNumber } from "@/shared/components/ui/rolling-number";
-import { usePathname, useRouter } from "@/shared/config/i18n/routing";
+import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { cn } from "@/shared/utils/cn";
 
@@ -47,7 +47,6 @@ export function ReviewDetailActions({
 }: ReviewDetailActionsProps) {
   const tReactions = useTranslations("review.reactions");
   const router = useRouter();
-  const pathname = usePathname();
   const userState = useAuthStore((state) => state.user);
   const [mounted, setMounted] = useState(false);
 
@@ -74,7 +73,7 @@ export function ReviewDetailActions({
 
   const handleReactionClick = (type: ReviewReactionType) => {
     if (!user) {
-      saveReturnUrl(pathname);
+      saveCurrentReturnUrl();
       router.push(PATHS.LOGIN);
       return;
     }

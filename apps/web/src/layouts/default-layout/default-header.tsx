@@ -14,7 +14,7 @@ import { flushSync } from "react-dom";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { HeaderMusicButton } from "@/features/music";
 import { NotificationPopover } from "@/features/notification/components/notification-popover";
 import {
@@ -216,7 +216,6 @@ interface ChapterMenuItem {
   href: string;
   label: string;
   /** 비로그인이면 로그인 후 돌아올 곳으로 기억한다 */
-  requiresAuth?: boolean;
 }
 
 interface ChapterMenuProps {
@@ -224,16 +223,9 @@ interface ChapterMenuProps {
   label: string;
   active: boolean;
   items: ChapterMenuItem[];
-  isLoggedIn: boolean;
 }
 
-const ChapterMenu = ({
-  index,
-  label,
-  active,
-  items,
-  isLoggedIn,
-}: ChapterMenuProps) => {
+const ChapterMenu = ({ index, label, active, items }: ChapterMenuProps) => {
   const { hovered, hoverProps } = useMouseHover();
   const [open, setOpen] = useState(false);
 
@@ -282,11 +274,6 @@ const ChapterMenu = ({
             >
               <Link
                 href={item.href}
-                onClick={
-                  item.requiresAuth && !isLoggedIn
-                    ? () => saveReturnUrl(item.href)
-                    : undefined
-                }
                 className="flex items-center justify-between w-full text-xs font-medium text-stone-700 group-hover/item:text-stone-900"
               >
                 <span>{item.label}</span>
@@ -426,18 +413,15 @@ export const DefaultHeader = () => {
             index="03"
             label={t("nav.menu_reviews")}
             active={isActive(PATHS.REVIEWS)}
-            isLoggedIn={!!currentUser}
             items={[
               { href: PATHS.REVIEWS, label: t("nav.review_feed") },
               {
                 href: PATHS.REVIEW_WRITE,
                 label: t("nav.write_review"),
-                requiresAuth: true,
               },
               {
                 href: PATHS.MY_REVIEWS,
                 label: t("nav.my_reviews"),
-                requiresAuth: true,
               },
             ]}
           />
@@ -445,18 +429,15 @@ export const DefaultHeader = () => {
             index="04"
             label={t("nav.menu_market")}
             active={isActive(PATHS.BOOK_MARKET)}
-            isLoggedIn={!!currentUser}
             items={[
               { href: PATHS.BOOK_MARKET, label: t("nav.market_home") },
               {
                 href: PATHS.BOOK_SALES_REGISTER,
                 label: t("nav.write_sales"),
-                requiresAuth: true,
               },
               {
                 href: PATHS.MY_PAGE_SALES,
                 label: t("nav.my_sales"),
-                requiresAuth: true,
               },
             ]}
           />
@@ -507,7 +488,7 @@ export const DefaultHeader = () => {
           ) : (
             <Link
               href={PATHS.LOGIN}
-              onClick={() => saveReturnUrl(pathname)}
+              onNavigate={saveCurrentReturnUrl}
               className="-mr-2 inline-flex items-center px-3 py-2"
             >
               <span className="text-sm font-medium font-[family-name:var(--font-gowun-batang)] text-stone-500 hover:text-stone-900 transition-colors tracking-wide">

@@ -144,6 +144,7 @@ export const ReviewHomeView = ({
               tag={tag}
               isbn={isbn}
               clearFilters={clearFilters}
+              listQuery={searchParamsString}
             />
           )}
         </motion.div>

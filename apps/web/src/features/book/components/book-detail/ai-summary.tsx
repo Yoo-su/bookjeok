@@ -4,9 +4,9 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { Loader2, RefreshCcw } from "@/shared/components/icons/iconsax";
-import { Link, usePathname } from "@/shared/config/i18n/routing";
+import { Link } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
 interface AIResponse {
@@ -40,7 +40,6 @@ export const AISummary = ({
   }, []);
 
   const isLoggedIn = mounted && !!user;
-  const pathname = usePathname();
 
   if (!isRequested) {
     return (
@@ -68,7 +67,7 @@ export const AISummary = ({
           ) : (
             <Link
               href={PATHS.LOGIN}
-              onClick={() => saveReturnUrl(pathname)}
+              onNavigate={saveCurrentReturnUrl}
               className="group relative px-6 py-3 text-sm font-medium text-gray-900 transition-all duration-300 ease-out border border-gray-200 rounded-full hover:border-gray-900 hover:bg-gray-900 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
             >
               <span className="relative">{t("button_login")}</span>

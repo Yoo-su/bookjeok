@@ -3,10 +3,9 @@
 import { usePopularKeywordsQuery } from "@bookjeok/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChevronDown } from "@/shared/components/icons/iconsax";
-import { usePathname } from "@/shared/config/i18n/routing";
 import { cn } from "@/shared/utils";
 
 import heroStyles from "../search-hero.module.css";
@@ -25,7 +24,6 @@ export const PopularKeywords = ({
   variant?: "default" | "hero";
 }) => {
   const t = useTranslations("book.search");
-  const pathname = usePathname();
   const { data, isLoading } = usePopularKeywordsQuery();
   // 기본값은 undefined에만 걸린다. 형태가 어긋난 200은 그대로 통과해 아래 map에서 터진다.
   const keywords = Array.isArray(data) ? data : [];
@@ -47,16 +45,15 @@ export const PopularKeywords = ({
   }, [variant, keywords.length, isHovered, isPaused]);
 
   // 검색어 클릭 핸들러
-  const handleKeywordClick = useCallback(
-    (keyword: string) => {
-      const params = new URLSearchParams();
+  const handleKeywordClick = (keyword: string) => {
+    const { pathname, search } = window.location;
+    const params = new URLSearchParams(search);
+    if (params.get("q") !== keyword) {
       params.set("q", keyword);
-      const newUrl = `${pathname}?${params.toString()}`;
-      window.history.pushState(null, "", newUrl);
-      setIsHovered(false);
-    },
-    [pathname],
-  );
+      window.history.pushState(null, "", `${pathname}?${params.toString()}`);
+    }
+    setIsHovered(false);
+  };
 
   // 로딩 중이거나 데이터가 없으면 렌더링하지 않음
   if (isLoading || keywords.length === 0) {

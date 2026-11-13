@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import remarkGfm from "remark-gfm";
 
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { RotateCcw, Send } from "@/shared/components/icons/iconsax";
 import { Particles } from "@/shared/components/magicui/particles";
 import { Input } from "@/shared/components/shadcn/input";
@@ -172,6 +173,7 @@ export const AiChatWindow = () => {
           <span className="text-stone-600">{t("login_notice")}</span>
           <Link
             href={PATHS.LOGIN}
+            onNavigate={saveCurrentReturnUrl}
             className="px-3 py-1.5 bg-stone-800 text-white font-medium rounded-lg hover:bg-stone-900 transition-colors shrink-0"
           >
             {t("login_button")}

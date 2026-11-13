@@ -20,7 +20,12 @@ export const LanguageSwitcher = ({ className }: { className?: string }) => {
   const pathname = usePathname();
 
   const handleLocaleChange = (newLocale: "ko" | "en") => {
-    router.replace(pathname, { locale: newLocale });
+    if (newLocale === locale) return;
+    const { search, hash } = window.location;
+    router.replace(pathname + search + hash, {
+      locale: newLocale,
+      scroll: false,
+    });
   };
 
   const languages = [

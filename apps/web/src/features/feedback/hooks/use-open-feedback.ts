@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
@@ -23,7 +23,7 @@ export const useOpenFeedback = () => {
   return useCallback(
     (preset?: FeedbackPreset) => {
       if (!user) {
-        saveReturnUrl(`${window.location.pathname}${window.location.search}`);
+        saveCurrentReturnUrl();
         router.push(PATHS.LOGIN);
         return;
       }

@@ -9,10 +9,10 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { BookOpen } from "@/shared/components/icons/iconsax";
 import { Button } from "@/shared/components/shadcn/button";
-import { usePathname, useRouter } from "@/shared/config/i18n/routing";
+import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 import { useSafeSubmit } from "@/shared/hooks/use-safe-submit";
 import { cn } from "@/shared/utils";
@@ -33,7 +33,6 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
   const t = useTranslations("reading_log.mark_as_read");
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-  const pathname = usePathname();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
@@ -57,7 +56,7 @@ export function MarkAsReadButton({ book, className }: MarkAsReadButtonProps) {
 
   const handleClick = () => {
     if (!user) {
-      saveReturnUrl(pathname);
+      saveCurrentReturnUrl();
       router.push(PATHS.LOGIN);
       return;
     }

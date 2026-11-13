@@ -1,12 +1,13 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
+import { type Locale, redirect } from "@/shared/config/i18n/routing";
 import { createPageMetadata } from "@/shared/config/metadata";
+import { PATHS } from "@/shared/constants/paths";
 import { OrderPaymentSuccessView } from "@/views/order-payment-success-view";
 
 type Props = {
-  params: Promise<{ locale: string }>;
+  params: Promise<{ locale: Locale }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -26,11 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Page({ params }: Props) {
+  const { locale } = await params;
   if (process.env.NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED !== "true") {
-    redirect("/");
+    redirect({ href: PATHS.HOME, locale });
   }
 
-  const { locale } = await params;
   setRequestLocale(locale);
 
   return <OrderPaymentSuccessView />;

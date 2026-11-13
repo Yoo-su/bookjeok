@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 
 import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
@@ -14,11 +14,13 @@ interface GuestGuardProps {
 export const GuestGuard = ({ children }: GuestGuardProps) => {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const leaving = useRef(false);
 
   useEffect(() => {
-    if (user) {
-      const returnUrl = consumeReturnUrl();
-      router.push(returnUrl || PATHS.HOME);
+    if (user && !leaving.current) {
+      leaving.current = true;
+      const target = consumeReturnUrl();
+      router.replace(target?.href ?? PATHS.HOME, { locale: target?.locale });
       return;
     }
   }, [user, router]);

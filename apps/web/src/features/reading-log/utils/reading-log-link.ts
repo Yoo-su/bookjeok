@@ -23,12 +23,19 @@ const ymd = (d: Date) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const ym = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
 
-export function readingLogHref({ date, month, view }: ReadingLogLink) {
-  const params = new URLSearchParams();
+export function readingLogParams(
+  { date, month, view }: ReadingLogLink,
+  params = new URLSearchParams(),
+) {
+  for (const key of ["view", "date", "month"]) params.delete(key);
   if (view) params.set("view", view);
   if (date) params.set("date", ymd(date));
   else if (month) params.set("month", ym(month));
-  const query = params.toString();
+  return params;
+}
+
+export function readingLogHref(link: ReadingLogLink) {
+  const query = readingLogParams(link).toString();
   return query ? `${PATHS.READING_LOG}?${query}` : PATHS.READING_LOG;
 }
 

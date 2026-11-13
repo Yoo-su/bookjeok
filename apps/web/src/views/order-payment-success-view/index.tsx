@@ -116,7 +116,9 @@ export const OrderPaymentSuccessView = () => {
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.HOME}>{t("btn_go_home")}</Link>
+            <Link href={PATHS.HOME} replace>
+              {t("btn_go_home")}
+            </Link>
           </Button>
         </div>
       </div>
@@ -172,7 +174,9 @@ export const OrderPaymentSuccessView = () => {
             variant="outline"
             className="border-stone-200 dark:border-stone-700"
           >
-            <Link href={PATHS.HOME}>{t("btn_go_home")}</Link>
+            <Link href={PATHS.HOME} replace>
+              {t("btn_go_home")}
+            </Link>
           </Button>
         </div>
       </div>
@@ -305,7 +309,7 @@ export const OrderPaymentSuccessView = () => {
           size="lg"
           className="flex-1 font-bold h-12 rounded-xl bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200 shadow-xs cursor-pointer"
         >
-          <Link href={PATHS.ORDER_DETAIL(targetOrderId)}>
+          <Link href={PATHS.ORDER_DETAIL(targetOrderId)} replace>
             {t("btn_order_detail")}
             <ArrowRight className="h-4 w-4 ml-1.5" />
           </Link>
@@ -316,7 +320,7 @@ export const OrderPaymentSuccessView = () => {
           size="lg"
           className="sm:w-36 h-12 rounded-xl border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300"
         >
-          <Link href={PATHS.HOME}>
+          <Link href={PATHS.HOME} replace>
             <Home className="h-4 w-4 mr-1.5" />
             {t("btn_go_home")}
           </Link>

@@ -76,7 +76,7 @@ export const OrderPaymentFailView = () => {
             size="lg"
             className="flex-1 font-bold h-12 rounded-xl bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 shadow-xs cursor-pointer"
           >
-            <Link href={PATHS.ORDER_PAYMENT(orderId)}>
+            <Link href={PATHS.ORDER_PAYMENT(orderId)} replace>
               <RefreshCw className="h-4 w-4 mr-1.5" />
               {t("btn_retry")}
             </Link>
@@ -87,7 +87,7 @@ export const OrderPaymentFailView = () => {
             size="lg"
             className="flex-1 font-bold h-12 rounded-xl bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 shadow-xs cursor-pointer"
           >
-            <Link href={PATHS.HOME}>
+            <Link href={PATHS.HOME} replace>
               <Home className="h-4 w-4 mr-1.5" />
               {t("btn_go_home")}
             </Link>
@@ -99,7 +99,7 @@ export const OrderPaymentFailView = () => {
           size="lg"
           className="sm:w-36 h-12 rounded-xl border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300"
         >
-          <Link href={PATHS.HOME}>
+          <Link href={PATHS.HOME} replace>
             <Home className="h-4 w-4 mr-1.5" />
             {t("btn_go_home")}
           </Link>

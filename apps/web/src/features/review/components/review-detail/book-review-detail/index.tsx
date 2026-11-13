@@ -1,5 +1,6 @@
 import { CommentTargetType } from "@bookjeok/core";
 import { useTranslations } from "next-intl";
+import { Suspense } from "react";
 
 import { CommentSection } from "@/features/comment/components/common/comment-section";
 import { useReviewWithAuth } from "@/features/review/hooks/use-review-with-auth";
@@ -15,6 +16,7 @@ import { ReviewDetailActions } from "./actions";
 import { ReviewDetailContent } from "./content";
 import { ReviewDetailHeader } from "./header";
 import { PrivateReviewOverlay } from "./private-overlay";
+import { ReviewListLink } from "./review-list-link";
 import { ReviewDetailSkeleton } from "./skeleton";
 
 interface ReviewDetailProps {
@@ -76,13 +78,27 @@ export const ReviewDetail = ({ id }: ReviewDetailProps) => {
 
         {/* 네비게이션 & 편집 버튼 */}
         <div className="flex items-center justify-between pt-8 mt-8 border-t border-stone-100">
-          <Button
-            variant="ghost"
-            className="text-stone-500 hover:text-stone-900"
-            asChild
+          <Suspense
+            fallback={
+              <Button
+                variant="ghost"
+                className="text-stone-500 hover:text-stone-900"
+                asChild
+              >
+                <Link href={PATHS.REVIEWS} replace>
+                  {t("back")}
+                </Link>
+              </Button>
+            }
           >
-            <Link href={PATHS.REVIEWS}>{t("back")}</Link>
-          </Button>
+            <Button
+              variant="ghost"
+              className="text-stone-500 hover:text-stone-900"
+              asChild
+            >
+              <ReviewListLink>{t("back")}</ReviewListLink>
+            </Button>
+          </Suspense>
 
           {isAuthor && (
             <Button

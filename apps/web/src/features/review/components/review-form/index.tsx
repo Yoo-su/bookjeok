@@ -39,7 +39,9 @@ import {
 } from "@/shared/components/shadcn/select";
 import { Switch } from "@/shared/components/shadcn/switch";
 import { StarRating } from "@/shared/components/ui/star-rating";
+import { PATHS } from "@/shared/constants/paths";
 import { useEditorImageHandler } from "@/shared/hooks/use-editor-image-handler";
+import { useFormCancel } from "@/shared/hooks/use-form-cancel";
 
 import { ReviewPreview } from "./review-preview";
 import { TagInput } from "./tag-input";
@@ -73,6 +75,7 @@ interface ReviewFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   isEditMode?: boolean;
+  cancelHref?: string;
 }
 
 /**
@@ -85,6 +88,7 @@ export const ReviewForm = ({
   submitLabel, // Optional now, will default to translated value
   isSubmitting = false,
   isEditMode = false,
+  cancelHref = PATHS.REVIEWS,
 }: ReviewFormProps) => {
   const t = useTranslations("review.form");
   const tFilters = useTranslations("review.filters");
@@ -121,7 +125,10 @@ export const ReviewForm = ({
 
   const handleBookSelect = (book: BookInfo) => {
     setSelectedBook(book);
-    form.setValue("isbn", book.isbn, { shouldValidate: true });
+    form.setValue("isbn", book.isbn, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const handleSubmit = async (data: ReviewSchemaValues) => {
@@ -134,6 +141,12 @@ export const ReviewForm = ({
   };
 
   const isProcessing = isSubmitting || isUploading;
+  const { isDirty } = form.formState;
+
+  const handleCancel = useFormCancel(isDirty && !isProcessing, cancelHref, [
+    cancelHref,
+    PATHS.MY_REVIEWS,
+  ]);
 
   const currentSubmitLabel =
     submitLabel ||
@@ -318,7 +331,10 @@ export const ReviewForm = ({
                   <TagInput
                     value={field.value}
                     onChange={(tags) =>
-                      form.setValue("tags", tags, { shouldValidate: true })
+                      form.setValue("tags", tags, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
                     }
                     disabled={isProcessing}
                   />
@@ -396,7 +412,7 @@ export const ReviewForm = ({
             type="button"
             variant="outline"
             size="lg"
-            onClick={() => window.history.back()}
+            onClick={handleCancel}
             disabled={isProcessing}
           >
             {t("buttons.cancel")}

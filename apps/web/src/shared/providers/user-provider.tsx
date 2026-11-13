@@ -4,7 +4,7 @@ import { getUserProfile } from "@bookjeok/api-client";
 import { ReactNode, useEffect, useState } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { FullScreenLoader } from "@/shared/components/ui/full-screen-loader";
 import { usePathname, useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
@@ -26,13 +26,33 @@ export default function UserProvider({ children }: UserProviderProps) {
   }, []);
 
   useEffect(() => {
+    const refreshRestoredSession = async (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      const previous = useAuthStore.getState();
+      await useAuthStore.persist.rehydrate();
+      const current = useAuthStore.getState();
+      if (
+        previous.user?.id !== current.user?.id ||
+        !!previous.accessToken !== !!current.accessToken
+      ) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener("pageshow", refreshRestoredSession);
+    return () => window.removeEventListener("pageshow", refreshRestoredSession);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
     const fetchUserProfile = async () => {
       if (accessToken) {
         try {
           const user = await getUserProfile();
-          setUser(user);
+          if (active) setUser(user);
+        } catch {
+          // 인증 실패는 세션 갱신 및 종료 처리에서 다룬다.
         } finally {
-          setIsLoading(false);
+          if (active) setIsLoading(false);
         }
       } else {
         setIsLoading(false);
@@ -40,26 +60,36 @@ export default function UserProvider({ children }: UserProviderProps) {
     };
 
     if (isHydrated) {
-      fetchUserProfile();
+      void fetchUserProfile();
     }
+    return () => {
+      active = false;
+    };
   }, [accessToken, setUser, isHydrated]);
 
   const isPrivateRoute = (path: string | null): boolean => {
     if (!path) return false;
+    const paymentEnabled =
+      process.env.NEXT_PUBLIC_FEATURE_PAYMENT_ENABLED === "true";
+    const isOrder =
+      paymentEnabled &&
+      path.startsWith(PATHS.ORDER_DETAIL("")) &&
+      path !== PATHS.ORDER_PAYMENT_SUCCESS &&
+      path !== PATHS.ORDER_PAYMENT_FAIL;
     return (
-      path.startsWith("/my-page") ||
-      path.startsWith("/admin") ||
-      path === "/book/sales/register" ||
-      path === "/book/reviews/write" ||
+      isOrder ||
+      path === PATHS.MY_PAGE ||
+      path.startsWith(PATHS.MY_PAGE + "/") ||
+      path === PATHS.ADMIN_FEEDBACK ||
+      path === PATHS.BOOK_SALES_REGISTER ||
+      path === PATHS.REVIEW_WRITE ||
       path.endsWith("/edit")
     );
   };
 
   useEffect(() => {
     if (isHydrated && !isLoading && !accessToken && isPrivateRoute(pathname)) {
-      if (pathname) {
-        saveReturnUrl(pathname);
-      }
+      saveCurrentReturnUrl();
       router.replace(PATHS.LOGIN);
     }
   }, [isHydrated, isLoading, accessToken, pathname, router]);

@@ -4,10 +4,10 @@ import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 import { useAuthStore } from "@/features/auth/stores/use-auth-store";
-import { saveReturnUrl } from "@/features/auth/utils/return-url";
+import { saveCurrentReturnUrl } from "@/features/auth/utils/return-url";
 import { useConfirm } from "@/features/confirm";
 import { useDeleteReviewMutation } from "@/features/review/mutations";
-import { usePathname, useRouter } from "@/shared/config/i18n/routing";
+import { useRouter } from "@/shared/config/i18n/routing";
 import { PATHS } from "@/shared/constants/paths";
 
 import { ReviewGridList } from "../review-grid-list";
@@ -17,15 +17,14 @@ export const MyReviewList = () => {
   const confirm = useConfirm();
   const user = useAuthStore((state) => state.user);
   const router = useRouter();
-  const pathname = usePathname();
   const { mutateAsync: deleteReviewMutation } = useDeleteReviewMutation();
 
   useEffect(() => {
     if (!user) {
-      saveReturnUrl(pathname);
-      router.push(PATHS.LOGIN);
+      saveCurrentReturnUrl();
+      router.replace(PATHS.LOGIN);
     }
-  }, [user, router, pathname]);
+  }, [user, router]);
 
   const handleDeleteReview = async (id: number) => {
     const isConfirmed = await confirm({
